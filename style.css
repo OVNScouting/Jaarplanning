@@ -1,213 +1,512 @@
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+/* ======================================================================
+   ROOT — KLEUREN EN BASIS
+====================================================================== */
 
-  <title>Bevers – Jaarplanning</title>
+:root {
+  --bg: #f5f7fb;
+  --card: #ffffff;
 
-  <link rel="stylesheet" href="style.css">
-  <script defer src="login.js"></script>
-  <script type="module" src="script.js"></script>
-</head>
+  /* Knop / hoofdkleur */
+  --blue: #006fff;
+  --blue-soft: #e4f0ff;
 
-<body data-speltak="bevers">
+  /* Extra accent */
+  --accent: #ffcd59;
 
-<header class="topbar">
-  <div class="topbar-left">
-    <a class="backlink" href="index.html">← Terug</a>
-    <img src="logo.png" class="topbar-logo" alt="Logo">
-    <div class="topbar-title">
-      <h1>Bevers</h1>
-      <span>Jaarplanning & Aanwezigheid</span>
-    </div>
-  </div>
-</header>
+  /* Opkomst-status */
+  --opkomst-geen: #f43e3e;
+  --opkomst-geen-bg: #fde1e1;
 
-<main class="container">
+  --opkomst-volgende: #7cc46a;
+  --opkomst-volgende-bg: #e4f7de;
 
-  <!-- INFO BLOK -->
-  <section class="info-block">
-    <h2>Belangrijke informatie</h2>
+  --opkomst-verleden: #5d5d5d;
+  --opkomst-verleden-bg: #e5e5e5;
 
-    <!-- VISUALISATIE -->
-    <div id="infotekstDisplay"></div>
+  --opkomst-bijzonder: #be70ff;
+  --opkomst-bijzonder-bg: #f3e7ff;
 
-    <!-- EDITOR (alleen bewerken-modus) -->
-    <div id="infotekstEditor" class="hidden" contenteditable="true"></div>
+  --opkomst-kamp: #ff66cc;
+  --opkomst-kamp-bg: #ffe3f4;
 
-    <!-- Toolbar -->
-    <div id="infoToolbar" class="hidden">
-      <button class="tb-btn" data-cmd="bold">B</button>
-      <button class="tb-btn" data-cmd="italic"><i>I</i></button>
-      <button class="tb-btn" data-cmd="insertLineBreak">↵</button>
-      <button id="saveInfoButton" class="pill-btn primary">Opslaan</button>
-    </div>
-  </section>
+  --text-main: #111827;
+  --text-muted: #6b7280;
 
-  <!-- KNOPPENRIJ -->
-  <div class="button-row">
+  --border: #dde3ef;
+  --border-strong: #cbd5e1;
 
-    <div class="filter-buttons">
-      <span id="filterAll" class="chip active">Alles</span>
-      <span id="filterFuture" class="chip">Komend</span>
-      <span id="filterPast" class="chip">Verleden</span>
-    </div>
+  --shadow: 0 6px 18px rgba(15, 23, 42, .08);
 
-    <button id="printButton" class="pill-btn primary">Printen</button>
+  --radius: 14px;
+  --radius-small: 8px;
+}
 
-    <a id="handleidingButton"
-       href="assets/scouting_mail_handleiding_styled.pdf"
-       target="_blank"
-       class="pill-btn outline hidden">
-      Handleiding mail
-    </a>
+/* ======================================================================
+   RESET & BODY
+====================================================================== */
 
-    <button id="mailboxButton" class="pill-btn outline hidden">Mailbox</button>
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
-    <button id="ledenbeheerButton" class="pill-btn outline hidden">Ledenbeheer</button>
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text-main);
+}
 
-    <button id="instellingenButton" class="pill-btn outline hidden">Meldingen</button>
+.hidden {
+  display: none !important;
+}
 
-    <button id="editModeButton" class="pill-btn primary hidden">Bewerken</button>
+/* ======================================================================
+   CONTAINER
+====================================================================== */
 
-  </div>
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
 
-  <!-- LEGENDA -->
-  <div class="legend-row">
-    <div class="legend-item"><span class="legend-color lc-next"></span> Eerstvolgende opkomst</div>
-    <div class="legend-item"><span class="legend-color lc-geen"></span> Geen opkomst</div>
-    <div class="legend-item"><span class="legend-color lc-bijzonder"></span> Bijzondere opkomst</div>
-    <div class="legend-item"><span class="legend-color lc-kamp"></span> Kamp</div>
-    <div class="legend-item"><span class="legend-color lc-verleden"></span> Opkomst al geweest</div>
-  </div>
+/* ======================================================================
+   TOPBAR
+====================================================================== */
 
-  <!-- TABEL -->
-  <div class="planning-section">
-    <div class="table-wrapper">
-      <table class="planning-table">
-        <thead>
-          <tr id="headerRowTop"></tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
+.topbar {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, .06);
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 
-    <div id="addOpkomstRow" class="add-row hidden">
-      + Nieuwe opkomst toevoegen
-    </div>
-  </div>
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
 
-  <!-- LEDENBEHEER -->
-  <section id="ledenbeheer" class="ledenbeheer hidden">
-    <h2>Ledenbeheer</h2>
-    <div class="ledenbeheer-columns">
-      <div class="ledenbeheer-col">
-        <h3>Jeugdleden</h3>
-        <ul id="ledenbeheerJeugd"></ul>
-      </div>
-      <div class="ledenbeheer-col">
-        <h3>Leiding</h3>
-        <ul id="ledenbeheerLeiding"></ul>
-      </div>
-    </div>
-    <button id="addMemberButton" class="pill-btn primary hidden">Lid toevoegen</button>
-  </section>
+.topbar-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
 
-  <!-- MELDINGEN -->
-  <section id="meldingen" class="meldingen hidden">
-    <h2>Meldingen instellingen</h2>
+.topbar-title h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
 
-    <div class="meldingen-row">
-      <label><input type="checkbox" id="meldLeidingEnabled"> Leiding-melding inschakelen</label>
-      <div class="meldingen-sub">
-        Wanneer <input type="number" id="meldLeidingThreshold" min="1"> leidingleden afwezig zijn → waarschuwing.
-      </div>
-    </div>
+.topbar-title span {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
 
-    <div class="meldingen-row">
-      <label><input type="checkbox" id="meldOnbekendEnabled"> Onbekend-status herinnering</label>
-      <div class="meldingen-sub">
-        Aantal dagen voor de opkomst:
-        <input type="number" id="meldOnbekendDays" min="1">
-      </div>
-    </div>
+.backlink {
+  text-decoration: none;
+  color: var(--blue);
+  font-weight: 500;
+}
 
-    <div class="meldingen-actions">
-      <button id="saveMeldingenButton" class="pill-btn primary">Opslaan</button>
-      <button id="testMeldingenButton" class="pill-btn outline">Testmelding</button>
-    </div>
-  </section>
+/* ======================================================================
+   INFO BLOK
+====================================================================== */
 
-</main>
+.info-block {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem 1.5rem;
+  margin-top: 1.5rem;
+}
 
-<!-- POPUP: NIEUWE OPKOMST -->
-<div id="popupOverlay" class="popup-overlay hidden">
-  <div class="popup-card">
-    <h2>Nieuwe opkomst</h2>
+.info-block h2 {
+  margin: 0 0 0.75rem;
+}
 
-    <label>Datum</label>
-    <input id="new_date" type="date">
+#infotekst {
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+}
 
-    <label>Thema</label>
-    <input id="new_thema" type="text">
+#infotekst_edit {
+  width: 100%;
+  min-height: 140px;
+  font-size: 0.95rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-small);
+  border: 1px solid var(--border);
+  resize: vertical;
+}
 
-    <label>Bijzonderheden</label>
-    <input id="new_bijzonder" type="text">
+.info-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
 
-    <label>Procor</label>
-    <input id="new_procor" type="text">
+/* ======================================================================
+   BUTTONS
+====================================================================== */
 
-    <label>Locatie</label>
-    <input id="new_locatie" type="text">
+.pill-btn,
+.primary-btn {
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.5rem 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  transition: background .15s ease, transform .05s ease;
+}
 
-    <label>Materiaal</label>
-    <input id="new_materiaal" type="text">
+.primary-btn,
+.pill-btn.primary {
+  background: var(--blue);
+  color: #fff;
+}
 
-    <label>Starttijd</label>
-    <input id="new_start" type="time" value="10:30">
+.primary-btn:hover,
+.pill-btn.primary:hover {
+  background: #0059d4;
+  transform: translateY(-1px);
+}
 
-    <label>Eindtijd</label>
-    <input id="new_eind" type="time" value="12:30">
+.pill-btn.outline {
+  background: #fff;
+  color: var(--blue);
+  border: 1px solid var(--blue);
+}
 
-    <label>Type opkomst</label>
-    <select id="new_type">
-      <option value="">Selecteer…</option>
-      <option value="normaal">Normale opkomst</option>
-      <option value="bijzonder">Bijzondere opkomst</option>
-      <option value="kamp">Kamp</option>
-      <option value="geen">Geen opkomst</option>
-    </select>
+.pill-btn.outline:hover {
+  background: var(--blue-soft);
+}
 
-    <div class="popup-buttons">
-      <button id="popupCancel" class="pill-btn outline">Annuleren</button>
-      <button id="popupSave" class="pill-btn primary">Opslaan</button>
-    </div>
-  </div>
-</div>
+.print-btn {
+  margin-left: auto;
+}
 
-</body>
-</html>
+/* ======================================================================
+   FILTER CHIPS
+====================================================================== */
 
-/* SUCCESSBAR ---------------------------- */
+.chip {
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  background: #f1f5f9;
+  cursor: pointer;
+  font-size: 0.85rem;
+  border: 1px solid transparent;
+  transition: all .15s ease;
+}
 
-.success-bar {
-  position: fixed;
-  top: -60px;
-  left: 0;
-  right: 0;
-  background: #4ade80;
-  color: #064e3b;
-  padding: 1rem;
+.chip:hover {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.chip.active {
+  background: var(--blue);
+  color: #fff;
+}
+
+/* ======================================================================
+   PLANNING-SECTIE
+====================================================================== */
+
+.planning-section {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.2rem 1.4rem 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.planning-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.planning-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ======================================================================
+   TABEL
+====================================================================== */
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: var(--radius-small);
+}
+
+.planning-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.planning-table th,
+.planning-table td {
+  border: 1px solid var(--border);
+  padding: 0.35rem 0.45rem;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.planning-table thead th {
+  background: var(--blue-soft);
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* verticale namen */
+.name-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  padding: 0.3rem 0.2rem;
+  background: #f9fafb;
+  font-size: 0.75rem;
+}
+
+/* splitter kolom */
+.col-split {
+  border-left: 4px solid #9ca3af !important;
+}
+
+/* aanwezigheid indicaties */
+.presence-cell {
+  cursor: pointer;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.presence-aanwezig {
+  color: #15803d;
+}
+
+.presence-afwezig {
+  color: #b91c1c;
+}
+
+.presence-reminder {
+  color: #b45309;
+}
+
+.aanw-count {
+  background: #fff7ed;
+  font-weight: 600;
+}
+
+/* ======================================================================
+   OPKOMST STATUS-KLEUREN
+====================================================================== */
+
+.row-geenopkomst {
+  background: var(--opkomst-geen-bg) !important;
+  border-left: 4px solid var(--opkomst-geen);
+}
+
+.row-next {
+  background: var(--opkomst-volgende-bg) !important;
+  border-left: 4px solid var(--opkomst-volgende);
+}
+
+.row-grey {
+  background: var(--opkomst-verleden-bg) !important;
+}
+
+.row-bijzonder {
+  background: var(--opkomst-bijzonder-bg) !important;
+  border-left: 4px solid var(--opkomst-bijzonder);
+}
+
+.row-kamp {
+  background: var(--opkomst-kamp-bg) !important;
+  border-left: 4px solid var(--opkomst-kamp);
+}
+
+/* ======================================================================
+   EXTRA KNOPPEN / ACTIES ONDER TABEL
+====================================================================== */
+
+.add-row {
+  margin-top: 1rem;
   text-align: center;
   font-weight: 600;
-  font-size: 1rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  transition: top 0.4s ease;
-  z-index: 9999;
+  color: var(--blue);
+  cursor: pointer;
+  padding: 0.6rem 0;
+  border-radius: var(--radius-small);
+  background: var(--blue-soft);
 }
 
-.success-bar.show {
-  top: 0;
+.add-row:hover {
+  background: #d8e8ff;
 }
 
+/* ======================================================================
+   LEDENBEHEER
+====================================================================== */
+
+.ledenbeheer {
+  margin-top: 1.5rem;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.2rem 1.4rem;
+}
+
+.ledenbeheer-columns {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.ledenbeheer-col h3 {
+  margin-top: 0;
+}
+
+.ledenbeheer-col ul {
+  padding: 0;
+  list-style: none;
+}
+
+.ledenbeheer-col li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--radius-small);
+  border: 1px solid var(--border);
+  background: #f9fafb;
+  font-size: 0.9rem;
+}
+
+.lid-verborgen {
+  opacity: 0.6;
+  font-style: italic;
+}
+
+.ledenbeheer-controls {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.ledenbeheer-btn {
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #fff;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+/* ======================================================================
+   MELDINGEN
+====================================================================== */
+
+.meldingen {
+  margin-top: 1.5rem;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.2rem 1.4rem 1.4rem;
+}
+
+.meldingen-row {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+
+.meldingen-row:last-child {
+  border-bottom: none;
+}
+
+.meldingen-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 500;
+}
+
+.meldingen-sub {
+  margin-top: 0.3rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.meldingen-sub input[type="number"] {
+  width: 3rem;
+}
+
+.meldingen-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ======================================================================
+   PRINT LAYOUT
+====================================================================== */
+
+@media print {
+
+  body {
+    background: #ffffff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* verberg UI */
+  header,
+  .info-block,
+  .planning-header-row,
+  .planning-controls,
+  #addOpkomstRow,
+  .ledenbeheer,
+  .meldingen {
+    display: none !important;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  .planning-table {
+    font-size: 11pt;
+  }
+
+  /* verberg prullenbak-kolom */
+  .planning-table th:first-child,
+  .planning-table td:first-child {
+    display: none !important;
+  }
+
+  /* verberg locatie */
+  .col-locatie {
+    display: none !important;
+  }
+
+  /* verberg alles vanaf kolom 9 */
+  .planning-table th:nth-child(n+9),
+  .planning-table td:nth-child(n+9) {
+    display: none !important;
+  }
+}

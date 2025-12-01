@@ -31,7 +31,7 @@ const firebaseConfig = {
   authDomain: "jaarplanning-ovn.firebaseapp.com",
   databaseURL: "https://jaarplanning-ovn-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "jaarplanning-ovn",
-  storageBucket: "jaarplanning-ovn.firebasestorage.app",
+  storageBucket: "jaarplanning-ovn.appspot.com",
   messagingSenderId: "526104562356",
   appId: "1:526104562356:web:ea211e722202d6383f65e1"
 };

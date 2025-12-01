@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Bevers – Jaarplanning</title>
+
+  <link rel="stylesheet" href="style.css" />
+  <script defer src="speltak.js"></script>
+</head>
+
+<body data-speltak="bevers">
+
+  <!-- ============================================================
+       TOPBAR
+  ============================================================ -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <a class="backlink" href="index.html">← Terug</a>
+      <img src="logo.png" class="topbar-logo" alt="Logo" />
+
+      <div class="topbar-title">
+        <h1>Bevers</h1>
+        <span>Jaarplanning & Aanwezigheid</span>
+      </div>
+    </div>
+
+    <button id="editModeButton" class="pill-btn primary">Bewerken</button>
+  </header>
+
+  <main class="container">
+
+    <!-- ============================================================
+         BELANGRIJKE INFORMATIE
+    ============================================================ -->
+    <section class="info-block">
+      <h2>Belangrijke informatie</h2>
+
+      <p id="infotekst"></p>
+
+      <textarea id="infotekst_edit" class="hidden"></textarea>
+
+      <div class="info-actions">
+        <button id="saveInfoButton" class="hidden primary-btn">Opslaan</button>
+
+        <!-- Maandbrief -->
+        <button id="maandbriefButton" class="pill-btn outline">
+          Maandbrief downloaden
+        </button>
+        <input id="maandbriefUpload"
+               type="file"
+               accept="application/pdf"
+               class="hidden" />
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PLANNING-HEADER (FILTERS + KNOPPEN)
+    ============================================================ -->
+    <div class="planning-section">
+
+      <div class="planning-header-row">
+        <div class="planning-controls">
+          <span id="filterAll" class="chip active">Alles</span>
+          <span id="filterFuture" class="chip">Komend</span>
+          <span id="filterPast" class="chip">Verleden</span>
+        </div>
+
+        <button id="printButton" class="pill-btn primary print-btn">
+          Printen
+        </button>
+
+        <button id="ledenbeheerButton" class="pill-btn outline hidden">
+          Ledenbeheer
+        </button>
+
+        <button id="instellingenButton" class="pill-btn outline hidden">
+          Meldingen
+        </button>
+
+        <button id="mailboxButton" class="pill-btn outline hidden"
+                onclick="window.open('https://mail.google.com', '_blank')">
+          Mailbox
+        </button>
+
+        <a id="handleidingButton"
+           class="pill-btn outline hidden"
+           href="scouting_mail_handleiding_styled.pdf"
+           download>
+          Handleiding mailbox
+        </a>
+      </div>
+
+      <!-- ============================================================
+           OPKOMSTENTABEL
+      ============================================================ -->
+      <div class="table-wrapper">
+        <table class="planning-table">
+          <thead>
+            <tr id="headerRowTop"></tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+
+      <div id="addOpkomstRow" class="add-row hidden">
+        + Nieuwe opkomst toevoegen
+      </div>
+    </div>
+
+    <!-- ============================================================
+         LEDENBEHEER PANEL
+    ============================================================ -->
+    <section id="ledenbeheer" class="ledenbeheer hidden">
+      <h2>Ledenbeheer</h2>
+
+      <div class="ledenbeheer-columns">
+        <!-- JEUGD -->
+        <div class="ledenbeheer-col">
+          <h3>Jeugdleden</h3>
+          <ul id="ledenbeheerJeugd"></ul>
+        </div>
+
+        <!-- LEIDING -->
+        <div class="ledenbeheer-col">
+          <h3>Leiding</h3>
+          <ul id="ledenbeheerLeiding"></ul>
+        </div>
+      </div>
+
+      <button id="addMemberButton" class="pill-btn primary hidden">
+        Lid toevoegen
+      </button>
+    </section>
+
+    <!-- ============================================================
+         MELDINGEN PANEL
+    ============================================================ -->
+    <section id="meldingen" class="meldingen hidden">
+      <h2>Meldingen instellingen</h2>
+
+      <div class="meldingen-row">
+        <label class="meldingen-label">
+          <input type="checkbox" id="meldLeidingEnabled" />
+          Leiding-melding inschakelen
+        </label>
+
+        <div class="meldingen-sub">
+          Wanneer <input type="number" id="meldLeidingThreshold" min="1" />
+          leidingleden afwezig zijn → waarschuwing.
+        </div>
+      </div>
+
+      <div class="meldingen-row">
+        <label class="meldingen-label">
+          <input type="checkbox" id="meldOnbekendEnabled" />
+          Onbekend-status herinnering
+        </label>
+
+        <div class="meldingen-sub">
+          Aantal dagen voor de opkomst:
+          <input type="number" id="meldOnbekendDays" min="1" />
+        </div>
+      </div>
+
+      <div class="meldingen-actions">
+        <button id="saveMeldingenButton" class="pill-btn primary">
+          Opslaan
+        </button>
+        <button id="testMeldingenButton" class="pill-btn outline">
+          Testmelding
+        </button>
+      </div>
+    </section>
+  </main>
+
+</body>
+</html>

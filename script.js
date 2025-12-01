@@ -508,16 +508,17 @@ function renderTable() {
     });
 
   } else {
-    // leiding / bewerken
+    // LEIDING / BEWERKEN
     addTH("🗑");
     addTH("Datum");
+    addTH("Procor");
     addTH("Thema");
     addTH("Bijzonderheden");
     addTH("Type");
     addTH("Start");
     addTH("Eind");
     addTH("Locatie");
-    addTH("Procor");
+    addTH("Materiaal");
     addTH("Bert 🧸");
     addTH("Aanw. Leden", "aanw-count");
     addTH("Aanw. Leiding", "aanw-count");
@@ -538,7 +539,6 @@ function renderTable() {
       headerRowTop.appendChild(th);
     });
     addTH("Extra");
-    addTH("Materiaal");
   }
 
   // BODY
@@ -585,14 +585,16 @@ function renderTable() {
       }
       tr.appendChild(delTd);
 
+      // Nieuwe volgorde: Datum → Procor → Thema → Bijzonderheden → Type → tijden → Locatie → Materiaal → Bert
       addDatumCell(tr, o, isBewerken());
+      addTextCell(tr, o, "procor", isBewerken());
       addTextCell(tr, o, "thema", isBewerken());
       addTextCell(tr, o, "bijzonderheden", isBewerken());
       addTypeCell(tr, o, isBewerken());
       addTimeCell(tr, o, "starttijd", isBewerken());
       addTimeCell(tr, o, "eindtijd", isBewerken());
       addTextCell(tr, o, "locatie", isBewerken());
-      addTextCell(tr, o, "procor", isBewerken());
+      addTextCell(tr, o, "materiaal", isBewerken(), "Materiaal…");
       addTextCell(tr, o, "bert_met", isBewerken());
 
       const [cntJ, cntL] = countAanwezigen(o, visibleJeugd, visibleLeiding);
@@ -618,9 +620,6 @@ function renderTable() {
 
       // extra leiding
       addNumberCell(tr, o, "extraLeiding", isBewerken());
-
-      // materiaal
-      addTextCell(tr, o, "materiaal", isBewerken(), "Materiaal…");
     }
 
     tableBody.appendChild(tr);

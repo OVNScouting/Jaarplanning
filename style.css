@@ -188,3 +188,26 @@
 
 </body>
 </html>
+
+/* SUCCESSBAR ---------------------------- */
+
+.success-bar {
+  position: fixed;
+  top: -60px;
+  left: 0;
+  right: 0;
+  background: #4ade80;
+  color: #064e3b;
+  padding: 1rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: top 0.4s ease;
+  z-index: 9999;
+}
+
+.success-bar.show {
+  top: 0;
+}
+

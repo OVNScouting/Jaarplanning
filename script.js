@@ -27,13 +27,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAZN4QdTuOpk8lEKsyPuhynqZ9-GJLDE0s",
-  authDomain: "jaarplanning-ovn.firebaseapp.com",
-  databaseURL: "https://jaarplanning-ovn-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "jaarplanning-ovn",
-  storageBucket: "ovn-jaarplanning.appspot.com"
-  messagingSenderId: "526104562356",
-  appId: "1:526104562356:web:ea211e722202d6383f65e1"
+  apiKey: "AIzaSyCFQeno5rmLIvZdscjrimvFO7ZsJW7qBTM",
+  authDomain: "ovn-jaarplanning.firebaseapp.com",
+  databaseURL: "https://ovn-jaarplanning-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "ovn-jaarplanning",
+  storageBucket: "ovn-jaarplanning.appspot.com",
+  messagingSenderId: "311108828430",
+  appId: "1:311108828430:web:40f3564fca975423972b5f"
 };
 
 const app = initializeApp(firebaseConfig);

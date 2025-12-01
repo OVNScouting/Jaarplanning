@@ -1,48 +1,10 @@
 // =============================================================
-// script.js — volledig herschreven voor 3 modi
-// modi: ouder / leiding / bewerken
+// script.js — Scouting OVN Jaarplanning
+// 3 modi: ouder / leiding / bewerken
 // =============================================================
 
 // -------------------------------------------------------------
-// 1. MODE SYSTEEM (LEIDING / OUDER / BEWERKEN)
-// -------------------------------------------------------------
-
-// Leest de mode:
-// - "ouder" (standaard)
-// - "leiding" (na inloggen op index.html)
-// - "bewerken" (na drukken op Bewerkmodus)
-let mode = localStorage.getItem("mode") || "ouder";
-
-function isOuder() {
-    return mode === "ouder";
-}
-
-function isLeiding() {
-    return mode === "leiding";
-}
-
-function isBewerken() {
-    return mode === "bewerken";
-}
-
-// Wordt aangeroepen bij BEWERKEN-knop
-function enterBewerkmodus() {
-    if (!isLeiding()) return;
-    mode = "bewerken";
-    localStorage.setItem("mode", "bewerken");
-    renderAll();
-}
-
-// Wordt aangeroepen bij verlaten bewerken (zelfde knop)
-function exitBewerkmodus() {
-    if (!isBewerken()) return;
-    mode = "leiding";
-    localStorage.setItem("mode", "leiding");
-    renderAll();
-}
-
-// -------------------------------------------------------------
-// 2. FIREBASE INIT — NIEUW PROJECT
+// 1. Firebase imports en init
 // -------------------------------------------------------------
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -78,7 +40,41 @@ const db = getDatabase(app);
 const storage = getStorage(app);
 
 // -------------------------------------------------------------
-// 3. GLOBALE STATE
+// 2. Mode-systeem (ouder / leiding / bewerken)
+// -------------------------------------------------------------
+
+let mode = localStorage.getItem("mode");
+if (mode !== "leiding" && mode !== "bewerken") {
+  mode = "ouder";
+}
+
+function isOuder() {
+  return mode === "ouder";
+}
+
+function isLeiding() {
+  return mode === "leiding";
+}
+
+function isBewerken() {
+  return mode === "bewerken";
+}
+
+function enterBewerkmodus() {
+  if (!isLeiding() && !isBewerken()) return;
+  mode = "bewerken";
+  localStorage.setItem("mode", "bewerken");
+  renderAll();
+}
+
+function exitBewerkmodus() {
+  mode = "leiding";
+  localStorage.setItem("mode", "leiding");
+  renderAll();
+}
+
+// -------------------------------------------------------------
+// 3. Globale state & DOM-elementen
 // -------------------------------------------------------------
 
 const body = document.body;
@@ -97,14 +93,14 @@ let meldingenInstellingen = {
   onbekendDays: 7
 };
 
-// -------------------------------------------------------------
-// 4. DOM ELEMENTS
-// -------------------------------------------------------------
+let filterMode = "all";
 
+// Tabel
 const headerRowTop   = document.getElementById("headerRowTop");
 const tableBody      = document.getElementById("tableBody");
 const addOpkomstRow  = document.getElementById("addOpkomstRow");
 
+// Buttons / UI
 const editModeButton    = document.getElementById("editModeButton");
 const addMemberButton   = document.getElementById("addMemberButton");
 const ledenbeheerButton = document.getElementById("ledenbeheerButton");
@@ -117,14 +113,17 @@ const filterFuture = document.getElementById("filterFuture");
 const filterPast   = document.getElementById("filterPast");
 const printButton  = document.getElementById("printButton");
 
+// Info-tekst
 const infoTekstP     = document.getElementById("infotekst");
 const infoTekstEdit  = document.getElementById("infotekst_edit");
 const saveInfoButton = document.getElementById("saveInfoButton");
 
+// Ledenbeheer
 const ledenbeheerSection     = document.getElementById("ledenbeheer");
 const ledenbeheerJeugdList   = document.getElementById("ledenbeheerJeugd");
 const ledenbeheerLeidingList = document.getElementById("ledenbeheerLeiding");
 
+// Meldingen
 const meldingenSection          = document.getElementById("meldingen");
 const meldLeidingEnabledInput   = document.getElementById("meldLeidingEnabled");
 const meldLeidingThresholdInput = document.getElementById("meldLeidingThreshold");
@@ -140,7 +139,7 @@ const maandbriefButton = document.getElementById("maandbriefButton");
 const maandbriefUpload = document.getElementById("maandbriefUpload");
 
 // -------------------------------------------------------------
-// 5. DATUMFUNCTIES
+// 4. Datum & sorteer helpers
 // -------------------------------------------------------------
 
 function todayISO() {
@@ -177,8 +176,22 @@ function isBinnenNDagen(iso, n) {
   return dagen >= 0 && dagen <= n;
 }
 
+// eerst toekomst, dan verleden
+function sorteerOpkomsten(a, b) {
+  const today = todayISO();
+  const aVerleden = a.datum && a.datum < today;
+  const bVerleden = b.datum && b.datum < today;
+
+  if (aVerleden === bVerleden) {
+    return compareISO(a.datum, b.datum);
+  }
+  if (!aVerleden && bVerleden) return -1;
+  if (aVerleden && !bVerleden) return 1;
+  return 0;
+}
+
 // -------------------------------------------------------------
-// 6. MAANDBRIEF FUNCTIES
+// 5. Maandbrief
 // -------------------------------------------------------------
 
 async function loadMaandbriefUrl() {
@@ -216,38 +229,28 @@ async function handleMaandbriefUploadChange(event) {
 }
 
 function handleMaandbriefButtonClick() {
-  if (isLeiding() || isBewerken()) {
-    // Download voor leiding ook in kijk-modus
-    if (!maandbriefUrl) {
-      alert("Er is nog geen maandbrief geüpload.");
-      return;
-    }
-    window.open(maandbriefUrl, "_blank");
+  if (isBewerken()) {
+    if (!maandbriefUpload) return;
+    maandbriefUpload.click();
     return;
   }
 
-  if (isOuder()) {
-    if (!maandbriefUrl) {
-      alert("Er is nog geen maandbrief geüpload.");
-      return;
-    }
-    window.open(maandbriefUrl, "_blank");
+  if (!maandbriefUrl) {
+    alert("Er is nog geen maandbrief geüpload.");
+    return;
   }
+  window.open(maandbriefUrl, "_blank");
 }
 
 function updateMaandbriefButtonLabel() {
-  maandbriefButton.textContent =
-    isBewerken()
-      ? "Maandbrief uploaden"
-      : "Maandbrief downloaden";
+  if (!maandbriefButton) return;
+  maandbriefButton.textContent = isBewerken()
+    ? "Maandbrief uploaden"
+    : "Maandbrief downloaden";
 }
 
-// =============================================================
-// script.js — DEEL 2
-// =============================================================
-
 // -------------------------------------------------------------
-// 7. DATA LADEN (OPKOMSTEN, LEDEN, MELDINGEN, INFOTEKST)
+// 6. Data uit Firebase laden
 // -------------------------------------------------------------
 
 function loadData() {
@@ -256,10 +259,8 @@ function loadData() {
   onValue(rootRef, snapshot => {
     const data = snapshot.val() || {};
 
-    // Infotekst
     infoTekst = data.infotekst || "";
 
-    // Meldingen
     meldingenInstellingen = {
       leidingEnabled: !!data.meldingen?.leidingEnabled,
       leidingThreshold: data.meldingen?.leidingThreshold ?? 3,
@@ -267,7 +268,6 @@ function loadData() {
       onbekendDays: data.meldingen?.onbekendDays ?? 7
     };
 
-    // Jeugdleden
     jeugd = Object.entries(data.jeugdleden || {}).map(([id, v]) => ({
       id,
       naam: v.naam,
@@ -275,7 +275,6 @@ function loadData() {
       volgorde: v.volgorde ?? 0
     })).sort((a, b) => a.volgorde - b.volgorde || a.naam.localeCompare(b.naam));
 
-    // Leiding
     leiding = Object.entries(data.leiding || {}).map(([id, v]) => ({
       id,
       naam: v.naam,
@@ -283,43 +282,16 @@ function loadData() {
       volgorde: v.volgorde ?? 0
     })).sort((a, b) => a.volgorde - b.volgorde || a.naam.localeCompare(b.naam));
 
-    // Opkomsten
     opkomsten = Object.entries(data.opkomsten || {})
       .map(([id, v]) => ({ id, ...v }))
       .sort(sorteerOpkomsten);
 
-    // Render alles opnieuw
     renderAll();
   });
 }
 
 // -------------------------------------------------------------
-// 8. NIEUWE SORTEERFUNCTIE
-// Eerst komende opkomsten
-// Dan opkomsten uit het verleden onderaan
-// -------------------------------------------------------------
-
-function sorteerOpkomsten(a, b) {
-
-  const today = todayISO();
-
-  const aIsVerleden = a.datum && a.datum < today;
-  const bIsVerleden = b.datum && b.datum < today;
-
-  // beide toekomst of beide verleden → normaal sorteren op datum
-  if (aIsVerleden === bIsVerleden) {
-    return compareISO(a.datum, b.datum);
-  }
-
-  // toekomst eerst
-  if (!aIsVerleden && bIsVerleden) return -1;
-  if (aIsVerleden && !bIsVerleden) return 1;
-
-  return 0;
-}
-
-// -------------------------------------------------------------
-// 9. RENDER FUNCTIES (CENTRAAL)
+// 7. Centrale render-functie
 // -------------------------------------------------------------
 
 function renderAll() {
@@ -332,7 +304,7 @@ function renderAll() {
 }
 
 // -------------------------------------------------------------
-// 10. INFOTEKST RENDEREN
+// 8. Infotekst
 // -------------------------------------------------------------
 
 function renderInfoTekst() {
@@ -340,23 +312,24 @@ function renderInfoTekst() {
   if (infoTekstEdit) infoTekstEdit.value = infoTekst;
 
   if (isBewerken()) {
-    infoTekstP.classList.add("hidden");
-    infoTekstEdit.classList.remove("hidden");
-    saveInfoButton.classList.remove("hidden");
+    infoTekstP && infoTekstP.classList.add("hidden");
+    infoTekstEdit && infoTekstEdit.classList.remove("hidden");
+    saveInfoButton && saveInfoButton.classList.remove("hidden");
   } else {
-    infoTekstP.classList.remove("hidden");
-    infoTekstEdit.classList.add("hidden");
-    saveInfoButton.classList.add("hidden");
+    infoTekstP && infoTekstP.classList.remove("hidden");
+    infoTekstEdit && infoTekstEdit.classList.add("hidden");
+    saveInfoButton && saveInfoButton.classList.add("hidden");
   }
 }
 
 function saveInfoTekst() {
+  if (!isBewerken()) return;
   const nieuwe = infoTekstEdit.value;
   update(ref(db, speltak), { infotekst: nieuwe });
 }
 
 // -------------------------------------------------------------
-// 11. MELDINGEN RENDEREN
+// 9. Meldingen-instellingen
 // -------------------------------------------------------------
 
 function renderMeldingenInstellingen() {
@@ -367,10 +340,8 @@ function renderMeldingenInstellingen() {
   meldOnbekendEnabledInput.checked = !!meldingenInstellingen.onbekendEnabled;
   meldOnbekendDaysInput.value = meldingenInstellingen.onbekendDays;
 
-  if (isBewerken()) {
-    meldingenSection.classList.remove("hidden");
-  } else {
-    meldingenSection.classList.add("hidden");
+  if (!isBewerken()) {
+    meldingenSection && meldingenSection.classList.add("hidden");
   }
 }
 
@@ -387,368 +358,437 @@ function saveMeldingenInstellingen() {
   set(ref(db, `${speltak}/meldingen`), obj)
     .then(() => alert("Meldingen opgeslagen."));
 }
-// =============================================================
-// script.js — DEEL 3
-// =============================================================
 
-// -------------------------------------------------------------
-// 12. MODE-GEBONDEN UI
-// -------------------------------------------------------------
+function testMeldingen() {
+  const problemen = [];
 
-function updateModeUI() {
+  opkomsten.forEach(o => {
+    if (!o.datum) return;
 
-  // BEWERKEN-knop zichtbaar in leiding + bewerken
-  if (editModeButton) {
-    if (isLeiding() || isBewerken()) editModeButton.classList.remove("hidden");
-    else editModeButton.classList.add("hidden");
+    // te weinig leiding
+    if (meldingenInstellingen.leidingEnabled) {
+      let afwezig = 0;
+      leiding.forEach(l => {
+        const k = "leiding-" + l.id;
+        if (o.aanwezigheid?.[k] === "afwezig") afwezig++;
+      });
+      if (afwezig >= meldingenInstellingen.leidingThreshold) {
+        problemen.push(
+          `Opkomst ${toDisplayDate(o.datum)}: ${afwezig} leiding afwezig.`
+        );
+      }
+    }
 
-    editModeButton.textContent = isBewerken()
-      ? "Klaar"
-      : "Bewerken";
-  }
+    // onbekend status binnen N dagen
+    if (meldingenInstellingen.onbekendEnabled &&
+        isBinnenNDagen(o.datum, meldingenInstellingen.onbekendDays)) {
 
-  // Ledenbeheer-knop zichtbaar in leiding + bewerken
-  if (ledenbeheerButton) {
-    if (isLeiding() || isBewerken()) ledenbeheerButton.classList.remove("hidden");
-    else ledenbeheerButton.classList.add("hidden");
-  }
+      let onbekend = 0;
 
-  // Mailbox, handleiding, meldingen-knoppen
-  if (mailboxButton) mailboxButton.classList.toggle("hidden", isOuder());
-  if (handleidingButton) handleidingButton.classList.toggle("hidden", isOuder());
-  if (instellingenButton) instellingenButton.classList.toggle("hidden", !(isLeiding() || isBewerken()));
+      jeugd.forEach(j => {
+        if (o.aanwezigheid?.[j.id] === "onbekend") onbekend++;
+      });
+      leiding.forEach(l => {
+        const k = "leiding-" + l.id;
+        if (o.aanwezigheid?.[k] === "onbekend") onbekend++;
+      });
 
-  // Leden toevoegen-knop alleen in bewerken
-  if (addMemberButton)
-    addMemberButton.classList.toggle("hidden", !isBewerken());
+      if (onbekend > 0) {
+        problemen.push(
+          `Opkomst ${toDisplayDate(o.datum)}: ${onbekend} personen nog onbekend.`
+        );
+      }
+    }
+  });
 
-  // Opkomst toevoegen-knop alleen in bewerken
-  if (addOpkomstRow)
-    addOpkomstRow.classList.toggle("hidden", !isBewerken());
+  const subject = encodeURIComponent(`Aanwezigheidsmeldingen ${speltak}`);
+  const body = encodeURIComponent(
+    problemen.length ? problemen.join("\n") : "Geen meldingen."
+  );
+
+  window.location.href = `mailto:ovnscouting@gmail.com?subject=${subject}&body=${body}`;
 }
 
 // -------------------------------------------------------------
-// 13. TABELLEN
+// 10. UI op basis van mode
+// -------------------------------------------------------------
+
+function updateModeUI() {
+  // Bewerk-knop
+  if (editModeButton) {
+    if (isLeiding() || isBewerken()) {
+      editModeButton.classList.remove("hidden");
+    } else {
+      editModeButton.classList.add("hidden");
+    }
+    editModeButton.textContent = isBewerken() ? "Klaar" : "Bewerken";
+  }
+
+  // Ledenbeheer-knop alleen in bewerkmodus
+  if (ledenbeheerButton) {
+    ledenbeheerButton.classList.toggle("hidden", !isBewerken());
+  }
+
+  // Mailbox, handleiding, meldingen-knop alleen in leiding/bewerken
+  if (mailboxButton) {
+    mailboxButton.classList.toggle("hidden", isOuder());
+  }
+  if (handleidingButton) {
+    handleidingButton.classList.toggle("hidden", isOuder());
+  }
+  if (instellingenButton) {
+    instellingenButton.classList.toggle("hidden", !isBewerken());
+  }
+
+  // Lid toevoegen-knop alleen in bewerken
+  if (addMemberButton) {
+    addMemberButton.classList.toggle("hidden", !isBewerken());
+  }
+
+  // Opkomst toevoegen alleen in bewerken
+  if (addOpkomstRow) {
+    addOpkomstRow.classList.toggle("hidden", !isBewerken());
+  }
+
+  // Filters active state
+  if (filterAll) {
+    filterAll.classList.toggle("active", filterMode === "all");
+  }
+  if (filterFuture) {
+    filterFuture.classList.toggle("active", filterMode === "future");
+  }
+  if (filterPast) {
+    filterPast.classList.toggle("active", filterMode === "past");
+  }
+}
+
+// -------------------------------------------------------------
+// 11. Tabel-rendering
 // -------------------------------------------------------------
 
 function renderTable() {
   if (!headerRowTop || !tableBody) return;
+
   headerRowTop.innerHTML = "";
   tableBody.innerHTML = "";
 
-  // Welke kolommen zichtbaar?
-  const cols = determineColumnsForMode();
+  const visibleJeugd   = jeugd.filter(j => !j.verborgen);
+  const visibleLeiding = leiding.filter(l => !l.verborgen);
 
-  // Header bouwen
-  buildTableHeader(cols);
+  // Volgende opkomst (voor highlight)
+  let volgendeId = null;
+  const toekomstige = opkomsten
+    .filter(o => isFutureOrToday(o.datum))
+    .sort((a, b) => compareISO(a.datum, b.datum));
+  if (toekomstige.length) volgendeId = toekomstige[0].id;
 
-  // Body bouwen
-  buildTableBody(cols);
-}
+  // Filter lijst
+  let lijst = opkomsten.slice();
+  if (filterMode === "future") {
+    lijst = lijst.filter(o => isFutureOrToday(o.datum));
+  } else if (filterMode === "past") {
+    lijst = lijst.filter(o => isPast(o.datum));
+  }
 
-// -------------------------------------------------------------
-// 14. KOLOMCONFIG PER MODUS
-// -------------------------------------------------------------
-
-function determineColumnsForMode() {
-
-  // Basis voor iedereen
-  const base = [
-    "delete",
-    "datum",
-    "thema",
-    "bijzonderheden",
-    "typeOpkomst",
-    "starttijd",
-    "eindtijd",
-  ];
-
+  // HEADER
   if (isOuder()) {
-    return [
-      ...base,
-      "bert_met",
-      "aanwLeden",
-      "aanwezigheidJeugd",
-    ];
+    addTH("Datum");
+    addTH("Thema");
+    addTH("Bijzonderheden");
+    addTH("Type");
+    addTH("Start");
+    addTH("Eind");
+    addTH("Bert 🧸");
+
+    visibleJeugd.forEach(j => {
+      const th = document.createElement("th");
+      th.textContent = j.naam;
+      th.classList.add("name-vertical");
+      headerRowTop.appendChild(th);
+    });
+
+  } else {
+    // leiding / bewerken
+    addTH("🗑");
+    addTH("Datum");
+    addTH("Thema");
+    addTH("Bijzonderheden");
+    addTH("Type");
+    addTH("Start");
+    addTH("Eind");
+    addTH("Locatie");
+    addTH("Procor");
+    addTH("Bert 🧸");
+    addTH("Aanw. Leden", "aanw-count");
+    addTH("Aanw. Leiding", "aanw-count");
+
+    visibleJeugd.forEach(j => {
+      const th = document.createElement("th");
+      th.textContent = j.naam;
+      th.classList.add("name-vertical");
+      headerRowTop.appendChild(th);
+    });
+
+    addTH("Kijkers");
+    visibleLeiding.forEach((l, idx) => {
+      const th = document.createElement("th");
+      th.textContent = l.naam;
+      th.classList.add("name-vertical");
+      if (idx === 0) th.classList.add("col-split");
+      headerRowTop.appendChild(th);
+    });
+    addTH("Extra");
+    addTH("Materiaal");
   }
 
-  // Leiding-modus (kijkmodus)
-  if (isLeiding()) {
-    return [
-      ...base,
-      "locatie",
-      "procor",
-      "bert_met",
-      "aanwLeden",
-      "aanwLeiding",
-      "aanwezigheidJeugd",
-      "kijkers",
-      "aanwezigheidLeiding",
-      "extraLeiding",
-      "materiaal"
-    ];
-  }
-
-  // Bewerkmodus (volledig)
-  if (isBewerken()) {
-    return [
-      ...base,
-      "locatie",
-      "procor",
-      "bert_met",
-      "aanwLeden",
-      "aanwLeiding",
-      "aanwezigheidJeugd",
-      "kijkers",
-      "aanwezigheidLeiding",
-      "extraLeiding",
-      "materiaal"
-    ];
-  }
-
-  return base;
-}
-
-// -------------------------------------------------------------
-// 15. HEADER RENDEREN
-// -------------------------------------------------------------
-
-function buildTableHeader(cols) {
-  cols.forEach(col => {
-    const th = document.createElement("th");
-
-    const labels = {
-      delete: "🗑",
-      datum: "Datum",
-      thema: "Thema",
-      bijzonderheden: "Bijzonderheden",
-      typeOpkomst: "Type",
-      starttijd: "Start",
-      eindtijd: "Eind",
-      locatie: "Locatie",
-      procor: "Procor",
-      bert_met: "Bert 🧸",
-      aanwLeden: "Aanw. Leden",
-      aanwLeiding: "Aanw. Leiding",
-      aanwezigheidJeugd: "Leden",
-      aanwezigheidLeiding: "Leiding",
-      kijkers: "Kijkers",
-      extraLeiding: "Extra",
-      materiaal: "Materiaal"
-    };
-
-    th.textContent = labels[col] || col;
-    headerRowTop.appendChild(th);
-  });
-}
-
-// =============================================================
-// script.js — DEEL 4
-// =============================================================
-
-function buildTableBody(cols) {
-
-  opkomsten.forEach(o => {
+  // BODY
+  lijst.forEach(o => {
+    ensureAanwezigheidStructure(o, visibleJeugd, visibleLeiding);
 
     const tr = document.createElement("tr");
 
-    // Styling op basis van status
     if (o.typeOpkomst === "geen") tr.classList.add("row-geenopkomst");
     else if (isPast(o.datum)) tr.classList.add("row-grey");
     if (o.typeOpkomst === "bijzonder") tr.classList.add("row-bijzonder");
     if (o.typeOpkomst === "kamp") tr.classList.add("row-kamp");
+    if (o.id === volgendeId) tr.classList.add("row-next");
 
-    cols.forEach(col => {
-      const td = document.createElement("td");
+    if (isOuder()) {
+      // OUDER-MODUS
+      addDatumCell(tr, o, false);
+      addTextCell(tr, o, "thema", false);
+      addTextCell(tr, o, "bijzonderheden", false);
+      addTypeCell(tr, o, false);
+      addTimeCell(tr, o, "starttijd", false);
+      addTimeCell(tr, o, "eindtijd", false);
+      addTextCell(tr, o, "bert_met", false);
 
-      switch (col) {
+      // per jeugdlid: aanwezigheid
+      visibleJeugd.forEach(j => {
+        const key = j.id;
+        const cell = makePresenceCell(o, key, true); // ouders mogen jeugd klikken
+        tr.appendChild(cell);
+      });
 
-        case "delete":
-          if (isBewerken()) {
-            td.textContent = "✖";
-            td.classList.add("delete-btn");
-            td.addEventListener("click", () => {
-              if (confirm("Opkomst verwijderen?")) {
-                remove(ref(db, `${speltak}/opkomsten/${o.id}`));
-              }
-            });
+    } else {
+      // LEIDING / BEWERKEN
+      // delete
+      const delTd = document.createElement("td");
+      if (isBewerken()) {
+        delTd.textContent = "✖";
+        delTd.classList.add("delete-btn");
+        delTd.addEventListener("click", () => {
+          if (confirm("Opkomst verwijderen?")) {
+            remove(ref(db, `${speltak}/opkomsten/${o.id}`));
           }
-          break;
-
-        case "datum":
-          renderDatumCell(td, o);
-          break;
-
-        case "thema":
-          renderEditableText(td, o, "thema", "Thema…");
-          break;
-
-        case "bijzonderheden":
-          renderEditableText(td, o, "bijzonderheden", "Bijzonderheden…");
-          break;
-
-        case "typeOpkomst":
-          renderTypeCell(td, o);
-          break;
-
-        case "starttijd":
-          renderTimeCell(td, o, "starttijd");
-          break;
-
-        case "eindtijd":
-          renderTimeCell(td, o, "eindtijd");
-          break;
-
-        case "locatie":
-          renderEditableText(td, o, "locatie", "Locatie…");
-          break;
-
-        case "procor":
-          renderEditableText(td, o, "procor", "Procor…");
-          break;
-
-        case "bert_met":
-          renderEditableText(td, o, "bert_met", "Bert met…");
-          break;
-
-        case "materiaal":
-          renderEditableText(td, o, "materiaal", "Materiaal…");
-          break;
-
-        case "aanwLeden":
-        case "aanwLeiding":
-          const [cntJ, cntL] = countAanwezigen(o);
-          td.textContent = col === "aanwLeden" ? cntJ : cntL;
-          break;
-
-        case "aanwezigheidJeugd":
-          renderPresenceRow(td, tr, o, jeugd, false);
-          break;
-
-        case "aanwezigheidLeiding":
-          renderPresenceRow(td, tr, o, leiding, true);
-          break;
-
-        case "kijkers":
-          renderNumberCell(td, o, "kijkers");
-          break;
-
-        case "extraLeiding":
-          renderNumberCell(td, o, "extraLeiding");
-          break;
+        });
       }
+      tr.appendChild(delTd);
 
-      tr.appendChild(td);
-    });
+      addDatumCell(tr, o, isBewerken());
+      addTextCell(tr, o, "thema", isBewerken());
+      addTextCell(tr, o, "bijzonderheden", isBewerken());
+      addTypeCell(tr, o, isBewerken());
+      addTimeCell(tr, o, "starttijd", isBewerken());
+      addTimeCell(tr, o, "eindtijd", isBewerken());
+      addTextCell(tr, o, "locatie", isBewerken());
+      addTextCell(tr, o, "procor", isBewerken());
+      addTextCell(tr, o, "bert_met", isBewerken());
+
+      const [cntJ, cntL] = countAanwezigen(o, visibleJeugd, visibleLeiding);
+      addStaticCell(tr, String(cntJ), "aanw-count");
+      addStaticCell(tr, String(cntL), "aanw-count");
+
+      visibleJeugd.forEach(j => {
+        const key = j.id;
+        const cell = makePresenceCell(o, key, true);
+        tr.appendChild(cell);
+      });
+
+      // kijkers
+      addNumberCell(tr, o, "kijkers", isBewerken());
+
+      // leiding-aanwezigheid
+      visibleLeiding.forEach((l, idx) => {
+        const key = "leiding-" + l.id;
+        const cell = makePresenceCell(o, key, true);
+        if (idx === 0) cell.classList.add("col-split");
+        tr.appendChild(cell);
+      });
+
+      // extra leiding
+      addNumberCell(tr, o, "extraLeiding", isBewerken());
+
+      // materiaal
+      addTextCell(tr, o, "materiaal", isBewerken(), "Materiaal…");
+    }
 
     tableBody.appendChild(tr);
   });
 }
 
+// Kleine helpers voor header & cellen
+function addTH(label, extraClass) {
+  const th = document.createElement("th");
+  th.textContent = label;
+  if (extraClass) th.classList.add(extraClass);
+  headerRowTop.appendChild(th);
+}
+
+function addStaticCell(tr, text, extraClass) {
+  const td = document.createElement("td");
+  td.textContent = text;
+  if (extraClass) td.classList.add(extraClass);
+  tr.appendChild(td);
+}
+
 // -------------------------------------------------------------
-// 16. AANWEZIGHEID
+// 12. Aanwezigheid helpers
 // -------------------------------------------------------------
 
-function renderPresenceRow(td, tr, o, lijst, isLeiding) {
-  // toevoegen van cellen per persoon
-  lijst.forEach((p, idx) => {
-    const cell = document.createElement("td");
-    cell.classList.add("presence-cell");
-
-    const key = isLeiding ? `leiding-${p.id}` : p.id;
-
-    if (!o.aanwezigheid) o.aanwezigheid = {};
+function ensureAanwezigheidStructure(o, jeugdLijst, leidingLijst) {
+  if (!o.aanwezigheid) o.aanwezigheid = {};
+  jeugdLijst.forEach(j => {
+    if (!o.aanwezigheid[j.id]) o.aanwezigheid[j.id] = "onbekend";
+  });
+  leidingLijst.forEach(l => {
+    const key = "leiding-" + l.id;
     if (!o.aanwezigheid[key]) o.aanwezigheid[key] = "onbekend";
-
-    const symbols = {
-      aanwezig: "✔",
-      afwezig: "✖",
-      onbekend: "?"
-    };
-
-    function apply() {
-      const v = o.aanwezigheid[key];
-      cell.textContent = symbols[v];
-    }
-
-    apply();
-
-    // Klikbaar voor iedereen in alle modi behalve Ouder → alleen leden/leiding?
-    if (isOuder()) {
-      if (!isLeiding) cell.addEventListener("click", toggleAanwezigheid);
-    } else {
-      cell.addEventListener("click", toggleAanwezigheid);
-    }
-
-    function toggleAanwezigheid() {
-      const states = ["aanwezig", "afwezig", "onbekend"];
-      const cur = o.aanwezigheid[key];
-      const next = states[(states.indexOf(cur) + 1) % states.length];
-      o.aanwezigheid[key] = next;
-
-      update(ref(db, `${speltak}/opkomsten/${o.id}`), {
-        aanwezigheid: o.aanwezigheid
-      });
-
-      apply();
-    }
-
-    tr.appendChild(cell);
   });
 }
 
-// =============================================================
-// script.js — DEEL 5
-// =============================================================
+function makePresenceCell(o, key, allowClick) {
+  const td = document.createElement("td");
+  td.classList.add("presence-cell");
 
-// -------------------------------------------------------------
-// Datum-cell
-// -------------------------------------------------------------
+  const symbols = {
+    aanwezig: "✔",
+    afwezig: "✖",
+    onbekend: "?"
+  };
 
-function renderDatumCell(td, o) {
-  if (isBewerken()) {
-    const input = document.createElement("input");
-    input.type = "date";
-    input.value = o.datum || "";
-    td.appendChild(input);
-
-    input.addEventListener("change", () => {
-      update(ref(db, `${speltak}/opkomsten/${o.id}`), { datum: input.value });
-    });
-
-  } else {
-    td.textContent = toDisplayDate(o.datum);
+  function apply() {
+    const state = o.aanwezigheid?.[key] || "onbekend";
+    td.textContent = symbols[state];
+    td.classList.remove("presence-aanwezig", "presence-afwezig", "presence-reminder");
+    if (state === "aanwezig") td.classList.add("presence-aanwezig");
+    if (state === "afwezig")  td.classList.add("presence-afwezig");
+    if (state === "onbekend") td.classList.add("presence-reminder");
   }
+
+  apply();
+
+  if (allowClick) {
+    td.addEventListener("click", () => {
+      const states = ["aanwezig", "afwezig", "onbekend"];
+      const cur = o.aanwezigheid?.[key] || "onbekend";
+      const next = states[(states.indexOf(cur) + 1) % states.length];
+      const nieuwe = { ...(o.aanwezigheid || {}), [key]: next };
+
+      o.aanwezigheid = nieuwe;
+      update(ref(db, `${speltak}/opkomsten/${o.id}`), { aanwezigheid: nieuwe });
+      apply();
+    });
+  }
+
+  return td;
+}
+
+function countAanwezigen(o, jeugdLijst, leidingLijst) {
+  let j = 0;
+  let l = 0;
+  jeugdLijst.forEach(x => {
+    if (o.aanwezigheid?.[x.id] === "aanwezig") j++;
+  });
+  leidingLijst.forEach(x => {
+    const key = "leiding-" + x.id;
+    if (o.aanwezigheid?.[key] === "aanwezig") l++;
+  });
+  return [j, l];
 }
 
 // -------------------------------------------------------------
-// Algemene editable tekstvelden
+// 13. Cell-render helpers (datum, tekst, tijd, nummer, type)
 // -------------------------------------------------------------
 
-function renderEditableText(td, o, field, placeholder) {
-  if (isBewerken()) {
+function addDatumCell(tr, o, editable) {
+  const td = document.createElement("td");
+  if (editable) {
+    const input = document.createElement("input");
+    input.type = "date";
+    input.value = o.datum || "";
+    input.addEventListener("change", () => {
+      update(ref(db, `${speltak}/opkomsten/${o.id}`), { datum: input.value });
+    });
+    td.appendChild(input);
+  } else {
+    td.textContent = toDisplayDate(o.datum);
+  }
+  tr.appendChild(td);
+}
+
+function addTextCell(tr, o, field, editable, placeholder) {
+  const td = document.createElement("td");
+  const value = o[field] || "";
+  if (editable) {
     const input = document.createElement("input");
     input.type = "text";
-    input.value = o[field] || "";
-    input.placeholder = placeholder;
-    td.appendChild(input);
-
+    input.value = value;
+    if (placeholder) input.placeholder = placeholder;
     input.addEventListener("change", () => {
       const obj = {};
       obj[field] = input.value;
       update(ref(db, `${speltak}/opkomsten/${o.id}`), obj);
     });
-
+    td.appendChild(input);
   } else {
-    td.textContent = o[field] || "";
+    td.textContent = value;
   }
+  tr.appendChild(td);
 }
 
-// -------------------------------------------------------------
-// Type opkomst (dropdown)
-// -------------------------------------------------------------
+function addTimeCell(tr, o, field, editable) {
+  const td = document.createElement("td");
+  const value = o[field] || "";
+  if (editable) {
+    const input = document.createElement("input");
+    input.type = "time";
+    input.value = value;
+    input.addEventListener("change", () => {
+      const obj = {};
+      obj[field] = input.value;
+      update(ref(db, `${speltak}/opkomsten/${o.id}`), obj);
+    });
+    td.appendChild(input);
+  } else {
+    td.textContent = value;
+  }
+  tr.appendChild(td);
+}
 
-function renderTypeCell(td, o) {
+function addNumberCell(tr, o, field, editable) {
+  const td = document.createElement("td");
+  const value = Number(o[field] || 0);
+  if (editable) {
+    const input = document.createElement("input");
+    input.type = "number";
+    input.min = "0";
+    input.value = value;
+    input.addEventListener("change", () => {
+      const num = parseInt(input.value, 10) || 0;
+      const obj = {};
+      obj[field] = num;
+      update(ref(db, `${speltak}/opkomsten/${o.id}`), obj);
+    });
+    td.appendChild(input);
+  } else {
+    td.textContent = value || "";
+  }
+  tr.appendChild(td);
+}
+
+function addTypeCell(tr, o, editable) {
+  const td = document.createElement("td");
   const types = {
     "": "Selecteer…",
     normaal: "Normale opkomst",
@@ -757,9 +797,8 @@ function renderTypeCell(td, o) {
     geen: "Geen opkomst"
   };
 
-  if (isBewerken()) {
+  if (editable) {
     const select = document.createElement("select");
-
     Object.entries(types).forEach(([val, label]) => {
       const opt = document.createElement("option");
       opt.value = val;
@@ -767,94 +806,21 @@ function renderTypeCell(td, o) {
       if (o.typeOpkomst === val) opt.selected = true;
       select.appendChild(opt);
     });
-
-    td.appendChild(select);
-
     select.addEventListener("change", () => {
       update(ref(db, `${speltak}/opkomsten/${o.id}`), {
         typeOpkomst: select.value
       });
     });
-
+    td.appendChild(select);
   } else {
     td.textContent = types[o.typeOpkomst] || "";
   }
+
+  tr.appendChild(td);
 }
 
 // -------------------------------------------------------------
-// Tijdvelden
-// -------------------------------------------------------------
-
-function renderTimeCell(td, o, field) {
-  if (isBewerken()) {
-    const input = document.createElement("input");
-    input.type = "time";
-    input.value = o[field] || "";
-    td.appendChild(input);
-
-    input.addEventListener("change", () => {
-      const obj = {};
-      obj[field] = input.value;
-      update(ref(db, `${speltak}/opkomsten/${o.id}`), obj);
-    });
-
-  } else {
-    td.textContent = o[field] || "";
-  }
-}
-
-// -------------------------------------------------------------
-// Nummervelden (kijkers, extra leiding)
-// -------------------------------------------------------------
-
-function renderNumberCell(td, o, field) {
-  const value = Number(o[field] || 0);
-
-  if (isBewerken()) {
-    const input = document.createElement("input");
-    input.type = "number";
-    input.min = "0";
-    input.value = value;
-    td.appendChild(input);
-
-    input.addEventListener("change", () => {
-      const num = parseInt(input.value, 10) || 0;
-      const obj = {};
-      obj[field] = num;
-      update(ref(db, `${speltak}/opkomsten/${o.id}`), obj);
-    });
-
-  } else {
-    td.textContent = value;
-  }
-}
-
-// =============================================================
-// script.js — DEEL 6
-// =============================================================
-
-// -------------------------------------------------------------
-// Aanwezigheid tellen
-// -------------------------------------------------------------
-
-function countAanwezigen(o) {
-  let j = 0;
-  let l = 0;
-
-  jeugd.forEach(x => {
-    if (o.aanwezigheid?.[x.id] === "aanwezig") j++;
-  });
-
-  leiding.forEach(x => {
-    const key = "leiding-" + x.id;
-    if (o.aanwezigheid?.[key] === "aanwezig") l++;
-  });
-
-  return [j, l];
-}
-
-// -------------------------------------------------------------
-// Nieuwe opkomst toevoegen
+// 14. Opkomsten & ledenbeheer
 // -------------------------------------------------------------
 
 function addOpkomst() {
@@ -862,7 +828,6 @@ function addOpkomst() {
 
   const nieuwRef = push(ref(db, `${speltak}/opkomsten`));
   const id = nieuwRef.key;
-
   const nieuw = {
     id,
     datum: "",
@@ -883,19 +848,14 @@ function addOpkomst() {
   set(nieuwRef, nieuw);
 }
 
-// -------------------------------------------------------------
-// LEDENBEHEER
-// -------------------------------------------------------------
-
 function renderLedenbeheer() {
-  if (!ledenbeheerSection) return;
+  if (!ledenbeheerSection || !ledenbeheerJeugdList || !ledenbeheerLeidingList) return;
 
   if (!isBewerken()) {
     ledenbeheerSection.classList.add("hidden");
     return;
   }
 
-  ledenbeheerSection.classList.remove("hidden");
   ledenbeheerJeugdList.innerHTML = "";
   ledenbeheerLeidingList.innerHTML = "";
 
@@ -947,11 +907,10 @@ function moveLid(type, index, delta) {
   const item = lijst.splice(index, 1)[0];
   lijst.splice(nieuwIndex, 0, item);
 
-  lijst.forEach((l, i) => l.volgorde = i);
+  lijst.forEach((l, i) => (l.volgorde = i));
 
   const path = type === "jeugd" ? "jeugdleden" : "leiding";
   const updates = {};
-
   lijst.forEach(l => {
     updates[`${path}/${l.id}/volgorde`] = l.volgorde;
   });
@@ -961,6 +920,7 @@ function moveLid(type, index, delta) {
 
 function renameLid(type, lid) {
   if (!isBewerken()) return;
+
   const nieuw = prompt("Nieuwe naam:", lid.naam);
   if (!nieuw) return;
 
@@ -970,6 +930,7 @@ function renameLid(type, lid) {
 
 function toggleVerborgen(type, lid) {
   if (!isBewerken()) return;
+
   const path = type === "jeugd" ? "jeugdleden" : "leiding";
   update(ref(db, `${speltak}/${path}/${lid.id}`), { hidden: !lid.verborgen });
 }
@@ -982,14 +943,35 @@ function deleteLid(type, lid) {
   remove(ref(db, `${speltak}/${path}/${lid.id}`));
 }
 
-// =============================================================
-// script.js — DEEL 7
-// =============================================================
+function addLidPopup() {
+  if (!isBewerken()) return;
+
+  const type = prompt("Type lid: 'jeugd' of 'leiding'")?.trim().toLowerCase();
+  if (type !== "jeugd" && type !== "leiding") {
+    alert("Type moet 'jeugd' of 'leiding' zijn.");
+    return;
+  }
+
+  const naam = prompt("Naam:");
+  if (!naam) return;
+
+  const path = type === "jeugd" ? "jeugdleden" : "leiding";
+  const lijst = type === "jeugd" ? jeugd : leiding;
+  const volgorde = lijst.length;
+
+  const nieuwRef = push(ref(db, `${speltak}/${path}`));
+  set(nieuwRef, {
+    naam,
+    hidden: false,
+    volgorde
+  });
+}
 
 // -------------------------------------------------------------
-// Bewerkmodus togglen
+// 15. Event listeners
 // -------------------------------------------------------------
 
+// Bewerkmodus-knop
 if (editModeButton) {
   editModeButton.addEventListener("click", () => {
     if (isBewerken()) exitBewerkmodus();
@@ -997,105 +979,80 @@ if (editModeButton) {
   });
 }
 
-// -------------------------------------------------------------
-// Ledenbeheer togglen
-// -------------------------------------------------------------
-
-if (ledenbeheerButton) {
+// Ledenbeheer-paneel togglen (alleen in bewerken, maar check anyway)
+if (ledenbeheerButton && ledenbeheerSection) {
   ledenbeheerButton.addEventListener("click", () => {
     ledenbeheerSection.classList.toggle("hidden");
   });
 }
 
-// -------------------------------------------------------------
-// Meldingen togglen
-// -------------------------------------------------------------
-
-if (instellingenButton) {
+// Meldingen-paneel togglen
+if (instellingenButton && meldingenSection) {
   instellingenButton.addEventListener("click", () => {
     meldingenSection.classList.toggle("hidden");
   });
 }
 
-// -------------------------------------------------------------
 // Filters
-// -------------------------------------------------------------
-
-let filterMode = "all";
-
-if (filterAll)
+if (filterAll) {
   filterAll.addEventListener("click", () => {
     filterMode = "all";
-    renderTable();
+    renderAll();
   });
-
-if (filterFuture)
+}
+if (filterFuture) {
   filterFuture.addEventListener("click", () => {
     filterMode = "future";
-    renderTable();
+    renderAll();
   });
-
-if (filterPast)
+}
+if (filterPast) {
   filterPast.addEventListener("click", () => {
     filterMode = "past";
-    renderTable();
+    renderAll();
   });
+}
 
-// -------------------------------------------------------------
 // Print
-// -------------------------------------------------------------
-
 if (printButton) {
   printButton.addEventListener("click", () => window.print());
 }
 
-// -------------------------------------------------------------
 // Maandbrief
-// -------------------------------------------------------------
-
-if (maandbriefButton)
+if (maandbriefButton) {
   maandbriefButton.addEventListener("click", handleMaandbriefButtonClick);
-
-if (maandbriefUpload)
+}
+if (maandbriefUpload) {
   maandbriefUpload.addEventListener("change", handleMaandbriefUploadChange);
-
-// -------------------------------------------------------------
-// Meldingen opslaan / testen
-// -------------------------------------------------------------
-
-if (saveMeldingenButton)
-  saveMeldingenButton.addEventListener("click", saveMeldingenInstellingen);
-
-if (testMeldingenButton)
-  testMeldingenButton.addEventListener("click", testMeldingen);
-
-// -------------------------------------------------------------
-// Opkomst toevoegen
-// -------------------------------------------------------------
-
-if (addOpkomstRow)
-  addOpkomstRow.addEventListener("click", addOpkomst);
-
-// -------------------------------------------------------------
-// Infotekst opslaan
-// -------------------------------------------------------------
-
-if (saveInfoButton)
-  saveInfoButton.addEventListener("click", saveInfoTekst);
-
-// =============================================================
-// script.js — DEEL 8 (INIT)
-// =============================================================
-
-function testMeldingen() {
-  alert("Automatische e-mails worden later geïmplementeerd.");
 }
 
-// Starten:
+// Meldingen
+if (saveMeldingenButton) {
+  saveMeldingenButton.addEventListener("click", saveMeldingenInstellingen);
+}
+if (testMeldingenButton) {
+  testMeldingenButton.addEventListener("click", testMeldingen);
+}
+
+// Opkomst toevoegen
+if (addOpkomstRow) {
+  addOpkomstRow.addEventListener("click", addOpkomst);
+}
+
+// Infotekst
+if (saveInfoButton) {
+  saveInfoButton.addEventListener("click", saveInfoTekst);
+}
+
+// Lid toevoegen
+if (addMemberButton) {
+  addMemberButton.addEventListener("click", addLidPopup);
+}
+
+// -------------------------------------------------------------
+// 16. Init
+// -------------------------------------------------------------
+
 loadData();
 loadMaandbriefUrl();
 updateModeUI();
-
-// -------------------------------------------------------------
-// EINDE SCRIPT.JS
-// =============================================================

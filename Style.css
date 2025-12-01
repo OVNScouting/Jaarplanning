@@ -35,7 +35,7 @@
 
   --shadow: 0 6px 18px rgba(15, 23, 42, .1);
 
-  /* speltak accentkleuren */
+  /* speltak kleuren */
   --bevers: #e51b23;
   --welpen: #009b3a;
   --scouts: #c69c6d;
@@ -114,6 +114,42 @@ body {
 }
 
 /* ======================================================================
+   INDEX — SPELTAK GRID
+====================================================================== */
+
+.speltak-grid {
+  display: grid;
+  gap: 1.2rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  margin-top: 2rem;
+}
+
+.speltak-card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 2rem 1rem;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-main);
+  text-decoration: none;
+  box-shadow: var(--shadow);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+
+.speltak-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.speltak-card.bevers    { border-top: 6px solid var(--bevers); }
+.speltak-card.welpen    { border-top: 6px solid var(--welpen); }
+.speltak-card.scouts    { border-top: 6px solid var(--scouts); }
+.speltak-card.explorers { border-top: 6px solid var(--explorers); }
+.speltak-card.rovers    { border-top: 6px solid var(--rovers); }
+.speltak-card.stam      { border-top: 6px solid var(--stam); }
+
+/* ======================================================================
    INFO-BLOK
 ====================================================================== */
 
@@ -153,7 +189,7 @@ body {
 }
 
 /* ======================================================================
-   BUTTONS
+   BUTTONS / CHIPS
 ====================================================================== */
 
 .pill-btn,
@@ -170,14 +206,14 @@ body {
   transition: background .15s ease, transform .05s ease;
 }
 
-.pill-btn.primary,
-.primary-btn {
+.primary-btn,
+.pill-btn.primary {
   background: var(--blue);
   color: #fff;
 }
 
-.pill-btn.primary:hover,
-.primary-btn:hover {
+.primary-btn:hover,
+.pill-btn.primary:hover {
   background: #004ec7;
   transform: translateY(-1px);
 }
@@ -192,18 +228,18 @@ body {
   background: var(--blue-soft);
 }
 
-.pill-btn.ghost {
-  background: transparent;
-  color: var(--blue);
-  border: 1px solid var(--blue-soft);
-}
-
-.pill-btn.ghost:hover {
+.chip {
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  cursor: pointer;
   background: var(--blue-soft);
+  color: var(--blue);
+  font-size: 0.85rem;
 }
 
-.print-btn {
-  margin-left: auto;
+.chip.active {
+  background: var(--blue);
+  color: #fff;
 }
 
 /* ======================================================================
@@ -300,6 +336,22 @@ body {
   cursor: pointer;
   color: #c62828;
   font-weight: bold;
+}
+
+/* EXTRA CEL */
+.add-row {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  text-align: center;
+  background: var(--blue-soft);
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--blue);
+}
+
+.add-row:hover {
+  background: #d9e8ff;
 }
 
 /* ======================================================================

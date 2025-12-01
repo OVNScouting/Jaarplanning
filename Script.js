@@ -1,9 +1,6 @@
-// speltak.js – jaarplanning / aanwezigheid per speltak (Bevers e.d.)
+// speltak.js — jaarplanning / aanwezigheid (Bevers, Welpen, etc.)
 
-import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import {
   getDatabase,
   ref,
@@ -12,27 +9,27 @@ import {
   update,
   push,
   remove
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
 import {
   getStorage,
   ref as storageRef,
   uploadBytes,
   getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js";
 
 /* -----------------------------------------------------
-   FIREBASE INIT
+   FIREBASE INIT — NIEUWE SCOUTING DATABASE
 ----------------------------------------------------- */
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAZN4QdTuOpk8lEKsyPuhynqZ9-GJLDE0s",
-  authDomain: "jaarplanning-ovn.firebaseapp.com",
-  databaseURL: "https://jaarplanning-ovn-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "jaarplanning-ovn",
-  storageBucket: "jaarplanning-ovn.firebasestorage.app",
-  messagingSenderId: "526104562356",
-  appId: "1:526104562356:web:ea211e722202d6383f65e1"
+  apiKey: "AIzaSyCFQeno5rmLIvZdscjrimvFO7ZsJW7qBTM",
+  authDomain: "ovn-jaarplanning.firebaseapp.com",
+  databaseURL: "https://ovn-jaarplanning-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "ovn-jaarplanning",
+  storageBucket: "ovn-jaarplanning.firebasestorage.app",
+  messagingSenderId: "311108828430",
+  appId: "1:311108828430:web:40f3564fca975423972b5f"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -103,7 +100,6 @@ const saveMeldingenButton       =
   document.getElementById("meldingenSaveButton");
 const testMeldingenButton       = document.getElementById("testMeldingenButton");
 
-// Maandbrief
 const maandbriefButton = document.getElementById("maandbriefButton");
 const maandbriefUpload = document.getElementById("maandbriefUpload");
 
@@ -146,7 +142,7 @@ function isBinnenNDagen(iso, n) {
 }
 
 /* -----------------------------------------------------
-   MAANDBRIEF (PDF in Firebase Storage)
+   MAANDBRIEF (PDF)
 ----------------------------------------------------- */
 
 async function loadMaandbriefUrl() {
@@ -154,8 +150,7 @@ async function loadMaandbriefUrl() {
 
   try {
     const sRef = storageRef(storage, `${speltak}/maandbrief.pdf`);
-    const url  = await getDownloadURL(sRef);
-    maandbriefUrl = url;
+    maandbriefUrl = await getDownloadURL(sRef);
   } catch (err) {
     maandbriefUrl = "";
   }
@@ -166,7 +161,7 @@ async function handleMaandbriefUploadChange(event) {
   if (!file) return;
 
   if (file.type !== "application/pdf") {
-    alert("Alleen PDF-bestanden zijn toegestaan.");
+    alert("Alleen PDF-bestanden toegestaan.");
     event.target.value = "";
     return;
   }
@@ -174,24 +169,20 @@ async function handleMaandbriefUploadChange(event) {
   try {
     const sRef = storageRef(storage, `${speltak}/maandbrief.pdf`);
     await uploadBytes(sRef, file);
-    alert("Maandbrief geüpload.");
+    alert("Maandbrief geüpload!");
     await loadMaandbriefUrl();
   } catch (err) {
     console.error(err);
-    alert("Uploaden van de maandbrief is mislukt.");
-  } finally {
-    event.target.value = "";
+    alert("Upload mislukt.");
   }
+
+  event.target.value = "";
 }
 
 function handleMaandbriefButtonClick() {
-  if (!maandbriefButton) return;
-
   if (isAdmin) {
-    // in bewerkmodus: upload
-    if (maandbriefUpload) maandbriefUpload.click();
+    maandbriefUpload.click();
   } else {
-    // voor ouders: downloaden / openen
     if (!maandbriefUrl) {
       alert("Er is nog geen maandbrief geüpload.");
       return;
@@ -201,7 +192,6 @@ function handleMaandbriefButtonClick() {
 }
 
 function updateMaandbriefButtonLabel() {
-  if (!maandbriefButton) return;
   maandbriefButton.textContent = isAdmin
     ? "Maandbrief uploaden"
     : "Maandbrief downloaden";
@@ -212,9 +202,7 @@ function updateMaandbriefButtonLabel() {
 ----------------------------------------------------- */
 
 function loadData() {
-  const rootRef = ref(db, speltak);
-
-  onValue(rootRef, snapshot => {
+  onValue(ref(db, speltak), snapshot => {
     const data = snapshot.val() || {};
 
     infoTekst = data.infotekst || "";
@@ -256,13 +244,12 @@ function loadData() {
 ----------------------------------------------------- */
 
 function renderInfoTekst() {
-  if (infoTekstP)    infoTekstP.textContent = infoTekst;
-  if (infoTekstEdit) infoTekstEdit.value    = infoTekst;
+  infoTekstP.textContent = infoTekst;
+  infoTekstEdit.value = infoTekst;
 }
 
 function saveInfoTekst() {
-  const nieuwe = infoTekstEdit.value;
-  update(ref(db, speltak), { infotekst: nieuwe });
+  update(ref(db, speltak), { infotekst: infoTekstEdit.value });
 }
 
 /* -----------------------------------------------------
@@ -270,26 +257,19 @@ function saveInfoTekst() {
 ----------------------------------------------------- */
 
 function renderMeldingenInstellingen() {
-  if (!meldLeidingEnabledInput) return;
-
-  meldLeidingEnabledInput.checked   = !!meldingenInstellingen.leidingEnabled;
-  meldLeidingThresholdInput.value   = meldingenInstellingen.leidingThreshold;
-  meldOnbekendEnabledInput.checked  = !!meldingenInstellingen.onbekendEnabled;
-  meldOnbekendDaysInput.value       = meldingenInstellingen.onbekendDays;
+  meldLeidingEnabledInput.checked = !!meldingenInstellingen.leidingEnabled;
+  meldLeidingThresholdInput.value = meldingenInstellingen.leidingThreshold;
+  meldOnbekendEnabledInput.checked = !!meldingenInstellingen.onbekendEnabled;
+  meldOnbekendDaysInput.value = meldingenInstellingen.onbekendDays;
 }
 
 function saveMeldingenInstellingen() {
-  if (!meldLeidingEnabledInput) return;
-
-  const obj = {
+  set(ref(db, `${speltak}/meldingen`), {
     leidingEnabled: !!meldLeidingEnabledInput.checked,
     leidingThreshold: Number(meldLeidingThresholdInput.value || 3),
     onbekendEnabled: !!meldOnbekendEnabledInput.checked,
     onbekendDays: Number(meldOnbekendDaysInput.value || 7)
-  };
-
-  set(ref(db, `${speltak}/meldingen`), obj)
-    .then(() => alert("Meldingen opgeslagen."));
+  }).then(() => alert("Opgeslagen."));
 }
 
 function testMeldingenInstellingen() {
@@ -301,13 +281,10 @@ function testMeldingenInstellingen() {
     if (meldingenInstellingen.leidingEnabled) {
       let afwezig = 0;
       leiding.forEach(l => {
-        const key = "leiding-" + l.id;
-        if (o.aanwezigheid?.[key] === "afwezig") afwezig++;
+        if (o.aanwezigheid?.[`leiding-${l.id}`] === "afwezig") afwezig++;
       });
       if (afwezig >= meldingenInstellingen.leidingThreshold) {
-        problemen.push(
-          `Opkomst ${toDisplayDate(o.datum)} "${o.thema || ""}": ${afwezig} leiding afwezig.`
-        );
+        problemen.push(`Opkomst ${toDisplayDate(o.datum)}: ${afwezig} leiding afwezig.`);
       }
     }
 
@@ -315,62 +292,55 @@ function testMeldingenInstellingen() {
         isBinnenNDagen(o.datum, meldingenInstellingen.onbekendDays)) {
 
       let onbekend = 0;
+
       jeugd.forEach(j => {
         if (o.aanwezigheid?.[j.id] === "onbekend") onbekend++;
       });
+
       leiding.forEach(l => {
-        const key = "leiding-" + l.id;
-        if (o.aanwezigheid?.[key] === "onbekend") onbekend++;
+        if (o.aanwezigheid?.[`leiding-${l.id}`] === "onbekend") onbekend++;
       });
 
       if (onbekend > 0) {
-        problemen.push(
-          `Opkomst ${toDisplayDate(o.datum)} "${o.thema || ""}": ${onbekend} personen nog onbekend.`
-        );
+        problemen.push(`Opkomst ${toDisplayDate(o.datum)}: ${onbekend} personen onbekend.`);
       }
     }
   });
 
   if (!problemen.length) {
-    alert("Geen meldingen nodig op basis van de huidige instellingen.");
+    alert("Geen meldingen.");
     return;
   }
 
-  const subject = encodeURIComponent("Bevers – meldingen aanwezigheid");
-  const body =
-    encodeURIComponent("Overzicht meldingen:\n\n" + problemen.join("\n"));
-
-  window.location.href =
-    `mailto:ovnscouting+${speltak}@gmail.com?subject=${subject}&body=${body}`;
+  const subject = encodeURIComponent("Aanwezigheidsmeldingen");
+  const body = encodeURIComponent(problemen.join("\n"));
+  window.location.href = `mailto:ovnscouting+${speltak}@gmail.com?subject=${subject}&body=${body}`;
 }
 
 /* -----------------------------------------------------
    HEADER / TABEL
 ----------------------------------------------------- */
 
-function clearNode(node) {
-  if (!node) return;
-  while (node.firstChild) node.removeChild(node.firstChild);
+function clearNode(n) {
+  while (n.firstChild) n.removeChild(n.firstChild);
 }
 
-function addTH(row, text, rowSpan = 1, colSpan = 1, extraClass = "") {
+function addTH(row, text, rowSpan = 1, colSpan = 1, c = "") {
   const th = document.createElement("th");
   th.textContent = text;
   th.rowSpan = rowSpan;
   th.colSpan = colSpan;
-  if (extraClass) th.classList.add(extraClass);
+  if (c) th.classList.add(c);
   row.appendChild(th);
 }
 
 function renderTable() {
   clearNode(headerRowTop);
   clearNode(tableBody);
-  if (!headerRowTop || !tableBody) return;
 
   const zichtbareJeugd   = jeugd.filter(j => !j.verborgen);
   const zichtbareLeiding = leiding.filter(l => !l.verborgen);
 
-  // Header
   addTH(headerRowTop, "🗑");
   addTH(headerRowTop, "Datum");
   addTH(headerRowTop, "Thema");
@@ -378,53 +348,46 @@ function renderTable() {
   addTH(headerRowTop, "Type");
   addTH(headerRowTop, "Start");
   addTH(headerRowTop, "Eind");
-  addTH(headerRowTop, "Locatie", 1, 1, "col-locatie");
+  addTH(headerRowTop, "Locatie");
 
-  if (isAdmin) addTH(headerRowTop, "Procor", 1, 1, "col-procor");
+  if (isAdmin) addTH(headerRowTop, "Procor");
+  addTH(headerRowTop, "Bert 🧸");
 
-  addTH(headerRowTop, "Bert 🧸", 1, 1, "col-bert");
   addTH(headerRowTop, "Aanw. Leden",   1, 1, "aanw-count");
   addTH(headerRowTop, "Aanw. Leiding", 1, 1, "aanw-count");
 
-  // Jeugd namen
   zichtbareJeugd.forEach(j => {
     const th = document.createElement("th");
     th.textContent = j.naam;
-    th.classList.add("name-vertical", "presence-col");
+    th.classList.add("name-vertical");
     headerRowTop.appendChild(th);
   });
 
-  // Kijkers
-  const kijkersTh = document.createElement("th");
-  kijkersTh.textContent = "Kijkers";
-  kijkersTh.classList.add("presence-col");
-  headerRowTop.appendChild(kijkersTh);
+  const kijkTh = document.createElement("th");
+  kijkTh.textContent = "Kijkers";
+  kijkTh.classList.add("presence-col");
+  headerRowTop.appendChild(kijkTh);
 
-  // Leiding namen
-  zichtbareLeiding.forEach((l, index) => {
+  zichtbareLeiding.forEach((l, idx) => {
     const th = document.createElement("th");
     th.textContent = l.naam;
-    th.classList.add("name-vertical", "presence-col");
-    if (index === 0) th.classList.add("col-split");
+    th.classList.add("name-vertical");
+    if (idx === 0) th.classList.add("col-split");
     headerRowTop.appendChild(th);
   });
 
-  // Extra leiding
   const extraTh = document.createElement("th");
   extraTh.textContent = "Extra";
   extraTh.classList.add("presence-col");
   headerRowTop.appendChild(extraTh);
 
-  // Bepaal "eerstvolgende opkomst" (voor row-next)
   let volgendeId = null;
   const toekomstige = opkomsten
     .filter(o => isFutureOrToday(o.datum))
     .sort((a, b) => compareISO(a.datum, b.datum));
-  if (toekomstige.length) {
-    volgendeId = toekomstige[0].id;
-  }
 
-  // Filter op mode
+  if (toekomstige.length) volgendeId = toekomstige[0].id;
+
   let lijst = [...opkomsten];
   if (filterMode === "future") lijst = lijst.filter(o => isFutureOrToday(o.datum));
   if (filterMode === "past")   lijst = lijst.filter(o => isPast(o.datum));
@@ -433,7 +396,6 @@ function renderTable() {
     const tr = document.createElement("tr");
 
     if (!o.datum) {
-      // nog te plannen / nieuwe
     } else if (o.typeOpkomst === "geen") {
       tr.classList.add("row-geenopkomst");
     } else if (isPast(o.datum)) {
@@ -442,7 +404,7 @@ function renderTable() {
 
     if (o.id === volgendeId) tr.classList.add("row-next");
     if (o.typeOpkomst === "bijzonder") tr.classList.add("row-bijzonder");
-    if (o.typeOpkomst === "kamp")      tr.classList.add("row-kamp");
+    if (o.typeOpkomst === "kamp") tr.classList.add("row-kamp");
 
     addDeleteCell(tr, o);
     addDatumCell(tr, o);
@@ -459,71 +421,56 @@ function renderTable() {
     ensurePresenceStructure(o, zichtbareJeugd, zichtbareLeiding);
 
     const [cntJ, cntL] = countAanwezigen(o, zichtbareJeugd, zichtbareLeiding);
-    const kijkersCount = Number(o.kijkers || 0);
-    const extraCount   = Number(o.extraLeiding || 0);
+    const kijkCount = Number(o.kijkers || 0);
+    const extraCount = Number(o.extraLeiding || 0);
 
-    const totaalLeden   = cntJ + kijkersCount;
-    const totaalLeiding = cntL + extraCount;
+    addStaticCell(tr, cntJ + kijkCount, "aanw-count");
+    addStaticCell(tr, cntL + extraCount, "aanw-count");
 
-    addStaticCell(tr, totaalLeden,   "aanw-count");
-    addStaticCell(tr, totaalLeiding, "aanw-count");
-
-    // Jeugd presence
     zichtbareJeugd.forEach(j => {
       const td = makePresenceCell(o, j.id);
-      td.classList.add("presence-col");
       tr.appendChild(td);
     });
 
-    // Kijkers
     addNumberCell(tr, o, "kijkers");
 
-    // Leiding presence
     zichtbareLeiding.forEach((l, idx) => {
-      const key = "leiding-" + l.id;
-      const td  = makePresenceCell(o, key);
-      td.classList.add("presence-col");
+      const key = `leiding-${l.id}`;
+      const td = makePresenceCell(o, key);
       if (idx === 0) td.classList.add("col-split");
       tr.appendChild(td);
     });
 
-    // Extra leiding
     addNumberCell(tr, o, "extraLeiding");
 
     tableBody.appendChild(tr);
   });
 
-  if (addOpkomstRow) {
-    addOpkomstRow.classList.toggle("hidden", !isAdmin);
-  }
+  addOpkomstRow.classList.toggle("hidden", !isAdmin);
 }
 
-function addStaticCell(tr, text, extraClass) {
+function addStaticCell(tr, text, c) {
   const td = document.createElement("td");
   td.textContent = text;
-  if (extraClass) td.classList.add(extraClass);
+  if (c) td.classList.add(c);
   tr.appendChild(td);
 }
 
 function addNumberCell(tr, o, field) {
   const td = document.createElement("td");
-  td.classList.add("presence-col");
 
   const value = Number(o[field] || 0);
 
   if (isAdmin) {
     const input = document.createElement("input");
     input.type = "number";
-    input.min  = "0";
-    input.step = "1";
+    input.min = "0";
     input.value = value ? String(value) : "";
     input.placeholder = "0";
 
     input.addEventListener("change", () => {
       const num = parseInt(input.value, 10) || 0;
-      const obj = {};
-      obj[field] = num;
-      update(ref(db, `${speltak}/opkomsten/${o.id}`), obj);
+      update(ref(db, `${speltak}/opkomsten/${o.id}`), { [field]: num });
     });
 
     td.appendChild(input);
@@ -540,15 +487,18 @@ function addNumberCell(tr, o, field) {
 
 function addDeleteCell(tr, o) {
   const td = document.createElement("td");
+
   if (isAdmin) {
     td.textContent = "✖";
     td.classList.add("delete-btn");
+
     td.addEventListener("click", () => {
       if (confirm("Deze opkomst verwijderen?")) {
         remove(ref(db, `${speltak}/opkomsten/${o.id}`));
       }
     });
   }
+
   tr.appendChild(td);
 }
 
@@ -573,9 +523,10 @@ function addDatumCell(tr, o) {
 
   if (isAdmin) {
     td.classList.add("editable");
+
     td.addEventListener("click", () => {
       const input = document.createElement("input");
-      input.type  = "date";
+      input.type = "date";
       input.value = o.datum || "";
       td.innerHTML = "";
       td.appendChild(input);
@@ -611,9 +562,10 @@ function addEditableTextCell(tr, o, field, placeholder) {
 
   if (isAdmin) {
     td.classList.add("editable");
+
     td.addEventListener("click", () => {
       const input = document.createElement("input");
-      input.type  = "text";
+      input.type = "text";
       input.value = o[field] || "";
       td.innerHTML = "";
       td.appendChild(input);
@@ -630,7 +582,6 @@ function addEditableTextCell(tr, o, field, placeholder) {
 
 function addTypeCell(tr, o) {
   const td = document.createElement("td");
-  const type = o.typeOpkomst || "";
 
   const labels = {
     "": "Selecteer…",
@@ -640,48 +591,25 @@ function addTypeCell(tr, o) {
     geen: "Geen opkomst"
   };
 
-  if (isAdmin && !type) {
-    const select = document.createElement("select");
-    [
-      { value: "",         label: "Selecteer…" },
-      { value: "normaal",  label: "Normale opkomst" },
-      { value: "bijzonder",label: "Bijzondere opkomst" },
-      { value: "kamp",     label: "Kamp" },
-      { value: "geen",     label: "Geen opkomst" }
-    ].forEach(opt => {
-      const el = document.createElement("option");
-      el.value = opt.value;
-      el.textContent = opt.label;
-      select.appendChild(el);
-    });
-
-    select.addEventListener("change", () => {
-      update(ref(db, `${speltak}/opkomsten/${o.id}`), { typeOpkomst: select.value });
-    });
-
-    td.appendChild(select);
-    tr.appendChild(td);
-    return;
-  }
-
-  td.textContent = labels[type] || "Selecteer…";
+  td.textContent = labels[o.typeOpkomst] || "Selecteer…";
 
   if (isAdmin) {
     td.classList.add("editable");
+
     td.addEventListener("click", () => {
       const select = document.createElement("select");
 
       [
-        { value: "",         label: "Selecteer…" },
-        { value: "normaal",  label: "Normale opkomst" },
-        { value: "bijzonder",label: "Bijzondere opkomst" },
-        { value: "kamp",     label: "Kamp" },
-        { value: "geen",     label: "Geen opkomst" }
+        { value: "", label: "Selecteer…" },
+        { value: "normaal", label: "Normale opkomst" },
+        { value: "bijzonder", label: "Bijzondere opkomst" },
+        { value: "kamp", label: "Kamp" },
+        { value: "geen", label: "Geen opkomst" }
       ].forEach(opt => {
         const el = document.createElement("option");
         el.value = opt.value;
         el.textContent = opt.label;
-        if (opt.value === type) el.selected = true;
+        if (opt.value === o.typeOpkomst) el.selected = true;
         select.appendChild(el);
       });
 
@@ -700,21 +628,21 @@ function addTypeCell(tr, o) {
 
 function addTimeCell(tr, o, field) {
   const td = document.createElement("td");
-  const val = o[field] || "";
 
   if (isAdmin) {
     const input = document.createElement("input");
-    input.type  = "time";
-    input.value = val;
-    td.appendChild(input);
+    input.type = "time";
+    input.value = o[field] || "";
 
     input.addEventListener("change", () => {
-      const obj = {};
-      obj[field] = input.value;
-      update(ref(db, `${speltak}/opkomsten/${o.id}`), obj);
+      update(ref(db, `${speltak}/opkomsten/${o.id}`), {
+        [field]: input.value
+      });
     });
+
+    td.appendChild(input);
   } else {
-    td.textContent = val;
+    td.textContent = o[field] || "";
   }
 
   tr.appendChild(td);
@@ -722,20 +650,21 @@ function addTimeCell(tr, o, field) {
 
 function addLocatieCell(tr, o) {
   const td = document.createElement("td");
-  td.classList.add("col-locatie");
-  const val = o.locatie || "";
 
   if (isAdmin) {
     const input = document.createElement("input");
-    input.type  = "text";
-    input.value = val;
-    td.appendChild(input);
+    input.type = "text";
+    input.value = o.locatie || "";
 
     input.addEventListener("change", () => {
-      update(ref(db, `${speltak}/opkomsten/${o.id}`), { locatie: input.value });
+      update(ref(db, `${speltak}/opkomsten/${o.id}`), {
+        locatie: input.value
+      });
     });
+
+    td.appendChild(input);
   } else {
-    td.textContent = val;
+    td.textContent = o.locatie || "";
   }
 
   tr.appendChild(td);
@@ -743,43 +672,45 @@ function addLocatieCell(tr, o) {
 
 function addProcorCell(tr, o) {
   const td = document.createElement("td");
-  const val = o.procor || "";
 
   if (isAdmin) {
     const input = document.createElement("input");
-    input.type  = "text";
-    input.value = val;
-    td.appendChild(input);
+    input.type = "text";
+    input.value = o.procor || "";
 
     input.addEventListener("change", () => {
-      update(ref(db, `${speltak}/opkomsten/${o.id}`), { procor: input.value });
+      update(ref(db, `${speltak}/opkomsten/${o.id}`), {
+        procor: input.value
+      });
     });
+
+    td.appendChild(input);
   } else {
-    td.textContent = val;
+    td.textContent = o.procor || "";
   }
 
-  td.classList.add("col-procor");
   tr.appendChild(td);
 }
 
 function addBertCell(tr, o) {
   const td = document.createElement("td");
-  const val = o.bert_met || "";
 
   if (isAdmin) {
     const input = document.createElement("input");
-    input.type  = "text";
-    input.value = val;
-    td.appendChild(input);
+    input.type = "text";
+    input.value = o.bert_met || "";
 
     input.addEventListener("change", () => {
-      update(ref(db, `${speltak}/opkomsten/${o.id}`), { bert_met: input.value });
+      update(ref(db, `${speltak}/opkomsten/${o.id}`), {
+        bert_met: input.value
+      });
     });
+
+    td.appendChild(input);
   } else {
-    td.textContent = val;
+    td.textContent = o.bert_met || "";
   }
 
-  td.classList.add("col-bert");
   tr.appendChild(td);
 }
 
@@ -802,7 +733,7 @@ function ensurePresenceStructure(o, jeugdLijst, leidingLijst) {
 
 function makePresenceCell(o, key) {
   const td = document.createElement("td");
-  td.classList.add("presence-cell", "presence-col");
+  td.classList.add("presence-cell");
 
   const symbols = {
     aanwezig: "✔",
@@ -823,17 +754,16 @@ function makePresenceCell(o, key) {
 
   apply();
 
-  // Altijd klikbaar, ook voor ouders
   td.addEventListener("click", () => {
     const current = o.aanwezigheid?.[key] || "onbekend";
-    const next = states[(states.indexOf(current) + 1) % states.length];
+    const nextState = states[(states.indexOf(current) + 1) % states.length];
 
-    const nieuweAanw = { ...(o.aanwezigheid || {}), [key]: next };
+    const nieuweAanw = { ...(o.aanwezigheid), [key]: nextState };
     o.aanwezigheid = nieuweAanw;
 
     update(ref(db, `${speltak}/opkomsten/${o.id}`), {
       aanwezigheid: nieuweAanw
-    }).catch(err => console.error("Fout bij opslaan aanwezigheid", err));
+    });
 
     apply();
   });
@@ -865,10 +795,9 @@ function addOpkomst() {
   if (!isAdmin) return;
 
   const nieuwRef = push(ref(db, `${speltak}/opkomsten`));
-  const id = nieuwRef.key;
 
   const nieuw = {
-    id,
+    id: nieuwRef.key,
     datum: "",
     thema: "",
     bijzonderheden: "",
@@ -891,10 +820,8 @@ function addOpkomst() {
 ----------------------------------------------------- */
 
 function renderLedenbeheer() {
-  if (!ledenbeheerJeugdList || !ledenbeheerLeidingList) return;
-
   if (!isAdmin) {
-    ledenbeheerJeugdList.innerHTML   = "";
+    ledenbeheerJeugdList.innerHTML = "";
     ledenbeheerLeidingList.innerHTML = "";
     return;
   }
@@ -961,6 +888,7 @@ function moveLid(type, index, delta) {
 function renameLid(type, lid) {
   const nieuw = prompt("Nieuwe naam:", lid.naam);
   if (!nieuw) return;
+
   const path = type === "jeugd" ? "jeugdleden" : "leiding";
   update(ref(db, `${speltak}/${path}/${lid.id}`), { naam: nieuw });
 }
@@ -972,6 +900,7 @@ function toggleVerborgen(type, lid) {
 
 function deleteLid(type, lid) {
   if (!confirm(`Lid ${lid.naam} verwijderen?`)) return;
+
   const path = type === "jeugd" ? "jeugdleden" : "leiding";
   remove(ref(db, `${speltak}/${path}/${lid.id}`));
 }
@@ -979,17 +908,18 @@ function deleteLid(type, lid) {
 function addLidPopup() {
   if (!isAdmin) return;
 
-  const type = prompt("Type lid invoeren: 'jeugd' of 'leiding'").trim().toLowerCase();
+  const type = prompt("Type lid: 'jeugd' of 'leiding'").trim().toLowerCase();
   if (type !== "jeugd" && type !== "leiding") {
     alert("Type moet 'jeugd' of 'leiding' zijn.");
     return;
   }
 
-  const naam = prompt("Naam van het nieuwe lid:");
+  const naam = prompt("Naam:");
   if (!naam) return;
 
   const path = type === "jeugd" ? "jeugdleden" : "leiding";
   const lijst = type === "jeugd" ? jeugd : leiding;
+
   const volgorde = lijst.length;
 
   const nieuwRef = push(ref(db, `${speltak}/${path}`));
@@ -1006,27 +936,25 @@ function addLidPopup() {
 
 function toggleAdmin() {
   if (!isAdmin) {
-    const pw = prompt("Wachtwoord voor bewerkmodus:");
+    const pw = prompt("Wachtwoord:");
     if (pw !== DEFAULT_ADMIN_PASSWORD) return;
     isAdmin = true;
   } else {
     isAdmin = false;
   }
 
-  if (addMemberButton)   addMemberButton.classList.toggle("hidden", !isAdmin);
-  if (ledenbeheerButton) ledenbeheerButton.classList.toggle("hidden", !isAdmin);
-  if (mailboxButton)     mailboxButton.classList.toggle("hidden", !isAdmin);
-  if (handleidingButton) handleidingButton.classList.toggle("hidden", !isAdmin);
-  if (instellingenButton) instellingenButton.classList.toggle("hidden", !isAdmin);
+  addMemberButton.classList.toggle("hidden", !isAdmin);
+  ledenbeheerButton.classList.toggle("hidden", !isAdmin);
+  mailboxButton.classList.toggle("hidden", !isAdmin);
+  handleidingButton.classList.toggle("hidden", !isAdmin);
+  instellingenButton.classList.toggle("hidden", !isAdmin);
 
-  if (infoTekstP)     infoTekstP.classList.toggle("hidden", isAdmin);
-  if (infoTekstEdit)  infoTekstEdit.classList.toggle("hidden", !isAdmin);
-  if (saveInfoButton) saveInfoButton.classList.toggle("hidden", !isAdmin);
+  infoTekstP.classList.toggle("hidden", isAdmin);
+  infoTekstEdit.classList.toggle("hidden", !isAdmin);
+  saveInfoButton.classList.toggle("hidden", !isAdmin);
 
-  if (ledenbeheerSection) ledenbeheerSection.classList.add("hidden");
-  if (meldingenSection)   meldingenSection.classList.add("hidden");
-
-  if (addOpkomstRow) addOpkomstRow.classList.toggle("hidden", !isAdmin);
+  ledenbeheerSection.classList.add("hidden");
+  meldingenSection.classList.add("hidden");
 
   updateMaandbriefButtonLabel();
   renderTable();
@@ -1034,20 +962,20 @@ function toggleAdmin() {
 }
 
 function toggleLedenbeheer() {
-  if (!isAdmin || !ledenbeheerSection) return;
+  if (!isAdmin) return;
   ledenbeheerSection.classList.toggle("hidden");
 }
 
 function toggleMeldingen() {
-  if (!isAdmin || !meldingenSection) return;
+  if (!isAdmin) return;
   meldingenSection.classList.toggle("hidden");
 }
 
 function setFilter(mode) {
   filterMode = mode;
-  if (filterAll)    filterAll.classList.toggle("active", mode === "all");
-  if (filterFuture) filterFuture.classList.toggle("active", mode === "future");
-  if (filterPast)   filterPast.classList.toggle("active", mode === "past");
+  filterAll.classList.toggle("active", mode === "all");
+  filterFuture.classList.toggle("active", mode === "future");
+  filterPast.classList.toggle("active", mode === "past");
   renderTable();
 }
 
@@ -1059,28 +987,27 @@ function doPrint() {
    INIT
 ----------------------------------------------------- */
 
-if (editModeButton)    editModeButton.addEventListener("click", toggleAdmin);
-if (addMemberButton)   addMemberButton.addEventListener("click", addLidPopup);
+editModeButton.addEventListener("click", toggleAdmin);
+
+if (addMemberButton) addMemberButton.addEventListener("click", addLidPopup);
 if (ledenbeheerButton) ledenbeheerButton.addEventListener("click", toggleLedenbeheer);
 if (instellingenButton) instellingenButton.addEventListener("click", toggleMeldingen);
 
-if (addOpkomstRow)     addOpkomstRow.addEventListener("click", addOpkomst);
-if (saveInfoButton)    saveInfoButton.addEventListener("click", saveInfoTekst);
+if (addOpkomstRow) addOpkomstRow.addEventListener("click", addOpkomst);
 
-if (saveMeldingenButton)
-  saveMeldingenButton.addEventListener("click", saveMeldingenInstellingen);
-if (testMeldingenButton)
-  testMeldingenButton.addEventListener("click", testMeldingenInstellingen);
+if (saveInfoButton) saveInfoButton.addEventListener("click", saveInfoTekst);
 
-if (maandbriefButton)
-  maandbriefButton.addEventListener("click", handleMaandbriefButtonClick);
-if (maandbriefUpload)
-  maandbriefUpload.addEventListener("change", handleMaandbriefUploadChange);
+if (saveMeldingenButton) saveMeldingenButton.addEventListener("click", saveMeldingenInstellingen);
+if (testMeldingenButton) testMeldingenButton.addEventListener("click", testMeldingenInstellingen);
 
-if (filterAll)    filterAll.addEventListener("click", () => setFilter("all"));
-if (filterFuture) filterFuture.addEventListener("click", () => setFilter("future"));
-if (filterPast)   filterPast.addEventListener("click", () => setFilter("past"));
-if (printButton)  printButton.addEventListener("click", doPrint);
+if (maandbriefButton) maandbriefButton.addEventListener("click", handleMaandbriefButtonClick);
+if (maandbriefUpload) maandbriefUpload.addEventListener("change", handleMaandbriefUploadChange);
+
+filterAll.addEventListener("click", () => setFilter("all"));
+filterFuture.addEventListener("click", () => setFilter("future"));
+filterPast.addEventListener("click", () => setFilter("past"));
+
+if (printButton) printButton.addEventListener("click", doPrint);
 
 updateMaandbriefButtonLabel();
 loadData();

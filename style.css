@@ -510,3 +510,18 @@ body {
     display: none !important;
   }
 }
+/* ================================
+   DASHBOARD EXTRA STYLING
+================================ */
+
+.date-separator-row td {
+  height: 0.8rem;
+  background: transparent !important;
+  border: none !important;
+}
+
+#dashboardSection h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+

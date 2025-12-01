@@ -7,14 +7,13 @@
   <title>Bevers – Jaarplanning</title>
 
   <link rel="stylesheet" href="style.css" />
+
+  <script defer src="login.js"></script>
   <script defer src="script.js"></script>
 </head>
 
 <body data-speltak="bevers">
 
-  <!-- ============================================================
-       TOPBAR
-  ============================================================ -->
   <header class="topbar">
     <div class="topbar-left">
       <a class="backlink" href="index.html">← Terug</a>
@@ -26,14 +25,12 @@
       </div>
     </div>
 
-    <button id="editModeButton" class="pill-btn primary">Bewerken</button>
+    <button id="editModeButton" class="pill-btn primary hidden">Bewerken</button>
   </header>
 
   <main class="container">
 
-    <!-- ============================================================
-         BELANGRIJKE INFORMATIE
-    ============================================================ -->
+    <!-- INFO BLOK -->
     <section class="info-block">
       <h2>Belangrijke informatie</h2>
 
@@ -44,20 +41,14 @@
       <div class="info-actions">
         <button id="saveInfoButton" class="hidden primary-btn">Opslaan</button>
 
-        <!-- Maandbrief -->
         <button id="maandbriefButton" class="pill-btn outline">
           Maandbrief downloaden
         </button>
-        <input id="maandbriefUpload"
-               type="file"
-               accept="application/pdf"
-               class="hidden" />
+        <input id="maandbriefUpload" type="file" accept="application/pdf" class="hidden" />
       </div>
     </section>
 
-    <!-- ============================================================
-         PLANNING-HEADER (FILTERS + KNOPPEN)
-    ============================================================ -->
+    <!-- TABEL + KNOPPEN -->
     <div class="planning-section">
 
       <div class="planning-header-row">
@@ -71,30 +62,11 @@
           Printen
         </button>
 
-        <button id="ledenbeheerButton" class="pill-btn outline hidden">
-          Ledenbeheer
-        </button>
-
-        <button id="instellingenButton" class="pill-btn outline hidden">
-          Meldingen
-        </button>
-
-        <button id="mailboxButton" class="pill-btn outline hidden"
-                onclick="window.open('https://mail.google.com', '_blank')">
-          Mailbox
-        </button>
-
-        <a id="handleidingButton"
-           class="pill-btn outline hidden"
-           href="scouting_mail_handleiding_styled.pdf"
-           download>
-          Handleiding mailbox
-        </a>
+        <button id="ledenbeheerButton" class="pill-btn outline hidden">Ledenbeheer</button>
+        <button id="instellingenButton" class="pill-btn outline hidden">Meldingen</button>
+        <button id="mailboxButton" class="pill-btn outline hidden" onclick="window.open('https://mail.google.com', '_blank')">Mailbox</button>
       </div>
 
-      <!-- ============================================================
-           OPKOMSTENTABEL
-      ============================================================ -->
       <div class="table-wrapper">
         <table class="planning-table">
           <thead>
@@ -109,34 +81,26 @@
       </div>
     </div>
 
-    <!-- ============================================================
-         LEDENBEHEER PANEL
-    ============================================================ -->
+    <!-- LEDENBEHEER -->
     <section id="ledenbeheer" class="ledenbeheer hidden">
       <h2>Ledenbeheer</h2>
 
       <div class="ledenbeheer-columns">
-        <!-- JEUGD -->
         <div class="ledenbeheer-col">
           <h3>Jeugdleden</h3>
           <ul id="ledenbeheerJeugd"></ul>
         </div>
 
-        <!-- LEIDING -->
         <div class="ledenbeheer-col">
           <h3>Leiding</h3>
           <ul id="ledenbeheerLeiding"></ul>
         </div>
       </div>
 
-      <button id="addMemberButton" class="pill-btn primary hidden">
-        Lid toevoegen
-      </button>
+      <button id="addMemberButton" class="pill-btn primary hidden">Lid toevoegen</button>
     </section>
 
-    <!-- ============================================================
-         MELDINGEN PANEL
-    ============================================================ -->
+    <!-- MELDINGEN -->
     <section id="meldingen" class="meldingen hidden">
       <h2>Meldingen instellingen</h2>
 
@@ -165,12 +129,8 @@
       </div>
 
       <div class="meldingen-actions">
-        <button id="saveMeldingenButton" class="pill-btn primary">
-          Opslaan
-        </button>
-        <button id="testMeldingenButton" class="pill-btn outline">
-          Testmelding
-        </button>
+        <button id="saveMeldingenButton" class="pill-btn primary">Opslaan</button>
+        <button id="testMeldingenButton" class="pill-btn outline">Testmelding</button>
       </div>
     </section>
   </main>

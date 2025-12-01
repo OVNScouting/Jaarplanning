@@ -19,19 +19,11 @@ import {
   push
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import {
-  getStorage,
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-
 const firebaseConfig = {
   apiKey: "AIzaSyCFQeno5rmLIvZdscjrimvFO7ZsJW7qBTM",
   authDomain: "ovn-jaarplanning.firebaseapp.com",
   databaseURL: "https://ovn-jaarplanning-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "ovn-jaarplanning",
-  storageBucket: "ovn-jaarplanning.appspot.com",
   messagingSenderId: "311108828430",
   appId: "1:311108828430:web:40f3564fca975423972b5f"
 };
@@ -53,8 +45,6 @@ let opkomsten = [];
 let jeugd = [];
 let leiding = [];
 let info = "";
-
-let maandbriefUrl = "";
 
 let meldingenInstellingen = {
   leidingEnabled: false,
@@ -89,9 +79,6 @@ const testMeldingenButton = document.getElementById("testMeldingenButton");
 
 const mailboxButton = document.getElementById("mailboxButton");
 const handleidingButton = document.getElementById("handleidingButton");
-
-const maandbriefButton = document.getElementById("maandbriefButton");
-const maandbriefUpload = document.getElementById("maandbriefUpload");
 
 const infoTekst = document.getElementById("infotekst");
 const infoEdit = document.getElementById("infotekst_edit");
@@ -136,13 +123,6 @@ function setMode(newMode) {
   infoEdit.classList.toggle("hidden", !isBewerken());
   infoTekst.classList.toggle("hidden", isBewerken());
 
-  // upload in bewerken, download in andere modes
-  maandbriefUpload.classList.toggle("hidden", !isBewerken());
-
-  maandbriefButton.textContent = isBewerken()
-    ? "Maandbrief uploaden"
-    : "Maandbrief downloaden";
-
   renderEverything();
 }
 
@@ -172,54 +152,6 @@ saveInfoButton.addEventListener("click", () => {
 
   update(ref(db, `${speltak}`), { infotekst: newText });
 });
-
-
-/* -------------------------------------------------------------------------
-   MAANDBRIEF
-------------------------------------------------------------------------- */
-
-async function loadMaandbriefUrlHelper() {
-  try {
-    const url = await getDownloadURL(
-      storageRef(storage, `${speltak}/maandbrief.pdf`)
-    );
-    maandbriefUrl = url;
-  } catch {
-    maandbriefUrl = "";
-  }
-}
-
-maandbriefButton.addEventListener("click", () => {
-  if (isBewerken()) {
-    maandbriefUpload.click();
-  } else {
-    if (!maandbriefUrl) {
-      alert("Er is nog geen maandbrief geüpload.");
-      return;
-    }
-    window.open(maandbriefUrl, "_blank");
-  }
-});
-
-maandbriefUpload.addEventListener("change", async (e) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-
-  if (file.type !== "application/pdf") {
-    alert("Alleen PDF-bestanden toegestaan.");
-    return;
-  }
-
-  try {
-    const sRef = storageRef(storage, `${speltak}/maandbrief.pdf`);
-    await uploadBytes(sRef, file);
-    await loadMaandbriefUrlHelper();
-    alert("Maandbrief geüpload.");
-  } catch {
-    alert("Uploaden mislukt.");
-  }
-});
-
 
 /* -------------------------------------------------------------------------
    MELDINGEN
@@ -365,7 +297,6 @@ function loadEverything() {
       ...v
     })).sort((a,b) => (a.datum||"") < (b.datum||"") ? -1 : 1);
 
-    await loadMaandbriefUrlHelper();
     renderEverything();
   });
 }

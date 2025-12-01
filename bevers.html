@@ -1,140 +1,190 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Bevers – Jaarplanning</title>
 
-<link rel="stylesheet" href="style.css" />
-
-<script defer src="login.js"></script>
-<script type="module" src="script.js"></script>
-
+  <link rel="stylesheet" href="style.css">
+  <script defer src="login.js"></script>
+  <script type="module" src="script.js"></script>
 </head>
 
 <body data-speltak="bevers">
 
-  <header class="topbar">
-    <div class="topbar-left">
-      <a class="backlink" href="index.html">← Terug</a>
-      <img src="logo.png" class="topbar-logo" alt="Logo" />
-
-      <div class="topbar-title">
-        <h1>Bevers</h1>
-        <span>Jaarplanning & Aanwezigheid</span>
-      </div>
+<header class="topbar">
+  <div class="topbar-left">
+    <a class="backlink" href="index.html">← Terug</a>
+    <img src="logo.png" class="topbar-logo" alt="Logo">
+    <div class="topbar-title">
+      <h1>Bevers</h1>
+      <span>Jaarplanning & Aanwezigheid</span>
     </div>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- INFO BLOK -->
+  <section class="info-block">
+    <h2>Belangrijke informatie</h2>
+
+    <!-- VISUALISATIE -->
+    <div id="infotekstDisplay"></div>
+
+    <!-- EDITOR (alleen bewerken-modus) -->
+    <div id="infotekstEditor" class="hidden" contenteditable="true"></div>
+
+    <!-- Toolbar -->
+    <div id="infoToolbar" class="hidden">
+      <button class="tb-btn" data-cmd="bold">B</button>
+      <button class="tb-btn" data-cmd="italic"><i>I</i></button>
+      <button class="tb-btn" data-cmd="insertLineBreak">↵</button>
+      <button id="saveInfoButton" class="pill-btn primary">Opslaan</button>
+    </div>
+  </section>
+
+  <!-- KNOPPENRIJ -->
+  <div class="button-row">
+
+    <div class="filter-buttons">
+      <span id="filterAll" class="chip active">Alles</span>
+      <span id="filterFuture" class="chip">Komend</span>
+      <span id="filterPast" class="chip">Verleden</span>
+    </div>
+
+    <button id="printButton" class="pill-btn primary">Printen</button>
+
+    <a id="handleidingButton"
+       href="assets/scouting_mail_handleiding_styled.pdf"
+       target="_blank"
+       class="pill-btn outline hidden">
+      Handleiding mail
+    </a>
+
+    <button id="mailboxButton" class="pill-btn outline hidden">Mailbox</button>
+
+    <button id="ledenbeheerButton" class="pill-btn outline hidden">Ledenbeheer</button>
+
+    <button id="instellingenButton" class="pill-btn outline hidden">Meldingen</button>
 
     <button id="editModeButton" class="pill-btn primary hidden">Bewerken</button>
-  </header>
 
-  <main class="container">
+  </div>
 
-    <!-- INFO BLOK -->
-    <section class="info-block">
-      <h2>Belangrijke informatie</h2>
+  <!-- LEGENDA -->
+  <div class="legend-row">
+    <div class="legend-item"><span class="legend-color lc-next"></span> Eerstvolgende opkomst</div>
+    <div class="legend-item"><span class="legend-color lc-geen"></span> Geen opkomst</div>
+    <div class="legend-item"><span class="legend-color lc-bijzonder"></span> Bijzondere opkomst</div>
+    <div class="legend-item"><span class="legend-color lc-kamp"></span> Kamp</div>
+    <div class="legend-item"><span class="legend-color lc-verleden"></span> Opkomst al geweest</div>
+  </div>
 
-      <p id="infotekst"></p>
+  <!-- TABEL -->
+  <div class="planning-section">
+    <div class="table-wrapper">
+      <table class="planning-table">
+        <thead>
+          <tr id="headerRowTop"></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
 
-      <textarea id="infotekst_edit" class="hidden"></textarea>
+    <div id="addOpkomstRow" class="add-row hidden">
+      + Nieuwe opkomst toevoegen
+    </div>
+  </div>
 
-      <div class="info-actions">
-        <button id="saveInfoButton" class="hidden primary-btn">Opslaan</button>
-
-        <button id="maandbriefButton" class="pill-btn outline">
-          Maandbrief downloaden
-        </button>
-        <input id="maandbriefUpload" type="file" accept="application/pdf" class="hidden" />
+  <!-- LEDENBEHEER -->
+  <section id="ledenbeheer" class="ledenbeheer hidden">
+    <h2>Ledenbeheer</h2>
+    <div class="ledenbeheer-columns">
+      <div class="ledenbeheer-col">
+        <h3>Jeugdleden</h3>
+        <ul id="ledenbeheerJeugd"></ul>
       </div>
-    </section>
-
-    <!-- TABEL + KNOPPEN -->
-    <div class="planning-section">
-
-      <div class="planning-header-row">
-        <div class="planning-controls">
-          <span id="filterAll" class="chip active">Alles</span>
-          <span id="filterFuture" class="chip">Komend</span>
-          <span id="filterPast" class="chip">Verleden</span>
-        </div>
-
-        <button id="printButton" class="pill-btn primary print-btn">
-          Printen
-        </button>
-
-        <button id="ledenbeheerButton" class="pill-btn outline hidden">Ledenbeheer</button>
-        <button id="instellingenButton" class="pill-btn outline hidden">Meldingen</button>
-        <button id="mailboxButton" class="pill-btn outline hidden" onclick="window.open('https://mail.google.com', '_blank')">Mailbox</button>
+      <div class="ledenbeheer-col">
+        <h3>Leiding</h3>
+        <ul id="ledenbeheerLeiding"></ul>
       </div>
+    </div>
+    <button id="addMemberButton" class="pill-btn primary hidden">Lid toevoegen</button>
+  </section>
 
-      <div class="table-wrapper">
-        <table class="planning-table">
-          <thead>
-            <tr id="headerRowTop"></tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
+  <!-- MELDINGEN -->
+  <section id="meldingen" class="meldingen hidden">
+    <h2>Meldingen instellingen</h2>
 
-      <div id="addOpkomstRow" class="add-row hidden">
-        + Nieuwe opkomst toevoegen
+    <div class="meldingen-row">
+      <label><input type="checkbox" id="meldLeidingEnabled"> Leiding-melding inschakelen</label>
+      <div class="meldingen-sub">
+        Wanneer <input type="number" id="meldLeidingThreshold" min="1"> leidingleden afwezig zijn → waarschuwing.
       </div>
     </div>
 
-    <!-- LEDENBEHEER -->
-    <section id="ledenbeheer" class="ledenbeheer hidden">
-      <h2>Ledenbeheer</h2>
-
-      <div class="ledenbeheer-columns">
-        <div class="ledenbeheer-col">
-          <h3>Jeugdleden</h3>
-          <ul id="ledenbeheerJeugd"></ul>
-        </div>
-
-        <div class="ledenbeheer-col">
-          <h3>Leiding</h3>
-          <ul id="ledenbeheerLeiding"></ul>
-        </div>
+    <div class="meldingen-row">
+      <label><input type="checkbox" id="meldOnbekendEnabled"> Onbekend-status herinnering</label>
+      <div class="meldingen-sub">
+        Aantal dagen voor de opkomst:
+        <input type="number" id="meldOnbekendDays" min="1">
       </div>
+    </div>
 
-      <button id="addMemberButton" class="pill-btn primary hidden">Lid toevoegen</button>
-    </section>
+    <div class="meldingen-actions">
+      <button id="saveMeldingenButton" class="pill-btn primary">Opslaan</button>
+      <button id="testMeldingenButton" class="pill-btn outline">Testmelding</button>
+    </div>
+  </section>
 
-    <!-- MELDINGEN -->
-    <section id="meldingen" class="meldingen hidden">
-      <h2>Meldingen instellingen</h2>
+</main>
 
-      <div class="meldingen-row">
-        <label class="meldingen-label">
-          <input type="checkbox" id="meldLeidingEnabled" />
-          Leiding-melding inschakelen
-        </label>
+<!-- POPUP: NIEUWE OPKOMST -->
+<div id="popupOverlay" class="popup-overlay hidden">
+  <div class="popup-card">
+    <h2>Nieuwe opkomst</h2>
 
-        <div class="meldingen-sub">
-          Wanneer <input type="number" id="meldLeidingThreshold" min="1" />
-          leidingleden afwezig zijn → waarschuwing.
-        </div>
-      </div>
+    <label>Datum</label>
+    <input id="new_date" type="date">
 
-      <div class="meldingen-row">
-        <label class="meldingen-label">
-          <input type="checkbox" id="meldOnbekendEnabled" />
-          Onbekend-status herinnering
-        </label>
+    <label>Thema</label>
+    <input id="new_thema" type="text">
 
-        <div class="meldingen-sub">
-          Aantal dagen voor de opkomst:
-          <input type="number" id="meldOnbekendDays" min="1" />
-        </div>
-      </div>
+    <label>Bijzonderheden</label>
+    <input id="new_bijzonder" type="text">
 
-      <div class="meldingen-actions">
-        <button id="saveMeldingenButton" class="pill-btn primary">Opslaan</button>
-        <button id="testMeldingenButton" class="pill-btn outline">Testmelding</button>
-      </div>
-    </section>
-  </main>
+    <label>Procor</label>
+    <input id="new_procor" type="text">
+
+    <label>Locatie</label>
+    <input id="new_locatie" type="text">
+
+    <label>Materiaal</label>
+    <input id="new_materiaal" type="text">
+
+    <label>Starttijd</label>
+    <input id="new_start" type="time" value="10:30">
+
+    <label>Eindtijd</label>
+    <input id="new_eind" type="time" value="12:30">
+
+    <label>Type opkomst</label>
+    <select id="new_type">
+      <option value="">Selecteer…</option>
+      <option value="normaal">Normale opkomst</option>
+      <option value="bijzonder">Bijzondere opkomst</option>
+      <option value="kamp">Kamp</option>
+      <option value="geen">Geen opkomst</option>
+    </select>
+
+    <div class="popup-buttons">
+      <button id="popupCancel" class="pill-btn outline">Annuleren</button>
+      <button id="popupSave" class="pill-btn primary">Opslaan</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

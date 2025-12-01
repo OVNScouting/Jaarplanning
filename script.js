@@ -107,6 +107,13 @@ const popupSave = document.getElementById("popupSave");
 // =============================================================
 // HULPFUNCTIES
 // =============================================================
+function successBar(msg) {
+    const bar = document.getElementById("successBar");
+    bar.textContent = msg;
+    bar.classList.add("show");
+    setTimeout(() => bar.classList.remove("show"), 4000);
+}
+
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }

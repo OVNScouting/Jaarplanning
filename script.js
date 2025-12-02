@@ -230,8 +230,6 @@ function setFilterMode(mode) {
 
 printButton.addEventListener("click", () => window.print());
 
-}
-
 function toDisplayDate(d) {
   if (!d) return "";
   const [y,m,da] = d.split("-");

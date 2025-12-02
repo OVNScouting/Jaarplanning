@@ -461,6 +461,71 @@ body {
   display: flex;
   gap: 0.5rem;
 }
+/* ======================================================================
+   INDEX – SPELTAKKAARTEN
+====================================================================== */
+
+.speltak-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.75rem;
+}
+
+/* algemene kaartstijl voor alle speltakken */
+.speltak-card {
+  display: block;
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius-large);
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  text-decoration: none;
+  color: var(--text-main);
+  font-weight: 600;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.speltak-card h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+/* hover-effect */
+.speltak-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+  border-color: var(--blue);
+}
+
+/* per speltak een subtiel kleuraccent bovenin */
+.speltak-card.bevers {
+  border-top: 4px solid #ffcd59;   /* geel / bevers */
+}
+
+.speltak-card.welpen {
+  border-top: 4px solid #7cc46a;   /* groen / welpen */
+}
+
+.speltak-card.scouts {
+  border-top: 4px solid #006fff;   /* blauw / scouts */
+}
+
+.speltak-card.explorers {
+  border-top: 4px solid #be70ff;   /* paars / explorers */
+}
+
+.speltak-card.rovers {
+  border-top: 4px solid #ff66cc;   /* roze / roverscouts */
+}
+
+.speltak-card.stam {
+  border-top: 4px solid #5d5d5d;   /* grijs / stam */
+}
 
 /* ======================================================================
    PRINT LAYOUT

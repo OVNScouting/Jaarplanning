@@ -7,6 +7,8 @@ import {
   getDatabase, ref, onValue
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
+import { todayISO } from "./utils.js";
+
 // --------------------------
 // Firebase configuratie
 // --------------------------
@@ -42,14 +44,6 @@ const dashboardLoading = document.getElementById("dashboardLoading");
 let mode = localStorage.getItem("mode");
 if (mode !== "leiding" && mode !== "bewerken") {
     window.location.href = "index.html";
-}
-
-
-// --------------------------------------------------------
-// HELPERS
-// --------------------------------------------------------
-function todayISO() {
-  return new Date().toISOString().slice(0,10);
 }
 
 function toDisplay(d) {

@@ -15,6 +15,20 @@ function updateLoginUI() {
         if (logoutButton) logoutButton.classList.add("hidden");
     }
 }
+const loginStatus = document.getElementById("loginStatus");
+
+function updateLoginUI() {
+    const mode = localStorage.getItem("mode") || "ouder";
+
+    if (mode === "leiding") {
+        loginStatus?.classList.remove("hidden");
+    } else {
+        loginStatus?.classList.add("hidden");
+    }
+
+    ...
+}
+
 
 if (loginButton) {
     loginButton.addEventListener("click", () => {

@@ -394,6 +394,16 @@ function deleteLid(path, lid) {
 function renderTable() {
   headerRowTop.innerHTML = "";
   tableBody.innerHTML = "";
+    
+    // Locatiekolom verbergen voor ouders
+    function hideLocationColumnIfNeeded() {
+      if (!isLeiding()) {
+        document.querySelectorAll(".col-locatie").forEach(el => {
+          el.classList.add("hidden");
+        });
+      }
+    }
+    hideLocationColumnIfNeeded();
 
   const jVisible = jeugd.filter(j => !j.verborgen);
   const lVisible = leiding.filter(l => !l.verborgen);
@@ -529,9 +539,8 @@ function addDeleteCell(o, tr) {
       }
     };
   } else {
-    td.style.opacity = "0.3";
-    td.style.cursor = "default";
-  }
+  td.classList.add("hidden");
+}
 
   tr.appendChild(td);
 }
@@ -760,6 +769,11 @@ addOpkomstRow.addEventListener("click", () => {
 /* -------------------------------------------------------------------------
    INIT
 ------------------------------------------------------------------------- */
-
 loadEverything();
-setMode("ouder");
+
+const savedMode = localStorage.getItem("mode");
+if (savedMode === "leiding") {
+  setMode("leiding");
+} else {
+  setMode("ouder");
+}

@@ -156,6 +156,48 @@ body {
   gap: 0.6rem;
 }
 
+/* Rich text editor voor infoblok */
+#infoEditorWrapper {
+  margin-top: 0.5rem;
+}
+
+#infoEditorToolbar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+#infoEditorToolbar button {
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: #f3f4f6;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+#infoEditorToolbar button:hover {
+  background: #e5e7eb;
+}
+
+#colorPicker {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.rich-editor {
+  min-height: 140px;
+  font-size: 0.95rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-small);
+  border: 1px solid var(--border);
+  background: #ffffff;
+}
+
 /* ======================================================================
    BUTTONS
 ====================================================================== */
@@ -420,6 +462,10 @@ body {
   padding: 0.15rem 0.45rem;
   font-size: 0.75rem;
   cursor: pointer;
+}
+
+#addMemberButton {
+  margin-top: 1rem;
 }
 
 /* ======================================================================

@@ -19,6 +19,13 @@ import {
   push
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
+import {
+  sanitizeText,
+  todayISO,
+  isPast,
+  isFutureOrToday
+} from "./utils.js";
+
 const firebaseConfig = {
   apiKey: "AIzaSyCFQeno5rmLIvZdscjrimvFO7ZsJW7qBTM",
   authDomain: "ovn-jaarplanning.firebaseapp.com",
@@ -221,35 +228,8 @@ function setFilterMode(mode) {
   renderTable();
 }
 
-
-/* -------------------------------------------------------------------------
-   PRINT
-------------------------------------------------------------------------- */
 printButton.addEventListener("click", () => window.print());
 
-
-/* -------------------------------------------------------------------------
-   SANITIZE
-------------------------------------------------------------------------- */
-
-function sanitizeText(t) {
-  return t.replace(/<\/?(script|style)[^>]*>/gi, "");
-}
-
-
-/* -------------------------------------------------------------------------
-   DATE HELPERS
-------------------------------------------------------------------------- */
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function isPast(d) {
-  return d < todayISO();
-}
-
-function isFutureOrToday(d) {
-  return d >= todayISO();
 }
 
 function toDisplayDate(d) {
@@ -257,11 +237,6 @@ function toDisplayDate(d) {
   const [y,m,da] = d.split("-");
   return `${da}-${m}-${y}`;
 }
-
-
-/* -------------------------------------------------------------------------
-   MAIN DATA LOADER
-------------------------------------------------------------------------- */
 
 function loadEverything() {
   onValue(ref(db, speltak), async snap => {

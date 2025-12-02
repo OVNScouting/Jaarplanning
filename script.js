@@ -19,13 +19,6 @@ import {
   push
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-import {
-  sanitizeText,
-  todayISO,
-  isPast,
-  isFutureOrToday
-} from "./utils.js";
-
 const firebaseConfig = {
   apiKey: "AIzaSyCFQeno5rmLIvZdscjrimvFO7ZsJW7qBTM",
   authDomain: "ovn-jaarplanning.firebaseapp.com",
@@ -59,7 +52,6 @@ let meldingenInstellingen = {
 };
 
 let filterMode = "all"; // all / future / past
-
 
 /* -------------------------------------------------------------------------
    DOM REFERENCES
@@ -99,7 +91,6 @@ const headerRowTop = document.getElementById("headerRowTop");
 const tableBody = document.getElementById("tableBody");
 
 const addOpkomstRow = document.getElementById("addOpkomstRow");
-
 
 /* -------------------------------------------------------------------------
    MODE MANAGEMENT
@@ -142,6 +133,10 @@ mailboxButton.addEventListener("click", () => {
   window.open("https://mail.google.com", "_blank");
 });
 
+/* Handleiding knop – gewoon een link, maar we toggelen alleen zichtbaarheid */
+handleidingButton.addEventListener("click", () => {
+  // default gedrag (href+download) is genoeg
+});
 
 /* -------------------------------------------------------------------------
    INFO BLOK
@@ -184,7 +179,6 @@ testMeldingenButton.addEventListener("click", () => {
   alert("Testmeldingen worden hier geactiveerd zoals in vorige versies.\n(Implementatie exact zoals oude systeem mogelijk op verzoek.)");
 });
 
-
 /* -------------------------------------------------------------------------
    LEDENBEHEER
 ------------------------------------------------------------------------- */
@@ -209,7 +203,6 @@ addMemberButton.addEventListener("click", () => {
   });
 });
 
-
 /* -------------------------------------------------------------------------
    FILTERS
 ------------------------------------------------------------------------- */
@@ -228,16 +221,40 @@ function setFilterMode(mode) {
   renderTable();
 }
 
+/* -------------------------------------------------------------------------
+   PRINT
+------------------------------------------------------------------------- */
 printButton.addEventListener("click", () => window.print());
 
-function toDisplayDate(d) {
-  if (!d) return "";
-  const [y,m,da] = d.split("-");
-  return `${da}-${m}-${y}`;
+/* -------------------------------------------------------------------------
+   SANITIZE
+------------------------------------------------------------------------- */
+
+function sanitizeText(t) {
+  return t.replace(/<\/?(script|style)[^>]*>/gi, "");
 }
 
+/* -------------------------------------------------------------------------
+   DATE HELPERS
+------------------------------------------------------------------------- */
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function isPast(d) {
+  return d < todayISO();
+}
+
+function isFutureOrToday(d) {
+  return d >= todayISO();
+}
+
+/* -------------------------------------------------------------------------
+   MAIN DATA LOADER
+------------------------------------------------------------------------- */
+
 function loadEverything() {
-  onValue(ref(db, speltak), async snap => {
+  onValue(ref(db, speltak), snap => {
     const data = snap.val() || {};
 
     info = data.infotekst || "";
@@ -272,7 +289,6 @@ function loadEverything() {
   });
 }
 
-
 /* -------------------------------------------------------------------------
    RENDER EVERYTHING
 ------------------------------------------------------------------------- */
@@ -283,7 +299,6 @@ function renderEverything() {
   renderLedenbeheer();
   renderTable();
 }
-
 
 /* -------------------------------------------------------------------------
    LEDENBEHEER RENDER
@@ -372,7 +387,6 @@ function deleteLid(path, lid) {
   remove(ref(db, `${speltak}/${path}/${lid.id}`));
 }
 
-
 /* -------------------------------------------------------------------------
    OPKOMSTENTABEL
 ------------------------------------------------------------------------- */
@@ -424,7 +438,7 @@ function renderTable() {
   /* RENDER EACH */
   lijst.forEach(o => {
     const tr = document.createElement("tr");
-    styleRow(o, tr);
+    styleRow(o, tr, volgende);
 
     addDeleteCell(o, tr);
     addDatumCell(o, tr);
@@ -463,7 +477,6 @@ function renderTable() {
   });
 }
 
-
 /* -------------------------------------------------------------------------
    HEADER BUILDERS
 ------------------------------------------------------------------------- */
@@ -483,22 +496,22 @@ function addHeaderVertical(text, extraClass = "") {
   headerRowTop.appendChild(th);
 }
 
-
 /* -------------------------------------------------------------------------
    ROW STYLE
 ------------------------------------------------------------------------- */
 
-function styleRow(o, tr) {
+function styleRow(o, tr, volgendeId) {
   if (!o.datum) return;
- 
+
   if (o.typeOpkomst === "geen") tr.classList.add("row-geenopkomst");
   else if (o.typeOpkomst === "kamp") tr.classList.add("row-kamp");
   else if (o.typeOpkomst === "bijzonder") tr.classList.add("row-bijzonder");
   else if (isPast(o.datum)) tr.classList.add("row-grey");
-  
-  if (o.id === volgende) tr.classList.add("row-next");
-}
 
+  if (volgendeId && o.id === volgendeId) {
+    tr.classList.add("row-next");
+  }
+}
 
 /* -------------------------------------------------------------------------
    CEL BUILDERS
@@ -535,7 +548,12 @@ function addDatumCell(o, tr) {
     });
     td.appendChild(input);
   } else {
-    td.textContent = toDisplayDate(o.datum);
+    if (o.datum) {
+      const [y,m,d] = o.datum.split("-");
+      td.textContent = `${d}-${m}-${y}`;
+    } else {
+      td.textContent = "";
+    }
   }
 
   tr.appendChild(td);
@@ -645,7 +663,6 @@ function addNumberCell(o, tr, field) {
   tr.appendChild(td);
 }
 
-
 /* -------------------------------------------------------------------------
    PRESENCE
 ------------------------------------------------------------------------- */
@@ -709,7 +726,6 @@ function countPresence(o) {
   return [j, l];
 }
 
-
 /* -------------------------------------------------------------------------
    NIEUWE OPKOMST
 ------------------------------------------------------------------------- */
@@ -740,7 +756,6 @@ addOpkomstRow.addEventListener("click", () => {
 
   set(refNew, newObj);
 });
-
 
 /* -------------------------------------------------------------------------
    INIT

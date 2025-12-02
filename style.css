@@ -594,3 +594,12 @@ body {
   margin-bottom: 1rem;
 }
 
+/*leiding badge*/
+.leiding-badge {
+  background: var(--blue);
+  color: white;
+  padding: .4rem 1rem;
+  border-radius: 999px;
+  font-size: .85rem;
+}
+

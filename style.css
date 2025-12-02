@@ -594,12 +594,31 @@ body {
   margin-bottom: 1rem;
 }
 
-/*leiding badge*/
-.leiding-badge {
-  background: var(--blue);
-  color: white;
-  padding: .4rem 1rem;
-  border-radius: 999px;
-  font-size: .85rem;
+.topbar-right-icons {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
+
+.speltak-icon {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    pointer-events: none;
+    flex-shrink: 0;
+}
+
+.leiding-badge {
+    background: var(--blue);
+    color: #fff;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.leiding-badge.hidden {
+    display: none !important;
+}
+
 

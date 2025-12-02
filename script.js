@@ -143,12 +143,13 @@ handleidingButton.addEventListener("click", () => {
 ------------------------------------------------------------------------- */
 
 function loadInfoTekst() {
-  infoTekst.textContent = info;
-  infoEdit.value = info;
+infoTekst.innerHTML = info;
+infoEdit.innerHTML = info;
+
 }
 
 saveInfoButton.addEventListener("click", () => {
-  const newText = sanitizeText(infoEdit.value);
+const newText = sanitizeText(infoEdit.innerHTML);
 
   update(ref(db, `${speltak}`), { infotekst: newText });
 });
@@ -163,6 +164,13 @@ function loadMeldingenUI() {
   meldOnbekendEnabled.checked = meldingenInstellingen.onbekendEnabled;
   meldOnbekendDays.value = meldingenInstellingen.onbekendDays;
 }
+
+meldingenButton.addEventListener("click", (e) => {
+  e.preventDefault();
+  meldingenSection.classList.remove("hidden");
+  ledenbeheerSection.classList.add("hidden");
+  smoothScrollTo(meldingenSection);
+});
 
 saveMeldingenButton.addEventListener("click", () => {
   const obj = {
@@ -183,9 +191,13 @@ testMeldingenButton.addEventListener("click", () => {
    LEDENBEHEER
 ------------------------------------------------------------------------- */
 
-ledenbeheerButton.addEventListener("click", () => {
-  ledenbeheerSection.classList.toggle("hidden");
+ledenbeheerButton.addEventListener("click", (e) => {
+  e.preventDefault();
+  ledenbeheerSection.classList.remove("hidden");
+  meldingenSection.classList.add("hidden");
+  smoothScrollTo(ledenbeheerSection);
 });
+
 
 addMemberButton.addEventListener("click", () => {
   const type = prompt("Type ('jeugd' of 'leiding'):");
@@ -219,6 +231,10 @@ function setFilterMode(mode) {
   filterPast.classList.toggle("active", mode === "past");
 
   renderTable();
+    // hide locatiekaart in viewmodus
+document.querySelectorAll(".col-locatie").forEach(el => {
+  if (!isLeiding()) el.classList.add("hidden");
+});
 }
 
 /* -------------------------------------------------------------------------
@@ -308,7 +324,7 @@ function renderLedenbeheer() {
   ledenbeheerJeugd.innerHTML = "";
   ledenbeheerLeiding.innerHTML = "";
 
-  if (!isBewerken()) return;
+if (!isLeiding()) return;
 
   jeugd.forEach((j, index) => {
     ledenbeheerJeugd.appendChild(renderLid(j, "jeugdleden", index));
@@ -490,6 +506,10 @@ function renderTable() {
 /* -------------------------------------------------------------------------
    HEADER BUILDERS
 ------------------------------------------------------------------------- */
+function smoothScrollTo(el) {
+  const y = el.getBoundingClientRect().top + window.scrollY - 20;
+  window.scrollTo({ top: y, behavior: "smooth" });
+}
 
 function addHeader(text, extraClass = "") {
   const th = document.createElement("th");
@@ -776,4 +796,20 @@ if (savedMode === "leiding") {
   setMode("leiding");
 } else {
   setMode("ouder");
+}
+// WYSIWYG Toolbar
+document.querySelectorAll("#infoEditorToolbar button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const cmd = btn.dataset.cmd;
+    document.execCommand(cmd, false, null);
+    infoEdit.focus();
+  });
+});
+
+const colorPicker = document.getElementById("colorPicker");
+if (colorPicker) {
+  colorPicker.addEventListener("change", () => {
+    document.execCommand("foreColor", false, colorPicker.value);
+    infoEdit.focus();
+  });
 }

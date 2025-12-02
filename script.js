@@ -113,7 +113,7 @@ function setMode(newMode) {
   meldingenButton.classList.toggle("hidden", !isLeiding());
   mailboxButton.classList.toggle("hidden", !isLeiding());
   handleidingButton.classList.toggle("hidden", !isLeiding());
-  addMemberButton.classList.toggle("hidden", !isBewerken());
+  addMemberButton.classList.toggle("hidden", !isLeiding());
   addOpkomstRow.classList.toggle("hidden", !isBewerken());
   saveInfoButton.classList.toggle("hidden", !isBewerken());
   infoEdit.classList.toggle("hidden", !isBewerken());
@@ -314,8 +314,15 @@ function renderEverything() {
   loadMeldingenUI();
   renderLedenbeheer();
   renderTable();
-}
 
+  // Locatiekolom verbergen voor ouders, tonen voor leiding
+  const locatieCells = document.querySelectorAll(".col-locatie");
+  if (!isLeiding()) {
+    locatieCells.forEach(el => el.classList.add("hidden"));
+  } else {
+    locatieCells.forEach(el => el.classList.remove("hidden"));
+  }
+}
 /* -------------------------------------------------------------------------
    LEDENBEHEER RENDER
 ------------------------------------------------------------------------- */
@@ -411,16 +418,6 @@ function renderTable() {
   headerRowTop.innerHTML = "";
   tableBody.innerHTML = "";
     
-    // Locatiekolom verbergen voor ouders
-    function hideLocationColumnIfNeeded() {
-      if (!isLeiding()) {
-        document.querySelectorAll(".col-locatie").forEach(el => {
-          el.classList.add("hidden");
-        });
-      }
-    }
-    hideLocationColumnIfNeeded();
-
   const jVisible = jeugd.filter(j => !j.verborgen);
   const lVisible = leiding.filter(l => !l.verborgen);
 
@@ -507,9 +504,12 @@ function renderTable() {
    HEADER BUILDERS
 ------------------------------------------------------------------------- */
 function smoothScrollTo(el) {
-  const y = el.getBoundingClientRect().top + window.scrollY - 20;
-  window.scrollTo({ top: y, behavior: "smooth" });
+  el.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
 }
+
 
 function addHeader(text, extraClass = "") {
   const th = document.createElement("th");

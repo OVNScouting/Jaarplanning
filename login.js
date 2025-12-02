@@ -25,8 +25,6 @@ function updateLoginUI() {
     } else {
         loginStatus?.classList.add("hidden");
     }
-
-    ...
 }
 
 

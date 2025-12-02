@@ -517,11 +517,13 @@ function addHeaderVertical(text, extraClass = "") {
 
 function styleRow(o, tr) {
   if (!o.datum) return;
-
+ 
   if (o.typeOpkomst === "geen") tr.classList.add("row-geenopkomst");
   else if (o.typeOpkomst === "kamp") tr.classList.add("row-kamp");
   else if (o.typeOpkomst === "bijzonder") tr.classList.add("row-bijzonder");
   else if (isPast(o.datum)) tr.classList.add("row-grey");
+  
+  if (o.id === volgende) tr.classList.add("row-next");
 }
 
 

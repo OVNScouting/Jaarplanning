@@ -19,9 +19,9 @@
     <div class="topbar-left">
       <a class="backlink" href="index.html">← Terug</a>
 
-  <img src="assets/OVN.logo.png" class="topbar-logo">
+      <img src="assets/OVN.logo.png"
          class="topbar-logo"
-         alt="Logo" />
+         alt="OVN logo" />
 
       <div class="topbar-title">
         <h1>Bevers</h1>
@@ -30,9 +30,15 @@
     </div>
 
     <div class="topbar-right-icons">
-    <img src="assets/Bevers-speltakteken.png" class="speltak-icon" alt="Speltakteken">
-    <button id="editModeButton" class="pill-btn primary">Bewerken</button>
-    </div>
+          <img src="assets/Bevers-speltakteken.png" class="speltak-icon" alt="Speltakteken">
+      
+          <span id="loginStatus" class="leiding-badge hidden">
+              Je bent ingelogd als leiding
+          </span>
+      
+          <button id="editModeButton" class="pill-btn primary">Bewerken</button>
+      </div>
+
 
   </header>
 
@@ -47,7 +53,17 @@
 
       <p id="infotekst"></p>
 
-      <textarea id="infotekst_edit" class="hidden"></textarea>
+      <div id="infoEditorWrapper" class="hidden">
+        <div id="infoEditorToolbar">
+            <button data-cmd="bold">B</button>
+            <button data-cmd="italic"><i>I</i></button>
+            <button data-cmd="underline"><u>U</u></button>
+            <input type="color" id="colorPicker">
+        </div>
+        
+          <div id="infotekst_edit" class="rich-editor" contenteditable="true"></div>
+      </div>
+
 
       <div class="info-actions">
         <button id="saveInfoButton" class="primary-btn hidden">
@@ -93,7 +109,7 @@
 
         <a id="handleidingButton"
            class="pill-btn outline hidden"
-           href="scouting_mail_handleiding_styled.pdf"
+           assets/scouting_mail_handleiding_styled.pdf
            target="_blank"
            download>
           Handleiding

@@ -703,4 +703,32 @@ body {
   margin-bottom: .25rem;
 }
 
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 14px;
+  width: 320px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.15);
+}
+
+.modal-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: .5rem;
+  justify-content: flex-end;
+}
 

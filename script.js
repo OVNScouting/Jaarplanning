@@ -106,6 +106,14 @@ function isBewerken() {
 
 function setMode(newMode) {
   mode = newMode;
+    
+    if (newMode === "leiding") {
+  editModeButton.textContent = "Bewerken";
+   }
+    if (newMode === "bewerken") {
+    editModeButton.textContent = "Opslaan";
+   }
+
 
   // zichtbaarheid knoppen
   editModeButton.classList.toggle("hidden", !isLeiding());
@@ -122,11 +130,19 @@ function setMode(newMode) {
   renderEverything();
 }
 
-/* Edit-knop */
 editModeButton.addEventListener("click", () => {
-  if (mode === "leiding") setMode("bewerken");
-  else if (mode === "bewerken") setMode("leiding");
+  if (mode === "leiding") {
+    // Wordt bewerken → knop-tekst aanpassen
+    editModeButton.textContent = "Opslaan";
+    setMode("bewerken");
+  } 
+  else if (mode === "bewerken") {
+    // Wordt leiding → knop-tekst terug
+    editModeButton.textContent = "Bewerken";
+    setMode("leiding");
+  }
 });
+
 
 /* Mailbox knop */
 mailboxButton.addEventListener("click", () => {

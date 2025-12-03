@@ -51,4 +51,11 @@ if (logoutButton) {
     });
 }
 
-updateLoginUI();
+updateLoginUI(if (mode === "leiding") {
+    loginStatus?.classList.remove("hidden");
+} else {
+    loginStatus?.classList.add("hidden");
+}
+);
+
+const loginStatus = document.getElementById("loginStatus");

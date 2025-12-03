@@ -1,12 +1,28 @@
 /* ============================================================
    BASISSTYLING
 ============================================================ */
+:root {
+  --ovn-blue: #006fff;
+  --ovn-blue-dark: #0052c7;
+  --ovn-green: #0b4b26;
+  --ovn-orange: #ff6900;
+
+  --bg-light: #f5f5f5;
+  --bg-white: #ffffff;
+
+  --border-light: #e3e3e3;
+  --border-medium: #cccccc;
+
+  --text-dark: #222;
+  --text-light: #666;
+}
+
 body {
   margin: 0;
   padding: 0;
   font-family: "Outfit", Arial, sans-serif;
-  background: #f5f5f5;
-  color: #222;
+  background: var(--bg-light);
+  color: var(--text-dark);
 }
 
 .container {
@@ -23,9 +39,9 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: white;
+  background: var(--bg-white);
   padding: 14px 20px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .topbar-left {
@@ -34,18 +50,24 @@ body {
   gap: 14px;
 }
 
+.backlink {
+  color: var(--ovn-blue);
+  text-decoration: none;
+  font-size: 16px;
+}
+
 .topbar-logo {
   height: 46px;
-  width: auto;
 }
 
 .topbar-title h1 {
   font-size: 22px;
   margin: 0;
 }
+
 .topbar-title span {
   font-size: 13px;
-  color: #666;
+  color: var(--text-light);
 }
 
 .topbar-right-icons {
@@ -58,30 +80,28 @@ body {
   height: 46px;
 }
 
-/* ============================================================
-   LEIDING BADGE
-============================================================ */
 .leiding-badge {
-  background: #006fff;
+  background: var(--ovn-blue);
   padding: 6px 12px;
   border-radius: 8px;
   color: white;
   font-size: 12px;
 }
 
-.hidden {
-  display: none !important;
+#logoutButton {
+  margin-left: 6px;
 }
 
 /* ============================================================
-   INFO BLOCK
+   INFO BLOK
 ============================================================ */
 .info-block {
-  background: white;
+  background: var(--bg-white);
   padding: 20px;
   border-radius: 14px;
-  border: 1px solid #e3e3e3;
+  border: 1px solid var(--border-light);
   margin-bottom: 20px;
+  position: relative;
 }
 
 .info-header-row {
@@ -95,15 +115,28 @@ body {
   line-height: 1.5;
 }
 
+/* Floating pen on mobile */
+.mobile-floating-pen {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .mobile-floating-pen {
+    display: block;
+    position: absolute;
+    top: 16px;
+    right: 16px;
+  }
+}
+
 .rich-editor {
   min-height: 120px;
   padding: 10px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-light);
   border-radius: 8px;
   background: white;
 }
 
-/* Toolbar */
 #infoEditorToolbar {
   margin-bottom: 6px;
   display: flex;
@@ -112,23 +145,56 @@ body {
 
 #infoEditorToolbar button {
   padding: 6px 10px;
-  border: 1px solid #ccc;
-  background: #f1f1f1;
+  border: 1px solid var(--border-light);
   border-radius: 6px;
-  cursor: pointer;
+  background: #f0f0f0;
 }
 
 /* ============================================================
-   KNOPPENBALK / TOOLBAR
+   BUTTONS & CHIPS
+============================================================ */
+.pill-btn {
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 15px;
+  border: 1px solid var(--ovn-blue);
+}
+
+.pill-btn.primary {
+  color: white;
+  background: var(--ovn-blue);
+}
+
+.pill-btn.outline {
+  color: var(--ovn-blue);
+  background: white;
+}
+
+.chip {
+  padding: 6px 12px;
+  background: #eeeeee;
+  border-radius: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.chip-primary.active {
+  background: var(--ovn-blue);
+  color: white;
+}
+
+/* ============================================================
+   TOOLBAR / KNOPPENBALK
 ============================================================ */
 .planning-header-row {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  background: #fafafa;
+  background: #f8f8f8;
   padding: 14px 18px;
   border-radius: 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-light);
   margin-bottom: 20px;
 }
 
@@ -138,38 +204,6 @@ body {
   align-items: center;
 }
 
-/* Chips */
-.chip {
-  background: #eee;
-  padding: 6px 12px;
-  border-radius: 12px;
-  cursor: pointer;
-}
-
-.chip-primary.active {
-  background: #006fff;
-  color: white;
-}
-
-/* Pill buttons */
-.pill-btn {
-  padding: 8px 16px;
-  border-radius: 20px;
-  border: 1px solid #006fff;
-  background: white;
-  cursor: pointer;
-}
-
-.pill-btn.primary {
-  background: #006fff;
-  color: white;
-}
-
-.pill-btn.outline {
-  background: white;
-  color: #006fff;
-}
-
 /* ============================================================
    PLANNING TABEL
 ============================================================ */
@@ -177,7 +211,8 @@ body {
   overflow-x: auto;
   background: white;
   border-radius: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-light);
+  position: relative;
 }
 
 .planning-table {
@@ -189,52 +224,58 @@ body {
 .planning-table th,
 .planning-table td {
   padding: 8px 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-light);
   text-align: center;
   white-space: nowrap;
 }
 
-/* Sticky kolommen */
+/* Sticky header (floating header) */
+.floating-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--ovn-blue);
+  color: white;
+  padding: 6px 10px;
+  font-weight: bold;
+  font-size: 15px;
+  border-radius: 0 0 6px 6px;
+}
+
+.floating-header.hidden {
+  display: none;
+}
+
+/* Sticky date only */
 .col-datum {
   position: sticky;
   left: 0;
   z-index: 5;
   background-color: transparent !important;
+  backdrop-filter: none !important;
 }
 
-.col-start {
-  position: sticky;
-  left: 90px;
-  z-index: 4;
-  background-color: transparent !important;
-}
-
-.col-eind {
-  position: sticky;
-  left: 180px;
-  z-index: 4;
-  background-color: transparent !important;
-}
-
-/* Divider */
+/* Divider (OVN blauw) */
 .col-split {
-  background: #e0e0e0;
+  background: var(--ovn-blue);
   width: 4px;
+  padding: 0 !important;
   min-width: 4px;
   max-width: 4px;
-  padding: 0 !important;
   border: none !important;
 }
 
-/* Leiding kolommen */
+/* Leiding kolommen licht achtergrond */
 .col-leiding {
-  background: #fafafa;
+  background: #f7f7f7;
 }
 
-/* Verberg locatie & materiaal voor ouders */
-.col-locatie.hidden,
-.col-materiaal.hidden {
-  display: none !important;
+/* Dropdown styling */
+td select {
+  padding: 4px 6px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border-medium);
 }
 
 /* Aanwezigheidscellen */
@@ -251,7 +292,7 @@ body {
   color: #d10000;
 }
 .presence-reminder {
-  color: #999999;
+  color: #999;
 }
 
 /* Edit modus highlight */
@@ -261,164 +302,4 @@ body {
 }
 
 /* Rij-kleuren */
-.row-next {
-  background: #d4f8d4 !important;
-}
-
-.row-grey {
-  background: #efefef !important;
-}
-
-.row-bijzonder {
-  background: #efe4ff !important;
-}
-
-.row-kamp {
-  background: #ffdff7 !important;
-}
-
-.row-geenopkomst {
-  background: #ffd3d3 !important;
-}
-
-/* ============================================================
-   LEDENBEHEER
-============================================================ */
-.ledenbeheer {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid #ddd;
-  margin-top: 20px;
-  position: relative;
-}
-
-.close-section {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: #eee;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.ledenbeheer-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.ledenbeheer-columns {
-  display: flex;
-  gap: 40px;
-  margin-top: 16px;
-}
-
-.ledenbeheer-col {
-  flex: 1;
-}
-
-.ledenbeheer-col ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.ledenbeheer-col li {
-  display: flex;
-  justify-content: space-between;
-  background: #f7f7f7;
-  padding: 8px 12px;
-  margin-bottom: 8px;
-  border-radius: 8px;
-}
-
-.lid-verborgen {
-  opacity: 0.5;
-}
-
-/* ============================================================
-   MELDINGEN
-============================================================ */
-.meldingen {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid #ddd;
-  margin-top: 20px;
-  position: relative;
-}
-
-.meldingen-row {
-  margin-bottom: 20px;
-}
-
-.meldingen-label {
-  font-weight: bold;
-  margin-bottom: 4px;
-}
-
-.meldingen-sub {
-  font-size: 13px;
-  color: #555;
-}
-
-.meldingen-actions {
-  margin-top: 6px;
-}
-
-/* ============================================================
-   MODALS
-============================================================ */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 3000;
-}
-
-.modal.hidden {
-  display: none;
-}
-
-.modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  width: 300px;
-}
-
-.modal-content label {
-  margin-top: 10px;
-  display: block;
-}
-
-/* ============================================================
-   FLOATING BUTTON
-============================================================ */
-.fab-add-opkomst {
-  position: fixed;
-  bottom: 26px;
-  right: 26px;
-  background: #006fff;
-  color: white;
-  font-size: 32px;
-  border-radius: 50%;
-  width: 64px;
-  height: 64px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-  z-index: 2000;
-}
-
-.fab-add-opkomst:hover {
-  background: #155eea;
-}
+.row-next { background: #d4f8d4 !

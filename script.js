@@ -56,6 +56,21 @@ let filterMode = "all"; // all / future / past
 /* -------------------------------------------------------------------------
    DOM REFERENCES
 ------------------------------------------------------------------------- */
+const opModal = document.getElementById("addOpkomstModal");
+const opDatum = document.getElementById("opDatum");
+const opStart = document.getElementById("opStart");
+const opEind = document.getElementById("opEind");
+const opThema = document.getElementById("opThema");
+const opLocatie = document.getElementById("opLocatie");
+const opType = document.getElementById("opType");
+const saveOpkomst = document.getElementById("saveOpkomst");
+const cancelOpkomst = document.getElementById("cancelOpkomst");
+
+const memberModal = document.getElementById("addMemberModal");
+const memberType = document.getElementById("memberType");
+const memberName = document.getElementById("memberName");
+const saveMember = document.getElementById("saveMember");
+const cancelMember = document.getElementById("cancelMember");
 
 const editModeButton = document.getElementById("editModeButton");
 
@@ -216,19 +231,30 @@ ledenbeheerButton.addEventListener("click", (e) => {
 
 
 addMemberButton.addEventListener("click", () => {
-  const type = prompt("Type ('jeugd' of 'leiding'):");
-  if (!type) return;
-  const naam = prompt("Naam:");
-  if (!naam) return;
+  memberName.value = "";
+  memberType.value = "jeugd";
+  memberModal.classList.remove("hidden");
+});
+
+cancelMember.addEventListener("click", () => {
+  memberModal.classList.add("hidden");
+});
+
+saveMember.addEventListener("click", () => {
+  const type = memberType.value;
+  const naam = memberName.value.trim();
+  if (!naam) return alert("Naam is verplicht");
 
   const path = type === "leiding" ? "leiding" : "jeugdleden";
-
   const newRef = push(ref(db, `${speltak}/${path}`));
+
   set(newRef, {
     naam,
     hidden: false,
     volgorde: 999
   });
+
+  memberModal.classList.add("hidden");
 });
 
 /* -------------------------------------------------------------------------
@@ -776,31 +802,50 @@ function countPresence(o) {
 ------------------------------------------------------------------------- */
 
 addOpkomstRow.addEventListener("click", () => {
+addOpkomstRow.addEventListener("click", () => {
   if (!isBewerken()) return;
+
+  opDatum.value = "";
+  opStart.value = "10:30";
+  opEind.value = "12:30";
+  opThema.value = "";
+  opLocatie.value = "";
+  opType.value = "";
+
+  opModal.classList.remove("hidden");
+});
+
+cancelOpkomst.addEventListener("click", () => {
+  opModal.classList.add("hidden");
+});
+
+saveOpkomst.addEventListener("click", () => {
+  const datum = opDatum.value;
 
   const refNew = push(ref(db, `${speltak}/opkomsten`));
 
   const newObj = {
     id: refNew.key,
-    datum: "",
-    thema: "",
+    datum,
+    thema: opThema.value,
     bijzonderheden: "",
-    typeOpkomst: "",
-    starttijd: "",
-    eindtijd: "",
-    locatie: "",
+    typeOpkomst: opType.value,
+    starttijd: opStart.value,
+    eindtijd: opEind.value,
+    locatie: opLocatie.value,
     bert_met: "",
     kijkers: 0,
     extraLeiding: 0,
     aanwezigheid: {}
   };
 
-  // vul aanwezigheid direct
   jeugd.forEach(j => newObj.aanwezigheid[j.id] = "onbekend");
   leiding.forEach(l => newObj.aanwezigheid["leiding-" + l.id] = "onbekend");
 
   set(refNew, newObj);
+  opModal.classList.add("hidden");
 });
+
 
 /* -------------------------------------------------------------------------
    INIT

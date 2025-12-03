@@ -2,65 +2,90 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <title>Scouting OVN – Jaarplanning</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scouting OVN – Jaarplanningen</title>
 
     <link rel="stylesheet" href="style.css">
-    <script defer src="login.js"></script>
+
+    <!-- Firebase niet nodig op index -->
 </head>
 
 <body>
 
+<!-- ============================================================
+     TOPBAR
+============================================================ -->
 <header class="topbar">
+
     <div class="topbar-left">
         <img src="assets/OVN.logo.png"
-     class="topbar-logo"
-     alt="Scouting OVN logo">
+             class="topbar-logo"
+             alt="Scouting OVN logo">
 
         <div class="topbar-title">
-            <h1>Scouting OVN – Jaarplanningen</h1>
-            <span>Kies een speltak om verder te gaan</span>
+            <h1>Scouting Olivier van Noort</h1>
+            <span>Jaarplanningen per speltak</span>
         </div>
     </div>
 
-    <div class="topbar-right">
+    <div class="topbar-right-icons">
+
+        <!-- Leiding badge -->
+        <span id="loginStatus" class="leiding-badge hidden">
+            Je bent ingelogd als leiding
+        </span>
+
+        <!-- Login / logout knoppen -->
         <button id="loginButton" class="pill-btn outline">Leiding inloggen</button>
         <button id="logoutButton" class="pill-btn outline hidden">Uitloggen</button>
-        <span id="loginStatus" class="leiding-badge hidden">Je bent ingelogd als leiding</span>
+
     </div>
 </header>
 
-<main class="container">
 
-    <section class="speltak-grid">
 
-        <a href="bevers.html" class="speltak-card bevers">
-            <h2>Bevers</h2>
-        </a>
+<div class="container">
 
-        <a href="welpen.html" class="speltak-card welpen">
-            <h2>Welpen</h2>
-        </a>
+    <!-- ============================================================
+         SPELTAKKAARTEN
+    ============================================================ -->
+    <section>
+        <div class="speltak-grid">
 
-        <a href="scouts.html" class="speltak-card scouts">
-            <h2>Scouts</h2>
-        </a>
+            <a href="bevers.html" class="speltak-card bevers">
+                <h2>Bevers</h2>
+            </a>
 
-        <a href="explorers.html" class="speltak-card explorers">
-            <h2>Explorers</h2>
-        </a>
+            <a href="welpen.html" class="speltak-card welpen">
+                <h2>Welpen</h2>
+            </a>
 
-        <a href="rovers.html" class="speltak-card rovers">
-            <h2>Roverscouts</h2>
-        </a>
+            <a href="scouts.html" class="speltak-card scouts">
+                <h2>Scouts</h2>
+            </a>
 
-        <a href="stam.html" class="speltak-card stam">
-            <h2>Stam</h2>
-        </a>
+            <a href="explorers.html" class="speltak-card explorers">
+                <h2>Explorers</h2>
+            </a>
 
+            <a href="rovers.html" class="speltak-card rovers">
+                <h2>Roverscouts</h2>
+            </a>
+
+            <a href="stam.html" class="speltak-card stam">
+                <h2>Stam</h2>
+            </a>
+
+        </div>
     </section>
 
-</main>
+</div> <!-- /container -->
+
+
+<!-- ============================================================
+     SCRIPTS
+============================================================ -->
+<script src="login.js"></script>
 
 </body>
 </html>

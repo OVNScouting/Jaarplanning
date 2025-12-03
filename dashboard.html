@@ -1,23 +1,11 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard – Scouting OVN</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard – Scouting OVN</title>
 
-    <link rel="stylesheet" href="style.css">
-
-    <!-- Firebase + Utils -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import {
-            getDatabase,
-            ref,
-            get
-        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-        window.firebase = { initializeApp, getDatabase, ref, get };
-    </script>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -26,43 +14,47 @@
      TOPBAR
 ============================================================ -->
 <header class="topbar">
+  <div class="topbar-left">
+    <a class="backlink" href="index.html">← Terug</a>
 
-    <div class="topbar-left">
-        <a class="backlink" href="index.html">← Terug</a>
+    <img src="assets/OVN.logo.png" class="topbar-logo" alt="OVN logo">
 
-        <img src="assets/OVN.logo.png" class="topbar-logo" alt="OVN logo">
-
-        <div class="topbar-title">
-            <h1>Dashboard</h1>
-            <span>Komende opkomsten (alle speltakken)</span>
-        </div>
+    <div class="topbar-title">
+      <h1>Dashboard</h1>
+      <span>Komende opkomsten (alle speltakken)</span>
     </div>
+  </div>
 
-    <div class="topbar-right-icons">
-
-        <!-- Leiding badge -->
-        <span id="loginStatus" class="leiding-badge hidden">
-            Je bent ingelogd als leiding
-        </span>
-
-    </div>
+  <div class="topbar-right-icons">
+    <span id="loginStatus" class="leiding-badge hidden">
+      Je bent ingelogd als leiding
+    </span>
+  </div>
 </header>
 
 
 <div class="container">
 
-    <!-- ============================================================
-         DASHBOARD
-    ============================================================ -->
-    <section id="dashboardSection">
-        <h2>Komende 4 dagen</h2>
-        <div id="dashboardList"></div>
-    </section>
+  <!-- ============================================================
+       DASHBOARD
+  ============================================================ -->
+  <section id="dashboardSection">
+    <h2>Komende 4 dagen</h2>
+    <div id="dashboardList"></div>
+  </section>
 
 </div>
 
 
-<!-- SCRIPTS -->
+<!-- ============================================================
+     SCRIPTS
+============================================================ -->
+
+<!-- Firebase setup -->
+<script src="firebase-config.js"></script>
+<script type="module" src="firebase-imports.js"></script>
+
+<!-- App scripts -->
 <script src="login.js"></script>
 <script type="module" src="utils.js"></script>
 <script type="module" src="dashboard.js"></script>

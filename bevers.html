@@ -27,32 +27,25 @@
 
     <div class="topbar-right-icons">
       <img src="assets/Bevers-speltakteken.png" class="speltak-icon" alt="Bevers speltakteken" />
-
-      <span id="loginStatus" class="leiding-badge hidden">
-        Je bent ingelogd als leiding
-      </span>
+      <span id="loginStatus" class="leiding-badge hidden">Je bent ingelogd als leiding</span>
     </div>
   </header>
+
 
   <div class="container">
 
     <!-- ============================================================
-         INFO BLOK (met WYSIWYG editor)
+         INFO BLOK
     ============================================================ -->
     <section class="info-block">
-
       <div class="info-header-row">
         <h2>Informatie</h2>
-
-        <!-- Losse edit-knop voor alleen het infoveld -->
-        <button id="infoEditButton" class="pill-btn outline info-edit-btn">
-          Info bewerken
-        </button>
+        <button id="infoEditButton" class="pill-btn outline only-leiding">Info bewerken</button>
       </div>
 
       <div id="infotekst"></div>
 
-      <!-- WYSIWYG EDITOR -->
+      <!-- Editor -->
       <div id="infoEditorWrapper" class="hidden">
         <div id="infoEditorToolbar">
           <button data-cmd="bold">B</button>
@@ -61,84 +54,75 @@
           <input type="color" id="colorPicker" />
         </div>
 
-        <div id="infotekst_edit"
-             class="rich-editor"
-             contenteditable="true"></div>
+        <div id="infotekst_edit" class="rich-editor" contenteditable="true"></div>
       </div>
     </section>
 
+
     <!-- ============================================================
-         PLANNING / TABEL
+         KNOPPENBALK
     ============================================================ -->
-    <section class="planning-section">
-      <div class="planning-header-row">
-        <!-- Filters -->
-        <div class="planning-controls">
-          <span id="filterAll" class="chip active">Alles</span>
-          <span id="filterFuture" class="chip">Komend</span>
-          <span id="filterPast" class="chip">Verleden</span>
-        </div>
+    <div class="planning-header-row">
 
-        <!-- Acties voor tabel -->
-        <button id="printButton" class="pill-btn outline print-btn">Printen</button>
+      <!-- Filters (ALTJD zichtbaar) -->
+      <div class="toolbar-section">
+        <span id="filterAll" class="chip chip-primary active">Alles</span>
+        <span id="filterFuture" class="chip chip-primary">Komend</span>
+        <span id="filterPast" class="chip chip-primary">Verleden</span>
+      </div>
 
-        <!-- Duidelijkere tabel-bewerkknop -->
-        <button id="editModeButton" class="pill-btn only-leiding primary tabel-edit-btn">
-          ✏️ Tabel bewerken
-        </button>
+      <!-- Acties voor iedereen -->
+      <div class="toolbar-section">
+        <button id="printButton" class="pill-btn outline">Printen</button>
+      </div>
 
-        <button class="pill-btn outline only-leiding" onclick="window.location.href='dashboard.html'">
-          Dashboard
-        </button>
+      <!-- Leiding-only -->
+      <div class="toolbar-section only-leiding">
+        <button id="editModeButton" class="pill-btn outline only-leiding">✏️ Tabel bewerken</button>
+        <button onclick="window.location.href='dashboard.html'" class="pill-btn outline only-leiding">Dashboard</button>
 
-        <!-- Handleiding (alleen leiding, via JS) -->
-        <a id="handleidingButton"
-           class="pill-btn outline only-leiding"
-           href="assets/scouting_mail_handleiding_styled.pdf"
-           target="_blank"
-           download>
+        <a id="handleidingButton" class="pill-btn outline only-leiding"
+           href="assets/scouting_mail_handleiding_styled.pdf" target="_blank" download>
           Handleiding Mailbox
         </a>
 
-        <!-- Knoppen om secties te openen + automatisch te scrollen -->
-        <button id="openLedenbeheerButton" class="pill-btn outline only-leiding">
-          Ledenbeheer
-        </button>
-        <button class="close-section" data-target="ledenbeheerSection">✖</button>
-        <button id="openMeldingenButton" class="pill-btn outline only-leiding">
-          Meldingen
-        </button>
-        <button class="close-section" data-target="meldingenSection">✖</button>
+        <button id="openLedenbeheerButton" class="pill-btn outline only-leiding">Ledenbeheer openen</button>
+        <button id="openMeldingenButton" class="pill-btn outline only-leiding">Meldingen openen</button>
       </div>
 
-      <!-- De tabel -->
+    </div>
+
+
+    <!-- ============================================================
+         PLANNING TABEL
+    ============================================================ -->
+    <section class="planning-section">
+
       <div class="table-wrapper">
         <table class="planning-table">
           <thead>
-            <!-- Wordt volledig door script.js gevuld -->
             <tr id="headerRowTop"></tr>
           </thead>
           <tbody id="tableBody"></tbody>
         </table>
       </div>
 
-      <!-- Nieuwe opkomst toevoegen (alleen in bewerkmodus via JS) -->
-      <div id="addOpkomstRow" class="add-row hidden">
-        + Nieuwe opkomst toevoegen
+      <!-- Verborgen rij, alleen in bewerkmodus -->
+      <div id="addOpkomstRow" class="add-row hidden only-leiding">
+        + Nieuwe opkomst
       </div>
     </section>
 
+
     <!-- ============================================================
-         LEDENBEHEER
+         LEDENBEHEER (Leiding-only)
     ============================================================ -->
     <section id="ledenbeheerSection" class="ledenbeheer hidden">
+      <button class="close-section" data-target="ledenbeheerSection">✖</button>
+
       <div class="ledenbeheer-header-row">
         <h2>Ledenbeheer</h2>
-
-        <!-- Lid toevoegen knop duidelijk bovenaan -->
-        <button id="addMemberButton" class="pill-btn primary hidden">
-          Nieuw lid toevoegen
-        </button>
+        <button id="addMemberButton" class="pill-btn primary only-leiding">Nieuw lid toevoegen</button>
       </div>
 
       <div class="ledenbeheer-columns">
@@ -154,10 +138,13 @@
       </div>
     </section>
 
+
     <!-- ============================================================
          MELDINGEN
     ============================================================ -->
     <section id="meldingenSection" class="meldingen hidden">
+      <button class="close-section" data-target="meldingenSection">✖</button>
+
       <h2>Meldingen & Instellingen</h2>
 
       <div class="meldingen-row">
@@ -166,11 +153,11 @@
           Melding: te weinig leiding
         </div>
         <div class="meldingen-sub">
-          Geeft een melding wanneer <b>aanwezig leiding</b> onder de ingestelde drempel komt.
+          Geeft een melding wanneer aanwezige leiding onder de ingestelde drempel komt.
         </div>
         <div class="meldingen-actions">
           <span>Drempel:</span>
-          <input type="number" id="leidingDrempel" min="0" max="20" value="2" style="width: 60px;" />
+          <input type="number" id="leidingDrempel" min="0" max="20" value="2" style="width: 60px" />
         </div>
       </div>
 
@@ -180,10 +167,11 @@
           Melding: onbekende aanwezigheden
         </div>
         <div class="meldingen-sub">
-          Geeft een melding wanneer leden langere tijd op ‘onbekend’ staan.
+          Geeft een melding wanneer leden langdurig op ‘onbekend’ blijven staan.
         </div>
       </div>
     </section>
+
 
     <!-- ============================================================
          MODAL — Lid toevoegen
@@ -209,7 +197,7 @@
     </div>
 
     <!-- ============================================================
-         MODAL — Opkomst toevoegen
+         MODAL — Nieuwe opkomst
     ============================================================ -->
     <div id="addOpkomstModal" class="modal hidden">
       <div class="modal-content">
@@ -230,7 +218,7 @@
         <label>Locatie:</label>
         <input type="text" id="opLocatie" />
 
-        <label>Type:</label>
+        <label>Type opkomst:</label>
         <select id="opType">
           <option value="">Selecteer…</option>
           <option value="normaal">Normaal</option>
@@ -246,29 +234,31 @@
       </div>
     </div>
 
-  </div> <!-- /container -->
+  </div>
+
+
+  <!-- ============================================================
+       FLOATING BUTTON (LEIDING ONLY)
+  ============================================================ -->
+  <div id="fabAddOpkomst" class="fab-add-opkomst only-leiding">+</div>
+
 
   <!-- ============================================================
        SCRIPTS
   ============================================================ -->
   <script>
-    // Configuratie specifiek voor BEVERS
     window.speltakConfig = {
       showBert: true,
       showLeiding: true
     };
   </script>
 
-  <!-- Firebase setup -->
   <script src="firebase-config.js"></script>
   <script type="module" src="firebase-imports.js"></script>
 
-  <!-- App scripts -->
   <script src="login.js"></script>
   <script type="module" src="utils.js"></script>
   <script type="module" src="script.js"></script>
-  
- <div id="fabAddOpkomst" class="fab-add-opkomst only-leiding">+</div>
 
 </body>
 </html>

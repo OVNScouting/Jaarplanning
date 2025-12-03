@@ -686,3 +686,37 @@ body {
   border-left: 4px solid var(--blue);
   padding-left: .75rem;
 }
+/* Datum sticky */
+.col-datum {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background: white;
+}
+
+/* Leiding kolommen visueel scheiden */
+.col-leiding {
+  background: #fafafa;
+  border-left: 3px solid #ddd;
+}
+
+/* Locatie + Materiaal verbergen voor ouders */
+.col-locatie.hidden,
+.col-materiaal.hidden {
+  display: none;
+}
+
+/* Close buttons in sections */
+.close-section {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #eee;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.close-section:hover {
+  background: #ddd;
+}

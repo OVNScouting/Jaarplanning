@@ -58,4 +58,10 @@ export function compareDateTime(a, b) {
   if (a.datum < b.datum) return -1;
   if (a.datum > b.datum) return 1;
 
-  if (a.starttijd && b.startt
+  if (a.starttijd && b.starttijd) {
+    if (a.starttijd < b.starttijd) return -1;
+    if (a.starttijd > b.starttijd) return 1;
+  }
+  return 0;
+}
+

@@ -40,7 +40,15 @@
          INFO BLOK (met WYSIWYG editor)
     ============================================================ -->
     <section class="info-block">
-      <h2>Informatie</h2>
+
+      <div class="info-header-row">
+        <h2>Informatie</h2>
+
+        <!-- Losse edit-knop voor alleen het infoveld -->
+        <button id="infoEditButton" class="pill-btn outline info-edit-btn">
+          Info bewerken
+        </button>
+      </div>
 
       <div id="infotekst"></div>
 
@@ -71,12 +79,19 @@
           <span id="filterPast" class="chip">Verleden</span>
         </div>
 
-        <!-- Extra knoppen -->
-        <button id="printButton" class="pill-btn primary print-btn">Printen</button>
-        <button id="editModeButton" class="pill-btn outline">Bewerken</button>
-        <button class="pill-btn outline" onclick="window.location.href='dashboard.html'">Dashboard</button>
+        <!-- Acties voor tabel -->
+        <button id="printButton" class="pill-btn outline print-btn">Printen</button>
 
-        <!-- Handleiding (alleen leiding) -->
+        <!-- Duidelijkere tabel-bewerkknop -->
+        <button id="editModeButton" class="pill-btn primary tabel-edit-btn">
+          ✏️ Tabel bewerken
+        </button>
+
+        <button class="pill-btn outline" onclick="window.location.href='dashboard.html'">
+          Dashboard
+        </button>
+
+        <!-- Handleiding (alleen leiding, via JS) -->
         <a id="handleidingButton"
            class="pill-btn outline hidden"
            href="assets/scouting_mail_handleiding_styled.pdf"
@@ -84,19 +99,28 @@
            download>
           Handleiding Mailbox
         </a>
+
+        <!-- Knoppen om secties te openen + automatisch te scrollen -->
+        <button id="openLedenbeheerButton" class="pill-btn outline">
+          Ledenbeheer openen
+        </button>
+        <button id="openMeldingenButton" class="pill-btn outline">
+          Meldingen openen
+        </button>
       </div>
 
       <!-- De tabel -->
       <div class="table-wrapper">
         <table class="planning-table">
           <thead>
+            <!-- Wordt volledig door script.js gevuld -->
             <tr id="headerRowTop"></tr>
           </thead>
           <tbody id="tableBody"></tbody>
         </table>
       </div>
 
-      <!-- Nieuwe opkomst toevoegen (alleen bewerken) -->
+      <!-- Nieuwe opkomst toevoegen (alleen in bewerkmodus via JS) -->
       <div id="addOpkomstRow" class="add-row hidden">
         + Nieuwe opkomst toevoegen
       </div>
@@ -106,7 +130,14 @@
          LEDENBEHEER
     ============================================================ -->
     <section id="ledenbeheerSection" class="ledenbeheer hidden">
-      <h2>Ledenbeheer</h2>
+      <div class="ledenbeheer-header-row">
+        <h2>Ledenbeheer</h2>
+
+        <!-- Lid toevoegen knop duidelijk bovenaan -->
+        <button id="addMemberButton" class="pill-btn primary hidden">
+          Nieuw lid toevoegen
+        </button>
+      </div>
 
       <div class="ledenbeheer-columns">
         <div class="ledenbeheer-col">
@@ -119,10 +150,6 @@
           <ul id="ledenbeheerLeiding"></ul>
         </div>
       </div>
-
-      <button id="addMemberButton" class="pill-btn primary hidden">
-        Lid toevoegen
-      </button>
     </section>
 
     <!-- ============================================================

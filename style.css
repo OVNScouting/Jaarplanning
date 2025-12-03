@@ -691,8 +691,10 @@ body {
   position: sticky;
   left: 0;
   z-index: 3;
-  background: white;
+  backdrop-filter: none;
+  background: inherit !important; /* neem rijkleur over */
 }
+
 
 /* Leiding kolommen visueel scheiden */
 .col-leiding {

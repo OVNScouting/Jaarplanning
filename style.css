@@ -646,3 +646,43 @@ body {
   margin-top: 0;
   margin-bottom: 1rem;
 }
+
+.speltak-card-dashboard {
+  display: grid;
+  grid-template-columns: 70px 1fr 80px;
+  align-items: center;
+  gap: 1rem;
+
+  padding: 1rem 1.25rem;
+  background: #ffffff;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 1rem;
+}
+
+.date-block {
+  text-align: center;
+  background: var(--blue-soft);
+  padding: .5rem .6rem;
+  border-radius: var(--radius-small);
+}
+
+.d-day {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.d-month {
+  font-size: .85rem;
+  color: var(--text-muted);
+}
+
+.type-tag {
+  font-size: .85rem;
+  font-weight: 600;
+}
+
+.dash-right {
+  border-left: 4px solid var(--blue);
+  padding-left: .75rem;
+}

@@ -272,7 +272,14 @@ function setFilterMode(mode) {
   filterFuture.classList.toggle("active", mode === "future");
   filterPast.classList.toggle("active", mode === "past");
 
-  renderTable();
+  renderTable(
+      const jRender = jeugd;                 // render altijd, zichtbaar/onzichtbaar
+const jCount  = jeugd.filter(j => !j.verborgen);   // alleen zichtbare tellen mee
+
+const lRender = leiding;
+const lCount  = leiding.filter(l => !l.verborgen);
+
+  );
     // hide locatiekaart in viewmodus
 document.querySelectorAll(".col-locatie").forEach(el => {
   if (!isLeiding()) el.classList.add("hidden");
@@ -477,11 +484,11 @@ function renderTable() {
   addHeader("Aanw. Leden");
   addHeader("Aanw. Leiding");
 
-  jVisible.forEach(j => addHeaderVertical(j.naam));
+  jRender.forEach(j => addHeaderVertical(j.naam));
 
   addHeader("Kijkers");
 
-  lVisible.forEach((l, idx) => {
+  lRender.forEach((l, idx) => {
     addHeaderVertical(l.naam, idx === 0 ? "col-split" : "");
   });
 
@@ -518,7 +525,21 @@ function renderTable() {
 
     fillPresenceStructure(o);
 
-    const [cntJ, cntL] = countPresence(o);
+   function countPresence(o) {
+  let j = 0, l = 0;
+
+  jeugd.forEach(x => {
+    if (!x.verborgen && o.aanwezigheid[x.id] === "aanwezig") j++;
+  });
+
+  leiding.forEach(x => {
+    const key = "leiding-" + x.id;
+    if (!x.verborgen && o.aanwezigheid[key] === "aanwezig") l++;
+  });
+
+  return [j, l];
+}
+
 
     const kijkers = Number(o.kijkers || 0);
     const extra = Number(o.extraLeiding || 0);
@@ -526,9 +547,11 @@ function renderTable() {
     addStatic(tr, cntJ + kijkers);
     addStatic(tr, cntL + extra);
 
-    jVisible.forEach(j => {
-      tr.appendChild(makePresenceCell(o, j.id));
-    });
+    jRender.forEach(j => {
+    const cell = makePresenceCell(o, j.id);
+    if (j.verborgen) cell.classList.add("hidden");
+    tr.appendChild(cell);
+});
 
     addNumberCell(o, tr, "kijkers");
 
@@ -646,8 +669,14 @@ function addTextCell(o, tr, field, extraClass = "") {
     };
     td.appendChild(input);
   } else {
-    td.textContent = o[field] || "";
+   td.textContent = o[field] || "";
+
+if (field === "starttijd" || field === "eindtijd") {
+  if (o.starttijd !== "10:30" || o.eindtijd !== "12:30") {
+    td.classList.add("tijd-afwijkend");
   }
+}
+
 
   tr.appendChild(td);
 }
@@ -850,7 +879,23 @@ saveOpkomst.addEventListener("click", () => {
 /* -------------------------------------------------------------------------
    INIT
 ------------------------------------------------------------------------- */
-loadEverything();
+loadEverything(
+    opkomsten = Object.entries(data.opkomsten || {}).map(([id,v]) => ({
+  id,
+  ...v
+})).sort((a,b) => {
+  const now = todayISO();
+
+  const aPast = a.datum < now;
+  const bPast = b.datum < now;
+
+  // toekomst eerst, verleden onderaan
+  if (aPast && !bPast) return 1;
+  if (bPast && !aPast) return -1;
+
+  return a.datum.localeCompare(b.datum);
+});
+);
 
 const savedMode = localStorage.getItem("mode");
 if (savedMode === "leiding") {

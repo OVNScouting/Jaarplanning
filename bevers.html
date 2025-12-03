@@ -83,17 +83,17 @@
         <button id="printButton" class="pill-btn outline print-btn">Printen</button>
 
         <!-- Duidelijkere tabel-bewerkknop -->
-        <button id="editModeButton" class="pill-btn primary tabel-edit-btn">
+        <button id="editModeButton" class="pill-btn only-leiding primary tabel-edit-btn">
           ✏️ Tabel bewerken
         </button>
 
-        <button class="pill-btn outline" onclick="window.location.href='dashboard.html'">
+        <button class="pill-btn outline only-leiding" onclick="window.location.href='dashboard.html'">
           Dashboard
         </button>
 
         <!-- Handleiding (alleen leiding, via JS) -->
         <a id="handleidingButton"
-           class="pill-btn outline hidden"
+           class="pill-btn outline only-leiding"
            href="assets/scouting_mail_handleiding_styled.pdf"
            target="_blank"
            download>
@@ -101,12 +101,12 @@
         </a>
 
         <!-- Knoppen om secties te openen + automatisch te scrollen -->
-        <button id="openLedenbeheerButton" class="pill-btn outline">
-          Ledenbeheer openen
+        <button id="openLedenbeheerButton" class="pill-btn outline only-leiding">
+          Ledenbeheer
         </button>
         <button class="close-section" data-target="ledenbeheerSection">✖</button>
-        <button id="openMeldingenButton" class="pill-btn outline">
-          Meldingen openen
+        <button id="openMeldingenButton" class="pill-btn outline only-leiding">
+          Meldingen
         </button>
         <button class="close-section" data-target="meldingenSection">✖</button>
       </div>

@@ -1,215 +1,218 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bevers – Jaarplanning & Aanwezigheid</title>
 
-  <title>Bevers – Jaarplanning</title>
+    <link rel="stylesheet" href="style.css">
 
-  <link rel="stylesheet" href="style.css" />
-<script type="module" src="script.js"></script>
+    <!-- Firebase -->
+    <script type="module">
+        // Firebase import (modular SDK)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import {
+            getDatabase,
+            ref,
+            get,
+            set,
+            update,
+            push
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        window.firebaseConfig = {
+            initializeApp,
+            getDatabase,
+            ref,
+            get,
+            set,
+            update,
+            push
+        };
+    </script>
 </head>
 
-<body data-speltak="bevers">
+<body>
 
-  <!-- ============================================================
-       TOPBAR
-  ============================================================ -->
-  <header class="topbar">
+<!-- ============================================================
+     TOPBAR
+============================================================ -->
+<header class="topbar">
+
     <div class="topbar-left">
-      <a class="backlink" href="index.html">← Terug</a>
+        <a class="backlink" href="index.html">← Terug</a>
 
-      <img src="assets/OVN.logo.png"
-         class="topbar-logo"
-         alt="OVN logo" />
+        <img src="assets/OVN.logo.png" class="topbar-logo" alt="OVN logo">
 
-      <div class="topbar-title">
-        <h1>Bevers</h1>
-        <span>Jaarplanning & Aanwezigheid</span>
-      </div>
+        <div class="topbar-title">
+            <h1>Bevers</h1>
+            <span>Jaarplanning & Aanwezigheid</span>
+        </div>
     </div>
 
     <div class="topbar-right-icons">
-          <img src="assets/Bevers-speltakteken.png" class="speltak-icon" alt="Speltakteken">
-      
-          <span id="loginStatus" class="leiding-badge hidden">
-              Je bent ingelogd als leiding
-          </span>
-      
-          <button id="editModeButton" class="pill-btn primary">Bewerken</button>
-      </div>
+        <img src="assets/Bevers-speltakteken.png" class="speltak-icon" alt="Speltakteken">
+
+        <span id="loginStatus" class="leiding-badge hidden">
+            Je bent ingelogd als leiding
+        </span>
+
+        <!-- Let op: bewerkknop staat NIET in de topbar.
+             Staat bij de planning-buttons -->
+    </div>
+</header>
 
 
-  </header>
 
+<div class="container">
 
-  <main class="container">
+<!-- ============================================================
+     INFO BLOK (met WYSIWYG editor)
+============================================================ -->
+<section class="info-block">
+    <h2>Informatie</h2>
 
-    <!-- ============================================================
-         BELANGRIJKE INFORMATIE
-    ============================================================ -->
-    <section class="info-block">
-      <h2>Belangrijke informatie</h2>
+    <div id="infotekst"></div>
 
-      <p id="infotekst"></p>
-
-      <div id="infoEditorWrapper" class="hidden">
+    <!-- WYSIWYG EDITOR -->
+    <div id="infoEditorWrapper" class="hidden">
         <div id="infoEditorToolbar">
             <button data-cmd="bold">B</button>
             <button data-cmd="italic"><i>I</i></button>
             <button data-cmd="underline"><u>U</u></button>
             <input type="color" id="colorPicker">
         </div>
-        
-          <div id="infotekst_edit" class="rich-editor" contenteditable="true"></div>
-      </div>
 
+        <div id="infotekst_edit"
+             class="rich-editor"
+             contenteditable="true"></div>
+    </div>
 
-      <div class="info-actions">
-        <button id="saveInfoButton" class="primary-btn hidden">
-          Opslaan
-        </button>
-      </div>
-    </section>
+</section>
 
 
 
-    <!-- ============================================================
-         PLANNING: FILTERS + TABEL
-    ============================================================ -->
-    <section class="planning-section">
+<!-- ============================================================
+     PLANNING / TABEL
+============================================================ -->
+<section class="planning-section">
 
-      <div class="planning-header-row">
-        <!-- FILTERS -->
+    <div class="planning-header-row">
+
+        <!-- Filters -->
         <div class="planning-controls">
-          <span id="filterAll"    class="chip active">Alles</span>
-          <span id="filterFuture" class="chip">Komend</span>
-          <span id="filterPast"   class="chip">Verleden</span>
+            <span id="filterAll" class="chip active">Alles</span>
+            <span id="filterFuture" class="chip">Komend</span>
+            <span id="filterPast" class="chip">Verleden</span>
         </div>
 
-        <button id="printButton" class="pill-btn primary print-btn">
-          Printen
-        </button>
+        <!-- Print -->
+        <button id="printButton" class="pill-btn primary print-btn">Printen</button>
 
+        <!-- BEWERK / OPSLAAN -->
+        <button id="editModeButton" class="pill-btn outline">Bewerken</button>
+
+        <!-- Dashboard -->
         <button class="pill-btn outline" onclick="window.location.href='dashboard.html'">
-          Dashboard
-        </button>
-        
-        <button id="editModeButton" class="pill-btn outline">
-          Bewerken
+            Dashboard
         </button>
 
-        <button id="ledenbeheerButton" class="pill-btn outline hidden">
-          Ledenbeheer
-        </button>
-
-        <button id="instellingenButton" class="pill-btn outline hidden">
-          Meldingen
-        </button>
-
-        <button id="mailboxButton" class="pill-btn outline hidden">
-          Mailbox
-        </button>
-
+        <!-- Handleiding (alleen voor leiding) -->
         <a id="handleidingButton"
            class="pill-btn outline hidden"
-           href=assets/scouting_mail_handleiding_styled.pdf
+           href="assets/scouting_mail_handleiding_styled.pdf"
            target="_blank"
            download>
-          Handleiding
+            Handleiding Mailbox
         </a>
-      </div>
+    </div>
 
 
-      <!-- ============================================================
-           OPKOMSTENTABEL
-      ============================================================ -->
-      <div class="table-wrapper">
+    <!-- De tabel -->
+    <div class="table-wrapper">
         <table class="planning-table">
-          <thead>
-            <tr id="headerRowTop"></tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
+            <thead>
+                <tr id="headerRowTop"></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
         </table>
-      </div>
+    </div>
 
-      <div id="addOpkomstRow" class="add-row hidden">
+    <!-- Opkomst toevoegen (alleen in bewerkmodus) -->
+    <div id="addOpkomstRow" class="add-row hidden">
         + Nieuwe opkomst toevoegen
-      </div>
-    </section>
+    </div>
+
+</section>
 
 
 
-    <!-- ============================================================
-         PANEL: LEDENBEHEER
-    ============================================================ -->
-    <section id="ledenbeheer" class="ledenbeheer hidden">
-      <h2>Ledenbeheer</h2>
+<!-- ============================================================
+     LEDENBEHEER
+============================================================ -->
+<section id="ledenbeheerSection" class="ledenbeheer hidden">
 
-      <div class="ledenbeheer-columns">
+    <h2>Ledenbeheer</h2>
+
+    <div class="ledenbeheer-columns">
+
         <div class="ledenbeheer-col">
-          <h3>Jeugdleden</h3>
-          <ul id="ledenbeheerJeugd"></ul>
+            <h3>Jeugdleden</h3>
+            <ul id="ledenbeheerJeugd"></ul>
         </div>
 
         <div class="ledenbeheer-col">
-          <h3>Leiding</h3>
-          <ul id="ledenbeheerLeiding"></ul>
+            <h3>Leiding</h3>
+            <ul id="ledenbeheerLeiding"></ul>
         </div>
-      </div>
 
-      <button id="addMemberButton" class="pill-btn primary hidden">
+    </div>
+
+    <button id="addMemberButton" class="pill-btn primary hidden">
         Lid toevoegen
-      </button>
-    </section>
+    </button>
+</section>
 
 
 
-    <!-- ============================================================
-         PANEL: MELDINGEN
-    ============================================================ -->
-    <section id="meldingen" class="meldingen hidden">
-      <h2>Meldingen instellingen</h2>
+<!-- ============================================================
+     MELDINGEN
+============================================================ -->
+<section id="meldingenSection" class="meldingen hidden">
+    <h2>Meldingen & Instellingen</h2>
 
-      <div class="meldingen-row">
-        <label class="meldingen-label">
-          <input type="checkbox" id="meldLeidingEnabled" />
-          Leiding-melding inschakelen
-        </label>
-
-        <div class="meldingen-sub">
-          Wanneer
-          <input type="number" id="meldLeidingThreshold" min="1" />
-          leidingleden afwezig zijn → waarschuwing.
+    <div class="meldingen-row">
+        <div class="meldingen-label">
+            <input type="checkbox" id="meldingLeidingAan">
+            Melding: te weinig leiding
         </div>
-      </div>
-
-      <div class="meldingen-row">
-        <label class="meldingen-label">
-          <input type="checkbox" id="meldOnbekendEnabled" />
-          Onbekend-status herinnering
-        </label>
-
         <div class="meldingen-sub">
-          Aantal dagen voor opkomst:
-          <input type="number" id="meldOnbekendDays" min="1" />
+            Activeert een melding wanneer <b>aanwezig leiding</b> onder drempel komt.
         </div>
-      </div>
+        <div class="meldingen-actions">
+            <span>Drempel:</span>
+            <input type="number" id="leidingDrempel" min="0" max="20" value="2" style="width: 60px;">
+        </div>
+    </div>
 
-      <div class="meldingen-actions">
-        <button id="saveMeldingenButton" class="pill-btn primary">
-          Opslaan
-        </button>
+    <div class="meldingen-row">
+        <div class="meldingen-label">
+            <input type="checkbox" id="meldingOnbekendAan">
+            Melding: onbekende aanwezigheden
+        </div>
+        <div class="meldingen-sub">
+            Activeert een melding als jeugdleden/leiding langere tijd op ‘onbekend’ blijven staan.
+        </div>
+    </div>
 
-        <button id="testMeldingenButton" class="pill-btn outline">
-          Testmelding
-        </button>
-      </div>
-    </section>
-  </main>
-  
+</section>
 
-  <div id="addMemberModal" class="modal hidden">
+
+
+<!-- ============================================================
+     MODAL — Lid toevoegen
+============================================================ -->
+<div id="addMemberModal" class="modal hidden">
   <div class="modal-content">
     <h3>Nieuw lid toevoegen</h3>
 
@@ -228,7 +231,13 @@
     </div>
   </div>
 </div>
-  <div id="addOpkomstModal" class="modal hidden">
+
+
+
+<!-- ============================================================
+     MODAL — Opkomst toevoegen
+============================================================ -->
+<div id="addOpkomstModal" class="modal hidden">
   <div class="modal-content">
     <h3>Nieuwe Opkomst</h3>
 
@@ -263,6 +272,14 @@
   </div>
 </div>
 
+
+
+</div> <!-- /container -->
+
+<!-- Scripts -->
+<script src="login.js"></script>
+<script type="module" src="utils.js"></script>
+<script type="module" src="script.js"></script>
 
 </body>
 </html>

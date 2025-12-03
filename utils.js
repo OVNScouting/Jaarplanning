@@ -64,4 +64,16 @@ export function compareDateTime(a, b) {
   }
   return 0;
 }
+// dd/mm/yyyy formatter
+export function formatDateDisplay(iso) {
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+// omzetting uit <input type="date"> waarde
+export function isoFromInput(v) {
+  if (!v) return "";
+  return v; // browser geeft al yyyy-mm-dd
+}
 

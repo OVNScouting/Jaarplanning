@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bevers – Jaarplanning & Aanwezigheid</title>
+  <title>Bevers – Jaarplanning</title>
 
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -26,8 +26,11 @@
     </div>
 
     <div class="topbar-right-icons">
-      <img src="assets/Bevers-speltakteken.png" class="speltak-icon" alt="Bevers speltakteken" />
+      <img src="assets/Bevers-speltakteken.png" class="speltak-icon" alt="Bevers logo" />
+
       <span id="loginStatus" class="leiding-badge hidden">Je bent ingelogd als leiding</span>
+
+      <button id="logoutButton" class="pill-btn outline only-leiding">Uitloggen</button>
     </div>
   </header>
 
@@ -40,7 +43,11 @@
     <section class="info-block">
       <div class="info-header-row">
         <h2>Informatie</h2>
-        <button id="infoEditButton" class="pill-btn outline only-leiding">Info bewerken</button>
+
+        <!-- Op mobiel wordt dit een floating pen-icoon -->
+        <button id="infoEditButton" class="pill-btn outline only-leiding mobile-floating-pen">
+          ✏️ Info
+        </button>
       </div>
 
       <div id="infotekst"></div>
@@ -60,34 +67,46 @@
 
 
     <!-- ============================================================
-         KNOPPENBALK
+         KNOPPENBALK / TOOLBAR
     ============================================================ -->
     <div class="planning-header-row">
 
-      <!-- Filters (ALTJD zichtbaar) -->
+      <!-- Filters -->
       <div class="toolbar-section">
         <span id="filterAll" class="chip chip-primary active">Alles</span>
         <span id="filterFuture" class="chip chip-primary">Komend</span>
         <span id="filterPast" class="chip chip-primary">Verleden</span>
       </div>
 
-      <!-- Acties voor iedereen -->
+      <!-- Acties -->
       <div class="toolbar-section">
         <button id="printButton" class="pill-btn outline">Printen</button>
       </div>
 
       <!-- Leiding-only -->
       <div class="toolbar-section only-leiding">
-        <button id="editModeButton" class="pill-btn outline only-leiding">✏️ Tabel bewerken</button>
-        <button onclick="window.location.href='dashboard.html'" class="pill-btn outline only-leiding">Dashboard</button>
+        <button id="editModeButton" class="pill-btn outline">✏️ Tabel bewerken</button>
 
-        <a id="handleidingButton" class="pill-btn outline only-leiding"
-           href="assets/scouting_mail_handleiding_styled.pdf" target="_blank" download>
+        <button
+          onclick="window.location.href='dashboard.html'"
+          class="pill-btn outline only-leiding">
+          Dashboard
+        </button>
+
+        <a id="handleidingButton"
+           class="pill-btn outline only-leiding"
+           href="assets/scouting_mail_handleiding_styled.pdf"
+           target="_blank" download>
           Handleiding Mailbox
         </a>
 
-        <button id="openLedenbeheerButton" class="pill-btn outline only-leiding">Ledenbeheer openen</button>
-        <button id="openMeldingenButton" class="pill-btn outline only-leiding">Meldingen openen</button>
+        <button id="openLedenbeheerButton" class="pill-btn outline only-leiding">
+          Ledenbeheer
+        </button>
+
+        <button id="openMeldingenButton" class="pill-btn outline only-leiding">
+          Meldingen
+        </button>
       </div>
 
     </div>
@@ -98,6 +117,9 @@
     ============================================================ -->
     <section class="planning-section">
 
+      <!-- Floating header for scroll UX -->
+      <div id="floatingHeader" class="floating-header hidden"></div>
+
       <div class="table-wrapper">
         <table class="planning-table">
           <thead>
@@ -107,7 +129,6 @@
         </table>
       </div>
 
-      <!-- Verborgen rij, alleen in bewerkmodus -->
       <div id="addOpkomstRow" class="add-row hidden only-leiding">
         + Nieuwe opkomst
       </div>
@@ -115,14 +136,16 @@
 
 
     <!-- ============================================================
-         LEDENBEHEER (Leiding-only)
+         LEDENBEHEER
     ============================================================ -->
     <section id="ledenbeheerSection" class="ledenbeheer hidden">
       <button class="close-section" data-target="ledenbeheerSection">✖</button>
 
       <div class="ledenbeheer-header-row">
         <h2>Ledenbeheer</h2>
-        <button id="addMemberButton" class="pill-btn primary only-leiding">Nieuw lid toevoegen</button>
+        <button id="addMemberButton" class="pill-btn primary only-leiding">
+          Nieuw lid toevoegen
+        </button>
       </div>
 
       <div class="ledenbeheer-columns">
@@ -148,26 +171,29 @@
       <h2>Meldingen & Instellingen</h2>
 
       <div class="meldingen-row">
-        <div class="meldingen-label">
+        <label class="meldingen-label">
           <input type="checkbox" id="meldingLeidingAan" />
           Melding: te weinig leiding
-        </div>
+        </label>
+
         <div class="meldingen-sub">
-          Geeft een melding wanneer aanwezige leiding onder de ingestelde drempel komt.
+          Waarschuwt wanneer aanwezige leiding onder de ingestelde drempel komt.
         </div>
+
         <div class="meldingen-actions">
           <span>Drempel:</span>
-          <input type="number" id="leidingDrempel" min="0" max="20" value="2" style="width: 60px" />
+          <input type="number" id="leidingDrempel" min="0" max="10" value="2" />
         </div>
       </div>
 
       <div class="meldingen-row">
-        <div class="meldingen-label">
+        <label class="meldingen-label">
           <input type="checkbox" id="meldingOnbekendAan" />
           Melding: onbekende aanwezigheden
-        </div>
+        </label>
+
         <div class="meldingen-sub">
-          Geeft een melding wanneer leden langdurig op ‘onbekend’ blijven staan.
+          Waarschuwt wanneer leden langdurig op ‘onbekend’ staan.
         </div>
       </div>
     </section>
@@ -196,8 +222,9 @@
       </div>
     </div>
 
+
     <!-- ============================================================
-         MODAL — Nieuwe opkomst
+         MODAL — Nieuwe Opkomst
     ============================================================ -->
     <div id="addOpkomstModal" class="modal hidden">
       <div class="modal-content">
@@ -216,15 +243,24 @@
         <input type="text" id="opThema" />
 
         <label>Locatie:</label>
-        <input type="text" id="opLocatie" />
+        <select id="opLocatie">
+          <option value="">Kies...</option>
+          <option value="Kampvuurkuil">Kampvuurkuil</option>
+          <option value="Zandveld">Zandveld</option>
+          <option value="Grasveld">Grasveld</option>
+          <option value="De Hoop">De Hoop</option>
+          <option value="Bever Lokaal">Bever Lokaal</option>
+          <option value="Welpen Lokaal">Welpen Lokaal</option>
+          <option value="Van Terrein Af">Van Terrein Af</option>
+          <option value="Externe Locatie">Externe Locatie</option>
+        </select>
 
-        <label>Type opkomst:</label>
+        <label>Type Opkomst:</label>
         <select id="opType">
-          <option value="">Selecteer…</option>
-          <option value="normaal">Normaal</option>
-          <option value="bijzonder">Bijzonder</option>
-          <option value="kamp">Kamp</option>
-          <option value="geen">Geen opkomst</option>
+          <option value="Normaal">Normaal</option>
+          <option value="Bijzonder">Bijzonder</option>
+          <option value="Kamp">Kamp</option>
+          <option value="Geen opkomst">Geen opkomst</option>
         </select>
 
         <div class="modal-actions">
@@ -234,11 +270,12 @@
       </div>
     </div>
 
+
   </div>
 
 
   <!-- ============================================================
-       FLOATING BUTTON (LEIDING ONLY)
+       FLOATING BUTTON
   ============================================================ -->
   <div id="fabAddOpkomst" class="fab-add-opkomst only-leiding">+</div>
 
@@ -255,7 +292,6 @@
 
   <script src="firebase-config.js"></script>
   <script type="module" src="firebase-imports.js"></script>
-
   <script src="login.js"></script>
   <script type="module" src="utils.js"></script>
   <script type="module" src="script.js"></script>

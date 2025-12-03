@@ -228,6 +228,41 @@
     </div>
   </div>
 </div>
+  <div id="addOpkomstModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>Nieuwe Opkomst</h3>
+
+    <label>Datum:</label>
+    <input type="date" id="opDatum">
+
+    <label>Starttijd:</label>
+    <input type="time" id="opStart" value="10:30">
+
+    <label>Eindtijd:</label>
+    <input type="time" id="opEind" value="12:30">
+
+    <label>Thema:</label>
+    <input type="text" id="opThema">
+
+    <label>Locatie:</label>
+    <input type="text" id="opLocatie">
+
+    <label>Type:</label>
+    <select id="opType">
+      <option value="">Selecteer…</option>
+      <option value="normaal">Normaal</option>
+      <option value="bijzonder">Bijzonder</option>
+      <option value="kamp">Kamp</option>
+      <option value="geen">Geen opkomst</option>
+    </select>
+
+    <div class="modal-actions">
+      <button id="saveOpkomst" class="pill-btn primary">Opslaan</button>
+      <button id="cancelOpkomst" class="pill-btn outline">Annuleren</button>
+    </div>
+  </div>
+</div>
+
 
 </body>
 </html>

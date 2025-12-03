@@ -1,33 +1,30 @@
-// login.js — centraal login systeem voor ALLE pagina's
+// ========================================================
+// login.js — universeel login systeem voor ALLE pagina’s
+// ========================================================
 
 const LOGIN_PW = "Olivier48Leiding";
 
 const loginButton = document.getElementById("loginButton");
 const logoutButton = document.getElementById("logoutButton");
-
-function updateLoginUI() {
-    const mode = localStorage.getItem("mode") || "ouder";
-    if (mode === "leiding") {
-        if (loginButton) loginButton.classList.add("hidden");
-        if (logoutButton) logoutButton.classList.remove("hidden");
-    } else {
-        if (loginButton) loginButton.classList.remove("hidden");
-        if (logoutButton) logoutButton.classList.add("hidden");
-    }
-}
 const loginStatus = document.getElementById("loginStatus");
 
+// --------------------------------------------------------
+// UI update functie
+// --------------------------------------------------------
 function updateLoginUI() {
     const mode = localStorage.getItem("mode") || "ouder";
 
-    if (mode === "leiding") {
-        loginStatus?.classList.remove("hidden");
-    } else {
-        loginStatus?.classList.add("hidden");
-    }
+    // Login/Logout knoppen (alleen op index aanwezig)
+    if (loginButton) loginButton.classList.toggle("hidden", mode === "leiding");
+    if (logoutButton) logoutButton.classList.toggle("hidden", mode !== "leiding");
+
+    // Leiding-badge (op alle pagina's aanwezig)
+    if (loginStatus) loginStatus.classList.toggle("hidden", mode !== "leiding");
 }
 
-
+// --------------------------------------------------------
+// Login handler
+// --------------------------------------------------------
 if (loginButton) {
     loginButton.addEventListener("click", () => {
         const pw = prompt("Voer leiding wachtwoord in:");
@@ -42,6 +39,9 @@ if (loginButton) {
     });
 }
 
+// --------------------------------------------------------
+// Logout handler
+// --------------------------------------------------------
 if (logoutButton) {
     logoutButton.addEventListener("click", () => {
         localStorage.setItem("mode", "ouder");
@@ -51,11 +51,7 @@ if (logoutButton) {
     });
 }
 
-updateLoginUI(if (mode === "leiding") {
-    loginStatus?.classList.remove("hidden");
-} else {
-    loginStatus?.classList.add("hidden");
-}
-);
-
-const loginStatus = document.getElementById("loginStatus");
+// --------------------------------------------------------
+// Initial UI update
+// --------------------------------------------------------
+updateLoginUI();

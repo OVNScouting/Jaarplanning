@@ -732,3 +732,7 @@ body {
   justify-content: flex-end;
 }
 
+.tijd-afwijkend {
+  color: #facc15 !important;
+  font-weight: 600;
+}

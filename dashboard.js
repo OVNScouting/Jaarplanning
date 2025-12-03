@@ -13,11 +13,12 @@ import {
   getDatabase,
   ref,
   get
-} from "./firebase-imports.js"; // vanuit dashboard.html
+} from "./firebase-imports.js";
 
 // ======================================================================
-// INIT FIREBASE
+// FIREBASE INIT
 // ======================================================================
+
 const app = initializeApp(window.firebaseConfig);
 const db = getDatabase(app);
 
@@ -34,58 +35,67 @@ const speltakken = [
 const list = document.getElementById("dashboardList");
 
 // ======================================================================
-// LOAD DASHBOARD DATA
+// LOAD DASHBOARD
 // ======================================================================
+
 async function loadDashboard() {
+  if (!list) return;
+
   const today = todayISO();
   let items = [];
 
-  for (const sp of speltakken) {
+  try {
+    for (const sp of speltakken) {
+      const snap = await get(ref(db, sp));
+      const data = snap.val();
+      if (!data || !data.opkomsten) continue;
 
-    const snap = await get(ref(db, sp));
-    const data = snap.val();
+      const arr = Object.entries(data.opkomsten).map(([id, v]) => ({
+        speltak: sp,
+        id,
+        ...v
+      }));
 
-    if (!data || !data.opkomsten) continue;
+      // alleen toekomstige / vandaag
+      const coming = arr.filter(o =>
+        o.datum && isFutureOrToday(o.datum)
+      );
 
-    const arr = Object.entries(data.opkomsten).map(([id, v]) => ({
-      speltak: sp,
-      id,
-      ...v
-    }));
+      items.push(...coming);
+    }
 
-    // filter alleen komende opkomsten
-    const coming = arr.filter(o =>
-      isFutureOrToday(o.datum)
-    );
+    // sorteren op datum + tijd
+    items.sort(compareDateTime);
 
-    items.push(...coming);
+    // alleen komende 4 dagen
+    const cutoffDate = new Date(today);
+    cutoffDate.setDate(cutoffDate.getDate() + 4);
+    const cutoffISO = cutoffDate.toISOString().slice(0, 10);
+
+    items = items.filter(o => o.datum <= cutoffISO);
+
+    renderDashboard(items);
+  } catch (err) {
+    console.error("Fout bij laden dashboard:", err);
+    list.innerHTML = "<p>Er ging iets mis bij het laden van de opkomsten.</p>";
   }
-
-  // sorteren op datum & tijd
-  items.sort(compareDateTime);
-
-  // alleen komende 4 dagen
-  const cutoff = new Date(today);
-  cutoff.setDate(cutoff.getDate() + 4);
-  const cutoffISO = cutoff.toISOString().slice(0,10);
-
-  items = items.filter(o => o.datum <= cutoffISO);
-
-  renderDashboard(items);
 }
 
 // ======================================================================
 // RENDER
 // ======================================================================
-function renderDashboard(listItems) {
+
+function renderDashboard(items) {
   list.innerHTML = "";
 
-  if (listItems.length === 0) {
-    list.innerHTML = `<p>Geen komende opkomsten in de komende 4 dagen.</p>`;
+  if (!items.length) {
+    list.innerHTML = "<p>Geen komende opkomsten in de komende 4 dagen.</p>";
     return;
   }
 
-  listItems.forEach(item => list.appendChild(makeDashboardCard(item)));
+  items.forEach(item => {
+    list.appendChild(makeDashboardCard(item));
+  });
 }
 
 function makeDashboardCard(o) {
@@ -96,20 +106,22 @@ function makeDashboardCard(o) {
 
   div.innerHTML = `
     <div class="dash-left">
-        <div class="date-block">
-            <span class="d-day">${formatDay(o.datum)}</span>
-            <span class="d-month">${formatMonth(o.datum)}</span>
-        </div>
+      <div class="date-block">
+        <span class="d-day">${formatDay(o.datum)}</span>
+        <span class="d-month">${formatMonth(o.datum)}</span>
+      </div>
     </div>
 
     <div class="dash-middle">
-        <h3>${capitalize(o.speltak)}</h3>
-        <p>${o.thema || "Geen thema"}</p>
-        <p><b>${o.starttijd || ""} – ${o.eindtijd || ""}</b></p>
+      <h3>${capitalize(o.speltak)}</h3>
+      <p>${o.thema || "Geen thema"}</p>
+      <p><b>${o.starttijd || ""} – ${o.eindtijd || ""}</b></p>
     </div>
 
     <div class="dash-right" style="border-left-color:${color}">
-        <span class="type-tag" style="color:${color}">${o.typeOpkomst || "normaal"}</span>
+      <span class="type-tag" style="color:${color}">
+        ${o.typeOpkomst || "normaal"}
+      </span>
     </div>
   `;
 
@@ -119,16 +131,19 @@ function makeDashboardCard(o) {
 // ======================================================================
 // HELPERS
 // ======================================================================
-function formatDay(dateStr) {
-  return dateStr.split("-")[2]; // dag
-}
-function formatMonth(dateStr) {
-  const month = Number(dateStr.split("-")[1]);
-  const months = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
-  return months[month - 1];
+
+function formatDay(dateStr = "") {
+  return dateStr.split("-")[2] || "";
 }
 
-function capitalize(s) {
+function formatMonth(dateStr = "") {
+  const month = Number(dateStr.split("-")[1]);
+  const months = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
+  return months[month - 1] || "";
+}
+
+function capitalize(s = "") {
+  if (!s) return "";
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 

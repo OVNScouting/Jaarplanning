@@ -1,331 +1,714 @@
-/* ============================================================
-   BASISSTYLING
-============================================================ */
+/* ======================================================================
+   ROOT — KLEUREN EN BASIS
+====================================================================== */
 :root {
-  --ovn-blue: #006fff;
-  --ovn-blue-dark: #0052c7;
-  --ovn-green: #0b4b26;
-  --ovn-orange: #ff6900;
+  --bg: #f5f7fb;
+  --card: #ffffff;
 
-  --bg-light: #f5f5f5;
-  --bg-white: #ffffff;
+  --blue: #006fff;
+  --blue-soft: #e4f0ff;
+  --accent: #ffcd59;
 
-  --border-light: #e3e3e3;
-  --border-medium: #cccccc;
+  --opkomst-geen: #f43e3e;
+  --opkomst-geen-bg: #fde1e1;
 
-  --text-dark: #222;
-  --text-light: #666;
+  --opkomst-volgende: #7cc46a;
+  --opkomst-volgende-bg: #e4f7de;
+
+  --opkomst-verleden: #5d5d5d;
+  --opkomst-verleden-bg: #e5e5e5;
+
+  --opkomst-bijzonder: #be70ff;
+  --opkomst-bijzonder-bg: #f3e7ff;
+
+  --opkomst-kamp: #ff66cc;
+  --opkomst-kamp-bg: #ffe3f4;
+
+  --text-main: #111827;
+  --text-muted: #6b7280;
+
+  --border: #dde3ef;
+  --border-strong: #cbd5e1;
+
+  --shadow: 0 6px 18px rgba(15, 23, 42, .08);
+
+  --radius: 14px;
+  --radius-small: 8px;
+  --radius-large: 25px;
+}
+
+/* ======================================================================
+   RESET & BODY
+====================================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  padding: 0;
-  font-family: "Outfit", Arial, sans-serif;
-  background: var(--bg-light);
-  color: var(--text-dark);
+  font-family: system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text-main);
 }
 
+.hidden {
+  display: none !important;
+}
+
+/* ======================================================================
+   CONTAINER
+====================================================================== */
 .container {
-  width: 100%;
-  max-width: 1300px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 1.5rem 1rem 3rem;
 }
 
-/* ============================================================
+/* ======================================================================
    TOPBAR
-============================================================ */
+====================================================================== */
 .topbar {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, .06);
+  padding: 0.75rem 1.5rem;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  background: var(--bg-white);
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--border-light);
+  justify-content: space-between;
 }
 
 .topbar-left {
   display: flex;
   align-items: center;
-  gap: 14px;
-}
-
-.backlink {
-  color: var(--ovn-blue);
-  text-decoration: none;
-  font-size: 16px;
+  gap: 0.75rem;
 }
 
 .topbar-logo {
-  height: 46px;
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
 }
 
 .topbar-title h1 {
-  font-size: 22px;
   margin: 0;
+  font-size: 1.25rem;
 }
 
 .topbar-title span {
-  font-size: 13px;
-  color: var(--text-light);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.backlink {
+  text-decoration: none;
+  color: var(--blue);
+  font-weight: 500;
 }
 
 .topbar-right-icons {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 1rem;
 }
 
 .speltak-icon {
-  height: 46px;
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 .leiding-badge {
-  background: var(--ovn-blue);
-  padding: 6px 12px;
-  border-radius: 8px;
-  color: white;
-  font-size: 12px;
+  background: var(--blue);
+  color: #fff;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
-#logoutButton {
-  margin-left: 6px;
-}
-
-/* ============================================================
+/* ======================================================================
    INFO BLOK
-============================================================ */
+====================================================================== */
 .info-block {
-  background: var(--bg-white);
-  padding: 20px;
-  border-radius: 14px;
-  border: 1px solid var(--border-light);
-  margin-bottom: 20px;
-  position: relative;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem 1.5rem;
+  margin-top: 1.5rem;
 }
 
-.info-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.info-block h2 {
+  margin: 0 0 0.75rem;
 }
 
 #infotekst {
-  margin-top: 10px;
-  line-height: 1.5;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
 }
 
-/* Floating pen on mobile */
-.mobile-floating-pen {
-  display: none;
-}
-
-@media (max-width: 760px) {
-  .mobile-floating-pen {
-    display: block;
-    position: absolute;
-    top: 16px;
-    right: 16px;
-  }
-}
-
-.rich-editor {
-  min-height: 120px;
-  padding: 10px;
-  border: 1px solid var(--border-light);
-  border-radius: 8px;
-  background: white;
+/* Rich text editor */
+#infoEditorWrapper {
+  margin-top: 0.5rem;
 }
 
 #infoEditorToolbar {
-  margin-bottom: 6px;
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 #infoEditorToolbar button {
-  padding: 6px 10px;
-  border: 1px solid var(--border-light);
+  padding: 0.25rem 0.6rem;
   border-radius: 6px;
-  background: #f0f0f0;
-}
-
-/* ============================================================
-   BUTTONS & CHIPS
-============================================================ */
-.pill-btn {
-  padding: 8px 16px;
-  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: #f3f4f6;
   cursor: pointer;
-  font-size: 15px;
-  border: 1px solid var(--ovn-blue);
+  font-size: 0.85rem;
 }
 
+#infoEditorToolbar button:hover {
+  background: #e5e7eb;
+}
+
+#colorPicker {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.rich-editor {
+  min-height: 140px;
+  font-size: 0.95rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-small);
+  border: 1px solid var(--border);
+  background: #ffffff;
+}
+
+/* ======================================================================
+   BUTTONS
+====================================================================== */
+.pill-btn,
+.primary-btn {
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.5rem 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  transition: background .15s ease, transform .05s ease;
+}
+
+.primary-btn,
 .pill-btn.primary {
-  color: white;
-  background: var(--ovn-blue);
+  background: var(--blue);
+  color: #fff;
+}
+
+.primary-btn:hover,
+.pill-btn.primary:hover {
+  background: #0059d4;
+  transform: translateY(-1px);
 }
 
 .pill-btn.outline {
-  color: var(--ovn-blue);
-  background: white;
+  background: #fff;
+  color: var(--blue);
+  border: 1px solid var(--blue);
 }
 
+.pill-btn.outline:hover {
+  background: var(--blue-soft);
+}
+
+.print-btn {
+  margin-left: auto;
+}
+
+/* ======================================================================
+   FILTER CHIPS
+====================================================================== */
 .chip {
-  padding: 6px 12px;
-  background: #eeeeee;
-  border-radius: 12px;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  background: #f1f5f9;
   cursor: pointer;
-  user-select: none;
+  font-size: 0.85rem;
+  border: 1px solid transparent;
+  transition: all .15s ease;
 }
 
-.chip-primary.active {
-  background: var(--ovn-blue);
-  color: white;
+.chip:hover {
+  background: var(--blue-soft);
+  color: var(--blue);
 }
 
-/* ============================================================
-   TOOLBAR / KNOPPENBALK
-============================================================ */
+.chip.active {
+  background: var(--blue);
+  color: #fff;
+}
+
+/* ======================================================================
+   PLANNING-SECTIE
+====================================================================== */
+.planning-section {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.2rem 1.4rem 1.5rem;
+  margin-top: 1.5rem;
+}
+
 .planning-header-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  background: #f8f8f8;
-  padding: 14px 18px;
-  border-radius: 16px;
-  border: 1px solid var(--border-light);
-  margin-bottom: 20px;
-}
-
-.toolbar-section {
-  display: flex;
-  gap: 12px;
   align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
 }
 
-/* ============================================================
-   PLANNING TABEL
-============================================================ */
+.planning-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ======================================================================
+   TABEL
+====================================================================== */
 .table-wrapper {
   overflow-x: auto;
-  background: white;
-  border-radius: 12px;
-  border: 1px solid var(--border-light);
-  position: relative;
+  border-radius: var(--radius-small);
 }
 
 .planning-table {
-  width: max-content;
+  width: 100%;
   border-collapse: collapse;
-  min-width: 900px;
+  font-size: 0.88rem;
 }
 
 .planning-table th,
 .planning-table td {
-  padding: 8px 10px;
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--border);
+  padding: 0.35rem 0.45rem;
   text-align: center;
+  vertical-align: middle;
+}
+
+.planning-table thead th {
+  background: var(--blue-soft);
+  font-size: 0.82rem;
+  font-weight: 600;
   white-space: nowrap;
 }
 
-/* Sticky header (floating header) */
-.floating-header {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: var(--ovn-blue);
-  color: white;
-  padding: 6px 10px;
-  font-weight: bold;
-  font-size: 15px;
-  border-radius: 0 0 6px 6px;
+/* verticale namen */
+.name-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  padding: 0.3rem 0.2rem;
+  background: #f9fafb;
+  font-size: 0.75rem;
 }
 
-.floating-header.hidden {
-  display: none;
-}
-
-/* Sticky date only */
-.col-datum {
-  position: sticky;
-  left: 0;
-  z-index: 5;
-  background-color: transparent !important;
-  backdrop-filter: none !important;
-}
-
-/* Divider (OVN blauw) */
+/* splitter kolom */
 .col-split {
-  background: var(--ovn-blue);
-  width: 4px;
-  padding: 0 !important;
-  min-width: 4px;
-  max-width: 4px;
-  border: none !important;
+  border-left: 4px solid #9ca3af !important;
 }
 
-/* Leiding kolommen licht achtergrond */
-.col-leiding {
-  background: #f7f7f7;
-}
-
-/* Dropdown styling */
-td select {
-  padding: 4px 6px;
-  font-size: 14px;
-  border-radius: 6px;
-  border: 1px solid var(--border-medium);
-}
-
-/* Aanwezigheidscellen */
+/* aanwezigheid indicaties */
 .presence-cell {
   cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
+  font-size: 1.05rem;
+  font-weight: 600;
 }
 
 .presence-aanwezig {
-  color: #008000;
+  color: #15803d;
 }
+
 .presence-afwezig {
-  color: #d10000;
+  color: #b91c1c;
 }
+
 .presence-reminder {
-  color: #999;
+  color: #b45309;
 }
 
-/* Edit modus highlight */
-.edit-active .editable-cell {
-  background: #fff6d6;
-  cursor: text;
+/* afwijkende tijden */
+.tijd-afwijkend {
+  color: #eab308;
+  font-weight: 600;
 }
 
-/* Rij-kleuren */
-.row-next { background: #d4f8d4 !important; }
-.row-grey { background: #efefef !important; }
-.row-bijzonder { background: #efe4ff !important; }
-.row-kamp { background: #ffdff7 !important; }
-.row-geenopkomst { background: #ffd3d3 !important; }
+/* telling */
+.aanw-count {
+  background: #fff7ed;
+  font-weight: 600;
+}
 
-/* Verberg locatie/materiaal voor ouders */
+/* ======================================================================
+   OPKOMST STATUS-KLEUREN
+====================================================================== */
+.row-geenopkomst {
+  background: var(--opkomst-geen-bg) !important;
+  border-left: 4px solid var(--opkomst-geen);
+}
+
+.row-next {
+  background: var(--opkomst-volgende-bg) !important;
+  border-left: 4px solid var(--opkomst-volgende);
+}
+
+.row-grey {
+  background: var(--opkomst-verleden-bg) !important;
+}
+
+.row-bijzonder {
+  background: var(--opkomst-bijzonder-bg) !important;
+  border-left: 4px solid var(--opkomst-bijzonder);
+}
+
+.row-kamp {
+  background: var(--opkomst-kamp-bg) !important;
+  border-left: 4px solid var(--opkomst-kamp);
+}
+
+/* ======================================================================
+   EXTRA KNOPPEN / ACTIES ONDER TABEL
+====================================================================== */
+.add-row {
+  margin-top: 1rem;
+  text-align: center;
+  font-weight: 600;
+  color: var(--blue);
+  cursor: pointer;
+  padding: 0.6rem 0;
+  border-radius: var(--radius-small);
+  background: var(--blue-soft);
+}
+
+.add-row:hover {
+  background: #d8e8ff;
+}
+
+/* ======================================================================
+   LEDENBEHEER
+====================================================================== */
+.ledenbeheer {
+  margin-top: 1.5rem;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.2rem 1.4rem;
+}
+
+.ledenbeheer-columns {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.ledenbeheer-col h3 {
+  margin-top: 0;
+}
+
+.ledenbeheer-col ul {
+  padding: 0;
+  list-style: none;
+}
+
+.ledenbeheer-col li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--radius-small);
+  border: 1px solid var(--border);
+  background: #f9fafb;
+  font-size: 0.9rem;
+}
+
+.lid-verborgen {
+  opacity: 0.6;
+  font-style: italic;
+}
+
+.ledenbeheer-controls {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.ledenbeheer-btn {
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #fff;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+#addMemberButton {
+  margin-top: 1rem;
+}
+
+/* ======================================================================
+   MELDINGEN
+====================================================================== */
+.meldingen {
+  margin-top: 1.5rem;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.2rem 1.4rem 1.4rem;
+}
+
+.meldingen-row {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+
+.meldingen-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 500;
+}
+
+.meldingen-sub {
+  margin-top: 0.3rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.meldingen-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ======================================================================
+   MODALS
+====================================================================== */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 14px;
+  width: 320px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.15);
+}
+
+.modal-content h3 {
+  margin-top: 0;
+}
+
+.modal-content input,
+.modal-content select {
+  width: 100%;
+  margin-top: 0.35rem;
+  margin-bottom: 0.75rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+
+.modal-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: .5rem;
+  justify-content: flex-end;
+}
+
+/* ======================================================================
+   INDEX – SPELTAKKAARTEN
+====================================================================== */
+.speltak-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.75rem;
+}
+
+.speltak-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .75rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+
+  background: #ffffff;
+  border-radius: var(--radius-large);
+  border: none;
+  box-shadow: var(--shadow);
+
+  text-decoration: none;
+  color: var(--text-main);
+  font-weight: 600;
+
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.speltak-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0,0,0,.12);
+}
+
+.speltak-card h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+/* Blousekleuren */
+.speltak-card.bevers { border-top: 4px solid #E6002B; }
+.speltak-card.welpen  { border-top: 4px solid #009A3D; }
+.speltak-card.scouts  { border-top: 4px solid #B59A58; }
+.speltak-card.explorers { border-top: 4px solid #801638; }
+.speltak-card.rovers { border-top: 4px solid #003865; }
+.speltak-card.stam { border-top: 4px solid #7A7A7A; }
+
+/* ======================================================================
+   PRINT LAYOUT
+====================================================================== */
+@media print {
+  body {
+    background: #ffffff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* verberg UI */
+  header,
+  .info-block,
+  .planning-header-row,
+  .planning-controls,
+  #addOpkomstRow,
+  .ledenbeheer,
+  .meldingen,
+  .modal {
+    display: none !important;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  .planning-table {
+    font-size: 11pt;
+  }
+
+  /* verberg prullenbak-kolom */
+  .planning-table th:first-child,
+  .planning-table td:first-child {
+    display: none !important;
+  }
+
+  /* verberg locatie */
+  .col-locatie {
+    display: none !important;
+  }
+}
+
+/* ======================================================================
+   DASHBOARD EXTRA STYLING
+====================================================================== */
+.date-separator-row td {
+  height: 0.8rem;
+  background: transparent !important;
+  border: none !important;
+}
+
+#dashboardSection h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.speltak-card-dashboard {
+  display: grid;
+  grid-template-columns: 70px 1fr 80px;
+  align-items: center;
+  gap: 1rem;
+
+  padding: 1rem 1.25rem;
+  background: #ffffff;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 1rem;
+}
+
+.date-block {
+  text-align: center;
+  background: var(--blue-soft);
+  padding: .5rem .6rem;
+  border-radius: var(--radius-small);
+}
+
+.d-day {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.d-month {
+  font-size: .85rem;
+  color: var(--text-muted);
+}
+
+.type-tag {
+  font-size: .85rem;
+  font-weight: 600;
+}
+
+.dash-right {
+  border-left: 4px solid var(--blue);
+  padding-left: .75rem;
+}
+/* Datum sticky */
+.col-datum {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  backdrop-filter: none;
+  background: inherit !important; /* neem rijkleur over */
+}
+
+
+/* Leiding kolommen visueel scheiden */
+.col-leiding {
+  background: #fafafa;
+  border-left: 3px solid #ddd;
+}
+
+/* Locatie + Materiaal verbergen voor ouders */
 .col-locatie.hidden,
 .col-materiaal.hidden {
-  display: none !important;
+  display: none;
 }
 
-/* ============================================================
-   LEDENBEHEER
-============================================================ */
-.ledenbeheer {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid var(--border-light);
-  margin-top: 20px;
-  position: relative;
-}
-
+/* Close buttons in sections */
 .close-section {
   position: absolute;
   top: 10px;
@@ -336,169 +719,48 @@ td select {
   border-radius: 6px;
   cursor: pointer;
 }
-
-.ledenbeheer-header-row {
+.close-section:hover {
+  background: #ddd;
+}
+.col-split {
+  width: 6px;
+  background: #e0e0e0;
+}
+.toolbar {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  gap: 12px;
+  background: #f8f8f8;
+  padding: 10px 18px;
+  border-radius: 16px;
+  margin-bottom: 14px;
+  border: 1px solid #e3e3e3;
 }
 
-.ledenbeheer-columns {
-  display: flex;
-  gap: 40px;
-  margin-top: 16px;
+.toolbar button,
+.toolbar a {
+  border-radius: 20px;
 }
 
-.ledenbeheer-col ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.toolbar .only-leiding {
+  display: none;
 }
-
-.ledenbeheer-col li {
-  display: flex;
-  justify-content: space-between;
-  background: #f7f7f7;
-  padding: 8px 12px;
-  margin-bottom: 8px;
-  border-radius: 8px;
-}
-
-.lid-verborgen { opacity: 0.5; }
-
-/* ============================================================
-   MELDINGEN
-============================================================ */
-.meldingen {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid var(--border-light);
-  margin-top: 20px;
-  position: relative;
-}
-
-.meldingen-row { margin-bottom: 20px; }
-.meldingen-label { font-weight: bold; margin-bottom: 4px; }
-.meldingen-sub { font-size: 13px; color: #555; }
-
-/* ============================================================
-   MODALS
-============================================================ */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 3000;
-}
-
-.modal.hidden { display: none; }
-
-.modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  width: 300px;
-}
-
-.modal-content label {
-  margin-top: 10px;
-  display: block;
-}
-
-/* ============================================================
-   FLOATING BUTTON: + Nieuwe Opkomst
-============================================================ */
 .fab-add-opkomst {
   position: fixed;
   bottom: 26px;
   right: 26px;
-  background: var(--ovn-blue);
+  background: #006fff;
   color: white;
-  font-size: 32px;
+  font-size: 28px;
   border-radius: 50%;
-  width: 64px;
-  height: 64px;
+  width: 60px;
+  height: 60px;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-  z-index: 2000;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.25);
 }
-
 .fab-add-opkomst:hover {
-  background: var(--ovn-blue-dark);
+  background: #155ff5;
 }
 
-/* ============================================================
-   INDEX-PAGINA 16:9 KAARTEN
-============================================================ */
-.index-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 20px;
-}
-
-.index-card {
-  background: white;
-  border-radius: 14px;
-  border: 1px solid var(--border-light);
-  overflow: hidden;
-  cursor: pointer;
-  aspect-ratio: 16 / 9;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 16px;
-  box-shadow: 0 0 0 rgba(0,0,0,0);
-  transition: 0.2s ease;
-  position: relative;
-}
-
-.index-card:hover {
-  box-shadow: 0 4px 14px rgba(0,0,0,0.15);
-  transform: translateY(-4px);
-}
-
-.index-card-logo {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  height: 50px;
-}
-
-.index-card-title {
-  font-size: 20px;
-  font-weight: 600;
-}
-
-/* ============================================================
-   MOBIEL UI
-============================================================ */
-@media (max-width: 760px) {
-  .planning-header-row {
-    flex-direction: column;
-  }
-
-  .toolbar-section {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .planning-table th,
-  .planning-table td {
-    padding: 6px;
-  }
-
-  .fab-add-opkomst {
-    bottom: 20px;
-    right: 20px;
-    width: 56px;
-    height: 56px;
-    font-size: 28px;
-  }
-}

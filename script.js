@@ -1,15 +1,14 @@
 // ======================================================================
-// script.js — volledige vernieuwde versie
+// IMPORTS
 // ======================================================================
-
 import {
   sanitizeText,
   todayISO,
   isPast,
   isFutureOrToday,
   compareDateTime,
-  formatDateDisplay,
-  isoFromInput
+  formatDisplayDate, // juiste naam in utils.js
+  isoFromInput       // alias die we toevoegen in utils.js
 } from "./utils.js";
 
 import {
@@ -27,92 +26,66 @@ import {
 // ======================================================================
 const app = initializeApp(window.firebaseConfig);
 const db = getDatabase(app);
-
-// Speltak bepalen
-const speltak = window.location.pathname
-  .split("/")
-  .pop()
-  .replace(".html", "")
-  .toLowerCase();
-
-// Config uit HTML
-const config = window.speltakConfig || { showBert: false, showLeiding: true };
+const speltak = window.location.pathname.split("/").pop().replace(".html", "");
 
 // ======================================================================
-// DOM ELEMENTS
+// MODE SYSTEEM — ouder / leiding / edit
 // ======================================================================
+let mode = localStorage.getItem("mode") || "ouder"; // ouder is standaard
+let editMode = false; // aparte boolean voor tabel-bewerken
 
-// Info
-const infoTekst = document.getElementById("infotekst");
-const infoEdit = document.getElementById("infotekst_edit");
-const infoEditorWrapper = document.getElementById("infoEditorWrapper");
-const infoEditButton = document.getElementById("infoEditButton");
-const toolbarButtons = document.querySelectorAll("#infoEditorToolbar button");
-const colorPicker = document.getElementById("colorPicker");
+function setMode(newMode) {
+  mode = newMode;
+  localStorage.setItem("mode", newMode);
+  updateVisibility();
+  renderTable(); // UI opnieuw tekenen
+}
 
-// Table
-const headerRowTop = document.getElementById("headerRowTop");
-const tableBody = document.getElementById("tableBody");
-const addOpkomstRow = document.getElementById("addOpkomstRow");
+function isOuder() {
+  return mode === "ouder";
+}
 
-// Buttons
-const editModeButton = document.getElementById("editModeButton");
-const printButton = document.getElementById("printButton");
-const filterAll = document.getElementById("filterAll");
-const filterFuture = document.getElementById("filterFuture");
-const filterPast = document.getElementById("filterPast");
+function isLeiding() {
+  return mode === "leiding";
+}
 
-const openLedenbeheerButton = document.getElementById("openLedenbeheerButton");
-const openMeldingenButton = document.getElementById("openMeldingenButton");
-const handleidingButton = document.getElementById("handleidingButton");
+function isEdit() {
+  return isLeiding() && editMode;
+}
 
-// Sections
-const ledenbeheerSection = document.getElementById("ledenbeheerSection");
-const meldingenSection = document.getElementById("meldingenSection");
-
-// Ledenbeheer
-const ledenbeheerJeugd = document.getElementById("ledenbeheerJeugd");
-const ledenbeheerLeiding = document.getElementById("ledenbeheerLeiding");
-const addMemberButton = document.getElementById("addMemberButton");
-
-// Meldingen
-const meldingLeidingAan = document.getElementById("meldingLeidingAan");
-const meldingOnbekendAan = document.getElementById("meldingOnbekendAan");
-const leidingDrempel = document.getElementById("leidingDrempel");
-
-// Modals
-const memberModal = document.getElementById("addMemberModal");
-const memberType = document.getElementById("memberType");
-const memberName = document.getElementById("memberName");
-const saveMember = document.getElementById("saveMember");
-const cancelMember = document.getElementById("cancelMember");
-
-const opModal = document.getElementById("addOpkomstModal");
-const opDatum = document.getElementById("opDatum");
-const opStart = document.getElementById("opStart");
-const opEind = document.getElementById("opEind");
-const opThema = document.getElementById("opThema");
-const opLocatie = document.getElementById("opLocatie");
-const opType = document.getElementById("opType");
-const saveOpkomst = document.getElementById("saveOpkomst");
-const cancelOpkomst = document.getElementById("cancelOpkomst");
-
-// Close buttons
-const closeButtons = document.querySelectorAll(".close-section");
+function toggleEditMode() {
+  if (!isLeiding()) return;
+  editMode = !editMode;
+  updateVisibility();
+  renderTable();
+}
 
 // ======================================================================
-// STATE
+// MODE-AFHANKELIJKE UI UPDATES
+// ======================================================================
+function updateVisibility() {
+  document.querySelectorAll(".only-leiding").forEach(el => {
+    el.classList.toggle("hide-ouder", !isLeiding());
+  });
+
+  document.querySelectorAll(".edit-only").forEach(el => {
+    el.classList.toggle("hide-edit", !isEdit());
+  });
+
+  document.querySelectorAll(".view-hide").forEach(el => {
+    el.classList.toggle("hide-view", isEdit());
+  });
+}
+
+// ======================================================================
+// DATA
 // ======================================================================
 let data = {};
 let opkomsten = [];
 let jeugd = [];
 let leiding = [];
-
-let currentFilter = "all";
-let mode = localStorage.getItem("mode") || "ouder";
-let infoEditActive = false;
-
 let nextUpcomingId = null;
+let currentFilter = "all";
 
 // ======================================================================
 // MODE FUNCTIES
@@ -147,18 +120,21 @@ function setMode(newMode) {
 }
 
 // ======================================================================
-// DATA LADEN
+// DATA LADEN UIT FIREBASE
 // ======================================================================
-async function loadEverything() {
+async function loadData() {
   const snap = await get(ref(db, speltak));
   data = snap.val() || {};
 
-  opkomsten = Object.entries(data.opkomsten || {}).map(([id, value]) => ({
+  // -------------------------------
+  // Opkomsten inladen en sorteren
+  // -------------------------------
+  opkomsten = Object.entries(data.opkomsten || {}).map(([id, v]) => ({
     id,
-    ...value
+    ...v
   }));
 
-  // sorteer: toekomst/heden → verleden
+  // Sorteer: toekomst/heden eerst, verleden erna
   opkomsten.sort((a, b) => {
     const aPast = isPast(a.datum);
     const bPast = isPast(b.datum);
@@ -175,24 +151,33 @@ async function loadEverything() {
     }
   }
 
+  // -------------------------------
+  // Jeugd + leiding
+  // -------------------------------
   jeugd = Object.entries(data.jeugdleden || {}).map(([id, v]) => ({
     id,
+    naam: v.naam || "",
     volgorde: typeof v.volgorde === "number" ? v.volgorde : 999,
-    hidden: !!v.hidden,
-    naam: v.naam || ""
+    hidden: !!v.hidden
   }));
 
   leiding = Object.entries(data.leiding || {}).map(([id, v]) => ({
     id,
+    naam: v.naam || "",
     volgorde: typeof v.volgorde === "number" ? v.volgorde : 999,
-    hidden: !!v.hidden,
-    naam: v.naam || ""
+    hidden: !!v.hidden
   }));
 
   jeugd.sort((a, b) => a.volgorde - b.volgorde);
   leiding.sort((a, b) => a.volgorde - b.volgorde);
 
-  renderEverything();
+  // -------------------------------
+  // UI tekenen
+  // -------------------------------
+  renderTable();
+  loadInfoBlock();
+  renderLedenbeheer();
+  renderMeldingen();
 }
 
 // ======================================================================

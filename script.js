@@ -303,8 +303,10 @@ if (isEdit()) {
 if (!isOuder()) {
     const thProcor = document.createElement("th");
     thProcor.textContent = "Procor";
+    thProcor.classList.add("col-procor");
     tr.appendChild(thProcor);
 }
+
 
 
    // Type (alleen zichtbaar in bewerkmodus, verborgen voor ouders)
@@ -519,7 +521,9 @@ function addRow(o) {
 
   // Procor (alleen zichtbaar voor leiding)
 if (!isOuder()) {
-    tr.appendChild(makeEditableCell(o, "procor"));
+   const tdProcor = makeEditableCell(o, "procor");
+tdProcor.classList.add("col-procor");
+tr.appendChild(tdProcor);
 }
 
  
@@ -947,10 +951,20 @@ function resetOpkomstFields() {
 
 const fab = document.getElementById("fabAddOpkomst");
 fab?.addEventListener("click", () => {
-  if (!isLeiding()) return;
-  resetOpkomstFields();
-  opModal.classList.remove("hidden");
+    if (!isLeiding()) return;
+    resetOpkomstFields();
+    applyPopupVisibility();
+    opModal.classList.remove("hidden");
 });
+
+
+function applyPopupVisibility() {
+    const procorField = document.querySelector(".field-procor");
+    if (!procorField) return;
+
+    if (isOuder()) procorField.classList.add("hidden");
+    else procorField.classList.remove("hidden");
+}
 
 saveOpkomst?.addEventListener("click", () => {
   if (!isEdit()) return;

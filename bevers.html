@@ -45,7 +45,7 @@
         <h2>Informatie</h2>
 
         <!-- Losse edit-knop voor alleen het infoveld -->
-        <button id="infoEditButton" class="pill-btn outline info-edit-btn">
+      <button id="infoEditButton" class="pill-btn outline info-edit-btn only-leiding">
           Info bewerken
         </button>
       </div>
@@ -225,13 +225,27 @@
         <input type="time" id="opEind" value="12:30" />
 
         <label>Thema:</label>
-        <input type="text" id="opThema" />
+        <select id="opThema">
 
-        <label>Locatie:</label>
-        <input type="text" id="opLocatie" />
+
+       <label>Locatie:</label>
+        <select id="opLocatie">
+          <option value="">Selecteer…</option>
+          <option value="Kampvuurkuil">Kampvuurkuil</option>
+          <option value="Zandveld">Zandveld</option>
+          <option value="Grasveld">Grasveld</option>
+          <option value="De Hoop">De Hoop</option>
+          <option value="Bever lokaal">Bever lokaal</option>
+          <option value="Welpen lokaal">Welpen lokaal</option>
+          <option value="Van terrein af">Van terrein af</option>
+          <option value="Externe locatie">Externe locatie</option>
+        </select>
+
+        <label>Materiaal:</label>
+        <input type="text" id="opMateriaal" />
 
         <label>Type:</label>
-        <select id="opType">
+        <select id="opType" class="hide-view">
           <option value="">Selecteer…</option>
           <option value="normaal">Normaal</option>
           <option value="bijzonder">Bijzonder</option>

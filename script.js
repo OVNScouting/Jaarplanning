@@ -22,11 +22,6 @@ import {
 // ======================================================================
 // FIREBASE INIT
 // ======================================================================
-const app = initializeApp(window.firebaseConfig);
-const db = getDatabase(app);
-
-setMode(mode);
-loadEverything();
 
 // Speltak bepalen
 const speltak = window.location.pathname
@@ -123,6 +118,15 @@ let infoEditActive = false;
 let mode = localStorage.getItem("mode") || "ouder";
 let editMode = false; 
 
+const app = initializeApp(window.firebaseConfig);
+const db = getDatabase(app);
+
+// Mode toepassen na definiëring van mode
+setMode(mode);
+
+// Database inladen
+loadEverything();
+ 
 function isOuder() {
   return mode === "ouder";
 }

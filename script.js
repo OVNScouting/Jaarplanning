@@ -531,11 +531,11 @@ function addRow(o) {
   tr.appendChild(tdMat);
 
   // 10. Jeugd aanwezigheden
-  jeugd.forEach(j => {
+jeugd.forEach(j => {
     tr.appendChild(makePresenceCell(o, j.id, j.hidden, false));
-  });
-  
-   // 11. Splitter
+});
+
+// 11. Splitter
 const visibleJeugd = jeugd.filter(j => !j.hidden).length;
 const visibleLeiding = leiding.filter(l => !l.hidden).length;
 
@@ -544,6 +544,11 @@ if (visibleJeugd > 0 && visibleLeiding > 0) {
     divider.classList.add("col-divider");
     tr.appendChild(divider);
 }
+
+// 12. Leiding aanwezigheden
+leiding.forEach(l => {
+    tr.appendChild(makePresenceCell(o, `leiding-${l.id}`, l.hidden, true));
+});
 
 
   // 13. Tellers

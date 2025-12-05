@@ -618,13 +618,22 @@ body {
 }
 /* Divider tussen jeugd en leiding kolommen */
 .col-divider {
-  width: 4px !important;
-  background: #d0d0d0 !important;
+  width: 6px;
+  min-width: 6px;
+  max-width: 6px;
+
   padding: 0 !important;
+  background: #d0d0d0;
+
+  /* geen extra borders, zodat hij niet “duwt” */
+  border-left: none !important;
+  border-right: none !important;
 }
+
 /* Materiaal-kolom */
+.col-locatie,
 .col-materiaal {
-  background: #fcfcfc;
+  background-color: inherit;
 }
 /* Elementen die verborgen moeten zijn voor ouders */
 .only-leiding {
@@ -736,19 +745,21 @@ body {
   left: 0;
   z-index: 5;
   backdrop-filter: none;
-  background: inherit !important; /* neem rijkleur over */
-  background-clip: padding-box !important;
 
+  /* basisachtergrond, zodat tekst altijd leesbaar is */
+  background-color: var(--card);
+  background-clip: padding-box;
 }
+
 /* Fix: sticky datum behoudt achtergrondkleur van de rij */
 tr > .col-datum {
   background-color: inherit !important;
 }
 tr.row-bijzonder > .col-datum { background-color: var(--opkomst-bijzonder-bg) !important; }
-tr.row-kamp > .col-datum { background-color: var(--opkomst-kamp-bg) !important; }
+tr.row-kamp > .col-datum      { background-color: var(--opkomst-kamp-bg) !important; }
 tr.row-geenopkomst > .col-datum { background-color: var(--opkomst-geen-bg) !important; }
-tr.row-next > .col-datum { background-color: var(--opkomst-volgende-bg) !important; }
-tr.row-grey > .col-datum { background-color: var(--opkomst-verleden-bg) !important; }
+tr.row-next > .col-datum      { background-color: var(--opkomst-volgende-bg) !important; }
+tr.row-grey > .col-datum      { background-color: var(--opkomst-verleden-bg) !important; }
 
 /* Locatie + Materiaal verbergen voor ouders */
 .col-locatie.hidden,

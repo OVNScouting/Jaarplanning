@@ -94,6 +94,7 @@ const opEind = document.getElementById("opEind");
 const opThema = document.getElementById("opThema");
 const opLocatie = document.getElementById("opLocatie");
 const opType = document.getElementById("opType");
+const opMateriaal = document.getElementById("opMateriaal");
 const saveOpkomst = document.getElementById("saveOpkomst");
 const cancelOpkomst = document.getElementById("cancelOpkomst");
 
@@ -157,7 +158,8 @@ function applyModeVisibility() {
 
   // FAB (opkomst toevoegen) alleen zichtbaar voor leiding
   const fab = document.getElementById("fabAddOpkomst");
-  if (fab) fab.classList.toggle("hide-view", !isLeiding());
+  if (fab) fab.classList.toggle("hide-view", isOuder());
+
 }
 
 // ======================================================================
@@ -294,9 +296,8 @@ function addHeaders() {
   const thT = document.createElement("th");
   thT.textContent = "Type";
   thT.classList.add("col-type");
-  if (!isEdit()) thT.classList.add("hide-view");
+  if (isOuder()) thT.classList.add("hide-view");   
   tr.appendChild(thT);
-
 
   // Thema
   const thTh = document.createElement("th");
@@ -442,7 +443,7 @@ function addRow(o) {
           update(ref(db, `${speltak}/opkomsten/${o.id}`), { typeOpkomst: nieuw }).then(loadEverything);
         }
       });
-    } else {
+    } else if (isOuder()) {
       tdType.classList.add("hide-view");
     }
 
@@ -483,11 +484,20 @@ function addRow(o) {
 
   // 12. Leiding aanwezigheden
   if (config.showLeiding) {
-    leiding.forEach(l => {
- const td = makePresenceCell(o, "leiding-" + l.id, l.hidden, true);
+  leiding.forEach(l => {
+    const td = makePresenceCell(o, "leiding-" + l.id, l.hidden, true);
 
+    if (isOuder()) {
+      td.classList.add("hide-view");
+    } else {
+      td.classList.add("presence-cell", "editable-cell");
+      td.addEventListener("click", () => togglePresence(o, `leiding-${l.id}`));
+    }
+
+    tr.appendChild(td);
   });
-  }
+}
+
 
   // 13. Tellers
   const [cntJ, cntL] = countPresence(o);
@@ -581,7 +591,7 @@ function makePresenceCell(o, key, hidden, isLeidingCell) {
 
   // Jeugd → altijd klikbaar
   if (!isLeidingCell) {
-    td.classList.add("editable-cell");
+    td.classList.add("presence-cell", "editable-cell");
     td.addEventListener("click", () => togglePresence(o, key));
     return td;
   }

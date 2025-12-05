@@ -8,29 +8,25 @@ import {
   isoFromInput
 } from "./utils.js";
 
-import { firebaseApp, firebaseDB } from "./firebase-imports.js";
+import {
+  initializeApp,
+  getDatabase,
+  ref,
+  get,
+  set,
+  update,
+  push
+} from "./firebase-imports.js";
 
-let initializeApp, getDatabase, ref, get, set, update, push;
-let app, db;
-
-Promise.all([firebaseApp, firebaseDB]).then(([appModule, dbModule]) => {
-    initializeApp = appModule.initializeApp;
-    getDatabase = dbModule.getDatabase;
-    ref = dbModule.ref;
-    get = dbModule.get;
-    set = dbModule.set;
-    update = dbModule.update;
-    push = dbModule.push;
-
-    app = initializeApp(window.firebaseConfig);
-    db = getDatabase(app);
-
-    loadEverything();
-});
 
 // ======================================================================
 // FIREBASE INIT
 // ======================================================================
+const app = initializeApp(window.firebaseConfig);
+const db = getDatabase(app);
+
+setMode(mode);
+loadEverything();
 
 // Speltak bepalen
 const speltak = window.location.pathname

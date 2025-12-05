@@ -619,9 +619,8 @@ body {
 }
 /* Divider tussen jeugd en leiding kolommen */
 .col-divider {
-  width: 6px !important;
-  background: #e0e0e0 !important;
-  border-right: 2px solid #888 !important;
+  width: 4px !important;
+  background: #d0d0d0 !important;
   padding: 0 !important;
 }
 /* Materiaal-kolom */
@@ -737,7 +736,7 @@ body {
 .col-datum {
   position: sticky;
   left: 0;
-  z-index: 3;
+  z-index: 5;
   backdrop-filter: none;
   background: inherit !important; /* neem rijkleur over */
   background-clip: padding-box !important;

@@ -16,7 +16,7 @@
   <header class="topbar">
   <div class="topbar-left">
     <a href="index.html" class="backlink">← Terug</a>
-    <img src="Bevers-speltakteken.png" class="topbar-logo" alt="">
+    <img src="assets/Bevers-speltakteken.png" class="topbar-logo" alt="Bevers logo">
     <div class="topbar-title">
       <h1>Bevers</h1>
       <span>Jaarplanning & Aanwezigheid</span>
@@ -26,7 +26,7 @@
   <div class="topbar-right-icons">
     <span id="leidingBadge" class="leiding-badge only-leiding">Je bent ingelogd als leiding</span>
     <button id="logoutBtn" class="pill-btn outline only-leiding">Uitloggen</button>
-    <img src="Bevers-speltakteken.png" class="speltak-icon" alt="">
+    <img src="assets/Bevers-speltakteken.png" class="speltak-icon" alt="">
   </div>
 </header>
 
@@ -100,20 +100,20 @@
         <button id="openLedenbeheerButton" class="pill-btn outline only-leiding">
           Ledenbeheer
         </button>
-        <button class="close-section" data-target="ledenbeheerSection">✖</button>
+      
         <button id="openMeldingenButton" class="pill-btn outline only-leiding">
           Meldingen
         </button>
-        <button class="close-section" data-target="meldingenSection">✖</button>
+       
       </div>
 
       <!-- De tabel -->
       <div class="table-wrapper">
         <table class="planning-table">
-          <thead>
-            <!-- Wordt volledig door script.js gevuld -->
+         <thead>
             <tr id="headerRowTop"></tr>
           </thead>
+
           <tbody id="tableBody"></tbody>
         </table>
       </div>
@@ -128,26 +128,22 @@
          LEDENBEHEER
     ============================================================ -->
     <section id="ledenbeheerSection" class="ledenbeheer hidden">
-      <div class="ledenbeheer-header-row">
-        <h2>Ledenbeheer</h2>
-
-        <!-- Lid toevoegen knop duidelijk bovenaan -->
-        <button id="addMemberButton" class="pill-btn primary hidden">
-          Nieuw lid toevoegen
-        </button>
-      </div>
-
+      <div class="ledenbeheer" id="ledenbeheer">
+      <h2>Ledenbeheer</h2>
       <div class="ledenbeheer-columns">
-        <div class="ledenbeheer-col">
-          <h3>Jeugdleden</h3>
-          <ul id="ledenbeheerJeugd"></ul>
-        </div>
-
-        <div class="ledenbeheer-col">
-          <h3>Leiding</h3>
-          <ul id="ledenbeheerLeiding"></ul>
-        </div>
+          <div class="ledenbeheer-col">
+              <h3>Jeugdleden</h3>
+              <ul id="jeugdLeden"></ul>
+          </div>
+          <div class="ledenbeheer-col">
+              <h3>Leiding</h3>
+              <ul id="leidingLeden"></ul>
+          </div>
       </div>
+    
+      <button id="addMemberButton" class="pill-btn primary">Lid toevoegen</button>
+    </div>
+
     </section>
 
     <!-- ============================================================
@@ -207,7 +203,7 @@
     <!-- ============================================================
          MODAL — Opkomst toevoegen
     ============================================================ -->
-    <div id="addOpkomstModal" class="modal hidden">
+    <div id="OpkomstModal" class="modal hidden">
       <div class="modal-content">
         <h3>Nieuwe Opkomst</h3>
 

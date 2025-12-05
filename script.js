@@ -913,7 +913,19 @@ filterPast?.addEventListener("click", () => {
   renderTable();
 });
 
-printButton?.addEventListener("click", () => window.print());
+printButton?.addEventListener("click", () => {
+    const prevMode = mode;
+
+    // altijd naar oudermodus voor print
+    setMode("ouder");
+
+    // wacht 150ms zodat DOM gerenderd is → dan printen
+    setTimeout(() => {
+        window.print();
+        // na print terugzetten naar vorige modus
+        setMode(prevMode);
+    }, 150);
+});
 
 editModeButton?.addEventListener("click", () => {
   if (!isLeiding() && !isEdit()) {

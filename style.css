@@ -515,9 +515,24 @@ body {
   background: white;
   padding: 1.5rem;
   border-radius: 14px;
-  width: 320px;
+
+  /* GROTER FORMULIER */
+  width: 420px;              /* was 320px */
+  max-height: 85vh;          /* zorgt dat de modal nooit buiten scherm valt */
+  overflow-y: auto;          /* scrollt binnen modal */
   box-shadow: 0 6px 20px rgba(0,0,0,.15);
 }
+
+/* Zorg dat scrollbalk netjes is */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #c5c9d3;
+  border-radius: 6px;
+}
+
 
 .modal-content h3 {
   margin-top: 0;

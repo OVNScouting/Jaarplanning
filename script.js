@@ -281,10 +281,13 @@ function addHeaders() {
   thE.textContent = "Eind";
   tr.appendChild(thE);
 
-  // Type
+   // Type (alleen zichtbaar in bewerkmodus, verborgen voor ouders)
   const thT = document.createElement("th");
   thT.textContent = "Type";
+  thT.classList.add("col-type");
+  if (!isBewerken()) thT.classList.add("hide-view");
   tr.appendChild(thT);
+
 
   // Thema
   const thTh = document.createElement("th");
@@ -301,19 +304,16 @@ function addHeaders() {
   const thLoc = document.createElement("th");
   thLoc.textContent = "Locatie";
   thLoc.classList.add("col-locatie");
+  if (isOuder()) thLoc.classList.add("hide-view");
   tr.appendChild(thLoc);
+
 
   const thMat = document.createElement("th");
   thMat.textContent = "Materiaal";
   thMat.classList.add("col-materiaal");
+  if (isOuder()) thMat.classList.add("hide-view");
   tr.appendChild(thMat);
 
-  // Splitter
-  if (config.showLeiding) {
-    const split = document.createElement("th");
-    split.classList.add("col-split");
-    tr.appendChild(split);
-  }
 
   // Jeugdleden
   jeugd.forEach(j => {
@@ -322,6 +322,13 @@ function addHeaders() {
     if (j.hidden) th.classList.add("hidden");
     tr.appendChild(th);
   });
+  
+    // Splitter
+  if (config.showLeiding) {
+    const split = document.createElement("th");
+    split.classList.add("col-divider");
+    tr.appendChild(split);
+  }
 
   // Leiding
   if (config.showLeiding) {
@@ -330,6 +337,7 @@ function addHeaders() {
       th.classList.add("col-leiding");
       th.innerHTML = `<div class="name-vertical">${l.naam}</div>`;
       if (l.hidden) th.classList.add("hidden");
+      if (isOuder()) th.classList.add("hide-view");
       tr.appendChild(th);
     });
   }
@@ -404,51 +412,70 @@ function addRow(o) {
   // 4. Eindtijd
   tr.appendChild(makeTimeCell(o, "eindtijd"));
 
-  // 5. Type
-  const tdType = document.createElement("td");
-  tdType.textContent = o.typeOpkomst || "";
-  if (isBewerken()) {
-    tdType.classList.add("editable-cell");
-    tdType.addEventListener("click", () => {
-      const nieuw = prompt("Type (normaal / bijzonder / kamp / geen):", o.typeOpkomst || "");
-      if (nieuw !== null) {
-        update(ref(db, `${speltak}/opkomsten/${o.id}`), {
-          typeOpkomst: nieuw
-        }).then(loadEverything);
-      }
-    });
-  }
-  tr.appendChild(tdType);
+  // Type (edit only – verborgen voor ouders)
+    const tdType = document.createElement("td");
+    tdType.classList.add("col-type");
+    
+    if (isBewerken()) {
+      tdType.textContent = o.typeOpkomst || "";
+      tdType.classList.add("editable-cell");
+      tdType.addEventListener("click", () => {
+        const nieuw = prompt("Type (normaal / bijzonder / kamp / geen):", o.typeOpkomst || "");
+        if (nieuw !== null) {
+          update(ref(db, `${speltak}/opkomsten/${o.id}`), {
+            typeOpkomst: nieuw
+          }).then(loadEverything);
+        }
+      });
+    } else {
+      tdType.textContent = "";
+      tdType.classList.add("hide-view");
+    }
+    
+    tr.appendChild(tdType);
+    
 
   // 6. Thema
   tr.appendChild(makeEditableCell(o, "thema"));
 
   // 7. Bert
   if (config.showBert) tr.appendChild(makeEditableCell(o, "bert_met"));
-
+  
   // 8. Locatie
-  tr.appendChild(makeRestrictedEditable(o, "locatie", ["Clubhuis", "Bos", "Extern", "Overig"], "col-locatie"));
+  const tdLoc = makeRestrictedEditable(
+  o,
+  "locatie",
+  ["Kampvuurkuil", "Zandveld", "Grasveld", "De Hoop", "Bever lokaal", "Welpen lokaal", "Van terrein af", "Externe locatie", "Overig"],
+  "col-locatie"
+   );
+  if (isOuder()) tdLoc.classList.add("hide-view");
+  tr.appendChild(tdLoc);
+    
 
   // 9. Materiaal
-  tr.appendChild(makeEditableCell(o, "materiaal", "col-materiaal"));
+  const tdMat = makeEditableCell(o, "materiaal", "col-materiaal");
+  if (isOuder()) tdMat.classList.add("hide-view");
+  tr.appendChild(tdMat);
 
-  // 10. Splitter
-  if (config.showLeiding) {
-    const split = document.createElement("td");
-    split.classList.add("col-split");
-    tr.appendChild(split);
-  }
-
-  // 11. Jeugd aanwezigheden
+  // 10. Jeugd aanwezigheden
   jeugd.forEach(j => {
     tr.appendChild(makePresenceCell(o, j.id, j.hidden, false));
   });
+  
+   // 11. Splitter
+  if (config.showLeiding) {
+    const split = document.createElement("td");
+    split.classList.add("col-divider");
+    tr.appendChild(split);
+  }
 
   // 12. Leiding aanwezigheden
   if (config.showLeiding) {
     leiding.forEach(l => {
-      tr.appendChild(makePresenceCell(o, "leiding-" + l.id, l.hidden, true));
-    });
+  const td = makePresenceCell(o, "leiding-" + l.id, l.hidden, true);
+  if (isOuder()) td.classList.add("hide-view");
+  tr.appendChild(td);
+  });
   }
 
   // 13. Tellers

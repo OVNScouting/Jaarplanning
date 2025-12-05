@@ -362,6 +362,54 @@ function addHeaders() {
   }
 }
 
+// ======================================================================
+// Tijdcel (Optie A) — inline bewerken via <input type="time">
+// ======================================================================
+function makeTimeCell(o, field) {
+  const td = document.createElement("td");
+  const val = o[field] || "";
+
+  td.textContent = val;
+
+  // Ouder mag nooit bewerken
+  if (isOuder()) 
+    return td;
+
+  // Alleen leiding mag bewerken — maar alleen in bewerk-modus
+  if (!isEdit()) 
+    return td;
+
+  td.classList.add("editable-cell");
+
+  td.addEventListener("click", () => {
+    const input = document.createElement("input");
+    input.type = "time";
+    input.value = val;
+    input.classList.add("inline-time");
+
+    td.innerHTML = "";
+    td.appendChild(input);
+    input.focus();
+
+    const save = () => {
+      if (!input.value) {
+        td.textContent = val; // revert bij lege input
+        return;
+      }
+
+      update(ref(db, `${speltak}/opkomsten/${o.id}`), {
+        [field]: input.value
+      }).then(loadEverything);
+    };
+
+    input.addEventListener("blur", save);
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter") save();
+    });
+  });
+
+  return td;
+}
 function addRow(o) {
   const tr = document.createElement("tr");
 

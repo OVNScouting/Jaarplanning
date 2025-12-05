@@ -321,11 +321,6 @@ body {
   font-size: 0.75rem;
 }
 
-/* splitter kolom */
-.col-split {
-  border-left: 4px solid #9ca3af !important;
-}
-
 /* aanwezigheid indicaties */
 .presence-cell {
   cursor: pointer;
@@ -591,6 +586,58 @@ body {
 .speltak-card.rovers { border-top: 4px solid #003865; }
 .speltak-card.stam { border-top: 4px solid #7A7A7A; }
 
+/* ============================
+   VIEW-MODUS (OUDERS)
+   ============================ */
+
+/* Verberg kolommen die niet voor ouders zijn */
+.hide-view {
+  display: none !important;
+}
+
+/* Verberg in ouder-modus via JS:
+   - Type kolom
+   - Locatie kolom
+   - Materiaal kolom
+   - Leiding aanwezigheidskolommen
+   - Delete kolom
+*/
+/* Kolomspecifieke styling */
+.col-type { }
+.col-locatie { }
+.col-materiaal { }
+
+/* Wanneer verborgen voor ouders */
+.col-type.hide-view,
+.col-locatie.hide-view,
+.col-materiaal.hide-view {
+  display: none !important;
+}
+.col-leiding {
+  background: #fafafa;
+  border-left: 3px solid #ddd;
+}
+/* Divider tussen jeugd en leiding kolommen */
+.col-divider {
+  width: 6px !important;
+  background: #e0e0e0 !important;
+  border-right: 2px solid #888 !important;
+  padding: 0 !important;
+}
+/* Materiaal-kolom */
+.col-materiaal {
+  background: #fcfcfc;
+}
+/* Elementen die verborgen moeten zijn voor ouders */
+.only-leiding {
+  /* JS toggelt deze class weg voor leiding */
+}
+
+/* Voor ouders ALTIJD verbergen */
+.hide-ouder {
+  display: none !important;
+}
+
 /* ======================================================================
    PRINT LAYOUT
 ====================================================================== */
@@ -693,13 +740,12 @@ body {
   z-index: 3;
   backdrop-filter: none;
   background: inherit !important; /* neem rijkleur over */
+  background-clip: padding-box !important;
+
 }
-
-
-/* Leiding kolommen visueel scheiden */
-.col-leiding {
-  background: #fafafa;
-  border-left: 3px solid #ddd;
+/* Fix: sticky datum behoudt achtergrondkleur van de rij */
+tr > .col-datum {
+  background-color: inherit !important;
 }
 
 /* Locatie + Materiaal verbergen voor ouders */
@@ -722,10 +768,6 @@ body {
 .close-section:hover {
   background: #ddd;
 }
-.col-split {
-  width: 6px;
-  background: #e0e0e0;
-}
 .toolbar {
   display: flex;
   gap: 12px;
@@ -741,9 +783,6 @@ body {
   border-radius: 20px;
 }
 
-.toolbar .only-leiding {
-  display: none;
-}
 .fab-add-opkomst {
   position: fixed;
   bottom: 26px;

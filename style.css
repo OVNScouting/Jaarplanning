@@ -304,16 +304,14 @@ body {
   text-align: center;
   vertical-align: middle;
 }
-/* Eerste kolom */
-.planning-table th:first-child,
-.planning-table td:first-child {
-  width: 40px !important;
-  min-width: 40px !important;
-  max-width: 40px !important;
-  padding: 0 !important;
-  text-align: center !important;
-}
 
+/* Datumkolom – vaste, comfortabele breedte */
+.planning-table th.col-datum,
+.planning-table td.col-datum {
+  width: 110px;
+  min-width: 110px;
+  max-width: 110px;
+}
 
 .planning-table thead th {
   background: var(--blue-soft);

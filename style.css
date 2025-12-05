@@ -813,4 +813,20 @@ tr.row-grey > .col-datum      { background-color: var(--opkomst-verleden-bg) !im
 .fab-add-opkomst:hover {
   background: #155ff5;
 }
+/* Datum-kolom fix: sticky offset aanpassen afhankelijk van modus */
+
+/* Ouder-modus (geen delete-kolom) → direct tegen linkerkant */
+body.mode-ouder .col-datum {
+    left: 0 !important;
+}
+
+/* Leiding-modus (geen delete-kolom) → ook links */
+body.mode-leiding .col-datum {
+    left: 0 !important;
+}
+
+/* Bewerken-modus (wel delete-kolom van 40px) → offset blijft 40px */
+body.mode-bewerken .col-datum {
+    left: 40px !important;
+}
 

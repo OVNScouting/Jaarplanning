@@ -16,7 +16,7 @@
   <header class="topbar">
   <div class="topbar-left">
     <a href="index.html" class="backlink">← Terug</a>
-    <img src="assets/Bevers-speltakteken.png" class="topbar-logo" alt="Bevers logo">
+    <img src="assets/OVN.logo.png" class="topbar-logo" alt="Bevers logo">
     <div class="topbar-title">
       <h1>Bevers</h1>
       <span>Jaarplanning & Aanwezigheid</span>
@@ -24,7 +24,7 @@
   </div>
 
   <div class="topbar-right-icons">
-    <span id="leidingBadge" class="leiding-badge only-leiding">Je bent ingelogd als leiding</span>
+    <span id="loginStatus" class="leiding-badge only-leiding">Je bent ingelogd als leiding</span>
     <button id="logoutBtn" class="pill-btn outline only-leiding">Uitloggen</button>
     <img src="assets/Bevers-speltakteken.png" class="speltak-icon" alt="">
   </div>
@@ -234,6 +234,9 @@
 
         <label>Materiaal:</label>
         <input type="text" id="opMateriaal" />
+
+        <label for="opBert">Bert logeert bij</label>
+        <input type="text" id="opBert">
 
         <label>Type:</label>
         <select id="opType" class="hide-view">

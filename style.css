@@ -1,6 +1,3 @@
-/* ======================================================================
-   ROOT — KLEUREN EN BASIS
-====================================================================== */
 :root {
   --bg: #f5f7fb;
   --card: #ffffff;
@@ -37,9 +34,6 @@
   --radius-large: 25px;
 }
 
-/* ======================================================================
-   RESET & BODY
-====================================================================== */
 *,
 *::before,
 *::after {
@@ -652,23 +646,6 @@ body {
 .hide-ouder {
   display: none !important;
 }
-
-/* ============================================================
-   UNIVERSELE AANWEZIGHEIDS-ACHTERGRONDEN (JEUGD + LEIDING)
-   ============================================================ */
-
-td.presence-aanwezig {
-    background-color: #d1f7d6 !important;  /* lichtgroen */
-}
-
-td.presence-afwezig {
-    background-color: #ffd6d6 !important;  /* lichtroze */
-}
-
-td.presence-reminder {
-    background-color: #fff2c6 !important;  /* lichtgeel */
-}
-
 
 /* ======================================================================
    PRINT LAYOUT

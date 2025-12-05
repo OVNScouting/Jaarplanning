@@ -294,6 +294,7 @@ body {
 .planning-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;  
   font-size: 0.88rem;
 }
 
@@ -304,13 +305,14 @@ body {
   text-align: center;
   vertical-align: middle;
 }
-/* Eerste kolom (prullenbak) vaste breedte,
-   zodat de sticky datumkolom netjes ernaast kan staan */
+/* Eerste kolom */
 .planning-table th:first-child,
 .planning-table td:first-child {
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  padding: 0 !important;
+  text-align: center !important;
 }
 
 

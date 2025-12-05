@@ -328,12 +328,12 @@ function addHeaders() {
     tr.appendChild(th);
   });
 
-  // Splitter alleen zichtbaar voor leiding
-  if (!isOuder()) {
-  const div = document.createElement("th");
-  div.classList.add("col-divider");
-  tr.appendChild(div);
-  }
+      // Splitter tussen jeugd en leiding
+    if (!isOuder()) {
+      const divider = document.createElement("th");
+      divider.classList.add("col-divider");
+      tr.appendChild(divider);
+    }
 
   // Leiding
   if (config.showLeiding) {

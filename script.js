@@ -268,8 +268,11 @@ function renderTable() {
 function addHeaders() {
   const tr = headerRowTop;
 
-  // Delete
-  tr.appendChild(document.createElement("th"));
+  // Delete column only in edit mode
+  if (isBewerken()) {
+      tr.appendChild(document.createElement("th"));
+  }
+
 
   // Datum
   const thD = document.createElement("th");
@@ -327,13 +330,12 @@ function addHeaders() {
     if (j.hidden) th.classList.add("hide-view");
     tr.appendChild(th);
   });
-
-      // Splitter tussen jeugd en leiding
-    if (!isOuder()) {
-      const divider = document.createElement("th");
-      divider.classList.add("col-divider");
-      tr.appendChild(divider);
-    }
+  
+// Divider exactly once, only if leiding columns are shown
+if (config.showLeiding) {
+    const divider = document.createElement("th");
+    divider.classList.add("col-divider");
+    tr.appendChild(divider);
 
   // Leiding
   if (config.showLeiding) {
@@ -427,22 +429,19 @@ function addRow(o) {
   }
   if (o.id === nextUpcomingId) tr.classList.add("row-next");
 
-  // 1. Delete (alleen zichtbaar in bewerken-modus)
-  const del = document.createElement("td");
-  
-  if (isEdit()) {
-    del.textContent = "🗑️";
-    del.classList.add("editable-cell");
-    del.addEventListener("click", () => {
-      if (confirm("Deze opkomst verwijderen?")) {
-        set(ref(db, `${speltak}/opkomsten/${o.id}`), null).then(loadEverything);
-      }
-    });
-  } else {
-    del.classList.add("hide-ouder");
+  // Delete-col only in edit-mode
+  if (isBewerken()) {
+      const del = document.createElement("td");
+      del.textContent = "🗑️";
+      del.classList.add("editable-cell");
+      del.addEventListener("click", () => {
+          if (confirm("Deze opkomst verwijderen?")) {
+              set(ref(db, `${speltak}/opkomsten/${o.id}`), null).then(loadEverything);
+          }
+      });
+      tr.appendChild(del);
   }
-  
-  tr.appendChild(del);
+
 
 
   // 2. Datum
@@ -527,11 +526,10 @@ function addRow(o) {
   });
   
    // 11. Splitter
- if (!isOuder()) {
-  const div = document.createElement("td");
-  div.classList.add("col-divider");
-  tr.appendChild(div);
-}
+if (config.showLeiding) {
+    const divider = document.createElement("td");
+    divider.classList.add("col-divider");
+    tr.appendChild(divider);
   
 if (config.showLeiding) {
   leiding.forEach(l => {

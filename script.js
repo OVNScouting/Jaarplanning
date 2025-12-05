@@ -8,13 +8,12 @@ import {
   isoFromInput
 } from "./utils.js";
 
-import { appPromise, dbPromise } from "./firebase-imports.js";
+import { firebaseApp, firebaseDB } from "./firebase-imports.js";
 
 let initializeApp, getDatabase, ref, get, set, update, push;
 let app, db;
 
-Promise.all([appPromise, dbPromise]).then(([appModule, dbModule]) => {
-    // Functies uit Firebase-modules halen
+Promise.all([firebaseApp, firebaseDB]).then(([appModule, dbModule]) => {
     initializeApp = appModule.initializeApp;
     getDatabase = dbModule.getDatabase;
     ref = dbModule.ref;
@@ -23,11 +22,9 @@ Promise.all([appPromise, dbPromise]).then(([appModule, dbModule]) => {
     update = dbModule.update;
     push = dbModule.push;
 
-    // Firebase initialiseren
     app = initializeApp(window.firebaseConfig);
     db = getDatabase(app);
 
-    // Start je app
     loadEverything();
 });
 

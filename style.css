@@ -304,6 +304,15 @@ body {
   text-align: center;
   vertical-align: middle;
 }
+/* Eerste kolom (prullenbak) vaste breedte,
+   zodat de sticky datumkolom netjes ernaast kan staan */
+.planning-table th:first-child,
+.planning-table td:first-child {
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+}
+
 
 .planning-table thead th {
   background: var(--blue-soft);
@@ -742,7 +751,7 @@ body {
 /* Datum sticky */
 .col-datum {
   position: sticky;
-  left: 0;
+  left: 40px;
   z-index: 5;
   backdrop-filter: none;
 

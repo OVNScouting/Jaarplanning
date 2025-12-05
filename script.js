@@ -414,6 +414,53 @@ function makeTimeCell(o, field) {
 
   return td;
 }
+// ======================================================================
+// Tijdcel (inline editing via <input type="time"> — Optie A)
+// ======================================================================
+function makeTimeCell(o, field) {
+  const td = document.createElement("td");
+  const val = o[field] || "";
+
+  td.textContent = val;
+
+  // Ouders mogen nooit bewerken
+  if (isOuder()) return td;
+
+  // Leiding mag alleen bewerken in edit-modus
+  if (!isEdit()) return td;
+
+  td.classList.add("editable-cell");
+
+  td.addEventListener("click", () => {
+    const input = document.createElement("input");
+    input.type = "time";
+    input.value = val;
+    input.classList.add("inline-time");
+
+    td.innerHTML = "";
+    td.appendChild(input);
+    input.focus();
+
+    const save = () => {
+      if (!input.value) {
+        td.textContent = val;
+        return;
+      }
+
+      update(ref(db, `${speltak}/opkomsten/${o.id}`), {
+        [field]: input.value
+      }).then(loadEverything);
+    };
+
+    input.addEventListener("blur", save);
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter") save();
+    });
+  });
+
+  return td;
+}
+
 function addRow(o) {
   const tr = document.createElement("tr");
 
@@ -530,16 +577,15 @@ function addRow(o) {
   });
   
    // 11. Splitter
-  if (!isOuder()) {
+ if (!isOuder()) {
   const div = document.createElement("td");
   div.classList.add("col-divider");
   tr.appendChild(div);
-  }
+}
   
-  // 12. Leiding aanwezigheden
-  if (config.showLeiding) {
+if (config.showLeiding) {
   leiding.forEach(l => {
-    const td = makePresenceCell(o, "leiding-" + l.id, l.hidden, true);
+    const td = makePresenceCell(o, `leiding-${l.id}`, l.hidden, true);
 
     if (isOuder()) {
       td.classList.add("hide-view");
@@ -551,7 +597,6 @@ function addRow(o) {
     tr.appendChild(td);
   });
 }
-
 
   // 13. Tellers
   const [cntJ, cntL] = countPresence(o);

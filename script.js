@@ -87,7 +87,7 @@ const memberName = document.getElementById("memberName");
 const saveMember = document.getElementById("saveMember");
 const cancelMember = document.getElementById("cancelMember");
 
-const opModal = document.getElementById("addOpkomstModal");
+const opModal = document.getElementById("opkomstModal");
 const opDatum = document.getElementById("opDatum");
 const opStart = document.getElementById("opStart");
 const opEind = document.getElementById("opEind");
@@ -760,6 +760,23 @@ cancelOpkomst?.addEventListener("click", () =>
   opModal.classList.add("hidden")
 );
 
+function resetOpkomstFields() {
+  opDatum.value = "";
+  opStart.value = "10:30";
+  opEind.value = "12:30";
+  opThema.value = "";
+  opLocatie.value = "";
+  opType.value = "";
+  opMateriaal.value = "";
+}
+
+const fab = document.getElementById("fabAddOpkomst");
+fab?.addEventListener("click", () => {
+  if (!isLeiding()) return;
+  resetOpkomstFields();
+  opModal.classList.remove("hidden");
+});
+
 saveOpkomst?.addEventListener("click", () => {
   if (!isBewerken()) return;
 
@@ -771,11 +788,11 @@ saveOpkomst?.addEventListener("click", () => {
     id: newRef.key,
     datum: isoFromInput(opDatum.value),
     thema: opThema.value,
-    typeOpkomst: opType.value,
+    typeOpkomst: opType.value || "normaal",
     starttijd: opStart.value || "10:30",
     eindtijd: opEind.value || "12:30",
     locatie: opLocatie.value,
-    materiaal: "",
+    materiaal: opMateriaal.value || "",
     aanwezigheid: {}
   };
 

@@ -269,9 +269,11 @@ function addHeaders() {
   const tr = headerRowTop;
 
   // Delete column only in edit mode
-  if (isBewerken()) {
-      tr.appendChild(document.createElement("th"));
-  }
+if (isEdit()) {
+    const thDel = document.createElement("th");
+    thDel.textContent = ""; // leeg
+    tr.appendChild(thDel);
+}
 
 
   // Datum
@@ -324,41 +326,45 @@ function addHeaders() {
 
 
   // Jeugdleden
-  jeugd.forEach(j => {
+jeugd.forEach(j => {
+    if (j.hidden) return; // volledige kolom overslaan
     const th = document.createElement("th");
     th.innerHTML = `<div class="name-vertical">${j.naam}</div>`;
-    if (j.hidden) th.classList.add("hide-view");
     tr.appendChild(th);
-  });
+});
   
 // Divider exactly once, only if leiding columns are shown
-if (config.showLeiding) {
+const visibleJeugd = jeugd.filter(j => !j.hidden).length;
+const visibleLeiding = leiding.filter(l => !l.hidden).length;
+
+if (visibleJeugd > 0 && visibleLeiding > 0) {
     const divider = document.createElement("th");
     divider.classList.add("col-divider");
     tr.appendChild(divider);
+}
 
   // Leiding
   if (config.showLeiding) {
     leiding.forEach(l => {
-      const th = document.createElement("th");
-      th.classList.add("col-leiding");
-      th.innerHTML = `<div class="name-vertical">${l.naam}</div>`;
-      if (l.hidden) th.classList.add("hide-view");
-      if (isOuder()) th.classList.add("hide-view");
-      tr.appendChild(th);
-    });
+    if (l.hidden) return; // volledige kolom overslaan
+    const th = document.createElement("th");
+    th.classList.add("col-leiding");
+    if (isOuder()) th.classList.add("hide-view");
+    th.innerHTML = `<div class="name-vertical">${l.naam}</div>`;
+    tr.appendChild(th);
+});
   }
 
   // Twee tellers
-  const thJ = document.createElement("th");
-  thJ.textContent = "Aanw. jeugd";
-  tr.appendChild(thJ);
+ if (!isOuder()) {
+    const thJ = document.createElement("th");
+    thJ.textContent = "Aanw. jeugd";
+    tr.appendChild(thJ);
 
-    if (config.showLeiding && !isOuder()) {
-      const thL = document.createElement("th");
-      thL.textContent = "Aanw. leiding";
-      tr.appendChild(thL);
-    }
+    const thL = document.createElement("th");
+    thL.textContent = "Aanw. leiding";
+    tr.appendChild(thL);
+}
 
 
 }
@@ -430,7 +436,7 @@ function addRow(o) {
   if (o.id === nextUpcomingId) tr.classList.add("row-next");
 
   // Delete-col only in edit-mode
-  if (isBewerken()) {
+  if (isEdit()) {
       const del = document.createElement("td");
       del.textContent = "🗑️";
       del.classList.add("editable-cell");
@@ -491,7 +497,7 @@ function addRow(o) {
         }
       });
     } else if (isOuder()) {
-        tdType.classList.add("hide-ouder");
+        tdType.classList.add("hide-view");
       }
 
 
@@ -526,39 +532,27 @@ function addRow(o) {
   });
   
    // 11. Splitter
-if (config.showLeiding) {
+const visibleJeugd = jeugd.filter(j => !j.hidden).length;
+const visibleLeiding = leiding.filter(l => !l.hidden).length;
+
+if (visibleJeugd > 0 && visibleLeiding > 0) {
     const divider = document.createElement("td");
     divider.classList.add("col-divider");
     tr.appendChild(divider);
-  
-if (config.showLeiding) {
-  leiding.forEach(l => {
-    const td = makePresenceCell(o, `leiding-${l.id}`, l.hidden, true);
-
-    if (isOuder()) {
-      td.classList.add("hide-view");
-    } else {
-      td.classList.add("presence-cell", "editable-cell");
-      td.addEventListener("click", () => togglePresence(o, `leiding-${l.id}`));
-    }
-
-    tr.appendChild(td);
-  });
 }
+
 
   // 13. Tellers
   const [cntJ, cntL] = countPresence(o);
 
- const tdJ = document.createElement("td");
-tdJ.textContent = cntJ;
-if (isOuder()) tdJ.classList.add("hide-view");
-tr.appendChild(tdJ);
+if (!isOuder()) {
+    const tdJ = document.createElement("td");
+    tdJ.textContent = cntJ;
+    tr.appendChild(tdJ);
 
-if (config.showLeiding) {
-  const tdL = document.createElement("td");
-  tdL.textContent = cntL;
-  if (isOuder()) tdL.classList.add("hide-view");
-  tr.appendChild(tdL);
+    const tdL = document.createElement("td");
+    tdL.textContent = cntL;
+    tr.appendChild(tdL);
 }
 
 
@@ -627,16 +621,22 @@ function makePresenceCell(o, key, hidden, isLeidingCell) {
   if (hidden) td.classList.add("hide-view");
   if (isLeidingCell) td.classList.add("col-leiding");
   
-// Verborgen leden mogen niet beïnvloed worden
+// Verborgen leden: cel wel renderen maar verbergen + niet interactief
 if (key.startsWith("leiding-")) {
-  const id = key.replace("leiding-", "");
-  const obj = leiding.find(l => l.id === id);
-  if (obj?.hidden) return;
+    const id = key.replace("leiding-", "");
+    const obj = leiding.find(l => l.id === id);
+    if (obj?.hidden) {
+        td.classList.add("hide-view");
+        return td; // cel bestaat, maar is onzichtbaar
+    }
 } else {
-  const obj = jeugd.find(j => j.id === key);
-  if (obj?.hidden) return;
+    const obj = jeugd.find(j => j.id === key);
+    if (obj?.hidden) {
+        td.classList.add("hide-view");
+        return td; // cel bestaat, maar is onzichtbaar
+    }
 }
-
+  
   const cur = (o.aanwezigheid && o.aanwezigheid[key]) || "onbekend";
   const sym = { aanwezig: "✔", afwezig: "✖", onbekend: "?" };
   td.textContent = sym[cur];

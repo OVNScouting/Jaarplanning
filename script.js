@@ -310,6 +310,11 @@ if (isEdit()) {
   thTh.textContent = "Thema";
   tr.appendChild(thTh);
 
+  // Bijzonderheden
+const thBz = document.createElement("th");
+thBz.textContent = "Bijzonderheden";
+tr.appendChild(thBz);
+
   // Bert
   if (config.showBert) {
     const thB = document.createElement("th");
@@ -338,7 +343,14 @@ jeugd.forEach(j => {
     th.innerHTML = `<div class="name-vertical">${j.naam}</div>`;
     tr.appendChild(th);
 });
-  
+
+  // Kijkers (alleen voor leiding/edit)
+if (!isOuder()) {
+    const thK = document.createElement("th");
+    thK.textContent = "Kijkers";
+    tr.appendChild(thK);
+}
+
 // Divider exactly once, only if leiding columns are shown
 const visibleJeugd = jeugd.filter(j => !j.hidden).length;
 const visibleLeiding = leiding.filter(l => !l.hidden).length;
@@ -360,6 +372,13 @@ if (visibleJeugd > 0 && visibleLeiding > 0) {
     tr.appendChild(th);
 });
   }
+  
+  // Extra leiding kolom
+if (!isOuder()) {
+    const thExtra = document.createElement("th");
+    thExtra.textContent = "Extra";
+    tr.appendChild(thExtra);
+}
 
   // Twee tellers
  if (!isOuder()) {
@@ -513,6 +532,9 @@ function addRow(o) {
   // 6. Thema
   tr.appendChild(makeEditableCell(o, "thema"));
 
+  // 6b. Bijzonderheden
+tr.appendChild(makeEditableCell(o, "bijzonderheden"));
+
   // 7. Bert
   if (config.showBert) tr.appendChild(makeEditableCell(o, "bert_met"));
   
@@ -537,6 +559,27 @@ jeugd.forEach(j => {
     tr.appendChild(makePresenceCell(o, j.id, j.hidden, false));
 });
 
+  // Kijkers (alleen in leiding/edit modus zichtbaar)
+if (!isOuder()) {
+    const tdK = document.createElement("td");
+    tdK.textContent = o.kijkers ?? 0;
+
+    if (isEdit()) {
+        tdK.classList.add("editable-cell");
+        tdK.addEventListener("click", () => {
+            const nieuw = prompt("Aantal kijkers:", o.kijkers ?? 0);
+            if (nieuw !== null) {
+                update(ref(db, `${speltak}/opkomsten/${o.id}`), {
+                    kijkers: Number(nieuw || 0)
+                }).then(loadEverything);
+            }
+        });
+    }
+
+    tr.appendChild(tdK);
+}
+
+
 // 11. Splitter
 const visibleJeugd = jeugd.filter(j => !j.hidden).length;
 const visibleLeiding = leiding.filter(l => !l.hidden).length;
@@ -553,6 +596,35 @@ if (!isOuder()) {
         tr.appendChild(makePresenceCell(o, `leiding-${l.id}`, l.hidden, true));
     });
 }
+
+  // Extra leiding kolom
+if (!isOuder()) {
+    const tdExtra = document.createElement("td");
+
+    if (isEdit()) {
+        tdExtra.innerHTML = `
+            <div>
+                <input type="number" value="${o.extraAantal ?? 0}" class="extraAantalInput" />
+                <input type="text" value="${o.extraNamen ?? ""}" class="extraNamenInput" placeholder="namen" />
+            </div>
+        `;
+        tdExtra.querySelector(".extraAantalInput").addEventListener("change", e => {
+            update(ref(db, `${speltak}/opkomsten/${o.id}`), {
+                extraAantal: Number(e.target.value || 0)
+            });
+        });
+        tdExtra.querySelector(".extraNamenInput").addEventListener("blur", e => {
+            update(ref(db, `${speltak}/opkomsten/${o.id}`), {
+                extraNamen: e.target.value.trim()
+            });
+        });
+    } else {
+        tdExtra.textContent = o.extraNamen || "";
+    }
+
+    tr.appendChild(tdExtra);
+}
+
 
 
 
@@ -691,8 +763,7 @@ function togglePresence(o, key) {
 }
 
 function countPresence(o) {
-  let j = 0,
-    l = 0;
+  let j = 0, l = 0;
 
   jeugd.forEach(m => {
     if (!m.hidden && o.aanwezigheid?.[m.id] === "aanwezig") j++;
@@ -700,10 +771,13 @@ function countPresence(o) {
 
   if (config.showLeiding) {
     leiding.forEach(m => {
-      if (!m.hidden && o.aanwezigheid?.[`leiding-${m.id}`] === "aanwezig")
-        l++;
+      if (!m.hidden && o.aanwezigheid?.[`leiding-${m.id}`] === "aanwezig") l++;
     });
   }
+
+  // Kijkers + extra leiding toevoegen
+  j += Number(o.kijkers || 0);
+  l += Number(o.extraAantal || 0);
 
   return [j, l];
 }
@@ -868,13 +942,17 @@ saveOpkomst?.addEventListener("click", () => {
     id: newRef.key,
     datum: isoFromInput(opDatum.value),
     thema: opThema.value,
+    bijzonderheden: "",
     typeOpkomst: opType.value || "normaal",
     starttijd: opStart.value || "10:30",
     eindtijd: opEind.value || "12:30",
     locatie: opLocatie.value,
     materiaal: opMateriaal.value || "",
+    kijkers: 0,
+    extraAantal: 0,
+    extraNamen: "",
     aanwezigheid: {}
-  };
+};
 
   if (config.showBert) newObj.bert_met = "";
 

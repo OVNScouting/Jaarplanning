@@ -147,11 +147,16 @@ function applyModeVisibility() {
   document.querySelectorAll(".only-leiding").forEach(el => {
     el.classList.toggle("hide-ouder", isOuder());
   });
+// Ouders verbergen bepaalde elementen
+document.querySelectorAll(".only-leiding").forEach(el => {
+  el.classList.toggle("hide-view", isOuder());
+});
 
-  document.querySelectorAll(".hide-view").forEach(el => {
-    el.classList.toggle("hide-view", isOuder());
-  });
-}
+// Leiding ziet columns terug die eerder verborgen waren
+document.querySelectorAll(".col-locatie, .col-materiaal, .col-type, .col-leiding").forEach(el => {
+  if (isLeiding()) el.classList.remove("hide-view");
+});
+  }
 
 // ======================================================================
 // DATA LADEN
@@ -201,6 +206,8 @@ async function loadEverything() {
 
   renderEverything();
 }
+
+let currentFilter = "all";
 
 // ======================================================================
 // RENDER EVERYTHING
@@ -285,7 +292,7 @@ function addHeaders() {
   const thT = document.createElement("th");
   thT.textContent = "Type";
   thT.classList.add("col-type");
-  if (!isBewerken()) thT.classList.add("hide-view");
+  if (!isEdit()) thT.classList.add("hide-view");
   tr.appendChild(thT);
 
 
@@ -319,16 +326,14 @@ function addHeaders() {
   jeugd.forEach(j => {
     const th = document.createElement("th");
     th.innerHTML = `<div class="name-vertical">${j.naam}</div>`;
-    if (j.hidden) th.classList.add("hidden");
+    if (j.hidden) th.classList.add("hide-view");
     tr.appendChild(th);
   });
-  
-    // Splitter
-  if (config.showLeiding) {
-    const split = document.createElement("th");
-    split.classList.add("col-divider");
-    tr.appendChild(split);
-  }
+
+  // Divider tussen jeugd & leiding
+  const div = document.createElement("th");
+  div.classList.add("col-divider");
+  tr.appendChild(div);
 
   // Leiding
   if (config.showLeiding) {
@@ -336,7 +341,7 @@ function addHeaders() {
       const th = document.createElement("th");
       th.classList.add("col-leiding");
       th.innerHTML = `<div class="name-vertical">${l.naam}</div>`;
-      if (l.hidden) th.classList.add("hidden");
+      if (l.hidden) th.classList.add("hide-view");
       if (isOuder()) th.classList.add("hide-view");
       tr.appendChild(th);
     });
@@ -357,19 +362,24 @@ function addHeaders() {
 function addRow(o) {
   const tr = document.createElement("tr");
 
-  // Type-kleur
-  if (o.typeOpkomst === "geen") tr.classList.add("row-geenopkomst");
-  if (o.typeOpkomst === "bijzonder") tr.classList.add("row-bijzonder");
-  if (o.typeOpkomst === "kamp") tr.classList.add("row-kamp");
+  if (o.typeOpkomst === "geen") {
+  tr.classList.add("row-geenopkomst");
+} else if (o.typeOpkomst === "bijzonder") {
+  tr.classList.add("row-bijzonder");
+} else if (o.typeOpkomst === "kamp") {
+  tr.classList.add("row-kamp");
+}
 
   // Verleden / volgende
-  if (isPast(o.datum)) tr.classList.add("row-grey");
+  if (isPast(o.datum) && !tr.classList.contains("row-geenopkomst")) {
+  tr.classList.add("row-grey");
+  }
   if (o.id === nextUpcomingId) tr.classList.add("row-next");
 
   // 1. Delete (alleen zichtbaar in bewerken-modus)
   const del = document.createElement("td");
   
-  if (isBewerken()) {
+  if (isEdit()) {
     del.textContent = "🗑️";
     del.classList.add("editable-cell");
     del.addEventListener("click", () => {
@@ -389,7 +399,7 @@ function addRow(o) {
   tdDatum.classList.add("col-datum");
   tdDatum.textContent = formatDateDisplay(o.datum);
 
-  if (isBewerken()) {
+  if (isEdit()) {
     tdDatum.classList.add("editable-cell");
     tdDatum.addEventListener("click", () => {
       const inp = document.createElement("input");
@@ -421,7 +431,7 @@ function addRow(o) {
     const tdType = document.createElement("td");
     tdType.classList.add("col-type");
     
-    if (isBewerken()) {
+    if (isEdit()) {
       tdType.textContent = o.typeOpkomst || "";
       tdType.classList.add("editable-cell");
       tdType.addEventListener("click", () => {
@@ -465,10 +475,9 @@ function addRow(o) {
   });
   
    // 11. Splitter
-  if (config.showLeiding) {
-    const split = document.createElement("td");
-    split.classList.add("col-divider");
-    tr.appendChild(split);
+   const div = document.createElement("td");
+    div.classList.add("col-divider");
+    tr.appendChild(div);
   }
 
   // 12. Leiding aanwezigheden
@@ -483,15 +492,18 @@ function addRow(o) {
   // 13. Tellers
   const [cntJ, cntL] = countPresence(o);
 
-  const tdJ = document.createElement("td");
-  tdJ.textContent = cntJ;
-  tr.appendChild(tdJ);
+ const tdJ = document.createElement("td");
+tdJ.textContent = cntJ;
+if (isOuder()) tdJ.classList.add("hide-view");
+tr.appendChild(tdJ);
 
-  if (config.showLeiding) {
-    const tdL = document.createElement("td");
-    tdL.textContent = cntL;
-    tr.appendChild(tdL);
-  }
+if (config.showLeiding) {
+  const tdL = document.createElement("td");
+  tdL.textContent = cntL;
+  if (isOuder()) tdL.classList.add("hide-view");
+  tr.appendChild(tdL);
+}
+
 
   tableBody.appendChild(tr);
 }
@@ -504,7 +516,7 @@ function makeEditableCell(o, field, extraClass = "") {
   td.textContent = o[field] || "";
   if (extraClass) td.classList.add(extraClass);
 
-  if (!isBewerken()) return td;
+  if (!isEdit()) return td;
 
   td.classList.add("editable-cell");
   td.contentEditable = true;
@@ -525,7 +537,7 @@ function makeRestrictedEditable(o, field, opties, className) {
 
   if (!isLeiding()) return td;
 
-  if (isBewerken()) {
+  if (isEdit()) {
     td.classList.add("editable-cell");
     td.addEventListener("click", () => {
       const nieuw = prompt(`Nieuwe ${field} (${opties.join(", ")}):`, o[field] || "");
@@ -547,7 +559,7 @@ function makeTimeCell(o, field) {
   if (o.starttijd !== "10:30" || o.eindtijd !== "12:30")
     td.classList.add("tijd-afwijkend");
 
-  if (!isBewerken()) return td;
+  if (!isEdit()) return td;
 
   td.classList.add("editable-cell");
   td.addEventListener("click", () => {
@@ -754,7 +766,7 @@ saveMember?.addEventListener("click", () => {
 
 // Opkomst toevoegen
 addOpkomstRow?.addEventListener("click", () => {
-  if (!isBewerken()) return;
+  if (!isEdit()) return;
   opModal.classList.remove("hidden");
 });
 
@@ -780,7 +792,7 @@ fab?.addEventListener("click", () => {
 });
 
 saveOpkomst?.addEventListener("click", () => {
-  if (!isBewerken()) return;
+  if (!isEdit()) return;
 
   if (!opDatum.value) return alert("Datum verplicht");
 
@@ -840,11 +852,11 @@ filterPast?.addEventListener("click", () => {
 printButton?.addEventListener("click", () => window.print());
 
 editModeButton?.addEventListener("click", () => {
-  if (!isLeiding() && !isBewerken()) {
+  if (!isLeiding() && !isEdit()) {
     alert("Log in als leiding om te bewerken.");
     return;
   }
-  setMode(isBewerken() ? "leiding" : "bewerken");
+  setMode(isEdit() ? "leiding" : "bewerken");
 });
 
 infoEditButton?.addEventListener("click", toggleInfoEdit);

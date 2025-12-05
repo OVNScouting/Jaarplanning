@@ -1,7 +1,3 @@
-// ======================================================================
-// script.js — volledige vernieuwde versie
-// ======================================================================
-
 import {
   sanitizeText,
   todayISO,
@@ -53,7 +49,6 @@ const colorPicker = document.getElementById("colorPicker");
 // Table
 const headerRowTop = document.getElementById("headerRowTop");
 const tableBody = document.getElementById("tableBody");
-const addOpkomstRow = document.getElementById("addOpkomstRow");
 
 // Buttons
 const editModeButton = document.getElementById("editModeButton");
@@ -247,7 +242,7 @@ function toggleInfoEdit() {
   if (!infoEditActive) {
     const sanitized = sanitizeText(infoEdit.innerHTML);
     update(ref(db, speltak), { infotekst: sanitized }).then(() => {
-      window.location.reload();
+    renderEverything();
     });
   }
 }
@@ -340,7 +335,6 @@ function addHeaders() {
   tr.appendChild(div);
   }
 
-
   // Leiding
   if (config.showLeiding) {
     leiding.forEach(l => {
@@ -358,11 +352,12 @@ function addHeaders() {
   thJ.textContent = "Aanw. jeugd";
   tr.appendChild(thJ);
 
-  if (config.showLeiding && !isOuder()) {
-  const tdL = document.createElement("td");
-  tdL.textContent = cntL;
-  tr.appendChild(tdL);
-  }
+    if (config.showLeiding && !isOuder()) {
+      const thL = document.createElement("th");
+      thL.textContent = "Aanw. leiding";
+      tr.appendChild(thL);
+    }
+
 
 }
 
@@ -414,52 +409,6 @@ function makeTimeCell(o, field) {
 
   return td;
 }
-// ======================================================================
-// Tijdcel (inline editing via <input type="time"> — Optie A)
-// ======================================================================
-function makeTimeCell(o, field) {
-  const td = document.createElement("td");
-  const val = o[field] || "";
-
-  td.textContent = val;
-
-  // Ouders mogen nooit bewerken
-  if (isOuder()) return td;
-
-  // Leiding mag alleen bewerken in edit-modus
-  if (!isEdit()) return td;
-
-  td.classList.add("editable-cell");
-
-  td.addEventListener("click", () => {
-    const input = document.createElement("input");
-    input.type = "time";
-    input.value = val;
-    input.classList.add("inline-time");
-
-    td.innerHTML = "";
-    td.appendChild(input);
-    input.focus();
-
-    const save = () => {
-      if (!input.value) {
-        td.textContent = val;
-        return;
-      }
-
-      update(ref(db, `${speltak}/opkomsten/${o.id}`), {
-        [field]: input.value
-      }).then(loadEverything);
-    };
-
-    input.addEventListener("blur", save);
-    input.addEventListener("keydown", e => {
-      if (e.key === "Enter") save();
-    });
-  });
-
-  return td;
-}
 
 function addRow(o) {
   const tr = document.createElement("tr");
@@ -490,7 +439,7 @@ function addRow(o) {
       }
     });
   } else {
-    del.classList.add("hide-view");
+    del.classList.add("hide-ouder");
   }
   
   tr.appendChild(del);
@@ -543,8 +492,9 @@ function addRow(o) {
         }
       });
     } else if (isOuder()) {
-      tdType.classList.add("hide-view");
-    }
+        tdType.classList.add("hide-ouder");
+      }
+
 
     tr.appendChild(tdType);
     
@@ -678,6 +628,16 @@ function makePresenceCell(o, key, hidden, isLeidingCell) {
   const td = document.createElement("td");
   if (hidden) td.classList.add("hide-view");
   if (isLeidingCell) td.classList.add("col-leiding");
+  
+// Verborgen leden mogen niet beïnvloed worden
+if (key.startsWith("leiding-")) {
+  const id = key.replace("leiding-", "");
+  const obj = leiding.find(l => l.id === id);
+  if (obj?.hidden) return;
+} else {
+  const obj = jeugd.find(j => j.id === key);
+  if (obj?.hidden) return;
+}
 
   const cur = (o.aanwezigheid && o.aanwezigheid[key]) || "onbekend";
   const sym = { aanwezig: "✔", afwezig: "✖", onbekend: "?" };
@@ -696,7 +656,7 @@ function makePresenceCell(o, key, hidden, isLeidingCell) {
   }
 
   // Leiding → alleen klikbaar voor leiding/bewerken
-  if (isLeiding() && !hidden) {
+  if (isLeiding()) {
   td.classList.add("editable-cell");
   td.addEventListener("click", () => togglePresence(o, key));
 }
@@ -864,12 +824,6 @@ saveMember?.addEventListener("click", () => {
   });
 });
 
-// Opkomst toevoegen
-addOpkomstRow?.addEventListener("click", () => {
-  if (!isEdit()) return;
-  opModal.classList.remove("hidden");
-});
-
 cancelOpkomst?.addEventListener("click", () =>
   opModal.classList.add("hidden")
 );
@@ -884,7 +838,7 @@ function resetOpkomstFields() {
   opMateriaal.value = "";
 }
 
-const fab = document.getElementById("fabAddOpkomst");
+const fab = document.getElementById("addOpkomstBtn");
 fab?.addEventListener("click", () => {
   if (!isLeiding()) return;
   resetOpkomstFields();

@@ -1089,9 +1089,3 @@ colorPicker?.addEventListener("change", () => {
 meldingLeidingAan?.addEventListener("change", saveMeldingen);
 meldingOnbekendAan?.addEventListener("change", saveMeldingen);
 leidingDrempel?.addEventListener("input", saveMeldingen);
-
-// ======================================================================
-// INIT
-// ======================================================================
-setMode(mode);
-loadEverything();

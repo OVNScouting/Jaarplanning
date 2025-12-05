@@ -751,10 +751,12 @@ body {
   background-clip: padding-box;
 }
 
-/* Fix: sticky datum behoudt achtergrondkleur van de rij */
+/* Sticky datum moet altijd leesbaar zijn */
 tr > .col-datum {
-  background-color: inherit !important;
+  background-color: var(--card) !important; /* witte basis */
 }
+
+/* Voor status-rijen kleur laten doorlopen */
 tr.row-bijzonder > .col-datum { background-color: var(--opkomst-bijzonder-bg) !important; }
 tr.row-kamp > .col-datum      { background-color: var(--opkomst-kamp-bg) !important; }
 tr.row-geenopkomst > .col-datum { background-color: var(--opkomst-geen-bg) !important; }

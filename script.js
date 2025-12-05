@@ -922,6 +922,11 @@ function resetOpkomstFields() {
   opLocatie.value = "";
   opType.value = "";
   opMateriaal.value = "";
+  opBijzonderheden.value = "";
+  opKijkers.value = 0;
+  opExtraAantal.value = 0;
+  opExtraNamen.value = "";
+
 }
 
 const fab = document.getElementById("fabAddOpkomst");
@@ -938,21 +943,22 @@ saveOpkomst?.addEventListener("click", () => {
 
   const newRef = push(ref(db, `${speltak}/opkomsten`));
 
-  const newObj = {
+ const newObj = {
     id: newRef.key,
     datum: isoFromInput(opDatum.value),
     thema: opThema.value,
-    bijzonderheden: "",
+    bijzonderheden: opBijzonderheden.value || "",
     typeOpkomst: opType.value || "normaal",
     starttijd: opStart.value || "10:30",
     eindtijd: opEind.value || "12:30",
     locatie: opLocatie.value,
     materiaal: opMateriaal.value || "",
-    kijkers: 0,
-    extraAantal: 0,
-    extraNamen: "",
+    kijkers: Number(opKijkers.value || 0),
+    extraAantal: Number(opExtraAantal.value || 0),
+    extraNamen: opExtraNamen.value || "",
     aanwezigheid: {}
 };
+
 
   if (config.showBert) newObj.bert_met = "";
 

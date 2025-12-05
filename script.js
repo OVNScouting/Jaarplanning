@@ -49,6 +49,9 @@ const infoEditorWrapper = document.getElementById("infoEditorWrapper");
 const infoEditButton = document.getElementById("infoEditButton");
 const toolbarButtons = document.querySelectorAll("#infoEditorToolbar button");
 const colorPicker = document.getElementById("colorPicker");
+const loadingIndicator = document.getElementById("loadingIndicator");
+const errorIndicator = document.getElementById("errorIndicator");
+
 
 // Table
 const headerRowTop = document.getElementById("headerRowTop");
@@ -168,54 +171,75 @@ function applyModeVisibility() {
 
 }
 
-// ======================================================================
-// DATA LADEN
-// ======================================================================
 async function loadEverything() {
-  const snap = await get(ref(db, speltak));
-  data = snap.val() || {};
 
-  opkomsten = Object.entries(data.opkomsten || {}).map(([id, value]) => ({
-    id,
-    ...value
-  }));
+    // --- LOADING START ---
+    loadingIndicator.classList.remove("hidden");
+    errorIndicator.classList.add("hidden");
 
-  // sorteer: toekomst/heden → verleden
-  opkomsten.sort((a, b) => {
-    const aPast = isPast(a.datum);
-    const bPast = isPast(b.datum);
-    if (aPast !== bPast) return aPast ? 1 : -1;
-    return compareDateTime(a, b);
-  });
+    try {
+        const snap = await get(ref(db, speltak));
 
-  // Eerstvolgende opkomst bepalen
-  nextUpcomingId = null;
-  for (const o of opkomsten) {
-    if (!isPast(o.datum)) {
-      nextUpcomingId = o.id;
-      break;
+        if (!snap.exists()) {
+            throw new Error("Geen data gevonden");
+        }
+
+        data = snap.val() || {};
+
+        // Klaar met laden
+        loadingIndicator.classList.add("hidden");
+
+        // --- DE REST VAN JOUW ORIGINELE FUNCTIE ---
+        opkomsten = Object.entries(data.opkomsten || {}).map(([id, value]) => ({
+            id,
+            ...value
+        }));
+
+        // sorteer toekomst-heden-verleden
+        opkomsten.sort((a, b) => {
+            const aPast = isPast(a.datum);
+            const bPast = isPast(b.datum);
+            if (aPast !== bPast) return aPast ? 1 : -1;
+            return compareDateTime(a, b);
+        });
+
+        // eerstvolgende opkomst bepalen
+        nextUpcomingId = null;
+        for (const o of opkomsten) {
+            if (!isPast(o.datum)) {
+                nextUpcomingId = o.id;
+                break;
+            }
+        }
+
+        jeugd = Object.entries(data.jeugdleden || {}).map(([id, v]) => ({
+            id,
+            volgorde: typeof v.volgorde === "number" ? v.volgorde : 999,
+            hidden: !!v.hidden,
+            naam: v.naam || ""
+        }));
+
+        leiding = Object.entries(data.leiding || {}).map(([id, v]) => ({
+            id,
+            volgorde: typeof v.volgorde === "number" ? v.volgorde : 999,
+            hidden: !!v.hidden,
+            naam: v.naam || ""
+        }));
+
+        jeugd.sort((a, b) => a.volgorde - b.volgorde);
+        leiding.sort((a, b) => a.volgorde - b.volgorde);
+
+        renderEverything();
+
+    } catch (err) {
+        console.error("Fout bij laden database:", err);
+
+        loadingIndicator.classList.add("hidden");
+        errorIndicator.classList.remove("hidden");
+        errorIndicator.textContent = "Kon geen verbinding maken met de database. Probeer opnieuw.";
     }
-  }
-
-  jeugd = Object.entries(data.jeugdleden || {}).map(([id, v]) => ({
-    id,
-    volgorde: typeof v.volgorde === "number" ? v.volgorde : 999,
-    hidden: !!v.hidden,
-    naam: v.naam || ""
-  }));
-
-  leiding = Object.entries(data.leiding || {}).map(([id, v]) => ({
-    id,
-    volgorde: typeof v.volgorde === "number" ? v.volgorde : 999,
-    hidden: !!v.hidden,
-    naam: v.naam || ""
-  }));
-
-  jeugd.sort((a, b) => a.volgorde - b.volgorde);
-  leiding.sort((a, b) => a.volgorde - b.volgorde);
-
-  renderEverything();
 }
+
 
 let currentFilter = "all";
 

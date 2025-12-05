@@ -646,6 +646,24 @@ body {
 .hide-ouder {
   display: none !important;
 }
+/* ============================================
+   Presence-cellen moeten altijd boven de rijkleur liggen
+   ============================================ */
+
+/* Aanwezig (groen) */
+td.presence-aanwezig {
+    background-color: #d8f5d0 !important;
+}
+
+/* Afwezig (rood) */
+td.presence-afwezig {
+    background-color: #f5d0d0 !important;
+}
+
+/* Onbekend (geel/oranje) */
+td.presence-reminder {
+    background-color: #fff3c4 !important;
+}
 
 /* ======================================================================
    PRINT LAYOUT

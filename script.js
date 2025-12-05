@@ -105,6 +105,8 @@ let jeugd = [];
 let leiding = [];
 
 let nextUpcomingId = null;
+let infoEditActive = false;
+
 
 /* =============================
    MODES — ouder / leiding / edit
@@ -236,18 +238,18 @@ function toggleInfoEdit() {
 
   infoEditActive = !infoEditActive;
 
-  infoEditorWrapper.classList.toggle("hidden", !infoEditActive);
-  infoTekst.classList.toggle("hidden", infoEditActive);
-
-  infoEditButton.textContent = infoEditActive
-    ? "Opslaan info"
-    : "Info bewerken";
-
-  if (!infoEditActive) {
-    const sanitized = sanitizeText(infoEdit.innerHTML);
-    update(ref(db, speltak), { infotekst: sanitized }).then(() => {
-    renderEverything();
-    });
+  if (infoEditActive) {
+      infoEditorWrapper.classList.remove("hidden");
+      infoTekst.classList.add("hidden");
+      infoEditButton.textContent = "Opslaan info";
+  } else {
+      const sanitized = sanitizeText(infoEdit.innerHTML);
+      update(ref(db, speltak), { infotekst: sanitized }).then(() => {
+          infoEditorWrapper.classList.add("hidden");
+          infoTekst.classList.remove("hidden");
+          infoEditButton.textContent = "Info bewerken";
+          renderEverything();
+      });
   }
 }
 
@@ -848,7 +850,7 @@ function resetOpkomstFields() {
   opMateriaal.value = "";
 }
 
-const fab = document.getElementById("addOpkomstBtn");
+const fab = document.getElementById("fabAddOpkomst");
 fab?.addEventListener("click", () => {
   if (!isLeiding()) return;
   resetOpkomstFields();
@@ -885,6 +887,14 @@ saveOpkomst?.addEventListener("click", () => {
     loadEverything();
   });
 });
+
+const logoutButton = document.getElementById("logoutButton");
+
+logoutButton?.addEventListener("click", () => {
+    localStorage.setItem("mode", "ouder");
+    setMode("ouder");
+});
+
 
 // ======================================================================
 // FILTERS, PRINT, EDIT MODE, INFO EDIT, WYSIWYG

@@ -128,6 +128,10 @@ function isEdit() {
 function setMode(newMode) {
   mode = newMode;
   localStorage.setItem("mode", newMode);
+
+  document.body.classList.remove("mode-ouder", "mode-leiding", "mode-bewerken");
+  document.body.classList.add(`mode-${newMode}`);
+
   applyModeVisibility();
   renderTable();
 }

@@ -545,10 +545,13 @@ if (visibleJeugd > 0 && visibleLeiding > 0) {
     tr.appendChild(divider);
 }
 
-// 12. Leiding aanwezigheden
-leiding.forEach(l => {
-    tr.appendChild(makePresenceCell(o, `leiding-${l.id}`, l.hidden, true));
-});
+// 12. Leiding aanwezigheden (niet zichtbaar in oudermodus)
+if (!isOuder()) {
+    leiding.forEach(l => {
+        tr.appendChild(makePresenceCell(o, `leiding-${l.id}`, l.hidden, true));
+    });
+}
+
 
 
   // 13. Tellers

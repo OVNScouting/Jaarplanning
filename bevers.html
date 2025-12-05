@@ -14,25 +14,21 @@
        TOPBAR
   ============================================================ -->
   <header class="topbar">
-    <div class="topbar-left">
-      <a class="backlink" href="index.html">← Terug</a>
-
-      <img src="assets/OVN.logo.png" class="topbar-logo" alt="OVN logo" />
-
-      <div class="topbar-title">
-        <h1>Bevers</h1>
-        <span>Jaarplanning & Aanwezigheid</span>
-      </div>
+  <div class="topbar-left">
+    <a href="index.html" class="backlink">← Terug</a>
+    <img src="assets/bevers.png" class="topbar-logo" alt="">
+    <div class="topbar-title">
+      <h1>Bevers</h1>
+      <span>Jaarplanning & Aanwezigheid</span>
     </div>
+  </div>
 
-    <div class="topbar-right-icons">
-      <img src="assets/Bevers-speltakteken.png" class="speltak-icon" alt="Bevers speltakteken" />
-
-      <span id="loginStatus" class="leiding-badge hidden">
-        Je bent ingelogd als leiding
-      </span>
-    </div>
-  </header>
+  <div class="topbar-right-icons">
+    <span id="leidingBadge" class="leiding-badge only-leiding">Je bent ingelogd als leiding</span>
+    <button id="logoutBtn" class="pill-btn outline only-leiding">Uitloggen</button>
+    <img src="assets/bevers.png" class="speltak-icon" alt="">
+  </div>
+</header>
 
   <div class="container">
 

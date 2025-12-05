@@ -142,21 +142,23 @@ function toggleEditMode() {
   setMode(editMode ? "bewerken" : "leiding");
 }
 
-/* Elementen verbergen op basis van modus */
 function applyModeVisibility() {
+  // Leiding-only elementen verbergen voor ouders
   document.querySelectorAll(".only-leiding").forEach(el => {
-    el.classList.toggle("hide-ouder", isOuder());
+    if (isOuder()) el.classList.add("hide-view");
+    else el.classList.remove("hide-view");
   });
-// Ouders verbergen bepaalde elementen
-document.querySelectorAll(".only-leiding").forEach(el => {
-  el.classList.toggle("hide-view", isOuder());
-});
 
-// Leiding ziet columns terug die eerder verborgen waren
-document.querySelectorAll(".col-locatie, .col-materiaal, .col-type, .col-leiding").forEach(el => {
-  if (isLeiding()) el.classList.remove("hide-view");
-});
-  }
+  // Kolommen die ouders niet mogen zien
+  document.querySelectorAll(".col-locatie, .col-materiaal, .col-type, .col-leiding").forEach(el => {
+    if (isOuder()) el.classList.add("hide-view");
+    else el.classList.remove("hide-view");
+  });
+
+  // FAB (opkomst toevoegen) alleen zichtbaar voor leiding
+  const fab = document.getElementById("fabAddOpkomst");
+  if (fab) fab.classList.toggle("hide-view", !isLeiding());
+}
 
 // ======================================================================
 // DATA LADEN
@@ -478,14 +480,12 @@ function addRow(o) {
    const div = document.createElement("td");
     div.classList.add("col-divider");
     tr.appendChild(div);
-  }
 
   // 12. Leiding aanwezigheden
   if (config.showLeiding) {
     leiding.forEach(l => {
-  const td = makePresenceCell(o, "leiding-" + l.id, l.hidden, true);
-  if (isOuder()) td.classList.add("hide-view");
-  tr.appendChild(td);
+ const td = makePresenceCell(o, "leiding-" + l.id, l.hidden, true);
+
   });
   }
 
@@ -529,7 +529,6 @@ function makeEditableCell(o, field, extraClass = "") {
 
   return td;
 }
-
 function makeRestrictedEditable(o, field, opties, className) {
   const td = document.createElement("td");
   td.textContent = o[field] || "";
@@ -540,43 +539,35 @@ function makeRestrictedEditable(o, field, opties, className) {
   if (isEdit()) {
     td.classList.add("editable-cell");
     td.addEventListener("click", () => {
-      const nieuw = prompt(`Nieuwe ${field} (${opties.join(", ")}):`, o[field] || "");
-      if (nieuw !== null) {
+      const select = document.createElement("select");
+
+      opties.forEach(opt => {
+        const oEl = document.createElement("option");
+        oEl.value = opt;
+        oEl.textContent = opt;
+        if (opt === o[field]) oEl.selected = true;
+        select.appendChild(oEl);
+      });
+
+      td.innerHTML = "";
+      td.appendChild(select);
+      select.focus();
+
+      select.addEventListener("change", () => {
         update(ref(db, `${speltak}/opkomsten/${o.id}`), {
-          [field]: nieuw
+          [field]: select.value
         }).then(loadEverything);
-      }
+      });
+
+      select.addEventListener("blur", () => loadEverything());
     });
   }
-
-  return td;
-}
-
-function makeTimeCell(o, field) {
-  const td = document.createElement("td");
-  td.textContent = o[field] || "";
-
-  if (o.starttijd !== "10:30" || o.eindtijd !== "12:30")
-    td.classList.add("tijd-afwijkend");
-
-  if (!isEdit()) return td;
-
-  td.classList.add("editable-cell");
-  td.addEventListener("click", () => {
-    const nieuw = prompt(`Nieuwe tijd voor ${field}:`, o[field] || "");
-    if (nieuw) {
-      update(ref(db, `${speltak}/opkomsten/${o.id}`), {
-        [field]: nieuw
-      }).then(loadEverything);
-    }
-  });
-
   return td;
 }
 
 function makePresenceCell(o, key, hidden, isLeidingCell) {
   const td = document.createElement("td");
-  if (hidden) td.classList.add("hidden");
+  if (hidden) td.classList.add("hide-view");
   if (isLeidingCell) td.classList.add("col-leiding");
 
   const cur = (o.aanwezigheid && o.aanwezigheid[key]) || "onbekend";
@@ -596,10 +587,10 @@ function makePresenceCell(o, key, hidden, isLeidingCell) {
   }
 
   // Leiding → alleen klikbaar voor leiding/bewerken
-  if (isLeiding()) {
-    td.classList.add("editable-cell");
-    td.addEventListener("click", () => togglePresence(o, key));
-  }
+  if (isLeiding() && !hidden) {
+  td.classList.add("editable-cell");
+  td.addEventListener("click", () => togglePresence(o, key));
+}
 
   return td;
 }

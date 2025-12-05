@@ -108,6 +108,8 @@ let opkomsten = [];
 let jeugd = [];
 let leiding = [];
 
+let nextUpcomingId = null;
+
 /* =============================
    MODES — ouder / leiding / edit
    ============================= */

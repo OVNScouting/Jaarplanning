@@ -366,8 +366,9 @@ function addRow(o) {
   if (isPast(o.datum)) tr.classList.add("row-grey");
   if (o.id === nextUpcomingId) tr.classList.add("row-next");
 
-  // 1. Delete
+  // 1. Delete (alleen zichtbaar in bewerken-modus)
   const del = document.createElement("td");
+  
   if (isBewerken()) {
     del.textContent = "🗑️";
     del.classList.add("editable-cell");
@@ -376,8 +377,12 @@ function addRow(o) {
         set(ref(db, `${speltak}/opkomsten/${o.id}`), null).then(loadEverything);
       }
     });
+  } else {
+    del.classList.add("hide-view");
   }
+  
   tr.appendChild(del);
+
 
   // 2. Datum
   const tdDatum = document.createElement("td");
@@ -422,16 +427,13 @@ function addRow(o) {
       tdType.addEventListener("click", () => {
         const nieuw = prompt("Type (normaal / bijzonder / kamp / geen):", o.typeOpkomst || "");
         if (nieuw !== null) {
-          update(ref(db, `${speltak}/opkomsten/${o.id}`), {
-            typeOpkomst: nieuw
-          }).then(loadEverything);
+          update(ref(db, `${speltak}/opkomsten/${o.id}`), { typeOpkomst: nieuw }).then(loadEverything);
         }
       });
     } else {
-      tdType.textContent = "";
       tdType.classList.add("hide-view");
     }
-    
+
     tr.appendChild(tdType);
     
 

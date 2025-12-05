@@ -108,43 +108,6 @@ let opkomsten = [];
 let jeugd = [];
 let leiding = [];
 
-let currentFilter = "all";
-let mode = localStorage.getItem("mode") || "ouder";
-let infoEditActive = false;
-
-let nextUpcomingId = null;
-
-// ======================================================================
-// MODE FUNCTIES
-// ======================================================================
-function isLeiding() {
-  return mode === "leiding" || mode === "bewerken";
-}
-
-function isBewerken() {
-  return mode === "bewerken";
-}
-
-function setMode(newMode) {
-  mode = newMode;
-  localStorage.setItem("mode", newMode);
-
-  if (editModeButton) {
-    editModeButton.textContent =
-      newMode === "bewerken" ? "Opslaan tabel" : "✏️ Tabel bewerken";
-  }
-
-  if (handleidingButton) {
-    handleidingButton.classList.toggle("hidden", !isLeiding());
-  }
-
-  addOpkomstRow?.classList.toggle("hidden", !isBewerken());
-  addMemberButton?.classList.toggle("hidden", !isBewerken());
-
-  document.body.classList.toggle("edit-active", isBewerken());
-
-  renderEverything();
-}
 /* =============================
    MODES — ouder / leiding / edit
    ============================= */

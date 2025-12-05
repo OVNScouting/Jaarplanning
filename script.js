@@ -86,6 +86,7 @@ const opModal = document.getElementById("opkomstModal");
 const opDatum = document.getElementById("opDatum");
 const opStart = document.getElementById("opStart");
 const opEind = document.getElementById("opEind");
+const opProcor = document.getElementById("opProcor");
 const opThema = document.getElementById("opThema");
 const opLocatie = document.getElementById("opLocatie");
 const opType = document.getElementById("opType");
@@ -298,6 +299,14 @@ if (isEdit()) {
   thE.textContent = "Eind";
   tr.appendChild(thE);
 
+// Procor (alleen zichtbaar voor leiding)
+if (!isOuder()) {
+    const thProcor = document.createElement("th");
+    thProcor.textContent = "Procor";
+    tr.appendChild(thProcor);
+}
+
+
    // Type (alleen zichtbaar in bewerkmodus, verborgen voor ouders)
   const thT = document.createElement("th");
   thT.textContent = "Type";
@@ -508,6 +517,12 @@ function addRow(o) {
   // 4. Eindtijd
   tr.appendChild(makeTimeCell(o, "eindtijd"));
 
+  // Procor (alleen zichtbaar voor leiding)
+if (!isOuder()) {
+    tr.appendChild(makeEditableCell(o, "procor"));
+}
+
+ 
   // Type (edit only – verborgen voor ouders)
     const tdType = document.createElement("td");
     tdType.classList.add("col-type");
@@ -919,6 +934,7 @@ function resetOpkomstFields() {
   opStart.value = "10:30";
   opEind.value = "12:30";
   opThema.value = "";
+  opProcor.value = "";
   opLocatie.value = "";
   opType.value = "";
   opMateriaal.value = "";
@@ -948,6 +964,7 @@ saveOpkomst?.addEventListener("click", () => {
     datum: isoFromInput(opDatum.value),
     thema: opThema.value,
     bijzonderheden: opBijzonderheden.value || "",
+    procor: opProcor.value || "",
     typeOpkomst: opType.value || "normaal",
     starttijd: opStart.value || "10:30",
     eindtijd: opEind.value || "12:30",

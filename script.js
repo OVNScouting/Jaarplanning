@@ -145,6 +145,48 @@ function setMode(newMode) {
 
   renderEverything();
 }
+/* =============================
+   MODES — ouder / leiding / edit
+   ============================= */
+
+let mode = localStorage.getItem("mode") || "ouder";
+let editMode = false; 
+
+function isOuder() {
+  return mode === "ouder";
+}
+
+function isLeiding() {
+  return mode === "leiding";
+}
+
+function isEdit() {
+  return mode === "bewerken";
+}
+
+function setMode(newMode) {
+  mode = newMode;
+  localStorage.setItem("mode", newMode);
+  applyModeVisibility();
+  renderTable();
+}
+
+function toggleEditMode() {
+  if (!isLeiding()) return;
+  editMode = !editMode;
+  setMode(editMode ? "bewerken" : "leiding");
+}
+
+/* Elementen verbergen op basis van modus */
+function applyModeVisibility() {
+  document.querySelectorAll(".only-leiding").forEach(el => {
+    el.classList.toggle("hide-ouder", isOuder());
+  });
+
+  document.querySelectorAll(".hide-view").forEach(el => {
+    el.classList.toggle("hide-view", isOuder());
+  });
+}
 
 // ======================================================================
 // DATA LADEN

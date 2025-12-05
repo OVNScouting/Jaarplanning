@@ -66,8 +66,8 @@ const ledenbeheerSection = document.getElementById("ledenbeheerSection");
 const meldingenSection = document.getElementById("meldingenSection");
 
 // Ledenbeheer
-const ledenbeheerJeugd = document.getElementById("ledenbeheerJeugd");
-const ledenbeheerLeiding = document.getElementById("ledenbeheerLeiding");
+const ledenbeheerJeugd = document.getElementById("jeugdLeden");
+const ledenbeheerLeiding = document.getElementById("leidingLeden");
 const addMemberButton = document.getElementById("addMemberButton");
 
 // Meldingen

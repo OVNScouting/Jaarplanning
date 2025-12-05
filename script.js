@@ -333,10 +333,13 @@ function addHeaders() {
     tr.appendChild(th);
   });
 
-  // Divider tussen jeugd & leiding
+  // Splitter alleen zichtbaar voor leiding
+  if (!isOuder()) {
   const div = document.createElement("th");
   div.classList.add("col-divider");
   tr.appendChild(div);
+  }
+
 
   // Leiding
   if (config.showLeiding) {
@@ -355,11 +358,12 @@ function addHeaders() {
   thJ.textContent = "Aanw. jeugd";
   tr.appendChild(thJ);
 
-  if (config.showLeiding) {
-    const thL = document.createElement("th");
-    thL.textContent = "Aanw. leiding";
-    tr.appendChild(thL);
+  if (config.showLeiding && !isOuder()) {
+  const tdL = document.createElement("td");
+  tdL.textContent = cntL;
+  tr.appendChild(tdL);
   }
+
 }
 
 // ======================================================================
@@ -526,10 +530,12 @@ function addRow(o) {
   });
   
    // 11. Splitter
-   const div = document.createElement("td");
-    div.classList.add("col-divider");
-    tr.appendChild(div);
-
+  if (!isOuder()) {
+  const div = document.createElement("td");
+  div.classList.add("col-divider");
+  tr.appendChild(div);
+  }
+  
   // 12. Leiding aanwezigheden
   if (config.showLeiding) {
   leiding.forEach(l => {

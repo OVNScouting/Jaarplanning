@@ -20,6 +20,11 @@ function updateLoginUI() {
 
     // Leiding-badge (op alle pagina's aanwezig)
     if (loginStatus) loginStatus.classList.toggle("hidden", mode !== "leiding");
+    
+        const dashboardCard = document.getElementById("dashboardCard");
+    if (dashboardCard) {
+        dashboardCard.classList.toggle("hidden", mode !== "leiding");
+    }
 }
 
 // --------------------------------------------------------

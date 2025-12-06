@@ -1,3 +1,6 @@
+/* ============================================================
+   ROOT VARIABELEN
+============================================================ */
 :root {
   --bg: #f5f7fb;
   --card: #ffffff;
@@ -34,6 +37,9 @@
   --radius-large: 25px;
 }
 
+/* ============================================================
+   GLOBAL
+============================================================ */
 *,
 *::before,
 *::after {
@@ -51,18 +57,18 @@ body {
   display: none !important;
 }
 
-/* ======================================================================
+/* ============================================================
    CONTAINER
-====================================================================== */
+============================================================ */
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 1.5rem 1rem 3rem;
 }
 
-/* ======================================================================
+/* ============================================================
    TOPBAR
-====================================================================== */
+============================================================ */
 .topbar {
   background: var(--card);
   border-bottom: 1px solid var(--border);
@@ -111,7 +117,6 @@ body {
   width: 48px;
   height: 48px;
   object-fit: contain;
-  pointer-events: none;
 }
 
 .leiding-badge {
@@ -123,9 +128,9 @@ body {
   font-weight: 500;
 }
 
-/* ======================================================================
+/* ============================================================
    INFO BLOK
-====================================================================== */
+============================================================ */
 .info-block {
   background: var(--card);
   border-radius: var(--radius);
@@ -171,7 +176,6 @@ body {
 #colorPicker {
   width: 32px;
   height: 32px;
-  padding: 0;
   border-radius: 999px;
   border: 1px solid var(--border);
   cursor: pointer;
@@ -186,9 +190,9 @@ body {
   background: #ffffff;
 }
 
-/* ======================================================================
+/* ============================================================
    BUTTONS
-====================================================================== */
+============================================================ */
 .pill-btn,
 .primary-btn {
   border-radius: 999px;
@@ -229,9 +233,28 @@ body {
   margin-left: auto;
 }
 
-/* ======================================================================
+/* FAB */
+.fab-add-opkomst {
+  position: fixed;
+  right: 15px;
+  bottom: 26px;
+  z-index: 1400;
+  padding-inline: 18px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+}
+
+.fab-add-opkomst.pill-btn {
+  font-size: 0.9rem;
+  padding-block: 8px;
+}
+
+.fab-add-opkomst:hover {
+  background: #155ff5;
+}
+
+/* ============================================================
    FILTER CHIPS
-====================================================================== */
+============================================================ */
 .chip {
   padding: 0.35rem 0.8rem;
   border-radius: 999px;
@@ -252,9 +275,9 @@ body {
   color: #fff;
 }
 
-/* ======================================================================
+/* ============================================================
    PLANNING-SECTIE
-====================================================================== */
+============================================================ */
 .planning-section {
   background: var(--card);
   border-radius: var(--radius);
@@ -277,9 +300,9 @@ body {
   gap: 0.5rem;
 }
 
-/* ======================================================================
+/* ============================================================
    TABEL
-====================================================================== */
+============================================================ */
 .table-wrapper {
   overflow-x: auto;
   border-radius: var(--radius-small);
@@ -299,7 +322,7 @@ body {
   vertical-align: middle;
 }
 
-/* Datumkolom – vaste, comfortabele breedte */
+/* Datum sticky */
 .planning-table th.col-datum,
 .planning-table td.col-datum {
   width: 110px;
@@ -307,14 +330,23 @@ body {
   max-width: 110px;
 }
 
-.planning-table thead th {
-  background: var(--blue-soft);
-  font-size: 0.82rem;
-  font-weight: 600;
-  white-space: nowrap;
+.col-datum {
+  position: sticky;
+  left: 40px; /* default voor leidingsmodus */
+  background: var(--card);
+  z-index: 5;
 }
 
-/* verticale namen */
+body.mode-ouder .col-datum,
+body.mode-leiding .col-datum {
+  left: 0 !important;
+}
+
+body.mode-bewerken .col-datum {
+  left: 40px !important;
+}
+
+/* Verticale namen */
 .name-vertical {
   writing-mode: vertical-rl;
   text-orientation: mixed;
@@ -323,85 +355,71 @@ body {
   font-size: 0.75rem;
 }
 
-/* aanwezigheid indicaties */
+/* Presence */
 .presence-cell {
   cursor: pointer;
   font-size: 1.05rem;
   font-weight: 600;
 }
 
-.presence-aanwezig {
-  color: #15803d;
+.presence-aanwezig { color: #15803d; }
+.presence-afwezig { color: #b91c1c; }
+.presence-reminder { color: #b45309; }
+
+/* Divider tussen jeugd en leiding */
+.col-divider {
+  width: 6px;
+  background: #d0d0d0;
+  padding: 0 !important;
+  border-left: none !important;
+  border-right: none !important;
 }
 
-.presence-afwezig {
-  color: #b91c1c;
+/* Status kleuren */
+.row-geenopkomst  { background: var(--opkomst-geen-bg) !important; border-left: 4px solid var(--opkomst-geen); }
+.row-next         { background: var(--opkomst-volgende-bg) !important; border-left: 4px solid var(--opkomst-volgende); }
+.row-grey         { background: var(--opkomst-verleden-bg) !important; }
+.row-bijzonder    { background: var(--opkomst-bijzonder-bg) !important; border-left: 4px solid var(--opkomst-bijzonder); }
+.row-kamp         { background: var(--opkomst-kamp-bg) !important; border-left: 4px solid var(--opkomst-kamp); }
+
+/* Keep sticky datum readable */
+tr.row-bijzonder > .col-datum { background: var(--opkomst-bijzonder-bg) !important; }
+tr.row-kamp > .col-datum      { background: var(--opkomst-kamp-bg) !important; }
+tr.row-geenopkomst > .col-datum { background: var(--opkomst-geen-bg) !important; }
+tr.row-next > .col-datum      { background: var(--opkomst-volgende-bg) !important; }
+tr.row-grey > .col-datum      { background: var(--opkomst-verleden-bg) !important; }
+
+/* Editable elements */
+.cell-input,
+.cell-select,
+.cell-textarea {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: .85rem;
+  background: #fff;
 }
 
-.presence-reminder {
-  color: #b45309;
+.cell-textarea {
+  resize: vertical;
+  min-height: 55px;
 }
 
-/* afwijkende tijden */
-.tijd-afwijkend {
-  color: #eab308;
-  font-weight: 600;
+.cell-input:focus,
+.cell-select:focus,
+.cell-textarea:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px var(--blue-soft);
 }
 
-/* telling */
-.aanw-count {
-  background: #fff7ed;
-  font-weight: 600;
-}
+/* Hide elements for parents */
+.hide-view { display: none !important; }
 
-/* ======================================================================
-   OPKOMST STATUS-KLEUREN
-====================================================================== */
-.row-geenopkomst {
-  background: var(--opkomst-geen-bg) !important;
-  border-left: 4px solid var(--opkomst-geen);
-}
-
-.row-next {
-  background: var(--opkomst-volgende-bg) !important;
-  border-left: 4px solid var(--opkomst-volgende);
-}
-
-.row-grey {
-  background: var(--opkomst-verleden-bg) !important;
-}
-
-.row-bijzonder {
-  background: var(--opkomst-bijzonder-bg) !important;
-  border-left: 4px solid var(--opkomst-bijzonder);
-}
-
-.row-kamp {
-  background: var(--opkomst-kamp-bg) !important;
-  border-left: 4px solid var(--opkomst-kamp);
-}
-
-/* ======================================================================
-   EXTRA KNOPPEN / ACTIES ONDER TABEL
-====================================================================== */
-.add-row {
-  margin-top: 1rem;
-  text-align: center;
-  font-weight: 600;
-  color: var(--blue);
-  cursor: pointer;
-  padding: 0.6rem 0;
-  border-radius: var(--radius-small);
-  background: var(--blue-soft);
-}
-
-.add-row:hover {
-  background: #d8e8ff;
-}
-
-/* ======================================================================
+/* ============================================================
    LEDENBEHEER
-====================================================================== */
+============================================================ */
 .ledenbeheer {
   margin-top: 1.5rem;
   background: var(--card);
@@ -415,13 +433,9 @@ body {
   gap: 1.5rem;
 }
 
-.ledenbeheer-col h3 {
-  margin-top: 0;
-}
-
 .ledenbeheer-col ul {
-  padding: 0;
   list-style: none;
+  padding: 0;
 }
 
 .ledenbeheer-col li {
@@ -446,22 +460,9 @@ body {
   gap: 0.25rem;
 }
 
-.ledenbeheer-btn {
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: #fff;
-  padding: 0.15rem 0.45rem;
-  font-size: 0.75rem;
-  cursor: pointer;
-}
-
-#addMemberButton {
-  margin-top: 1rem;
-}
-
-/* ======================================================================
+/* ============================================================
    MELDINGEN
-====================================================================== */
+============================================================ */
 .meldingen {
   margin-top: 1.5rem;
   background: var(--card);
@@ -489,14 +490,9 @@ body {
   color: var(--text-muted);
 }
 
-.meldingen-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-/* ======================================================================
+/* ============================================================
    MODALS
-====================================================================== */
+============================================================ */
 .modal {
   position: fixed;
   inset: 0;
@@ -507,39 +503,19 @@ body {
   z-index: 2000;
 }
 
-.modal.hidden {
-  display: none;
-}
-
 .modal-content {
   background: white;
   padding: 1.5rem;
   border-radius: 14px;
-
-  /* GROTER FORMULIER */
-  width: 420px;              /* was 320px */
-  max-height: 85vh;          /* zorgt dat de modal nooit buiten scherm valt */
-  overflow-y: auto;          /* scrollt binnen modal */
+  width: 420px;
+  max-height: 85vh;
+  overflow-y: auto;
   box-shadow: 0 6px 20px rgba(0,0,0,.15);
 }
 
-/* Zorg dat scrollbalk netjes is */
-.modal-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.modal-content::-webkit-scrollbar-thumb {
-  background: #c5c9d3;
-  border-radius: 6px;
-}
-
-
-.modal-content h3 {
-  margin-top: 0;
-}
-
 .modal-content input,
-.modal-content select {
+.modal-content select,
+.modal-content textarea {
   width: 100%;
   margin-top: 0.35rem;
   margin-bottom: 0.75rem;
@@ -555,144 +531,39 @@ body {
   justify-content: flex-end;
 }
 
-/* ======================================================================
-   INDEX – SPELTAKKAARTEN
-====================================================================== */
-.speltak-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.25rem;
-  margin-top: 1.75rem;
-}
-
-.speltak-card {
+/* ============================================================
+   SIDEBAR (LEIDING)
+============================================================ */
+.leiding-sidebar {
+  position: fixed;
+  top: 180px;
+  right: 15px;
+  width: 150px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: .75rem;
-  padding: 2rem 1.5rem;
+  gap: 8px;
+  z-index: 1500;
+}
+
+.leiding-sidebar .pill-btn {
+  width: 100%;
   text-align: center;
-
-  background: #ffffff;
-  border-radius: var(--radius-large);
-  border: none;
-  box-shadow: var(--shadow);
-
-  text-decoration: none;
-  color: var(--text-main);
-  font-weight: 600;
-
-  transition: transform .2s ease, box-shadow .2s ease;
+  padding: 6px 10px;
+  font-size: 0.9rem;
 }
 
-.speltak-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 28px rgba(0,0,0,.12);
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media (max-width: 900px) {
+  .leiding-sidebar {
+    display: none !important;
+  }
 }
 
-.speltak-card h2 {
-  margin: 0;
-  font-size: 1.25rem;
-}
-
-/* Blousekleuren */
-.speltak-card.bevers { border-top: 4px solid #E6002B; }
-.speltak-card.welpen  { border-top: 4px solid #009A3D; }
-.speltak-card.scouts  { border-top: 4px solid #B59A58; }
-.speltak-card.explorers { border-top: 4px solid #801638; }
-.speltak-card.rovers { border-top: 4px solid #003865; }
-.speltak-card.stam { border-top: 4px solid #7A7A7A; }
-.speltak-card.dashboard { border-top: 4px solid #f0E626; }
-    
-
-/* ============================
-   VIEW-MODUS (OUDERS)
-   ============================ */
-
-/* Verberg kolommen die niet voor ouders zijn */
-.hide-view {
-  display: none !important;
-}
-
-/* Verberg in ouder-modus via JS:
-   - Type kolom
-   - Locatie kolom
-   - Materiaal kolom
-   - Leiding aanwezigheidskolommen
-   - Delete kolom
-*/
-/* Kolomspecifieke styling */
-.col-type { }
-.col-locatie { }
-.col-materiaal { }
-
-/* Wanneer verborgen voor ouders */
-.col-type.hide-view,
-.col-locatie.hide-view,
-.col-materiaal.hide-view {
-  display: none !important;
-}
-.col-leiding {
-  background-color: inherit;
-}
-
-/* Divider tussen jeugd en leiding kolommen */
-.col-divider {
-  width: 6px;
-  min-width: 6px;
-  max-width: 6px;
-
-  padding: 0 !important;
-  background: #d0d0d0;
-
-  /* geen extra borders, zodat hij niet “duwt” */
-  border-left: none !important;
-  border-right: none !important;
-}
-
-/* Materiaal-kolom */
-.col-locatie,
-.col-materiaal {
-  background-color: inherit;
-}
-/* Elementen die verborgen moeten zijn voor ouders */
-.only-leiding {
-  /* JS toggelt deze class weg voor leiding */
-}
-
-/* Voor ouders ALTIJD verbergen */
-.hide-ouder {
-  display: none !important;
-}
-
-.loading {
-  padding: 12px;
-  margin: 10px 0;
-  background: #f5f5f5;
-  border-radius: 8px;
-  font-weight: 600;
-  text-align: center;
-}
-
-.error {
-  padding: 12px;
-  margin: 10px 0;
-  background: #ffe3e3;
-  color: #b10000;
-  border: 1px solid #ffb3b3;
-  border-radius: 8px;
-  font-weight: 600;
-  text-align: center;
-}
-
-.hidden {
-  display: none !important;
-}
-
-
-/* ======================================================================
-   PRINT LAYOUT
-====================================================================== */
+/* ============================================================
+   PRINT
+============================================================ */
 @media print {
   body {
     background: #ffffff;
@@ -700,7 +571,6 @@ body {
     print-color-adjust: exact;
   }
 
-  /* verberg UI */
   header,
   .info-block,
   .planning-header-row,
@@ -713,245 +583,16 @@ body {
     display: none !important;
   }
 
+  thead { display: table-header-group; }
 
-  thead {
-    display: table-header-group;
-  }
+  .planning-table { font-size: 11pt; }
 
-  .planning-table {
-    font-size: 11pt;
-  }
-
-  /* verberg prullenbak-kolom */
+  /* Verberg delete-kolom */
   .planning-table th:first-child,
   .planning-table td:first-child {
     display: none !important;
   }
 
-  /* verberg locatie */
-  .col-locatie {
-    display: none !important;
-  }
+  /* Locatie verbergen (print wordt ouder-modus) */
+  .col-locatie { display: none !important; }
 }
-
-/* ======================================================================
-   DASHBOARD EXTRA STYLING
-====================================================================== */
-.date-separator-row td {
-  height: 0.8rem;
-  background: transparent !important;
-  border: none !important;
-}
-
-#dashboardSection h2 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-}
-
-.speltak-card-dashboard {
-  display: grid;
-  grid-template-columns: 70px 1fr 80px;
-  align-items: center;
-  gap: 1rem;
-
-  padding: 1rem 1.25rem;
-  background: #ffffff;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  margin-bottom: 1rem;
-}
-
-.date-block {
-  text-align: center;
-  background: var(--blue-soft);
-  padding: .5rem .6rem;
-  border-radius: var(--radius-small);
-}
-
-.d-day {
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-
-.d-month {
-  font-size: .85rem;
-  color: var(--text-muted);
-}
-
-.type-tag {
-  font-size: .85rem;
-  font-weight: 600;
-}
-
-.dash-right {
-  border-left: 4px solid var(--blue);
-  padding-left: .75rem;
-}
-/* Datum sticky */
-.col-datum {
-  position: sticky;
-  left: 40px;
-  z-index: 5;
-  backdrop-filter: none;
-
-  /* basisachtergrond, zodat tekst altijd leesbaar is */
-  background-color: var(--card);
-  background-clip: padding-box;
-}
-
-/* Sticky datum moet altijd leesbaar zijn */
-tr > .col-datum {
-  background-color: var(--card) !important; /* witte basis */
-}
-
-/* Voor status-rijen kleur laten doorlopen */
-tr.row-bijzonder > .col-datum { background-color: var(--opkomst-bijzonder-bg) !important; }
-tr.row-kamp > .col-datum      { background-color: var(--opkomst-kamp-bg) !important; }
-tr.row-geenopkomst > .col-datum { background-color: var(--opkomst-geen-bg) !important; }
-tr.row-next > .col-datum      { background-color: var(--opkomst-volgende-bg) !important; }
-tr.row-grey > .col-datum      { background-color: var(--opkomst-verleden-bg) !important; }
-
-/* Locatie + Materiaal verbergen voor ouders */
-.col-locatie.hidden,
-.col-materiaal.hidden {
-  display: none;
-}
-
-/* Close buttons in sections */
-.close-section {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: #eee;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-.close-section:hover {
-  background: #ddd;
-}
-
-.fab-add-opkomst {
-  position: fixed;
-  right: 15px;
-  bottom: 26px;
-  z-index: 1400;            /* boven de tabel maar onder modals */
-  padding-inline: 18px;     /* iets meer horizontale ruimte */
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
-}
-
-/* optioneel: iets compacter dan andere pill-knoppen */
-.fab-add-opkomst.pill-btn {
-  font-size: 0.9rem;
-  padding-block: 8px;
-}
-
-.fab-add-opkomst:hover {
-  background: #155ff5;
-}
-/* Datum-kolom fix: sticky offset aanpassen afhankelijk van modus */
-
-/* Ouder-modus (geen delete-kolom) → direct tegen linkerkant */
-body.mode-ouder .col-datum {
-    left: 0 !important;
-}
-
-/* Leiding-modus (geen delete-kolom) → ook links */
-body.mode-leiding .col-datum {
-    left: 0 !important;
-}
-
-/* Bewerken-modus (wel delete-kolom van 40px) → offset blijft 40px */
-body.mode-bewerken .col-datum {
-    left: 40px !important;
-}
-/* ============================================================
-   LEIDING SIDEBAR (rechts, vast – buiten de kaart)
-   ============================================================ */
-
-.leiding-sidebar {
-    position: fixed;
-    top: 180px;          /* ongeveer onder het infoblok */
-    right: 15px;         /* uitlijnen met de FAB-knop */
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 150px;
-    z-index: 1500;       /* boven de kaart, onder modals */
-}
-
-.leiding-sidebar.hidden {
-    display: none !important;
-}
-
-/* Buttons in sidebar vullen de breedte */
-.leiding-sidebar .pill-btn {
-    width: 100%;
-    text-align: center;
-    padding: 6px 10px;   /* compacter dan de standaard pill-knop */
-    font-size: 0.9rem;   /* net iets kleiner */
-}
-
-
-/* ============================================================
-   LAYOUT: planning-sectie + tabel + sidebar
-   ============================================================ */
-
-/* planning-section blijft gewoon een “kaart” */
-.planning-section {
-    background: var(--card);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 1.2rem 1.4rem 1.5rem;
-    margin-top: 1.5rem;
-}
-
-/* Wrapper onder de filters – nu gewoon blok, zonder sidebar-layout */
-.planning-main {
-    margin-top: 1rem;
-}
-
-/* Tabel vult gewoon de kaart */
-.table-wrapper {
-    width: 100%;
-    min-width: 0;
-}
-
-.table-wrapper table {
-    width: 100%;
-    max-width: 100%;
-}
-
-
-/* ============================================================
-   RESPONSIVE: Sidebar uit op kleine schermen
-   ============================================================ */
-
-@media (max-width: 900px) {
-    .planning-main {
-        flex-direction: column;
-    }
-
-    .leiding-sidebar {
-        display: none !important;
-    }
-}
-
-.cell-input,
-.cell-select {
-    width: 100%;
-    padding: 4px 6px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font-size: .85rem;
-    background: #fff;
-}
-
-.cell-input:focus,
-.cell-select:focus {
-    outline: none;
-    border-color: var(--blue);
-    box-shadow: 0 0 0 2px var(--blue-soft);
-}
-

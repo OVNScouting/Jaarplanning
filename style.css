@@ -874,7 +874,7 @@ body.mode-bewerken .col-datum {
 .leiding-sidebar {
     position: fixed;
     top: 180px;          /* ongeveer onder het infoblok */
-    right: 26px;         /* uitlijnen met de FAB-knop */
+    right: 20px;         /* uitlijnen met de FAB-knop */
     display: flex;
     flex-direction: column;
     gap: 8px;

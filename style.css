@@ -864,4 +864,76 @@ body.mode-leiding .col-datum {
 body.mode-bewerken .col-datum {
     left: 40px !important;
 }
+/* ============================================================
+   LEIDING SIDEBAR (rechts, sticky)
+   ============================================================ */
+
+.leiding-sidebar {
+    position: sticky;
+    top: 110px; /* hoogte t.o.v. topbar */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 190px; /* natuurlijke breedte */
+    margin-left: auto; /* schuift hem volledig rechts */
+    padding-left: 20px; /* afstand tussen tabel en sidebar */
+}
+
+.leiding-sidebar.hidden {
+    display: none !important;
+}
+
+/* Buttons in sidebar */
+.leiding-sidebar .pill-btn {
+    width: 100%;
+    text-align: center;
+}
+/* ============================================================
+   INFO HEADER (titel + bewerk knop rechts)
+   ============================================================ */
+
+.info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.info-block {
+    background: #ffffff;
+    padding: 20px 22px;
+    border-radius: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    margin-bottom: 32px;
+}
+/* Zorg dat content + sidebar netjes naast elkaar blijven */
+.planning-section {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+/* De tabel-wrapper moet de ruimte krijgen en niet krimpen */
+.table-wrapper {
+    flex: 1;
+}
+
+/* Sidebar mag niet over de tabel heen vallen */
+.table-wrapper table {
+    max-width: 100%;
+}
+/* ============================================================
+   RESPONSIVE: Sidebar uit op kleine schermen
+   ============================================================ */
+
+@media (max-width: 900px) {
+    .leiding-sidebar {
+        display: none !important;
+    }
+
+    .planning-section {
+        flex-direction: column;
+    }
+}
+
 

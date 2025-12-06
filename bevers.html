@@ -92,31 +92,29 @@
 
         <!-- Duidelijkere tabel-bewerkknop -->
         <button id="editModeButton" class="pill-btn only-leiding primary tabel-edit-btn">
-          ✏️ Tabel bewerken
-        </button>
-
-        <button class="pill-btn outline only-leiding" onclick="window.location.href='dashboard.html'">
-          Dashboard
-        </button>
-
-        <!-- Handleiding (alleen leiding, via JS) -->
-        <a id="handleidingButton"
-           class="pill-btn outline only-leiding"
-           href="assets/scouting_mail_handleiding_styled.pdf"
-           target="_blank"
-           download>
-          Handleiding Mailbox
-        </a>
-
-        <!-- Knoppen om secties te openen + automatisch te scrollen -->
-        <button id="openLedenbeheerButton" class="pill-btn outline only-leiding">
-          Ledenbeheer
+          ✏️ Opkomsten bewerken
         </button>
       
-        <button id="openMeldingenButton" class="pill-btn outline only-leiding">
-          Meldingen
-        </button>
-       
+      </div>
+      <!-- =========================================
+     LEIDING SIDEBAR (rechts)
+     ========================================= -->
+      <div id="leidingSidebar" class="leiding-sidebar only-leiding hidden">
+          <button class="pill-btn outline" onclick="window.location='dashboard.html'">Dashboard</button>
+      
+          <a class="pill-btn outline"
+             href="assets/scouting_mail_handleiding_styled.pdf"
+             target="_blank" download>
+             Handleiding Mailbox
+          </a>
+      
+          <button id="openLedenbeheerButton" class="pill-btn outline">
+            Ledenbeheer
+          </button>
+      
+          <button id="openMeldingenButton" class="pill-btn outline">
+            Meldingen
+          </button>
       </div>
 
       <!-- De tabel -->
@@ -274,8 +272,6 @@
             <option value="bijzonder">Bijzonder</option>
             <option value="kamp">Kamp</option>
             <option value="geen">Geen opkomst</option>
-        </select>
-
         </select>
 
         <div class="modal-actions">

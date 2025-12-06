@@ -275,15 +275,41 @@ function toggleInfoEdit() {
       infoEditorWrapper.classList.remove("hidden");
       infoTekst.classList.add("hidden");
       infoEditButton.textContent = "Opslaan info";
-  } else {
-      const sanitized = sanitizeText(infoEdit.innerHTML);
-      update(ref(db, speltak), { infotekst: sanitized }).then(() => {
-          infoEditorWrapper.classList.add("hidden");
-          infoTekst.classList.remove("hidden");
-          infoEditButton.textContent = "Info bewerken";
-          renderEverything();
-      });
-  }
+ } else {
+    const sanitized = sanitizeText(infoEdit.innerHTML);
+
+    update(ref(db, speltak), { infotekst: sanitized }).then(() => {
+
+        // DIRECTE visuele update zonder refresh
+        infoTekst.innerHTML = sanitized;
+
+        // UI terugzetten
+        infoEditorWrapper.classList.add("hidden");
+        infoTekst.classList.remove("hidden");
+        infoEditButton.textContent = "Info bewerken";
+
+        // Sync met database (heeft geen visueel effect meer)
+        renderEverything();
+    });
+}
+} else {
+    const sanitized = sanitizeText(infoEdit.innerHTML);
+
+    update(ref(db, speltak), { infotekst: sanitized }).then(() => {
+
+        // DIRECTE visuele update zonder refresh
+        infoTekst.innerHTML = sanitized;
+
+        // UI terugzetten
+        infoEditorWrapper.classList.add("hidden");
+        infoTekst.classList.remove("hidden");
+        infoEditButton.textContent = "Info bewerken";
+
+        // Sync met database (heeft geen visueel effect meer)
+        renderEverything();
+    });
+}
+
 }
 
 // ======================================================================

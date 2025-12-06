@@ -870,88 +870,66 @@ body.mode-bewerken .col-datum {
 
 .leiding-sidebar {
     position: sticky;
-    top: 110px; /* hoogte t.o.v. topbar */
+    top: 110px;               /* onder de topbar */
     display: flex;
     flex-direction: column;
     gap: 12px;
-    width: 190px; /* natuurlijke breedte */
-    margin-left: auto; /* schuift hem volledig rechts */
-    padding-left: 20px; /* afstand tussen tabel en sidebar */
+    width: 170px;             /* compacte breedte */
+    flex-shrink: 0;
 }
 
 .leiding-sidebar.hidden {
     display: none !important;
 }
 
-/* Buttons in sidebar */
+/* Buttons in sidebar vullen de breedte */
 .leiding-sidebar .pill-btn {
     width: 100%;
     text-align: center;
 }
+
 /* ============================================================
-   INFO HEADER (titel + bewerk knop rechts)
+   LAYOUT: planning-sectie + tabel + sidebar
    ============================================================ */
 
-.info-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-}
-
-.info-block {
-    background: #ffffff;
-    padding: 20px 22px;
-    border-radius: 14px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-    margin-bottom: 32px;
-}
-/* Zorg dat content + sidebar netjes naast elkaar blijven */
+/* planning-section blijft gewoon een “kaart” */
 .planning-section {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.2rem 1.4rem 1.5rem;
+    margin-top: 1.5rem;
+}
+
+/* Nieuwe wrapper: tabel + sidebar naast elkaar */
+.planning-main {
     display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-}
-
-/* De tabel-wrapper moet de ruimte krijgen en niet krimpen */
-.table-wrapper {
-    flex: 1;
-}
-
-/* Sidebar mag niet over de tabel heen vallen */
-.table-wrapper table {
-    max-width: 100%;
-}
-/* ============================================================
-   RESPONSIVE: Sidebar uit op kleine schermen
-   ============================================================ */
-
-@media (max-width: 900px) {
-    .leiding-sidebar {
-        display: none !important;
-    }
-
-    .planning-section {
-        flex-direction: column;
-    }
-}
-
-.planning-section {
-    display: flex;
-    flex-direction: row;
     align-items: flex-start;
     gap: 20px;
+    margin-top: 1rem;   /* beetje ruimte onder filters */
 }
 
-/* tabel neemt alle ruimte */
+/* tabel neemt alle beschikbare ruimte */
 .table-wrapper {
     flex: 1;
     min-width: 0;
 }
 
-/* sidebar blijft rechts */
-.leiding-sidebar {
-    flex-shrink: 0;
-    width: 170px; /* kleiner zoals je vroeg */
+/* Sidebar duwt de tabel niet verder naar binnen dan nodig */
+.table-wrapper table {
+    max-width: 100%;
 }
 
+/* ============================================================
+   RESPONSIVE: Sidebar uit op kleine schermen
+   ============================================================ */
+
+@media (max-width: 900px) {
+    .planning-main {
+        flex-direction: column;
+    }
+
+    .leiding-sidebar {
+        display: none !important;
+    }
+}

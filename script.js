@@ -987,8 +987,8 @@ function resetOpkomstFields() {
   opType.value = "";
   opMateriaal.value = "";
   opBijzonderheden.value = "";
-  opKijkers.value = 0;
-  opExtraAantal.value = 0;
+  opKijkers.value = "0";
+  opExtraAantal.value = "0";
   opExtraNamen.value = "";
 
 }
@@ -1011,41 +1011,46 @@ function applyPopupVisibility() {
 }
 
 saveOpkomst?.addEventListener("click", () => {
-  if (!isEdit()) return;
+    if (!isLeiding()) return; 
+    if (!opDatum.value) return alert("Datum verplicht");
 
-  if (!opDatum.value) return alert("Datum verplicht");
+    const newRef = push(ref(db, `${speltak}/opkomsten`));
 
-  const newRef = push(ref(db, `${speltak}/opkomsten`));
+    const newObj = {
+        id: newRef.key,
+        datum: isoFromInput(opDatum.value),
 
- const newObj = {
-    id: newRef.key,
-    datum: isoFromInput(opDatum.value),
-    thema: opThema.value,
-    bijzonderheden: opBijzonderheden.value || "",
-    procor: opProcor.value || "",
-    typeOpkomst: opType.value || "normaal",
-    starttijd: opStart.value || "10:30",
-    eindtijd: opEind.value || "12:30",
-    locatie: opLocatie.value,
-    materiaal: opMateriaal.value || "",
-    kijkers: Number(opKijkers.value || 0),
-    extraAantal: Number(opExtraAantal.value || 0),
-    extraNamen: opExtraNamen.value || "",
-    aanwezigheid: {}
-};
+        thema: opThema?.value || "",
+        procor: opProcor?.value || "",
+        bijzonderheden: opBijzonderheden?.value || "",
 
+        typeOpkomst: opType?.value || "normaal",
 
-  if (config.showBert) newObj.bert_met = "";
+        starttijd: opStart?.value || "",
+        eindtijd: opEind?.value || "",
 
-  jeugd.forEach(j => (newObj.aanwezigheid[j.id] = "onbekend"));
-  if (config.showLeiding)
-    leiding.forEach(l => (newObj.aanwezigheid[`leiding-${l.id}`] = "onbekend"));
+        locatie: opLocatie?.value || "",
+        materiaal: opMateriaal?.value || "",
 
-  set(newRef, newObj).then(() => {
-    opModal.classList.add("hidden");
-    loadEverything();
-  });
+        kijkers: Number(opKijkers?.value || 0),
+        extraAantal: Number(opExtraAantal?.value || 0),
+        extraNamen: opExtraNamen?.value || "",
+
+        aanwezigheid: {}
+    };
+
+    if (config.showBert) newObj.bert_met = "";
+
+    jeugd.forEach(j => newObj.aanwezigheid[j.id] = "onbekend");
+    if (config.showLeiding)
+        leiding.forEach(l => newObj.aanwezigheid[`leiding-${l.id}`] = "onbekend");
+
+    set(newRef, newObj).then(() => {
+        opModal.classList.add("hidden");
+        loadEverything();
+    });
 });
+
 
 const logoutButton = document.getElementById("logoutButton");
 

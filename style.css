@@ -877,8 +877,8 @@ body.mode-bewerken .col-datum {
     right: 26px;         /* uitlijnen met de FAB-knop */
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    width: 180px;
+    gap: 8px;
+    width: 150px;
     z-index: 1500;       /* boven de kaart, onder modals */
 }
 
@@ -890,6 +890,8 @@ body.mode-bewerken .col-datum {
 .leiding-sidebar .pill-btn {
     width: 100%;
     text-align: center;
+    padding: 6px 10px;   /* compacter dan de standaard pill-knop */
+    font-size: 0.9rem;   /* net iets kleiner */
 }
 
 

@@ -271,45 +271,31 @@ function toggleInfoEdit() {
 
   infoEditActive = !infoEditActive;
 
+  // BEWERK-MODUS AAN
   if (infoEditActive) {
       infoEditorWrapper.classList.remove("hidden");
       infoTekst.classList.add("hidden");
       infoEditButton.textContent = "Opslaan info";
- } else {
-    const sanitized = sanitizeText(infoEdit.innerHTML);
+  }
 
-    update(ref(db, speltak), { infotekst: sanitized }).then(() => {
+  // BEWERK-MODUS UIT (OPSLAAN)
+  else {
+      const sanitized = sanitizeText(infoEdit.innerHTML);
 
-        // DIRECTE visuele update zonder refresh
-        infoTekst.innerHTML = sanitized;
+      update(ref(db, speltak), { infotekst: sanitized }).then(() => {
 
-        // UI terugzetten
-        infoEditorWrapper.classList.add("hidden");
-        infoTekst.classList.remove("hidden");
-        infoEditButton.textContent = "Info bewerken";
+          // DIRECTE visuele update
+          infoTekst.innerHTML = sanitized;
 
-        // Sync met database (heeft geen visueel effect meer)
-        renderEverything();
-    });
-}
-} else {
-    const sanitized = sanitizeText(infoEdit.innerHTML);
+          // Editor sluiten
+          infoEditorWrapper.classList.add("hidden");
+          infoTekst.classList.remove("hidden");
+          infoEditButton.textContent = "Info bewerken";
 
-    update(ref(db, speltak), { infotekst: sanitized }).then(() => {
-
-        // DIRECTE visuele update zonder refresh
-        infoTekst.innerHTML = sanitized;
-
-        // UI terugzetten
-        infoEditorWrapper.classList.add("hidden");
-        infoTekst.classList.remove("hidden");
-        infoEditButton.textContent = "Info bewerken";
-
-        // Sync met database (heeft geen visueel effect meer)
-        renderEverything();
-    });
-}
-
+          // Sync met database
+          renderEverything();
+      });
+  }
 }
 
 // ======================================================================

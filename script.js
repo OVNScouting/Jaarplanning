@@ -365,8 +365,6 @@ if (!isOuder()) {
     tr.appendChild(thProcor);
 }
 
-
-
    // Type (alleen zichtbaar in bewerkmodus, verborgen voor ouders)
   const thT = document.createElement("th");
   thT.textContent = "Type";
@@ -460,7 +458,134 @@ if (!isOuder()) {
     tr.appendChild(thL);
 }
 }
-  tableBody.appendChild(tr);
+
+function addRow(o) {
+    const tr = document.createElement("tr");
+
+    // Row coloring
+    if (o.typeOpkomst === "geen") tr.classList.add("row-geenopkomst");
+    else if (o.typeOpkomst === "bijzonder") tr.classList.add("row-bijzonder");
+    else if (o.typeOpkomst === "kamp") tr.classList.add("row-kamp");
+
+    if (isPast(o.datum) && o.typeOpkomst !== "geen") tr.classList.add("row-grey");
+    if (o.id === nextUpcomingId) tr.classList.add("row-next");
+
+    // DELETE COLUMN
+    if (isEdit()) {
+        const del = document.createElement("td");
+        del.textContent = "🗑️";
+        del.classList.add("editable-cell");
+        del.addEventListener("click", () => {
+            if (confirm("Deze opkomst verwijderen?")) {
+                set(ref(db, `${speltak}/opkomsten/${o.id}`), null).then(loadEverything);
+            }
+        });
+        tr.appendChild(del);
+    }
+
+    // DATUM
+    tr.appendChild(makeEditableCell(o, "datum", "col-datum", "date"));
+
+    // START / EIND
+    tr.appendChild(makeEditableCell(o, "starttijd", "", "time"));
+    tr.appendChild(makeEditableCell(o, "eindtijd", "", "time"));
+
+    // PROCOR (alleen leiding)
+    if (!isOuder()) {
+        tr.appendChild(makeEditableCell(o, "procor", "col-procor", "text"));
+    }
+
+    // TYPE (dropdown)
+   const tdType = makeRestrictedEditable(
+    o,
+    "typeOpkomst",
+    ["normaal", "bijzonder", "kamp", "geen"],
+    "col-type"
+);
+if (isOuder()) tdType.classList.add("hide-view");
+tr.appendChild(tdType);
+
+    // THEMA
+    tr.appendChild(makeEditableCell(o, "thema"));
+
+    // BIJZONDERHEDEN
+    tr.appendChild(makeEditableCell(o, "bijzonderheden"));
+
+    // BERT (optioneel)
+    if (config.showBert) {
+        tr.appendChild(makeEditableCell(o, "bert_met"));
+    }
+
+    // LOCATIE (dropdown)
+  const tdLoc = makeRestrictedEditable(
+    o,
+    "locatie",
+    ["", "Kampvuurkuil", "Zandveld", "Grasveld", "De Hoop",
+     "Bever lokaal", "Welpen lokaal", "Van terrein af",
+     "Externe locatie", "Overig"],
+    "col-locatie"
+);
+if (isOuder()) tdLoc.classList.add("hide-view");
+tr.appendChild(tdLoc);
+
+
+    // MATERIAAL
+    tr.appendChild(makeEditableCell(o, "materiaal", "col-materiaal"));
+
+    // JEUGD AANWEZIGHEID
+    jeugd.forEach(j => {
+        if (!j.hidden) {
+            tr.appendChild(makePresenceCell(o, j.id, j.hidden, false));
+        }
+    });
+
+    // KIJKERS
+    if (!isOuder()) {
+        tr.appendChild(makeEditableCell(o, "kijkers", "", "number"));
+    }
+
+    // DIVIDER
+    const visibleJeugd = jeugd.filter(j => !j.hidden).length;
+    const visibleLeiding = leiding.filter(l => !l.hidden).length;
+    if (visibleJeugd > 0 && visibleLeiding > 0) {
+        const divider = document.createElement("td");
+        divider.classList.add("col-divider");
+        tr.appendChild(divider);
+    }
+
+    // LEIDING AANWEZIGHEID
+    if (config.showLeiding) {
+        leiding.forEach(l => {
+            if (!l.hidden) {
+                tr.appendChild(makePresenceCell(o, `leiding-${l.id}`, l.hidden, true));
+            }
+        });
+    }
+
+    // EXTRA LEIDING (aantal)
+    if (!isOuder()) {
+        tr.appendChild(makeEditableCell(o, "extraAantal", "", "number"));
+    }
+
+    // EXTRA LEIDING (namen)
+    if (!isOuder()) {
+        tr.appendChild(makeEditableCell(o, "extraNamen"));
+    }
+
+    // TELLERS
+    if (!isOuder()) {
+        const [cntJ, cntL] = countPresence(o);
+
+        const tdJ = document.createElement("td");
+        tdJ.textContent = cntJ;
+        tr.appendChild(tdJ);
+
+        const tdL = document.createElement("td");
+        tdL.textContent = cntL;
+        tr.appendChild(tdL);
+    }
+
+    tableBody.appendChild(tr);
 }
 
 // ======================================================================
@@ -483,7 +608,11 @@ function makeEditableCell(o, field, extraClass = "", inputType = "text") {
 
     const input = document.createElement("input");
     input.type = inputType;        // text, date, time
-    input.value = value;
+    if (inputType === "date") {
+        input.value = value?.substring(0, 10) || "";
+    } else {
+        input.value = value;
+    }
     input.classList.add("cell-input");
 
     // Opslaan bij blur

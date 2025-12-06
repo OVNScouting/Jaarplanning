@@ -937,3 +937,21 @@ body.mode-bewerken .col-datum {
         display: none !important;
     }
 }
+
+.cell-input,
+.cell-select {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: .85rem;
+    background: #fff;
+}
+
+.cell-input:focus,
+.cell-select:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px var(--blue-soft);
+}
+

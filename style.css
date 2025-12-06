@@ -707,9 +707,12 @@ body {
   .planning-controls,
   .ledenbeheer,
   .meldingen,
-  .modal {
+  .modal,
+  .leiding-sidebar,
+  .fab-add-opkomst {
     display: none !important;
   }
+
 
   thead {
     display: table-header-group;
@@ -865,17 +868,18 @@ body.mode-bewerken .col-datum {
     left: 40px !important;
 }
 /* ============================================================
-   LEIDING SIDEBAR (rechts, sticky)
+   LEIDING SIDEBAR (rechts, vast – buiten de kaart)
    ============================================================ */
 
 .leiding-sidebar {
-    position: sticky;
-    top: 110px;               /* onder de topbar */
+    position: fixed;
+    top: 180px;          /* ongeveer onder het infoblok */
+    right: 26px;         /* uitlijnen met de FAB-knop */
     display: flex;
     flex-direction: column;
     gap: 12px;
-    width: 170px;             /* compacte breedte */
-    flex-shrink: 0;
+    width: 180px;
+    z-index: 1500;       /* boven de kaart, onder modals */
 }
 
 .leiding-sidebar.hidden {
@@ -887,6 +891,7 @@ body.mode-bewerken .col-datum {
     width: 100%;
     text-align: center;
 }
+
 
 /* ============================================================
    LAYOUT: planning-sectie + tabel + sidebar
@@ -901,24 +906,22 @@ body.mode-bewerken .col-datum {
     margin-top: 1.5rem;
 }
 
-/* Nieuwe wrapper: tabel + sidebar naast elkaar */
+/* Wrapper onder de filters – nu gewoon blok, zonder sidebar-layout */
 .planning-main {
-    display: flex;
-    align-items: flex-start;
-    gap: 20px;
-    margin-top: 1rem;   /* beetje ruimte onder filters */
+    margin-top: 1rem;
 }
 
-/* tabel neemt alle beschikbare ruimte */
+/* Tabel vult gewoon de kaart */
 .table-wrapper {
-    flex: 1;
+    width: 100%;
     min-width: 0;
 }
 
-/* Sidebar duwt de tabel niet verder naar binnen dan nodig */
 .table-wrapper table {
+    width: 100%;
     max-width: 100%;
 }
+
 
 /* ============================================================
    RESPONSIVE: Sidebar uit op kleine schermen

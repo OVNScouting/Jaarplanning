@@ -78,8 +78,7 @@
     <!-- ============================================================
          PLANNING / TABEL
     ============================================================ -->
-    <section class="planning-section">
-      <div class="planning-header-row">
+         <div class="planning-header-row">
         <!-- Filters -->
         <div class="planning-controls">
           <span id="filterAll" class="chip active">Alles</span>
@@ -94,39 +93,39 @@
         <button id="editModeButton" class="pill-btn only-leiding primary tabel-edit-btn">
           ✏️ Opkomsten bewerken
         </button>
-      
-      </div>
-      <!-- =========================================
-     LEIDING SIDEBAR (rechts)
-     ========================================= -->
-      <div id="leidingSidebar" class="leiding-sidebar only-leiding hidden">
-          <button class="pill-btn outline" onclick="window.location='dashboard.html'">Dashboard</button>
-      
-          <a class="pill-btn outline"
-             href="assets/scouting_mail_handleiding_styled.pdf"
-             target="_blank" download>
-             Handleiding Mailbox
-          </a>
-      
-          <button id="openLedenbeheerButton" class="pill-btn outline">
-            Ledenbeheer
-          </button>
-      
-          <button id="openMeldingenButton" class="pill-btn outline">
-            Meldingen
-          </button>
       </div>
 
       <!-- De tabel -->
       <div class="table-wrapper">
         <table class="planning-table">
-         <thead>
+          <thead>
             <tr id="headerRowTop"></tr>
           </thead>
-
           <tbody id="tableBody"></tbody>
         </table>
       </div>
+
+      <!-- =========================================
+           LEIDING SIDEBAR (rechts)
+           ========================================= -->
+      <div id="leidingSidebar" class="leiding-sidebar only-leiding hidden">
+        <button class="pill-btn outline" onclick="window.location='dashboard.html'">Dashboard</button>
+
+        <a class="pill-btn outline"
+           href="assets/scouting_mail_handleiding_styled.pdf"
+           target="_blank" download>
+           Handleiding Mailbox
+        </a>
+
+        <button id="openLedenbeheerButton" class="pill-btn outline">
+          Ledenbeheer
+        </button>
+
+        <button id="openMeldingenButton" class="pill-btn outline">
+          Meldingen
+        </button>
+      </div>
+
 
       <!-- Nieuwe opkomst toevoegen (alleen in bewerkmodus via JS) -->
       <div id="addOpkomstRow" class="add-row hidden">

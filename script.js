@@ -61,7 +61,6 @@ const filterPast = document.getElementById("filterPast");
 
 const openLedenbeheerButton = document.getElementById("openLedenbeheerButton");
 const openMeldingenButton = document.getElementById("openMeldingenButton");
-const handleidingButton = document.getElementById("handleidingButton");
 
 // Sections
 const ledenbeheerSection = document.getElementById("ledenbeheerSection");
@@ -93,6 +92,14 @@ const opThema = document.getElementById("opThema");
 const opLocatie = document.getElementById("opLocatie");
 const opType = document.getElementById("opType");
 const opMateriaal = document.getElementById("opMateriaal");
+
+// nieuwe velden uit de opkomst-modal
+const opBijzonderheden = document.getElementById("opBijzonderheden");
+const opKijkers = document.getElementById("opKijkers");
+const opExtraAantal = document.getElementById("opExtraAantal");
+const opExtraNamen = document.getElementById("opExtraNamen");
+const opBert = document.getElementById("opBert");
+
 const saveOpkomst = document.getElementById("saveOpkomst");
 const cancelOpkomst = document.getElementById("cancelOpkomst");
 
@@ -997,8 +1004,9 @@ function resetOpkomstFields() {
   opKijkers.value = "0";
   opExtraAantal.value = "0";
   opExtraNamen.value = "";
-
+  if (opBert) opBert.value = "";
 }
+
 
 const fab = document.getElementById("fabAddOpkomst");
 fab?.addEventListener("click", () => {
@@ -1046,7 +1054,11 @@ saveOpkomst?.addEventListener("click", () => {
         aanwezigheid: {}
     };
 
-    if (config.showBert) newObj.bert_met = "";
+    // Bert logeert bij – alleen gebruiken als de speltak dat ondersteunt
+    if (config.showBert) {
+        newObj.bert_met = opBert?.value || "";
+    }
+
 
     jeugd.forEach(j => newObj.aanwezigheid[j.id] = "onbekend");
     if (config.showLeiding)

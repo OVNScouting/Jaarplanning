@@ -491,9 +491,9 @@ function addRow(o) {
     tr.appendChild(makeEditableCell(o, "eindtijd", "", "time"));
 
     // PROCOR (alleen leiding)
-    if (!isOuder()) {
-        tr.appendChild(makeEditableCell(o, "procor", "col-procor", "text"));
-    }
+    const tdPro = makeEditableCell(o, "procor", "col-procor", "text");
+    if (isOuder()) tdPro.classList.add("hide-view");
+    else tr.appendChild(tdPro);
 
     // TYPE (dropdown)
    const tdType = makeRestrictedEditable(
@@ -509,7 +509,7 @@ tr.appendChild(tdType);
     tr.appendChild(makeEditableCell(o, "thema"));
 
     // BIJZONDERHEDEN
-    tr.appendChild(makeEditableCell(o, "bijzonderheden"));
+    tr.appendChild(makeEditableCell(o, "bijzonderheden", "", "textarea"));
 
     // BERT (optioneel)
     if (config.showBert) {
@@ -1001,22 +1001,16 @@ printButton?.addEventListener("click", () => {
 });
 
 editModeButton?.addEventListener("click", () => {
-  if (!isLeiding() && !isEdit()) return alert("Log in als leiding om te bewerken.");
+  if (!isLeiding()) return alert("Log in als leiding om te bewerken.");
 
-  if (isEdit()) {
-    // Save & terug naar normale leidingmodus
-    editMode = false;
-    setMode("leiding");
-    editModeButton.textContent = "✏️ Opkomsten bewerken";
-    renderTable();
-  } else {
-    // Naar bewerkmodus
-    editMode = true;
-    setMode("bewerken");
-    editModeButton.textContent = "💾 Wijzigingen opslaan";
-    renderTable();
-  }
+  editMode = !editMode;
+  setMode(editMode ? "bewerken" : "leiding");
+
+  editModeButton.textContent = editMode
+      ? "💾 Wijzigingen opslaan"
+      : "✏️ Opkomsten bewerken";
 });
+
 
 
 infoEditButton?.addEventListener("click", toggleInfoEdit);

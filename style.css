@@ -834,20 +834,19 @@ tr.row-grey > .col-datum      { background-color: var(--opkomst-verleden-bg) !im
 
 .fab-add-opkomst {
   position: fixed;
+  right: 15px;
   bottom: 26px;
-  right: 26px;
-  background: #006fff;
-  color: white;
-  font-size: 28px;
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+  z-index: 1400;            /* boven de tabel maar onder modals */
+  padding-inline: 18px;     /* iets meer horizontale ruimte */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
 }
+
+/* optioneel: iets compacter dan andere pill-knoppen */
+.fab-add-opkomst.pill-btn {
+  font-size: 0.9rem;
+  padding-block: 8px;
+}
+
 .fab-add-opkomst:hover {
   background: #155ff5;
 }
@@ -874,7 +873,7 @@ body.mode-bewerken .col-datum {
 .leiding-sidebar {
     position: fixed;
     top: 180px;          /* ongeveer onder het infoblok */
-    right: 20px;         /* uitlijnen met de FAB-knop */
+    right: 15px;         /* uitlijnen met de FAB-knop */
     display: flex;
     flex-direction: column;
     gap: 8px;

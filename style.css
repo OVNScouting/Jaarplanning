@@ -936,4 +936,22 @@ body.mode-bewerken .col-datum {
     }
 }
 
+.planning-section {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+/* tabel neemt alle ruimte */
+.table-wrapper {
+    flex: 1;
+    min-width: 0;
+}
+
+/* sidebar blijft rechts */
+.leiding-sidebar {
+    flex-shrink: 0;
+    width: 170px; /* kleiner zoals je vroeg */
+}
 

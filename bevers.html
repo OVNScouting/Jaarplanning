@@ -64,9 +64,9 @@
              class="rich-editor"
              contenteditable="true"></div>
       </div>
-    </section>
+   </section> <!-- sluit info-block -->
 
-    <div id="loadingIndicator" class="loading hidden">
+<div id="loadingIndicator" class="loading hidden">
   Jaarplanning wordt opgehaald.
 </div>
 
@@ -74,11 +74,12 @@
   Oeps er is iets mis gegaan. Probeer het later opnieuw.
 </div>
 
+<!-- ============================================================
+     PLANNING / TABEL (nieuw: planning-section wrapper)
+============================================================ -->
+<section class="planning-section">
 
-    <!-- ============================================================
-         PLANNING / TABEL
-    ============================================================ -->
-         <div class="planning-header-row">
+    <div class="planning-header-row">
         <!-- Filters -->
         <div class="planning-controls">
           <span id="filterAll" class="chip active">Alles</span>
@@ -86,24 +87,43 @@
           <span id="filterPast" class="chip">Verleden</span>
         </div>
 
-        <!-- Acties voor tabel -->
         <button id="printButton" class="pill-btn outline print-btn">Printen</button>
 
-        <!-- Duidelijkere tabel-bewerkknop -->
         <button id="editModeButton" class="pill-btn only-leiding primary tabel-edit-btn">
           ✏️ Opkomsten bewerken
         </button>
-      </div>
+    </div>
 
-      <!-- De tabel -->
-      <div class="table-wrapper">
+    <!-- Tabel -->
+    <div class="table-wrapper">
         <table class="planning-table">
           <thead>
             <tr id="headerRowTop"></tr>
           </thead>
           <tbody id="tableBody"></tbody>
         </table>
-      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div id="leidingSidebar" class="leiding-sidebar only-leiding hidden">
+        <button class="pill-btn outline" onclick="window.location='dashboard.html'">Dashboard</button>
+
+        <a class="pill-btn outline"
+           href="assets/scouting_mail_handleiding_styled.pdf"
+           target="_blank" download>
+           Handleiding Mailbox
+        </a>
+
+        <button id="openLedenbeheerButton" class="pill-btn outline">
+          Ledenbeheer
+        </button>
+
+        <button id="openMeldingenButton" class="pill-btn outline">
+          Meldingen
+        </button>
+    </div>
+
+</section> <!-- sluit planning-section -->
 
       <!-- =========================================
            LEIDING SIDEBAR (rechts)

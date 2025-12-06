@@ -602,6 +602,8 @@ body {
 .speltak-card.explorers { border-top: 4px solid #801638; }
 .speltak-card.rovers { border-top: 4px solid #003865; }
 .speltak-card.stam { border-top: 4px solid #7A7A7A; }
+.speltak-card.dashboard { border-top: 4px solid #f0E626; }
+    
 
 /* ============================
    VIEW-MODUS (OUDERS)

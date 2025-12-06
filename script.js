@@ -172,8 +172,15 @@ function applyModeVisibility() {
   // FAB (opkomst toevoegen) alleen zichtbaar voor leiding
   const fab = document.getElementById("fabAddOpkomst");
   if (fab) fab.classList.toggle("hide-view", isOuder());
-
+  
+ // === LEIDING SIDEBAR ===
+    const sidebar = document.getElementById("leidingSidebar");
+    if (sidebar) {
+        sidebar.classList.toggle("hidden", isOuder());
+    }
 }
+   
+
 
 async function loadEverything() {
 

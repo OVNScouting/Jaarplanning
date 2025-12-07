@@ -437,27 +437,46 @@ tr.row-grey > .col-datum      { background: var(--opkomst-verleden-bg) !importan
 
 /* Hide elements for parents */
 .hide-view { display: none !important; }
-
-/* Sticky horizontale scrollbalk voor de tabel */
+/* Zwevende horizontale scrollbar – gekoppeld aan de tabel */
 .table-h-scroll {
-  position: sticky;
-  bottom: 0;
-  z-index: 20;
-  background: var(--card);
-  padding: 2px 0;
+  position: fixed;                 /* hangt los boven de inhoud */
+  z-index: 2000;                   /* boven de tabel maar onder modals */
+  background: rgba(255, 255, 255, 0.95);
+  padding: 4px 0;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+
+  /* breedte en positie (left/top) worden via JS gezet */
   overflow-x: auto;
   overflow-y: hidden;
+  display: none;                   /* JS zet hem aan/uit */
 }
 
-/* De “spoor”-div die dezelfde breedte krijgt als de tabel */
 .table-h-inner {
-  height: 1px;           /* bijna onzichtbaar, alleen scrollbar is zichtbaar */
+  height: 1px;                     /* onzichtbare “spoor”-div, alleen scrollbar telt */
 }
 
-/* Optioneel: iets kleinere scrollbar */
+/* WebKit (Chrome/Edge/Safari) */
 .table-h-scroll::-webkit-scrollbar {
-  height: 8px;
+  height: 10px;
 }
+
+.table-h-scroll::-webkit-scrollbar-track {
+  background: #e5e7eb;
+  border-radius: 999px;
+}
+
+.table-h-scroll::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 999px;
+}
+
+/* Firefox styling */
+.table-h-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #6b7280 #e5e7eb;
+}
+
 
 
 /* ============================================================

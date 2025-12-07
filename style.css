@@ -719,6 +719,23 @@ body.mode-ouder .col-divider {
     }
 }
 
+/* Nieuwe modal structuur – meer ruimte en grouping */
+.modal-content label {
+  margin-top: 0.55rem;
+  font-weight: 500;
+}
+
+.modal-content input,
+.modal-content select {
+  margin-top: 0.25rem;
+  margin-bottom: 0.6rem;
+}
+
+#opkomstModal h3 {
+  margin-top: 0;
+  margin-bottom: 0.8rem;
+}
+
 /* ============================================================
    PRINT
 ============================================================ */

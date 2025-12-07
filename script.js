@@ -507,12 +507,22 @@ function makeEditableCell(o, field, extraClass = "", inputType = "text") {
         input = document.createElement("textarea");
         input.value = value;
         input.classList.add("cell-textarea");
+
+        // auto-groei zodat de hele tekst zichtbaar blijft
+        const autoSize = () => {
+            input.style.height = "auto";
+            input.style.height = input.scrollHeight + "px";
+        };
+        autoSize();
+        input.addEventListener("input", autoSize);
+
     } else if (inputType === "date") {
         input = document.createElement("input");
         input.type = "date";
         input.value = value?.substring(0, 10) || "";
         input.classList.add("cell-input");
     } else {
+
         input = document.createElement("input");
         input.type = inputType;
         input.value = value;

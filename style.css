@@ -839,6 +839,112 @@ body.mode-ouder .col-divider {
 }
 
 /* ============================================================
+   WELPEN — HEADER STRUCTUUR & KLEUREN
+============================================================ */
+
+/* Container voor twee namen in verticale header */
+.welpen-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+
+    padding: 0.3rem 0.2rem;
+    background: #f9fafb;
+    font-size: 0.72rem;
+    line-height: 1.05;
+}
+
+/* Bovenste regel = welpennaam of ❗ */
+.welpen-naam {
+    font-weight: normal;          /* standaard niet bold */
+    padding: 2px 4px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+/* Onderste regel = normale naam */
+.welpen-naam-reallife {
+    margin-top: 4px;
+    opacity: 0.85;
+    font-weight: normal;
+}
+
+/* ❗ styling als welpennaam ontbreekt */
+.welpen-missing {
+    color: #d11;                  /* rood ❗ */
+    font-weight: bold;
+    background: transparent !important;
+}
+
+/* Nestleider krijgt bold welpennaam */
+.welpen-leider .welpen-naam {
+    font-weight: 700 !important;
+}
+
+/* ============================================================
+   WELPEN — SUBTIELE NESTKLEUREN (achtergrond welpennaam)
+============================================================ */
+
+/* Zwart */
+.nest-zwart .welpen-naam {
+    background: rgba(22, 25, 28, 0.15);
+    color: #16191c;
+}
+
+/* Bruin */
+.nest-bruin .welpen-naam {
+    background: rgba(94, 83, 74, 0.20);
+    color: #5e534a;
+}
+
+/* Wit */
+.nest-wit .welpen-naam {
+    background: rgba(204, 213, 227, 0.35);
+    color: #333;
+}
+
+/* Grijs */
+.nest-grijs .welpen-naam {
+    background: rgba(113, 128, 153, 0.20);
+    color: #333;
+}
+
+/* Geen nest → géén achtergrond & géén bold */
+.nest-none .welpen-naam {
+    background: transparent;
+    font-weight: normal !important;
+}
+
+
+/* ============================================================
+   WELPEN — LEDENBEHEER VELDEN
+============================================================ */
+
+/* Extra velden in ledenbeheer voor welpennaam/nest */
+.welpen-extra-field {
+    margin-top: 0.35rem;
+}
+
+.welpen-extra-field label {
+    font-weight: 500;
+    display: block;
+    margin-bottom: 0.2rem;
+}
+
+.welpen-extra-field input,
+.welpen-extra-field select {
+    width: 100%;
+    padding: 0.45rem 0.55rem;
+    border-radius: var(--radius-small);
+    border: 1px solid var(--border);
+}
+
+
+/* ============================================================
    PRINT
 ============================================================ */
 @media print {

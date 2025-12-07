@@ -438,6 +438,28 @@ tr.row-grey > .col-datum      { background: var(--opkomst-verleden-bg) !importan
 /* Hide elements for parents */
 .hide-view { display: none !important; }
 
+/* Sticky horizontale scrollbalk voor de tabel */
+.table-h-scroll {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  background: var(--card);
+  padding: 2px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* De “spoor”-div die dezelfde breedte krijgt als de tabel */
+.table-h-inner {
+  height: 1px;           /* bijna onzichtbaar, alleen scrollbar is zichtbaar */
+}
+
+/* Optioneel: iets kleinere scrollbar */
+.table-h-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+
 /* ============================================================
    LEDENBEHEER
 ============================================================ */

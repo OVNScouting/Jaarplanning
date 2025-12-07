@@ -413,6 +413,23 @@ tr.row-grey > .col-datum      { background: var(--opkomst-verleden-bg) !importan
   border-color: var(--blue);
   box-shadow: 0 0 0 2px var(--blue-soft);
 }
+.cell-textarea {
+    width: 100%;
+    min-height: 3rem;     /* start-hoogte */
+    max-height: 10rem;    /* voorkomt mega-rijen */
+    padding: 4px 6px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: .85rem;
+    background: #fff;
+    resize: vertical;     /* eventueel nog zelf iets groter kunnen trekken */
+}
+
+.cell-textarea:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px var(--blue-soft);
+}
 
 /* Hide elements for parents */
 .hide-view { display: none !important; }
@@ -536,7 +553,7 @@ tr.row-grey > .col-datum      { background: var(--opkomst-verleden-bg) !importan
 ============================================================ */
 .leiding-sidebar {
   position: fixed;
-  top: 180px;
+  top: 400px;
   right: 15px;
   width: 150px;
   display: flex;

@@ -786,7 +786,9 @@ body.mode-ouder .col-divider {
 .speltak-card.explorers   .card-topbar { background: #8a0a03; }
 .speltak-card.rovers      .card-topbar { background: #590501; }
 .speltak-card.stam        .card-topbar { background: #f0d800; }
-.speltak-card.dashboard   .card-topbar { background: #1822b5; }
+.speltak-card.dashboard   .card-topbar { background: #687a96; }
+.speltak-card.bestuur     .card-topbar { background: #1822b5; }
+
 
 /* responsive */
 @media (max-width: 600px) {

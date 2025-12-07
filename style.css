@@ -701,13 +701,13 @@ body.mode-ouder .col-divider {
 }
 
 /* KLEUREN per speltak */
-.speltak-card.bevers      .card-topbar { background: #e53935; }
-.speltak-card.welpen      .card-topbar { background: #4caf50; }
-.speltak-card.scouts      .card-topbar { background: #2e7d32; }
-.speltak-card.explorers   .card-topbar { background: #1976d2; }
-.speltak-card.rovers      .card-topbar { background: #6a1b9a; }
-.speltak-card.stam        .card-topbar { background: #5d4037; }
-.speltak-card.dashboard   .card-topbar { background: var(--blue); }
+.speltak-card.bevers      .card-topbar { background: #e61700; }
+.speltak-card.welpen      .card-topbar { background: #19b30b; }
+.speltak-card.scouts      .card-topbar { background: #c4b584; }
+.speltak-card.explorers   .card-topbar { background: #8a0a03; }
+.speltak-card.rovers      .card-topbar { background: #590501; }
+.speltak-card.stam        .card-topbar { background: #f0d800; }
+.speltak-card.dashboard   .card-topbar { background: #1822b5; }
 
 /* responsive */
 @media (max-width: 600px) {

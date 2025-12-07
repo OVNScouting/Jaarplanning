@@ -316,20 +316,25 @@ async function loadEverything() {
              hidden: !!v.hidden,
              volgorde: v.volgorde ?? 999
          })).sort((a, b) => a.volgorde - b.volgorde);
-             if (speltak === "welpen") {
-          const nestOrder = { zwart: 1, bruin: 2, wit: 3, grijs: 4, "": 5, none: 5 };
-      
-          jeugd.sort((a, b) => {
-              const na = nestOrder[a.nest || "none"];
-              const nb = nestOrder[b.nest || "none"];
-              if (na !== nb) return na - nb;
-      
-              // binnen een nest eerst nestleider
-              if (a.nestleider !== b.nestleider) return a.nestleider ? -1 : 1;
-      
-              return a.naam.localeCompare(b.naam);
-          });
-      }
+       
+      if (speltak === "welpen") {
+    const nestOrder = { zwart: 1, bruin: 2, wit: 3, grijs: 4, "": 5, none: 5 };
+
+    jeugd.sort((a, b) => {
+        // 1. Nest-volgorde
+        const na = nestOrder[a.nest || "none"];
+        const nb = nestOrder[b.nest || "none"];
+        if (na !== nb) return na - nb;
+
+        // 2. Nestleider eerst binnen hetzelfde nest
+        if (a.nestleider !== b.nestleider) {
+            return a.nestleider ? -1 : 1;
+        }
+
+        // 3. Daarna alfabetisch op de echte naam
+        return a.naam.localeCompare(b.naam);
+    });
+}
 
           leiding = Object.entries(data.leiding || {}).map(([id, v]) => ({
              id,

@@ -927,13 +927,6 @@ filterPast?.addEventListener("click", () => {
 });
 
 printButton?.addEventListener("click", () => {
-    const prev = mode;
-    setMode("ouder");
-    setTimeout(() => {
-        window.print();
-        setMode(prev);
-    }, 150);
-});
 
 editModeButton?.addEventListener("click", () => {
     if (!isLeiding()) {

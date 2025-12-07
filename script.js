@@ -144,19 +144,23 @@ setMode(mode);
 loadEverything();
 
 function setMode(newMode) {
-  // Basismode is altijd ouder of leiding
+  // Validatie
   if (newMode !== "ouder" && newMode !== "leiding") {
     newMode = "ouder";
   }
 
+  // Basis-modus opslaan
   mode = newMode;
   localStorage.setItem("mode", newMode);
 
+  // ALTIJD eerst compleet resetten
   document.body.classList.remove("mode-ouder", "mode-leiding", "mode-bewerken");
-  document.body.classList.add(`mode-${newMode}`);
 
-  // Extra body-class alleen wanneer je in edit-modus én leiding bent
-  if (editMode && mode === "leiding") {
+  // Basis-modus toevoegen
+  document.body.classList.add(`mode-${mode}`);
+
+  // Bewerken-modus toevoegen ALS leiding + editMode true
+  if (mode === "leiding" && editMode) {
     document.body.classList.add("mode-bewerken");
   }
 

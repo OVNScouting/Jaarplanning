@@ -82,9 +82,9 @@ const memberModal = document.getElementById("addMemberModal");
 const memberType = document.getElementById("memberType");
 const memberName = document.getElementById("memberName");
 
-const memberwelpennaam = document.getElementById("memberwelpennaam");
+const memberwelpennaam = document.getElementById("memberWelpenNaam");
 const memberNest = document.getElementById("memberNest");
-const membernestleider = document.getElementById("membernestleider");
+const membernestleider = document.getElementById("memberNestLeider");
 
 const welpenExtraFields = document.getElementById("welpenExtraFields");
 

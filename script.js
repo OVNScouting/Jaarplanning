@@ -95,6 +95,22 @@ if (welpenExtraFields) {
     }
 }
 
+function toggleWelpenExtraFields() {
+    if (!welpenExtraFields) return;
+
+    if (speltak !== "welpen") {
+        welpenExtraFields.style.display = "none";
+        return;
+    }
+
+    // Alleen jeugdleden hebben nest/nestleider
+    if (memberType.value === "jeugd") {
+        welpenExtraFields.style.display = "block";
+    } else {
+        welpenExtraFields.style.display = "none";
+    }
+}
+
 const saveMember = document.getElementById("saveMember");
 const cancelMember = document.getElementById("cancelMember");
 
@@ -408,6 +424,7 @@ function toggleInfoEdit() {
    ====================================================================== */
 function renderTable() {
     headerRowTop.innerHTML = "";
+    if (headerRowBottom) headerRowBottom.innerHTML = "";
     tableBody.innerHTML = "";
 
     addHeaders();
@@ -419,124 +436,168 @@ function renderTable() {
             return true;
         })
         .forEach(o => addRow(o));
-   syncHorizontalScrollProxy();
+
+    syncHorizontalScrollProxy();
 }
 
 function addHeaders() {
-    const tr = headerRowTop;
+    const trTop = headerRowTop;
+    const trBottom = headerRowBottom;
 
+    const twoRows = speltak === "welpen" && trBottom;
+
+    trTop.innerHTML = "";
+    if (trBottom) trBottom.innerHTML = "";
+
+    // Helper: header met optioneel rowSpan=2
+    function addMainHeader(txt, cls) {
+        const th = makeHeader(txt, cls);
+        if (twoRows) th.rowSpan = 2;
+        trTop.appendChild(th);
+        return th;
+    }
+
+    // Extra kolom voor verwijderen in edit-modus
     if (isEdit()) {
         const th = document.createElement("th");
-        tr.appendChild(th);
+        if (twoRows) th.rowSpan = 2;
+        trTop.appendChild(th);
     }
 
-    tr.appendChild(makeHeader("Datum", "col-datum"));
-    tr.appendChild(makeHeader("Start"));
-    tr.appendChild(makeHeader("Eind"));
+    addMainHeader("Datum", "col-datum");
+    addMainHeader("Start");
+    addMainHeader("Eind");
 
-    if (!isOuder()) tr.appendChild(makeHeader("Procor", "col-procor"));
+    if (!isOuder()) addMainHeader("Procor", "col-procor");
 
-    const thType = makeHeader("Type", "col-type");
+    const thType = addMainHeader("Type", "col-type");
     if (isOuder()) thType.classList.add("hide-view");
-    tr.appendChild(thType);
 
-    tr.appendChild(makeHeader("Thema", "col-thema"));
-tr.appendChild(makeHeader("Bijzonderheden", "col-bijzonderheden"));
+    addMainHeader("Thema", "col-thema");
+    addMainHeader("Bijzonderheden", "col-bijzonderheden");
 
-if (config.showBert) tr.appendChild(makeHeader("Bert logeert bij", "col-bert"));
+    if (config.showBert) addMainHeader("Bert logeert bij", "col-bert");
 
-
-    const thLoc = makeHeader("Locatie", "col-locatie");
+    const thLoc = addMainHeader("Locatie", "col-locatie");
     if (isOuder()) thLoc.classList.add("hide-view");
-    tr.appendChild(thLoc);
 
-    const thMat = makeHeader("Materiaal", "col-materiaal");
+    const thMat = addMainHeader("Materiaal", "col-materiaal");
     if (isOuder()) thMat.classList.add("hide-view");
-    tr.appendChild(thMat);
 
-      jeugd.forEach(j => {
-          if (j.hidden) return;
-      
-          const th = document.createElement("th");
-          th.classList.add("col-jeugd");
-      
-          if (speltak === "welpen") {
-              const wn = j.welpennaam?.trim() || "";
-              const rl = j.naam;
-              const nest = j.nest || "none";
-              const missing = wn === "";
-      
-              th.classList.add(`nest-${nest}`);
-      
-              th.innerHTML = `
-                  <div class="welpen-header ${j.nestleider ? "welpen-leider" : ""}">
-                      <span class="welpen-naam ${missing ? "welpen-missing" : ""}">
-                          ${missing ? "❗" : wn}
-                      </span>
-                      <span class="welpen-naam-reallife">${rl}</span>
-                  </div>
-              `;
-          } else {
-              th.innerHTML = `<div class="name-vertical">${j.naam}</div>`;
-          }
-      
-          tr.appendChild(th);
-      });
+    // ===== JEUGD-KOLOMMEN =====
+    const zichtbareJeugd = jeugd.filter(j => !j.hidden);
 
-
-
-    if (!isOuder()) tr.appendChild(makeHeader("Kijkers"));
-
-    const vJ = jeugd.filter(j => !j.hidden).length;
-    const vL = leiding.filter(l => !l.hidden).length;
-    if (vJ > 0 && vL > 0) tr.appendChild(makeDivider());
-
-    if (config.showLeiding) {
-       
-      leiding.forEach(l => {
-    if (l.hidden) return;
-
-    const th = document.createElement("th");
-    th.classList.add("col-leiding");
-    if (isOuder()) th.classList.add("hide-view");
-
-    if (speltak === "welpen") {
-        const wn = l.welpennaam?.trim() || "";
-        const missing = wn === "";
-
-        th.innerHTML = `
-            <div class="welpen-header">
-                <span class="welpen-naam ${missing ? "welpen-missing" : ""}">
-                    ${missing ? "❗" : wn}
-                </span>
-                <span class="welpen-naam-reallife">${l.naam}</span>
-            </div>
-        `;
+    if (!twoRows) {
+        // Niet-welpen: bestaande verticale namen
+        zichtbareJeugd.forEach(j => {
+            const th = document.createElement("th");
+            th.classList.add("col-jeugd");
+            th.innerHTML = `<div class="name-vertical">${j.naam}</div>`;
+            trTop.appendChild(th);
+        });
     } else {
-        th.innerHTML = `<div class="name-vertical">${l.naam}</div>`;
+        // Welpen: boven welpennaam, onder echte naam
+        zichtbareJeugd.forEach(j => {
+            const nest = (j.nest || "").toLowerCase();
+            const missing = !j.welpennaam || !j.welpennaam.trim();
+
+            // Bovenste rij: welpennaam
+            const thTop = document.createElement("th");
+            thTop.classList.add("col-jeugd");
+            if (nest) thTop.classList.add(`nest-${nest}`);
+
+            const divTop = document.createElement("div");
+            divTop.classList.add("name-vertical", "welpen-naam");
+            if (missing) divTop.classList.add("welpen-missing");
+            if (j.nestleider) divTop.classList.add("welpen-leider");
+
+            divTop.textContent = missing ? "❗" : j.welpennaam;
+            thTop.appendChild(divTop);
+            trTop.appendChild(thTop);
+
+            // Onderste rij: echte naam
+            const thBottom = document.createElement("th");
+            thBottom.classList.add("col-jeugd");
+
+            const divBottom = document.createElement("div");
+            divBottom.classList.add("name-vertical", "welpen-naam-reallife");
+            divBottom.textContent = j.naam;
+
+            thBottom.appendChild(divBottom);
+            trBottom.appendChild(thBottom);
+        });
     }
 
-    tr.appendChild(th);
-});
+    // Kijkers-kolom
+    if (!isOuder()) addMainHeader("Kijkers");
 
+    // Divider tussen jeugd en leiding
+    const vJ = zichtbareJeugd.length;
+    const vL = leiding.filter(l => !l.hidden).length;
+    if (vJ > 0 && vL > 0) {
+        const split = document.createElement("th");
+        split.classList.add("col-divider");
+        if (twoRows) split.rowSpan = 2;
+        trTop.appendChild(split);
+    }
+
+    // ===== LEIDING-KOLOMMEN =====
+    if (config.showLeiding) {
+        const zichtbareLeiding = leiding.filter(l => !l.hidden);
+
+        if (!twoRows) {
+            zichtbareLeiding.forEach(l => {
+                const th = document.createElement("th");
+                th.classList.add("col-leiding");
+                if (isOuder()) th.classList.add("hide-view");
+                th.innerHTML = `<div class="name-vertical">${l.naam}</div>`;
+                trTop.appendChild(th);
+            });
+        } else {
+            zichtbareLeiding.forEach(l => {
+                const missing = !l.welpennaam || !l.welpennaam.trim();
+
+                // bovenste rij: welpennaam
+                const thTop = document.createElement("th");
+                thTop.classList.add("col-leiding");
+                if (isOuder()) thTop.classList.add("hide-view");
+
+                const divTop = document.createElement("div");
+                divTop.classList.add("name-vertical", "welpen-naam");
+                if (missing) divTop.classList.add("welpen-missing");
+                divTop.textContent = missing ? "❗" : l.welpennaam;
+
+                thTop.appendChild(divTop);
+                trTop.appendChild(thTop);
+
+                // onderste rij: echte naam
+                const thBottom = document.createElement("th");
+                thBottom.classList.add("col-leiding");
+                if (isOuder()) thBottom.classList.add("hide-view");
+
+                const divBottom = document.createElement("div");
+                divBottom.classList.add("name-vertical", "welpen-naam-reallife");
+                divBottom.textContent = l.naam;
+
+                thBottom.appendChild(divBottom);
+                trBottom.appendChild(thBottom);
+            });
+        }
     }
 
     // Extra + tellers (alleen voor leiding)
     if (!isOuder()) {
         if (isEdit()) {
-            // In bewerkmodus: 2 kolommen "Extra"
-            tr.appendChild(makeHeader("Extra", "col-extra-aantal")); // aantal
-            tr.appendChild(makeHeader("Extra", "col-extra-namen"));  // namen
+            addMainHeader("Extra", "col-extra-aantal");
+            addMainHeader("Extra", "col-extra-namen");
         } else {
-            // In view-modus: alleen Extra (namen)
-            tr.appendChild(makeHeader("Extra", "col-extra-namen"));
+            addMainHeader("Extra", "col-extra-namen");
         }
 
-        tr.appendChild(makeHeader("Aanw. jeugd"));
-        tr.appendChild(makeHeader("Aanw. leiding"));
+        addMainHeader("Aanw. jeugd");
+        addMainHeader("Aanw. leiding");
     }
 }
-
 
 function makeHeader(txt, cls) {
     const th = document.createElement("th");
@@ -863,18 +924,61 @@ function makeMemberRow(obj, type) {
     li.innerHTML = `
         <span>${icon} ${obj.naam}</span>
         <div class="ledenbeheer-controls">
+            <button data-act="edit">Bewerken</button>
             <button data-act="toggle">${obj.hidden ? "Toon" : "Verberg"}</button>
             <button data-act="del">🗑️</button>
         </div>
     `;
 
-    li.querySelectorAll("button").forEach(b => {
-        b.addEventListener("click", () =>
-            handleMemberAction(obj, type, b.dataset.act)
-        );
-    });
+    // Buttons
+    li.querySelectorAll("button").forEach(b =>
+        b.addEventListener("click", (e) => {
+            e.stopPropagation();
+            handleMemberAction(obj, type, b.dataset.act);
+        })
+    );
 
-    // Drag events
+    // Drag & drop
+    function onDragStart(e) {
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", this.dataset.id);
+    }
+
+    function onDragOver(e) {
+        e.preventDefault();
+        this.classList.add("drag-over");
+    }
+
+    function onDragLeave() {
+        this.classList.remove("drag-over");
+    }
+
+    function onDrop(e) {
+        e.preventDefault();
+        this.classList.remove("drag-over");
+
+        const draggedId = e.dataTransfer.getData("text/plain");
+        const targetId = this.dataset.id;
+
+        if (draggedId === targetId) return;
+
+        const list = type === "jeugd" ? jeugd : leiding;
+
+        const fromIndex = list.findIndex(m => m.id === draggedId);
+        const toIndex = list.findIndex(m => m.id === targetId);
+        if (fromIndex === -1 || toIndex === -1) return;
+
+        const [moved] = list.splice(fromIndex, 1);
+        list.splice(toIndex, 0, moved);
+
+        const updates = {};
+        list.forEach((m, i) => {
+            updates[`${speltak}/${type === "jeugd" ? "jeugdleden" : "leiding"}/${m.id}/volgorde`] = i + 1;
+        });
+
+        update(ref(db), updates).then(loadEverything);
+    }
+
     li.addEventListener("dragstart", onDragStart);
     li.addEventListener("dragover", onDragOver);
     li.addEventListener("drop", onDrop);
@@ -882,6 +986,7 @@ function makeMemberRow(obj, type) {
 
     return li;
 }
+
 
 let dragSrcEl = null;
 
@@ -965,51 +1070,37 @@ if (act === "edit") {
   }
 
 }
+
 function openEditMember(obj, type) {
-    const isWelpen = speltak === "welpen";
+    if (!isLeiding()) return;
 
-    const wn = obj.welpennaam || "";
-    const nest = obj.nest || "";
-    const nl = !!obj.nestleider;
+    editingMemberId = obj.id;
+    editingMemberType = type;
 
-    const nieuweNaam = prompt("Naam:", obj.naam);
-    if (!nieuweNaam) return;
+    // Titel aanpassen
+    const title = memberModal.querySelector("h3");
+    if (title) title.textContent = "Lid bewerken";
 
-    let welpennaam = wn;
-    let selectedNest = nest;
-    let nestleider = nl;
+    // Type vastzetten tijdens bewerken
+    memberType.value = type;
+    memberType.disabled = true;
 
-    if (isWelpen) {
-        welpennaam = prompt("welpennaam (leeg = ❗):", wn) || "";
+    memberName.value = obj.naam || "";
 
-        selectedNest = prompt("Nest (zwart/bruin/wit/grijs, leeg = geen):", nest).toLowerCase();
-        if (!["zwart","bruin","wit","grijs",""].includes(selectedNest)) selectedNest = "";
+    if (speltak === "welpen" && welpenExtraFields) {
+        memberWelpenNaam.value = obj.welpennaam || "";
 
-        if (selectedNest !== "") {
-            nestleider = confirm("Is dit de nestleider?");
-            if (nestleider) {
-                // check of er al een leider is
-                const conflict = jeugd.find(j => j.nest === selectedNest && j.nestleider && j.id !== obj.id);
-                if (conflict) {
-                    const overschrijf = confirm(`Er is al een nestleider (${conflict.naam}). Overschrijven?`);
-                    if (!overschrijf) return;
-                    update(ref(db, `${speltak}/jeugdleden/${conflict.id}`), { nestleider: false });
-                }
-            }
+        if (type === "jeugd") {
+            memberNest.value = (obj.nest || "").toLowerCase();
+            memberNestLeider.checked = !!obj.nestleider;
         } else {
-            nestleider = false;
+            memberNest.value = "";
+            memberNestLeider.checked = false;
         }
+        toggleWelpenExtraFields();
     }
 
-    const updateObj = { naam: nieuweNaam };
-    if (isWelpen) {
-        updateObj.welpennaam = welpennaam;
-        updateObj.nest = selectedNest;
-        updateObj.nestleider = nestleider;
-    }
-
-    const path = type === "jeugd" ? "jeugdleden" : "leiding";
-    update(ref(db, `${speltak}/${path}/${obj.id}`), updateObj).then(loadEverything);
+    memberModal.classList.remove("hidden");
 }
 
 /* ======================================================================
@@ -1060,48 +1151,102 @@ closeButtons.forEach(btn => {
    ====================================================================== */
 addMemberButton?.addEventListener("click", () => {
     if (!isLeiding()) return alert("Alleen leiding kan leden toevoegen.");
+
+    editingMemberId = null;
+    editingMemberType = null;
+
+    const title = memberModal.querySelector("h3");
+    if (title) title.textContent = "Nieuw lid toevoegen";
+
+    memberType.disabled = false;
+    memberType.value = "jeugd";
+    memberName.value = "";
+
+    if (speltak === "welpen" && welpenExtraFields) {
+        memberWelpenNaam.value = "";
+        memberNest.value = "";
+        memberNestLeider.checked = false;
+    }
+
+    toggleWelpenExtraFields();
     memberModal.classList.remove("hidden");
 });
 
-cancelMember?.addEventListener("click", () =>
-    memberModal.classList.add("hidden")
-);
-
-saveMember?.addEventListener("click", () => {
+saveMember?.addEventListener("click", async () => {
     if (!isLeiding()) return;
 
     const naam = memberName.value.trim();
-    if (!naam) return alert("Naam vereist");
-
-    const path = memberType.value === "jeugd" ? "jeugdleden" : "leiding";
-    const newRef = push(ref(db, `${speltak}/${path}`));
-
-    // Basismodel
-    let newObj = {
-        naam,
-        hidden: false,
-        volgorde: 999
-    };
-
-    // Alleen voor Welpen extra velden
-    if (speltak === "welpen") {
-        newObj.welpennaam = memberwelpennaam.value.trim() || "";
-        newObj.nest = memberNest.value || "";
-        newObj.nestleider = membernestleider.checked || false;
+    if (!naam) {
+        alert("Naam vereist");
+        return;
     }
 
-    // Speciale regel: leiding heeft wel welpennaam maar GEEN nest
-    if (speltak === "welpen" && path === "leiding") {
-        delete newObj.nest;
-        delete newObj.nestleider;
+    const type = memberType.value === "leiding" ? "leiding" : "jeugd";
+    const path = type === "jeugd" ? "jeugdleden" : "leiding";
+    const isWelpen = speltak === "welpen";
+
+    let updateObj = { naam };
+
+    if (isWelpen) {
+        const welpNaam = (memberWelpenNaam?.value || "").trim();
+        let nest = "";
+        let nestleider = false;
+
+        if (type === "jeugd") {
+            nest = (memberNest?.value || "").toLowerCase();
+            nestleider = !!(memberNestLeider && memberNestLeider.checked) && !!nest;
+        }
+
+        updateObj.welpennaam = welpNaam;
+        updateObj.nest = type === "jeugd" ? nest : "";
+        updateObj.nestleider = type === "jeugd" ? nestleider : false;
     }
 
-    set(newRef, newObj).then(() => {
+    try {
+        // Unieke nestleider per nest afdwingen
+        if (isWelpen && type === "jeugd" && updateObj.nest && updateObj.nestleider) {
+            const conflict = jeugd.find(j =>
+                j.nest === updateObj.nest &&
+                j.nestleider &&
+                j.id !== editingMemberId
+            );
+
+            if (conflict) {
+                const overschrijf = confirm(
+                    `Er is al een nestleider (${conflict.naam}) in nest ${updateObj.nest}. Overschrijven?`
+                );
+                if (!overschrijf) return;
+
+                await update(ref(db, `${speltak}/jeugdleden/${conflict.id}`), {
+                    nestleider: false
+                });
+            }
+        }
+
+        if (editingMemberId) {
+            // Bestaand lid bijwerken
+            await update(ref(db, `${speltak}/${path}/${editingMemberId}`), updateObj);
+        } else {
+            // Nieuw lid
+            const newRef = push(ref(db, `${speltak}/${path}`));
+            await set(newRef, {
+                hidden: false,
+                volgorde: 999,
+                ...updateObj
+            });
+        }
+
         memberModal.classList.add("hidden");
-        loadEverything();
-    });
-});
+        editingMemberId = null;
+        editingMemberType = null;
 
+        memberType.disabled = false;
+        await loadEverything();
+    } catch (err) {
+        console.error(err);
+        alert("Opslaan mislukt, probeer het opnieuw.");
+    }
+});
 
 
 /* ======================================================================

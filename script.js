@@ -100,18 +100,17 @@ const opBert = document.getElementById("opBert");
 
 const saveOpkomst = document.getElementById("saveOpkomst");
 const cancelOpkomst = document.getElementById("cancelOpkomst");
-
 const closeButtons = document.querySelectorAll(".close-section");
 const fab = document.getElementById("fabAddOpkomst");
 const logoutButton = document.getElementById("logoutButton");
 
 /* ======================================================================
-   HORIZONTALE SCROLLBALK
+   HORIZONTALE SCROLLBALK – zwevend
    ====================================================================== */
 function initHorizontalScrollProxy() {
     if (!tableWrapper || tableHScroll) return;
 
-    // Maak de sticky scrollbalk
+    // Maak de zwevende scrollbalk
     tableHScroll = document.createElement("div");
     tableHScroll.className = "table-h-scroll";
 
@@ -119,9 +118,8 @@ function initHorizontalScrollProxy() {
     tableHInner.className = "table-h-inner";
     tableHScroll.appendChild(tableHInner);
 
-    // Plaats hem direct vóór de echte tabel-wrapper
-    const parent = tableWrapper.parentElement;
-    parent.insertBefore(tableHScroll, tableWrapper);
+    // Voeg hem toe aan de body (zwevend boven alles)
+    document.body.appendChild(tableHScroll);
 
     // Scroll-sync beide kanten op
     tableHScroll.addEventListener("scroll", () => {
@@ -133,12 +131,55 @@ function initHorizontalScrollProxy() {
         if (!tableHScroll) return;
         tableHScroll.scrollLeft = tableWrapper.scrollLeft;
     });
+
+    // Reageren op scroll en resize om positie bij te werken
+    window.addEventListener("scroll", updateHorizontalScrollPosition);
+    window.addEventListener("resize", () => {
+        syncHorizontalScrollProxy();
+    });
 }
 
 function syncHorizontalScrollProxy() {
     if (!tableWrapper || !tableHInner) return;
-    // Zorg dat de "spoor"-div net zo breed is als de content van de tabel
+    // Breedte van de inhoud = breedte van de tabel (voor horizontale scroll)
     tableHInner.style.width = tableWrapper.scrollWidth + "px";
+    updateHorizontalScrollPosition();
+}
+
+function updateHorizontalScrollPosition() {
+    if (!tableWrapper || !tableHScroll) return;
+
+    const rect = tableWrapper.getBoundingClientRect();
+    const vh = window.innerHeight;
+    const barHeight = tableHScroll.offsetHeight || 24;
+    const margin = 8;
+
+    // Alleen tonen als er horizontale overflow is én de tabel zichtbaar is
+    const hasOverflow = tableWrapper.scrollWidth > tableWrapper.clientWidth + 1;
+    const isVisible = rect.bottom > 0 && rect.top < vh;
+
+    if (!hasOverflow || !isVisible) {
+        tableHScroll.style.display = "none";
+        return;
+    }
+
+    tableHScroll.style.display = "block";
+
+    // Horizontale positie en breedte laten matchen met de tabel
+    tableHScroll.style.left = rect.left + "px";
+    tableHScroll.style.width = rect.width + "px";
+
+    // Doelpositie: net boven de onderkant van het viewport
+    const desiredTop = vh - barHeight - margin;
+
+    // Max: onderkant van de tabel (balk moet daar stoppen)
+    const maxTop = rect.bottom - barHeight - margin;
+
+    // Min: iets onder de bovenkant van de tabel (balk niet bovenaan laten hangen)
+    const minTop = rect.top + margin;
+
+    const top = Math.max(minTop, Math.min(desiredTop, maxTop));
+    tableHScroll.style.top = top + "px";
 }
 
 // Direct bij load de proxy aanmaken

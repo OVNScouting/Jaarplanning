@@ -943,6 +943,20 @@ body.mode-ouder .col-divider {
     border: 1px solid var(--border);
 }
 
+/* Drag & drop styling */
+.draggable {
+    cursor: grab;
+}
+
+.draggable:active {
+    cursor: grabbing;
+}
+
+.drag-over {
+    border: 2px dashed var(--blue);
+    background: #eef6ff;
+}
+
 
 /* ============================================================
    PRINT

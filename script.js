@@ -499,9 +499,13 @@ function makeEditableCell(o, field, extraClass = "", inputType = "text") {
 
     // VIEW MODE
     if (!isEdit()) {
+    if (inputType === "date" && value) {
+        td.textContent = formatDateDisplay(value); // dd/mm/yyyy
+    } else {
         td.textContent = value;
-        return td;
     }
+    return td;
+}
 
     td.classList.add("editable-cell");
 
@@ -870,11 +874,20 @@ saveOpkomst?.addEventListener("click", () => {
     jeugd.forEach(j => newObj.aanwezigheid[j.id] = "onbekend");
     if (config.showLeiding)
         leiding.forEach(l => newObj.aanwezigheid[`leiding-${l.id}`] = "onbekend");
-
-    set(newRef, newObj).then(() => {
-        opModal.classList.add("hidden");
-        loadEverything();
-    });
+   
+      set(newRef, newObj).then(() => {
+       opModal.classList.add("hidden");
+   
+       // laad opnieuw, wacht tot tabel klaarstaat
+       loadEverything().then(() => {
+           const row = document.querySelector(`tr[data-id="${newRef.key}"]`);
+           if (row) {
+               row.scrollIntoView({ behavior: "smooth", block: "center" });
+               row.classList.add("row-highlight");
+               setTimeout(() => row.classList.remove("row-highlight"), 2000);
+           }
+       });
+   });
 });
 
 /* ======================================================================

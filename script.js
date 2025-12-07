@@ -247,20 +247,27 @@ function toggleInfoEdit() {
     infoEditActive = !infoEditActive;
 
     if (infoEditActive) {
+        // Naar bewerk-modus
         infoEditorWrapper.classList.remove("hidden");
         infoTekst.classList.add("hidden");
         infoEditButton.textContent = "Opslaan info";
     } else {
+        // Opslaan
         const sanitized = sanitizeText(infoEdit.innerHTML);
+
         update(ref(db, speltak), { infotekst: sanitized }).then(() => {
+            // Lokale state en weergave direct bijwerken
+            data.infotekst = sanitized;
             infoTekst.innerHTML = sanitized;
+            infoEdit.innerHTML = sanitized;
+
             infoEditorWrapper.classList.add("hidden");
             infoTekst.classList.remove("hidden");
             infoEditButton.textContent = "Info bewerken";
-            renderEverything();
         });
     }
 }
+
 
 /* ======================================================================
    TABEL — HEADER
@@ -832,17 +839,25 @@ printButton?.addEventListener("click", () => {
 });
 
 editModeButton?.addEventListener("click", () => {
-  if (!isLeiding()) {
-    alert("Log in als leiding om te bewerken.");
-    return;
-  }
+    if (!isLeiding()) {
+        alert("Log in als leiding om te bewerken.");
+        return;
+    }
 
-  editMode = !editMode;          // toggle edit state
-  setMode(mode);                 // zelfde basismode, maar nu met/zonder edit
+    if (editMode) {
+        // We gaan VAN bewerken NAAR bekijken → "opslaan"
+        editMode = false;
+        setMode("leiding");                 // terug naar normale leiding-weergave
+        editModeButton.textContent = "✏️ Opkomsten bewerken";
 
-  editModeButton.textContent = editMode
-    ? "💾 Wijzigingen opslaan"
-    : "✏️ Opkomsten bewerken";
+        // Opnieuw uit de database laden zodat alle wijzigingen (incl. kleuren/tellers) zichtbaar zijn
+        loadEverything();
+    } else {
+        // We gaan NAAR bewerkmodus
+        editMode = true;
+        setMode("leiding");                 // basis blijft leiding
+        editModeButton.textContent = "💾 Wijzigingen opslaan";
+    }
 });
 
 

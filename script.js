@@ -49,6 +49,8 @@ const loadingIndicator = document.getElementById("loadingIndicator");
 const errorIndicator = document.getElementById("errorIndicator");
 
 const headerRowTop = document.getElementById("headerRowTop");
+const headerRowBottom = document.getElementById("headerRowBottom");
+
 const tableBody = document.getElementById("tableBody");
 
 const tableWrapper = document.querySelector(".table-wrapper");
@@ -87,7 +89,11 @@ const membernestleider = document.getElementById("membernestleider");
 const welpenExtraFields = document.getElementById("welpenExtraFields");
 
 // Alleen tonen als speltak welpen is
-if (speltak !== "welpen") welpenExtraFields.style.display = "none";
+if (welpenExtraFields) {
+    if (speltak !== "welpen") {
+        welpenExtraFields.style.display = "none";
+    }
+}
 
 const saveMember = document.getElementById("saveMember");
 const cancelMember = document.getElementById("cancelMember");
@@ -204,6 +210,9 @@ let jeugd = [];
 let leiding = [];
 let nextUpcomingId = null;
 let infoEditActive = false;
+let editingMemberId = null;
+let editingMemberType = null;
+
 
 // ----------------------------------------------------------------------
 // MODE STATE
@@ -307,34 +316,32 @@ async function loadEverything() {
 
         nextUpcomingId = opkomsten.find(o => !isPast(o.datum))?.id || null;
 
-         jeugd = Object.entries(data.jeugdleden || {}).map(([id, v]) => ({
-             id,
-             naam: v.naam || "",
-             welpennaam: v.welpennaam || "",
-             nest: v.nest || "",             // "", "zwart", "wit", "bruin", "grijs"
-             nestleider: !!v.nestleider,     // boolean
-             hidden: !!v.hidden,
-             volgorde: v.volgorde ?? 999
-         })).sort((a, b) => a.volgorde - b.volgorde);
-       
-      if (speltak === "welpen") {
+        jeugd = Object.entries(data.jeugdleden || {}).map(([id, v]) => ({
+    id,
+    naam: v.naam || "",
+    welpennaam: v.welpennaam || "",
+    // nest altijd lowercase voor sortering
+    nest: (v.nest || "").toLowerCase(),
+    nestleider: !!v.nestleider,
+    hidden: !!v.hidden,
+    volgorde: v.volgorde ?? 999
+})).sort((a, b) => a.volgorde - b.volgorde);
+
+if (speltak === "welpen") {
     const nestOrder = { zwart: 1, bruin: 2, wit: 3, grijs: 4, "": 5, none: 5 };
 
     jeugd.sort((a, b) => {
-        // 1. Nest-volgorde
         const na = nestOrder[a.nest || "none"];
         const nb = nestOrder[b.nest || "none"];
         if (na !== nb) return na - nb;
 
-        // 2. Nestleider eerst binnen hetzelfde nest
-        if (a.nestleider !== b.nestleider) {
-            return a.nestleider ? -1 : 1;
-        }
+        // binnen een nest eerst nestleider
+        if (a.nestleider !== b.nestleider) return a.nestleider ? -1 : 1;
 
-        // 3. Daarna alfabetisch op de echte naam
         return a.naam.localeCompare(b.naam);
     });
 }
+
 
           leiding = Object.entries(data.leiding || {}).map(([id, v]) => ({
              id,

@@ -394,12 +394,16 @@ tr.row-grey > .col-datum      { background: var(--opkomst-verleden-bg) !importan
 .cell-select,
 .cell-textarea {
   width: 100%;
-  padding: 4px 6px;
+  min-height: 34px;
+  max-height: 300px;
+  resize: vertical;
+  padding: 6px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  font-size: .85rem;
-  background: #fff;
+  font-size: 0.85rem;
+  line-height: 1.4;
 }
+
 
 .cell-textarea {
   resize: vertical;
@@ -603,6 +607,30 @@ tr.row-grey > .col-datum      { background: var(--opkomst-verleden-bg) !importan
     display: none !important;
   }
 }
+
+/* Extra-kolommen consistent */
+.col-extra-aantal,
+.col-extra-namen {
+  min-width: 90px;
+  max-width: 180px;
+}
+
+/* In view-modus mag aantal volledig weg */
+body.mode-ouder .col-extra-aantal,
+body.mode-leiding .col-extra-aantal:not(.mode-bewerken) {
+  display: none !important;
+}
+/* Force verbergen leiding-cellen voor ouders */
+body.mode-ouder td.col-leiding,
+body.mode-ouder th.col-leiding {
+  display: none !important;
+}
+
+/* Divider alleen zichtbaar voor leiding */
+body.mode-ouder .col-divider {
+  display: none !important;
+}
+
 
 /* ============================================================
    PRINT

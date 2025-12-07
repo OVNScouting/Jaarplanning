@@ -876,18 +876,18 @@ saveOpkomst?.addEventListener("click", () => {
         leiding.forEach(l => newObj.aanwezigheid[`leiding-${l.id}`] = "onbekend");
    
       set(newRef, newObj).then(() => {
-       opModal.classList.add("hidden");
-   
-       // laad opnieuw, wacht tot tabel klaarstaat
-       loadEverything().then(() => {
-           const row = document.querySelector(`tr[data-id="${newRef.key}"]`);
-           if (row) {
-               row.scrollIntoView({ behavior: "smooth", block: "center" });
-               row.classList.add("row-highlight");
-               setTimeout(() => row.classList.remove("row-highlight"), 2000);
-           }
-       });
-   });
+    opModal.classList.add("hidden");
+
+    loadEverything().then(() => {
+        const row = document.querySelector(`tr[data-id="${newRef.key}"]`);
+        if (row) {
+            row.scrollIntoView({ behavior: "smooth", block: "center" });
+            row.classList.add("row-highlight");
+            setTimeout(() => row.classList.remove("row-highlight"), 2000);
+        }
+    });
+});
+
 });
 
 /* ======================================================================

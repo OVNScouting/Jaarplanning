@@ -582,26 +582,34 @@ function makeRestrictedEditable(o, field, opties, extraClass = "") {
 function makePresenceCell(o, key, hidden, isLeidingCell) {
     const td = document.createElement("td");
 
+    // basis-classes
     if (hidden) td.classList.add("hide-view");
     if (isLeidingCell) td.classList.add("col-leiding");
 
-    const isHiddenMember =
-        key.startsWith("leiding-")
-            ? leiding.find(l => l.id === key.replace("leiding-", ""))?.hidden
-            : jeugd.find(j => j.id === key)?.hidden;
+    // volledig verbergen als het lid zelf verborgen is
+    const isHiddenMember = key.startsWith("leiding-")
+        ? leiding.find(l => l.id === key.replace("leiding-", ""))?.hidden
+        : jeugd.find(j => j.id === key)?.hidden;
 
     if (isHiddenMember) {
         td.classList.add("hide-view");
         return td;
     }
 
+    // huidige status + icoontje
     const cur = o.aanwezigheid?.[key] || "onbekend";
     const symbols = { aanwezig: "✔", afwezig: "✖", onbekend: "?" };
 
     td.textContent = symbols[cur];
     td.classList.add("presence-cell", `presence-${cur}`);
 
-    if (!isLeidingCell || isLeiding()) {
+    // JEUGD: altijd klikbaar (ook voor ouders)
+    if (!isLeidingCell) {
+        td.classList.add("editable-cell");
+        td.addEventListener("click", () => togglePresence(o, key));
+    }
+    // LEIDING: alleen zichtbaar/klikbaar als leiding
+    else if (isLeiding()) {
         td.classList.add("editable-cell");
         td.addEventListener("click", () => togglePresence(o, key));
     }

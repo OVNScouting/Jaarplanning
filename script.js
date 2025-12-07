@@ -344,10 +344,22 @@ function addHeaders() {
         });
     }
 
-    if (!isOuder()) tr.appendChild(makeHeader("Extra"));
-    if (!isOuder()) tr.appendChild(makeHeader("Aanw. jeugd"));
-    if (!isOuder()) tr.appendChild(makeHeader("Aanw. leiding"));
+    // Extra + tellers (alleen voor leiding)
+    if (!isOuder()) {
+        if (isEdit()) {
+            // In bewerkmodus: 2 kolommen "Extra"
+            tr.appendChild(makeHeader("Extra", "col-extra-aantal")); // aantal
+            tr.appendChild(makeHeader("Extra", "col-extra-namen"));  // namen
+        } else {
+            // In view-modus: alleen Extra (namen)
+            tr.appendChild(makeHeader("Extra", "col-extra-namen"));
+        }
+
+        tr.appendChild(makeHeader("Aanw. jeugd"));
+        tr.appendChild(makeHeader("Aanw. leiding"));
+    }
 }
+
 
 function makeHeader(txt, cls) {
     const th = document.createElement("th");
@@ -446,10 +458,18 @@ function addRow(o) {
         });
     }
 
-    if (!isOuder()) tr.appendChild(makeEditableCell(o, "extraAantal", "", "number"));
-    if (!isOuder()) tr.appendChild(makeEditableCell(o, "extraNamen"));
-
     if (!isOuder()) {
+        // In bewerkmodus: getal + namen; in view-modus: alleen namen
+        if (isEdit()) {
+            tr.appendChild(
+                makeEditableCell(o, "extraAantal", "col-extra-aantal", "number")
+            );
+        }
+
+        tr.appendChild(
+            makeEditableCell(o, "extraNamen", "col-extra-namen")
+        );
+
         const [cntJ, cntL] = countPresence(o);
 
         const tdJ = document.createElement("td");

@@ -51,6 +51,10 @@ const errorIndicator = document.getElementById("errorIndicator");
 const headerRowTop = document.getElementById("headerRowTop");
 const tableBody = document.getElementById("tableBody");
 
+const tableWrapper = document.querySelector(".table-wrapper");
+let tableHScroll = null;
+let tableHInner = null;
+
 const editModeButton = document.getElementById("editModeButton");
 const printButton = document.getElementById("printButton");
 
@@ -100,6 +104,45 @@ const cancelOpkomst = document.getElementById("cancelOpkomst");
 const closeButtons = document.querySelectorAll(".close-section");
 const fab = document.getElementById("fabAddOpkomst");
 const logoutButton = document.getElementById("logoutButton");
+
+/* ======================================================================
+   HORIZONTALE SCROLLBALK
+   ====================================================================== */
+function initHorizontalScrollProxy() {
+    if (!tableWrapper || tableHScroll) return;
+
+    // Maak de sticky scrollbalk
+    tableHScroll = document.createElement("div");
+    tableHScroll.className = "table-h-scroll";
+
+    tableHInner = document.createElement("div");
+    tableHInner.className = "table-h-inner";
+    tableHScroll.appendChild(tableHInner);
+
+    // Plaats hem direct vóór de echte tabel-wrapper
+    const parent = tableWrapper.parentElement;
+    parent.insertBefore(tableHScroll, tableWrapper);
+
+    // Scroll-sync beide kanten op
+    tableHScroll.addEventListener("scroll", () => {
+        if (!tableWrapper) return;
+        tableWrapper.scrollLeft = tableHScroll.scrollLeft;
+    });
+
+    tableWrapper.addEventListener("scroll", () => {
+        if (!tableHScroll) return;
+        tableHScroll.scrollLeft = tableWrapper.scrollLeft;
+    });
+}
+
+function syncHorizontalScrollProxy() {
+    if (!tableWrapper || !tableHInner) return;
+    // Zorg dat de "spoor"-div net zo breed is als de content van de tabel
+    tableHInner.style.width = tableWrapper.scrollWidth + "px";
+}
+
+// Direct bij load de proxy aanmaken
+initHorizontalScrollProxy();
 
 /* ======================================================================
    STATE
@@ -289,6 +332,7 @@ function renderTable() {
             return true;
         })
         .forEach(o => addRow(o));
+   syncHorizontalScrollProxy();
 }
 
 function addHeaders() {

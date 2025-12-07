@@ -209,74 +209,80 @@
     <!-- ============================================================
          MODAL — Opkomst toevoegen
     ============================================================ -->
-    <div id="opkomstModal" class="modal hidden">
-      <div class="modal-content">
-        <h3>Nieuwe Opkomst</h3>
+   <div id="opkomstModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>Nieuwe Opkomst</h3>
 
-        <label>Datum:</label>
-        <input type="date" id="opDatum" />
+    <!-- Datum & tijd -->
+    <label>Datum:</label>
+    <input type="date" id="opDatum" />
 
-        <label>Starttijd:</label>
-        <input type="time" id="opStart" value="10:30" />
+    <label>Starttijd:</label>
+    <input type="time" id="opStart" value="10:30" />
 
-        <label>Eindtijd:</label>
-        <input type="time" id="opEind" value="12:30" />
+    <label>Eindtijd:</label>
+    <input type="time" id="opEind" value="12:30" />
 
-        <div class="field-procor">
-          <label for="opProcor">Procor:</label>
-          <input type="text" id="opProcor" class="input" />
-        </div>
+    <!-- Type -->
+    <label for="opType">Type:</label>
+    <select id="opType" class="input">
+      <option value="normaal">Normaal</option>
+      <option value="bijzonder">Bijzonder</option>
+      <option value="kamp">Kamp</option>
+      <option value="geen">Geen opkomst</option>
+    </select>
 
+    <!-- Thema + Procor -->
+    <label>Thema:</label>
+    <input type="text" id="opThema" />
 
-        <label>Thema:</label>
-        <input type="text" id="opThema" />
+    <label>Procor:</label>
+    <input type="text" id="opProcor" />
 
-       <label>Locatie:</label>
-        <select id="opLocatie">
-          <option value="">Selecteer…</option>
-          <option value="Kampvuurkuil">Kampvuurkuil</option>
-          <option value="Zandveld">Zandveld</option>
-          <option value="Grasveld">Grasveld</option>
-          <option value="De Hoop">De Hoop</option>
-          <option value="Bever lokaal">Bever lokaal</option>
-          <option value="Welpen lokaal">Welpen lokaal</option>
-          <option value="Van terrein af">Van terrein af</option>
-          <option value="Externe locatie">Externe locatie</option>
-        </select>
+    <!-- Bijzonderheden -->
+    <label for="opBijzonderheden">Bijzonderheden:</label>
+    <input type="text" id="opBijzonderheden" />
 
-        <label>Materiaal:</label>
-        <input type="text" id="opMateriaal" />
+    <!-- Kijkers -->
+    <label for="opKijkers">Kijkers (aantal):</label>
+    <input type="number" id="opKijkers" class="input" min="0" value="0" />
 
-        <label for="opBijzonderheden">Bijzonderheden:</label>
-          <input type="text" id="opBijzonderheden" class="input" />
-          
-          <label for="opKijkers">Kijkers:</label>
-          <input type="number" id="opKijkers" class="input" min="0" />
-          
-          <label for="opExtraAantal">Extra leiding (aantal):</label>
-          <input type="number" id="opExtraAantal" class="input" min="0" />
-          
-          <label for="opExtraNamen">Extra leiding (namen):</label>
-          <input type="text" id="opExtraNamen" class="input" placeholder="bijv. Sacha, Jan" />
+    <!-- Extra leiding -->
+    <label for="opExtraAantal">Extra leiding (aantal):</label>
+    <input type="number" id="opExtraAantal" class="input" min="0" value="0" />
 
+    <label for="opExtraNamen">Extra leiding (namen):</label>
+    <input type="text" id="opExtraNamen" class="input" placeholder="bijv. Sacha, Jan" />
 
-        <label for="opBert">Bert logeert bij</label>
-        <input type="text" id="opBert">
+    <!-- Locatie reserveren -->
+    <label>Locatie reserveren:</label>
+    <select id="opLocatie">
+      <option value="">Selecteer…</option>
+      <option value="Kampvuurkuil">Kampvuurkuil</option>
+      <option value="Zandveld">Zandveld</option>
+      <option value="Grasveld">Grasveld</option>
+      <option value="De Hoop">De Hoop</option>
+      <option value="Bever lokaal">Bever lokaal</option>
+      <option value="Welpen lokaal">Welpen lokaal</option>
+      <option value="Van terrein af">Van terrein af</option>
+      <option value="Externe locatie">Externe locatie</option>
+    </select>
 
-        <label for="opType">Type:</label>
-        <select id="opType" class="input">
-            <option value="normaal">Normaal</option>
-            <option value="bijzonder">Bijzonder</option>
-            <option value="kamp">Kamp</option>
-            <option value="geen">Geen opkomst</option>
-        </select>
+    <!-- Materiaal -->
+    <label>Materiaal reserveren:</label>
+    <input type="text" id="opMateriaal" />
 
-        <div class="modal-actions">
-          <button id="saveOpkomst" class="pill-btn primary">Opslaan</button>
-          <button id="cancelOpkomst" class="pill-btn outline">Annuleren</button>
-        </div>
-      </div>
+    <!-- Alleen voor Bevers -->
+    <label for="opBert">Bert logeert bij:</label>
+    <input type="text" id="opBert">
+
+    <!-- ACTIES -->
+    <div class="modal-actions">
+      <button id="saveOpkomst" class="pill-btn primary">Opslaan</button>
+      <button id="cancelOpkomst" class="pill-btn outline">Annuleren</button>
     </div>
+  </div>
+</div>
 
   </div> <!-- /container -->
 

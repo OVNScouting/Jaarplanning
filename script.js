@@ -927,6 +927,44 @@ filterPast?.addEventListener("click", () => {
 });
 
 printButton?.addEventListener("click", () => {
+    const prevMode = mode;
+    const prevFilter = currentFilter;
+
+    // Print altijd als ouder
+    setMode("ouder");
+
+    // Alleen komende opkomsten tonen tijdens print
+    currentFilter = "future";
+
+    // Chips visueel updaten
+    if (filterAll && filterFuture && filterPast) {
+        filterAll.classList.remove("active");
+        filterPast.classList.remove("active");
+        filterFuture.classList.add("active");
+    }
+
+    // Tabel opnieuw renderen met alleen toekomstige opkomsten
+    renderTable();
+
+    setTimeout(() => {
+        window.print();
+
+        // Filter herstellen
+        currentFilter = prevFilter;
+        if (filterAll && filterFuture && filterPast) {
+            filterAll.classList.remove("active");
+            filterFuture.classList.remove("active");
+            filterPast.classList.remove("active");
+
+            if (prevFilter === "all")    filterAll.classList.add("active");
+            if (prevFilter === "future") filterFuture.classList.add("active");
+            if (prevFilter === "past")   filterPast.classList.add("active");
+        }
+
+        // Mode herstellen en tabel opnieuw tekenen
+        setMode(prevMode);
+    }, 150);
+});
 
 editModeButton?.addEventListener("click", () => {
     if (!isLeiding()) {

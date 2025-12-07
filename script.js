@@ -297,13 +297,37 @@ async function loadEverything() {
 
         nextUpcomingId = opkomsten.find(o => !isPast(o.datum))?.id || null;
 
-        jeugd = Object.entries(data.jeugdleden || {}).map(([id, v]) => ({
-            id, naam: v.naam || "", hidden: !!v.hidden, volgorde: v.volgorde ?? 999
-        })).sort((a, b) => a.volgorde - b.volgorde);
+         jeugd = Object.entries(data.jeugdleden || {}).map(([id, v]) => ({
+             id,
+             naam: v.naam || "",
+             welpennaam: v.welpennaam || "",
+             nest: v.nest || "",             // "", "zwart", "wit", "bruin", "grijs"
+             nestleider: !!v.nestleider,     // boolean
+             hidden: !!v.hidden,
+             volgorde: v.volgorde ?? 999
+         })).sort((a, b) => a.volgorde - b.volgorde);
+             if (speltak === "welpen") {
+          const nestOrder = { zwart: 1, bruin: 2, wit: 3, grijs: 4, "": 5, none: 5 };
+      
+          jeugd.sort((a, b) => {
+              const na = nestOrder[a.nest || "none"];
+              const nb = nestOrder[b.nest || "none"];
+              if (na !== nb) return na - nb;
+      
+              // binnen een nest eerst nestleider
+              if (a.nestleider !== b.nestleider) return a.nestleider ? -1 : 1;
+      
+              return a.naam.localeCompare(b.naam);
+          });
+      }
 
-        leiding = Object.entries(data.leiding || {}).map(([id, v]) => ({
-            id, naam: v.naam || "", hidden: !!v.hidden, volgorde: v.volgorde ?? 999
-        })).sort((a, b) => a.volgorde - b.volgorde);
+          leiding = Object.entries(data.leiding || {}).map(([id, v]) => ({
+             id,
+             naam: v.naam || "",
+             welpennaam: v.welpennaam || "",
+             hidden: !!v.hidden,
+             volgorde: v.volgorde ?? 999
+         })).sort((a, b) => a.volgorde - b.volgorde);
 
         renderEverything();
 
@@ -408,14 +432,35 @@ if (config.showBert) tr.appendChild(makeHeader("Bert logeert bij", "col-bert"));
     if (isOuder()) thMat.classList.add("hide-view");
     tr.appendChild(thMat);
 
-       jeugd.forEach(j => {
-          if (!j.hidden) {
-              const th = document.createElement("th");
-              th.classList.add("col-jeugd");
+      jeugd.forEach(j => {
+          if (j.hidden) return;
+      
+          const th = document.createElement("th");
+          th.classList.add("col-jeugd");
+      
+          if (speltak === "welpen") {
+              const wn = j.welpennaam?.trim() || "";
+              const rl = j.naam;
+              const nest = j.nest || "none";
+              const missing = wn === "";
+      
+              th.classList.add(`nest-${nest}`);
+      
+              th.innerHTML = `
+                  <div class="welpen-header ${j.nestleider ? "welpen-leider" : ""}">
+                      <span class="welpen-naam ${missing ? "welpen-missing" : ""}">
+                          ${missing ? "❗" : wn}
+                      </span>
+                      <span class="welpen-naam-reallife">${rl}</span>
+                  </div>
+              `;
+          } else {
               th.innerHTML = `<div class="name-vertical">${j.naam}</div>`;
-              tr.appendChild(th);
           }
+      
+          tr.appendChild(th);
       });
+
 
 
     if (!isOuder()) tr.appendChild(makeHeader("Kijkers"));
@@ -425,15 +470,33 @@ if (config.showBert) tr.appendChild(makeHeader("Bert logeert bij", "col-bert"));
     if (vJ > 0 && vL > 0) tr.appendChild(makeDivider());
 
     if (config.showLeiding) {
-        leiding.forEach(l => {
-            if (!l.hidden) {
-                const th = document.createElement("th");
-                th.classList.add("col-leiding");
-                if (isOuder()) th.classList.add("hide-view");
-                th.innerHTML = `<div class="name-vertical">${l.naam}</div>`;
-                tr.appendChild(th);
-            }
-        });
+       
+      leiding.forEach(l => {
+    if (l.hidden) return;
+
+    const th = document.createElement("th");
+    th.classList.add("col-leiding");
+    if (isOuder()) th.classList.add("hide-view");
+
+    if (speltak === "welpen") {
+        const wn = l.welpennaam?.trim() || "";
+        const missing = wn === "";
+
+        th.innerHTML = `
+            <div class="welpen-header">
+                <span class="welpen-naam ${missing ? "welpen-missing" : ""}">
+                    ${missing ? "❗" : wn}
+                </span>
+                <span class="welpen-naam-reallife">${l.naam}</span>
+            </div>
+        `;
+    } else {
+        th.innerHTML = `<div class="name-vertical">${l.naam}</div>`;
+    }
+
+    tr.appendChild(th);
+});
+
     }
 
     // Extra + tellers (alleen voor leiding)
@@ -774,6 +837,7 @@ function makeMemberRow(obj, type) {
     li.innerHTML = `
         <span>${icon} ${obj.naam}</span>
         <div class="ledenbeheer-controls">
+            <button data-act="edit">✏️</button>
             <button data-act="up">↑</button>
             <button data-act="down">↓</button>
             <button data-act="toggle">${obj.hidden ? "Toon" : "Verberg"}</button>
@@ -781,14 +845,15 @@ function makeMemberRow(obj, type) {
         </div>
     `;
 
-    li.querySelectorAll("button").forEach(b =>
-        b.addEventListener("click", () =>
-            handleMemberAction(obj, type, b.dataset.act)
+    li.querySelectorAll("button").forEach(btn =>
+        btn.addEventListener("click", () =>
+            handleMemberAction(obj, type, btn.dataset.act)
         )
     );
 
     return li;
 }
+
 
 function handleMemberAction(obj, type, act) {
   if (!isLeiding()) {
@@ -799,6 +864,14 @@ function handleMemberAction(obj, type, act) {
   const path = type === "jeugd" ? "jeugdleden" : "leiding";
   const list = type === "jeugd" ? jeugd : leiding;
   const baseRef = ref(db, `${speltak}/${path}/${obj.id}`);
+
+   // Bewerken van lid
+if (act === "edit") {
+    if (!isLeiding()) return;
+
+    openEditMember(obj, type);
+    return;
+}
 
   // Verwijderen
   if (act === "del") {
@@ -837,6 +910,52 @@ function handleMemberAction(obj, type, act) {
     update(ref(db), updates).then(loadEverything);
     return;
   }
+}
+function openEditMember(obj, type) {
+    const isWelpen = speltak === "welpen";
+
+    const wn = obj.welpennaam || "";
+    const nest = obj.nest || "";
+    const nl = !!obj.nestleider;
+
+    const nieuweNaam = prompt("Naam:", obj.naam);
+    if (!nieuweNaam) return;
+
+    let welpennaam = wn;
+    let selectedNest = nest;
+    let nestleider = nl;
+
+    if (isWelpen) {
+        welpennaam = prompt("Welpennaam (leeg = ❗):", wn) || "";
+
+        selectedNest = prompt("Nest (zwart/bruin/wit/grijs, leeg = geen):", nest).toLowerCase();
+        if (!["zwart","bruin","wit","grijs",""].includes(selectedNest)) selectedNest = "";
+
+        if (selectedNest !== "") {
+            nestleider = confirm("Is dit de nestleider?");
+            if (nestleider) {
+                // check of er al een leider is
+                const conflict = jeugd.find(j => j.nest === selectedNest && j.nestleider && j.id !== obj.id);
+                if (conflict) {
+                    const overschrijf = confirm(`Er is al een nestleider (${conflict.naam}). Overschrijven?`);
+                    if (!overschrijf) return;
+                    update(ref(db, `${speltak}/jeugdleden/${conflict.id}`), { nestleider: false });
+                }
+            }
+        } else {
+            nestleider = false;
+        }
+    }
+
+    const updateObj = { naam: nieuweNaam };
+    if (isWelpen) {
+        updateObj.welpennaam = welpennaam;
+        updateObj.nest = selectedNest;
+        updateObj.nestleider = nestleider;
+    }
+
+    const path = type === "jeugd" ? "jeugdleden" : "leiding";
+    update(ref(db, `${speltak}/${path}/${obj.id}`), updateObj).then(loadEverything);
 }
 
 /* ======================================================================

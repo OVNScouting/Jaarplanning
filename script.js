@@ -507,18 +507,21 @@ function makeEditableCell(o, field, extraClass = "", inputType = "text") {
 
     let input;
 
-    if (inputType === "textarea") {
-        input = document.createElement("textarea");
-        input.value = value;
-        input.classList.add("cell-textarea");
+if (inputType === "textarea") {
+    input = document.createElement("textarea");
+    input.value = value;
+    input.classList.add("cell-textarea");
 
-        // auto-groei zodat de hele tekst zichtbaar blijft
-        const autoSize = () => {
-            input.style.height = "auto";
-            input.style.height = input.scrollHeight + "px";
-        };
-        autoSize();
-        input.addEventListener("input", autoSize);
+    const autoSize = () => {
+        input.style.height = "auto";
+        input.style.height = input.scrollHeight + "px";
+    };
+
+    input.addEventListener("input", autoSize);
+
+    // eerste render
+    setTimeout(autoSize, 0);
+}
 
     } else if (inputType === "date") {
         input = document.createElement("input");
@@ -588,7 +591,10 @@ function makePresenceCell(o, key, hidden, isLeidingCell) {
 
     // basis-classes
     if (hidden) td.classList.add("hide-view");
-    if (isLeidingCell) td.classList.add("col-leiding");
+   if (isLeidingCell) {
+    td.classList.add("col-leiding");
+    if (!isLeiding()) td.classList.add("hide-view");
+}
 
     // volledig verbergen als het lid zelf verborgen is
     const isHiddenMember = key.startsWith("leiding-")

@@ -631,6 +631,14 @@ body.mode-ouder .col-divider {
   display: none !important;
 }
 
+.row-highlight {
+    animation: flashRow 2s ease-out;
+}
+
+@keyframes flashRow {
+    0%   { background: #fff3cd; }
+    100% { background: transparent; }
+}
 
 /* ============================================================
    PRINT

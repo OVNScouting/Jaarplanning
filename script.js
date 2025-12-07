@@ -383,6 +383,7 @@ function makeDivider() {
    ====================================================================== */
 function addRow(o) {
     const tr = document.createElement("tr");
+    tr.dataset.id = o.id; // nodig voor scroll + highlight na opslaan
 
     if (o.typeOpkomst === "geen") tr.classList.add("row-geenopkomst");
     else if (o.typeOpkomst === "bijzonder") tr.classList.add("row-bijzonder");

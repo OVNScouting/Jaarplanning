@@ -80,9 +80,9 @@ const memberModal = document.getElementById("addMemberModal");
 const memberType = document.getElementById("memberType");
 const memberName = document.getElementById("memberName");
 
-const memberWelpenNaam = document.getElementById("memberWelpenNaam");
+const memberwelpennaam = document.getElementById("memberwelpennaam");
 const memberNest = document.getElementById("memberNest");
-const memberNestLeider = document.getElementById("memberNestLeider");
+const membernestleider = document.getElementById("membernestleider");
 
 const welpenExtraFields = document.getElementById("welpenExtraFields");
 
@@ -837,31 +837,86 @@ function renderLedenbeheer() {
     jeugd.forEach(j => ledenbeheerJeugd.appendChild(makeMemberRow(j, "jeugd")));
     leiding.forEach(l => ledenbeheerLeiding.appendChild(makeMemberRow(l, "leiding")));
 }
-
 function makeMemberRow(obj, type) {
     const li = document.createElement("li");
+    li.classList.add("draggable");
+    li.draggable = true;
+    li.dataset.id = obj.id;
+    li.dataset.type = type;
+
     if (obj.hidden) li.classList.add("lid-verborgen");
 
-    const icon = obj.hidden ? "🚫" : "✅";
+    const icon = obj.hidden ? "🚫" : "👁️";
 
     li.innerHTML = `
         <span>${icon} ${obj.naam}</span>
         <div class="ledenbeheer-controls">
-            <button data-act="edit">✏️</button>
-            <button data-act="up">↑</button>
-            <button data-act="down">↓</button>
             <button data-act="toggle">${obj.hidden ? "Toon" : "Verberg"}</button>
             <button data-act="del">🗑️</button>
         </div>
     `;
 
-    li.querySelectorAll("button").forEach(btn =>
-        btn.addEventListener("click", () =>
-            handleMemberAction(obj, type, btn.dataset.act)
-        )
-    );
+    li.querySelectorAll("button").forEach(b => {
+        b.addEventListener("click", () =>
+            handleMemberAction(obj, type, b.dataset.act)
+        );
+    });
+
+    // Drag events
+    li.addEventListener("dragstart", onDragStart);
+    li.addEventListener("dragover", onDragOver);
+    li.addEventListener("drop", onDrop);
+    li.addEventListener("dragleave", onDragLeave);
 
     return li;
+}
+
+let dragSrcEl = null;
+
+function onDragStart(e) {
+    dragSrcEl = this;
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", this.dataset.id);
+}
+
+function onDragOver(e) {
+    e.preventDefault();
+    this.classList.add("drag-over");
+}
+
+function onDragLeave() {
+    this.classList.remove("drag-over");
+}
+
+function onDrop(e) {
+    e.preventDefault();
+    this.classList.remove("drag-over");
+
+    const draggedId = e.dataTransfer.getData("text/plain");
+    const targetId = this.dataset.id;
+
+    if (draggedId === targetId) return;
+
+    const type = this.dataset.type; // jeugd of leiding
+    const list = type === "jeugd" ? jeugd : leiding;
+
+    // Indexen bepalen
+    const fromIndex = list.findIndex(m => m.id === draggedId);
+    const toIndex = list.findIndex(m => m.id === targetId);
+
+    if (fromIndex === -1 || toIndex === -1) return;
+
+    // Element verplaatsen in array
+    const [moved] = list.splice(fromIndex, 1);
+    list.splice(toIndex, 0, moved);
+
+    // Nieuwe volgorde opslaan in Firebase
+    const updates = {};
+    list.forEach((m, i) => {
+        updates[`${speltak}/${type === "jeugd" ? "jeugdleden" : "leiding"}/${m.id}/volgorde`] = i + 1;
+    });
+
+    update(ref(db), updates).then(loadEverything);
 }
 
 
@@ -897,29 +952,6 @@ if (act === "edit") {
     return;
   }
 
-  // Omhoog / omlaag schuiven
-  if (act === "up" || act === "down") {
-    const dir = act === "up" ? -1 : 1;
-    const idx = list.findIndex(m => m.id === obj.id);
-    const swapIdx = idx + dir;
-
-    // Bovenste kan niet verder omhoog, onderste niet verder omlaag
-    if (swapIdx < 0 || swapIdx >= list.length) return;
-
-    const current = list[idx];
-    const other = list[swapIdx];
-
-    const currentOrder = current.volgorde ?? ((idx + 1) * 10);
-    const otherOrder = other.volgorde ?? ((swapIdx + 1) * 10);
-
-    const updates = {};
-    updates[`${speltak}/${path}/${current.id}/volgorde`] = otherOrder;
-    updates[`${speltak}/${path}/${other.id}/volgorde`] = currentOrder;
-
-    // Multi-path update zodat beide volgordes in één keer worden omgewisseld
-    update(ref(db), updates).then(loadEverything);
-    return;
-  }
 }
 function openEditMember(obj, type) {
     const isWelpen = speltak === "welpen";
@@ -936,7 +968,7 @@ function openEditMember(obj, type) {
     let nestleider = nl;
 
     if (isWelpen) {
-        welpennaam = prompt("Welpennaam (leeg = ❗):", wn) || "";
+        welpennaam = prompt("welpennaam (leeg = ❗):", wn) || "";
 
         selectedNest = prompt("Nest (zwart/bruin/wit/grijs, leeg = geen):", nest).toLowerCase();
         if (!["zwart","bruin","wit","grijs",""].includes(selectedNest)) selectedNest = "";
@@ -1041,15 +1073,15 @@ saveMember?.addEventListener("click", () => {
 
     // Alleen voor Welpen extra velden
     if (speltak === "welpen") {
-        newObj.welpenNaam = memberWelpenNaam.value.trim() || "";
+        newObj.welpennaam = memberwelpennaam.value.trim() || "";
         newObj.nest = memberNest.value || "";
-        newObj.nestLeider = memberNestLeider.checked || false;
+        newObj.nestleider = membernestleider.checked || false;
     }
 
-    // Speciale regel: leiding heeft wel welpenNaam maar GEEN nest
+    // Speciale regel: leiding heeft wel welpennaam maar GEEN nest
     if (speltak === "welpen" && path === "leiding") {
         delete newObj.nest;
-        delete newObj.nestLeider;
+        delete newObj.nestleider;
     }
 
     set(newRef, newObj).then(() => {

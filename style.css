@@ -583,7 +583,7 @@ tr.row-grey > .col-datum      { background: var(--opkomst-verleden-bg) !importan
 ============================================================ */
 .leiding-sidebar {
   position: fixed;
-  top: 400px;
+  top: 375px;
   right: 15px;
   width: 150px;
   display: flex;

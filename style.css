@@ -820,4 +820,10 @@ body.mode-ouder .col-divider {
 
   /* Locatie verbergen (print wordt ouder-modus) */
   .col-locatie { display: none !important; }
-}
+   
+  /* Aanwezigheid (jeugd + leiding) niet meeprinten */
+  .col-jeugd,
+  .col-leiding {
+    display: none !important;
+  }
+ }

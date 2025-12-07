@@ -309,10 +309,11 @@ function addHeaders() {
     if (isOuder()) thType.classList.add("hide-view");
     tr.appendChild(thType);
 
-    tr.appendChild(makeHeader("Thema"));
-    tr.appendChild(makeHeader("Bijzonderheden"));
+    tr.appendChild(makeHeader("Thema", "col-thema"));
+tr.appendChild(makeHeader("Bijzonderheden", "col-bijzonderheden"));
 
-    if (config.showBert) tr.appendChild(makeHeader("Bert logeert bij"));
+if (config.showBert) tr.appendChild(makeHeader("Bert logeert bij", "col-bert"));
+
 
     const thLoc = makeHeader("Locatie", "col-locatie");
     if (isOuder()) thLoc.classList.add("hide-view");
@@ -421,11 +422,14 @@ function addRow(o) {
         ));
     }
 
-    tr.appendChild(makeEditableCell(o, "thema"));
-    tr.appendChild(makeEditableCell(o, "bijzonderheden", "", "textarea"));
+  tr.appendChild(makeEditableCell(o, "thema", "col-thema"));
+tr.appendChild(makeEditableCell(o, "bijzonderheden", "col-bijzonderheden", "textarea"));
 
-    if (config.showBert) {
-        tr.appendChild(makeEditableCell(o, "bert_met"));
+if (config.showBert) {
+    tr.appendChild(makeEditableCell(o, "bert_met", "col-bert"));
+}
+
+
     }
 
     if (!isOuder()) {

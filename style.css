@@ -640,6 +640,85 @@ body.mode-ouder .col-divider {
     100% { background: transparent; }
 }
 
+/* ============================================
+   SPELTAK KAARTEN – Variant B (Optie 3)
+   ============================================ */
+
+.speltak-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.1rem;
+    margin-top: 1.5rem;
+}
+
+.speltak-card {
+    position: relative;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.2rem 1rem 1.6rem;
+    text-decoration: none;
+    color: var(--text-main);
+    overflow: hidden;
+    transition: transform .18s ease, box-shadow .18s ease;
+    cursor: pointer;
+}
+
+.speltak-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+}
+
+.speltak-card h2 {
+    margin: 0;
+    padding-top: 0.4rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    position: relative;
+    z-index: 5;
+}
+
+/* bovenbalk */
+.card-topbar {
+    height: 46px;
+    border-radius: var(--radius) var(--radius) 0 0;
+    margin: -1.2rem -1rem 1rem -1rem;
+    position: relative;
+    z-index: 3;
+}
+
+/* achtergrond-icon */
+.card-icon-bg {
+    position: absolute;
+    right: -22px;
+    top: 18px;
+    width: 95px;
+    height: 95px;
+    opacity: 0.12;
+    z-index: 2;
+    pointer-events: none;
+    user-select: none;
+}
+
+/* KLEUREN per speltak */
+.speltak-card.bevers      .card-topbar { background: #e53935; }
+.speltak-card.welpen      .card-topbar { background: #4caf50; }
+.speltak-card.scouts      .card-topbar { background: #2e7d32; }
+.speltak-card.explorers   .card-topbar { background: #1976d2; }
+.speltak-card.rovers      .card-topbar { background: #6a1b9a; }
+.speltak-card.stam        .card-topbar { background: #5d4037; }
+.speltak-card.dashboard   .card-topbar { background: var(--blue); }
+
+/* responsive */
+@media (max-width: 600px) {
+    .card-icon-bg {
+        width: 70px;
+        height: 70px;
+        right: -15px;
+        top: 20px;
+    }
+}
+
 /* ============================================================
    PRINT
 ============================================================ */

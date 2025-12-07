@@ -1,1 +1,315 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Explorers – Jaarplanning & Aanwezigheid</title>
+  <link rel="icon" href="assets/OVN.logo.png" type="image/png">
 
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- ============================================================
+       TOPBAR
+  ============================================================ -->
+  <header class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="backlink">← Terug</a>
+    <img src="assets/OVN.logo.png" class="topbar-logo" alt="Bevers logo">
+    <div class="topbar-title">
+      <h1>Explorers</h1>
+      <span>Jaarplanning & Aanwezigheid</span>
+    </div>
+  </div>
+
+  <div class="topbar-right-icons">
+    <span id="loginStatus" class="leiding-badge only-leiding">Je bent ingelogd als leiding</span>
+    <button id="loginButton" class="pill-btn outline">Leiding inloggen</button>
+    <button id="logoutButton" class="pill-btn outline only-leiding">Uitloggen</button>
+    <img src="assets/Explorers-speltakteken.png" alt="">
+  </div>
+</header>
+
+  <div class="container">
+
+    <!-- ============================================================
+         INFO BLOK (met WYSIWYG editor)
+    ============================================================ -->
+    <section class="info-block">
+
+      <div class="info-header-row">
+        <h2>Informatie</h2>
+
+        <!-- Losse edit-knop voor alleen het infoveld -->
+      <button id="infoEditButton" class="pill-btn outline info-edit-btn only-leiding">
+          Info bewerken
+        </button>
+      </div>
+
+      <div id="infotekst"></div>
+
+      <!-- WYSIWYG EDITOR -->
+      <div id="infoEditorWrapper" class="hidden">
+        <div id="infoEditorToolbar">
+          <button data-cmd="bold">B</button>
+          <button data-cmd="italic"><i>I</i></button>
+          <button data-cmd="underline"><u>U</u></button>
+          <input type="color" id="colorPicker" />
+        </div>
+
+        <div id="infotekst_edit"
+             class="rich-editor"
+             contenteditable="true"></div>
+      </div>
+   </section> <!-- sluit info-block -->
+
+<div id="loadingIndicator" class="loading hidden">
+  Jaarplanning wordt opgehaald.
+</div>
+
+<div id="errorIndicator" class="error hidden">
+  Oeps er is iets mis gegaan. Probeer het later opnieuw.
+</div>
+
+<section class="planning-section">
+
+    <div class="planning-header-row">
+        <!-- Filters -->
+        <div class="planning-controls">
+          <span id="filterAll" class="chip active">Alles</span>
+          <span id="filterFuture" class="chip">Komend</span>
+          <span id="filterPast" class="chip">Verleden</span>
+        </div>
+
+        <button id="printButton" class="pill-btn outline print-btn">Printen</button>
+
+        <button id="editModeButton" class="pill-btn only-leiding primary tabel-edit-btn">
+          ✏️ Opkomsten bewerken
+        </button>
+    </div>
+
+    <!-- Tabel + sidebar naast elkaar -->
+    <div class="planning-main">
+      <!-- Tabel -->
+      <div class="table-wrapper">
+          <table class="planning-table">
+            <thead>
+              <tr id="headerRowTop"></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+      </div>
+
+      <!-- Sidebar -->
+      <div id="leidingSidebar" class="leiding-sidebar only-leiding hidden">
+          <button class="pill-btn outline" onclick="window.location='dashboard.html'">Dashboard</button>
+
+          <a class="pill-btn outline"
+             href="assets/scouting_mail_handleiding_styled.pdf"
+             target="_blank" download>
+             Handleiding Mailbox
+          </a>
+
+          <button id="openLedenbeheerButton" class="pill-btn outline">
+            Ledenbeheer
+          </button>
+
+          <button id="openMeldingenButton" class="pill-btn outline">
+            Meldingen
+          </button>
+      </div>
+    </div>
+
+</section> <!-- sluit planning-section -->
+
+    <!-- ============================================================
+         LEDENBEHEER
+    ============================================================ -->
+<section id="ledenbeheerSection" class="ledenbeheer hidden">
+  <div class="section-header">
+    <h2>Ledenbeheer</h2>
+    <button class="close-section" data-target="ledenbeheerSection">×</button>
+  </div>
+  
+      <div class="ledenbeheer-columns">
+          <div class="ledenbeheer-col">
+              <h3>Jeugdleden</h3>
+              <ul id="jeugdLeden"></ul>
+          </div>
+          <div class="ledenbeheer-col">
+              <h3>Leiding</h3>
+              <ul id="leidingLeden"></ul>
+          </div>
+      </div>
+    
+      <button id="addMemberButton" class="pill-btn primary">Lid toevoegen</button>
+
+    </section>
+
+    <!-- ============================================================
+         MELDINGEN
+    ============================================================ -->
+  <section id="meldingenSection" class="meldingen hidden">
+      <div class="section-header">
+        <h2>Meldingen & Instellingen</h2>
+        <button class="close-section" data-target="meldingenSection">×</button>
+      </div>
+
+      <div class="meldingen-row">
+        <div class="meldingen-label">
+          <input type="checkbox" id="meldingLeidingAan" />
+          Melding: te weinig leiding
+        </div>
+        <div class="meldingen-sub">
+          Geeft een melding wanneer <b>aanwezig leiding</b> onder de ingestelde drempel komt.
+        </div>
+        <div class="meldingen-actions">
+          <span>Drempel:</span>
+          <input type="number" id="leidingDrempel" min="0" max="20" value="2" style="width: 60px;" />
+        </div>
+      </div>
+
+      <div class="meldingen-row">
+        <div class="meldingen-label">
+          <input type="checkbox" id="meldingOnbekendAan" />
+          Melding: onbekende aanwezigheden
+        </div>
+        <div class="meldingen-sub">
+          Geeft een melding wanneer leden langere tijd op ‘onbekend’ staan.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         MODAL — Lid toevoegen
+    ============================================================ -->
+    <div id="addMemberModal" class="modal hidden">
+      <div class="modal-content">
+        <h3>Nieuw lid toevoegen</h3>
+
+        <label>Type:</label>
+        <select id="memberType">
+          <option value="jeugd">Jeugd</option>
+          <option value="leiding">Leiding</option>
+        </select>
+
+        <label>Naam:</label>
+        <input type="text" id="memberName" />
+
+        <div class="modal-actions">
+          <button id="saveMember" class="pill-btn primary">Opslaan</button>
+          <button id="cancelMember" class="pill-btn outline">Annuleren</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         MODAL — Opkomst toevoegen
+    ============================================================ -->
+   <div id="opkomstModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>Nieuwe Opkomst</h3>
+
+    <!-- Datum & tijd -->
+    <label>Datum:</label>
+    <input type="date" id="opDatum" />
+
+    <label>Starttijd:</label>
+    <input type="time" id="opStart" value="10:30" />
+
+    <label>Eindtijd:</label>
+    <input type="time" id="opEind" value="12:30" />
+
+    <!-- Type -->
+    <label for="opType">Type:</label>
+    <select id="opType" class="input">
+      <option value="normaal">Normaal</option>
+      <option value="bijzonder">Bijzonder</option>
+      <option value="kamp">Kamp</option>
+      <option value="geen">Geen opkomst</option>
+    </select>
+
+    <!-- Thema + Procor -->
+    <label>Thema:</label>
+    <input type="text" id="opThema" />
+
+    <label>Procor:</label>
+    <input type="text" id="opProcor" />
+
+    <!-- Bijzonderheden -->
+    <label for="opBijzonderheden">Bijzonderheden:</label>
+    <input type="text" id="opBijzonderheden" />
+
+    <!-- Kijkers -->
+    <label for="opKijkers">Kijkers (aantal):</label>
+    <input type="number" id="opKijkers" class="input" min="0" value="0" />
+
+    <!-- Extra leiding -->
+    <label for="opExtraAantal">Extra leiding (aantal):</label>
+    <input type="number" id="opExtraAantal" class="input" min="0" value="0" />
+
+    <label for="opExtraNamen">Extra leiding (namen):</label>
+    <input type="text" id="opExtraNamen" class="input" placeholder="bijv. Sacha, Jan" />
+
+    <!-- Locatie reserveren -->
+    <label>Locatie reserveren:</label>
+    <select id="opLocatie">
+      <option value="">Selecteer…</option>
+      <option value="Kampvuurkuil">Kampvuurkuil</option>
+      <option value="Zandveld">Zandveld</option>
+      <option value="Grasveld">Grasveld</option>
+      <option value="De Hoop">De Hoop</option>
+      <option value="Bever lokaal">Bever lokaal</option>
+      <option value="Welpen lokaal">Welpen lokaal</option>
+      <option value="Van terrein af">Van terrein af</option>
+      <option value="Externe locatie">Externe locatie</option>
+    </select>
+
+    <!-- Materiaal -->
+    <label>Materiaal reserveren:</label>
+    <input type="text" id="opMateriaal" />
+
+    <!-- ACTIES -->
+    <div class="modal-actions">
+      <button id="saveOpkomst" class="pill-btn primary">Opslaan</button>
+      <button id="cancelOpkomst" class="pill-btn outline">Annuleren</button>
+    </div>
+  </div>
+</div>
+
+  </div> <!-- /container -->
+
+  <!-- ============================================================
+       SCRIPTS
+  ============================================================ -->
+  <script>
+    // Configuratie specifiek voor BEVERS
+    window.speltakConfig = {
+      showBert: false,
+      showLeiding: true
+    };
+  </script>
+
+    <button id="fabAddOpkomst"
+        class="pill-btn primary fab-add-opkomst only-leiding">
+  Nieuwe opkomst +
+</button>
+  
+  <!-- Firebase setup -->
+  <script src="firebase-config.js"></script>
+  <script type="module" src="firebase-imports.js"></script>
+
+ 
+  <!-- App scripts -->
+  <script src="login.js"></script>
+  <script type="module" src="utils.js"></script>
+  <script type="module" src="script.js"></script>
+  
+
+
+
+</body>
+</html>

@@ -429,9 +429,6 @@ if (config.showBert) {
     tr.appendChild(makeEditableCell(o, "bert_met", "col-bert"));
 }
 
-
-    }
-
     if (!isOuder()) {
         tr.appendChild(makeRestrictedEditable(
             o,

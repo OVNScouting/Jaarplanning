@@ -677,23 +677,52 @@ function makeMemberRow(obj, type) {
 }
 
 function handleMemberAction(obj, type, act) {
-    if (!isLeiding()) return alert("Alleen leiding kan leden beheren.");
+  if (!isLeiding()) {
+    alert("Alleen leiding kan leden beheren.");
+    return;
+  }
 
-    const path = type === "jeugd" ? "jeugdleden" : "leiding";
-    const baseRef = ref(db, `${speltak}/${path}/${obj.id}`);
+  const path = type === "jeugd" ? "jeugdleden" : "leiding";
+  const list = type === "jeugd" ? jeugd : leiding;
+  const baseRef = ref(db, `${speltak}/${path}/${obj.id}`);
 
-    if (act === "del") {
-        if (confirm(`Verwijder ${obj.naam}?`)) {
-            set(baseRef, null).then(loadEverything);
-        }
-        return;
+  // Verwijderen
+  if (act === "del") {
+    if (confirm(`Verwijder ${obj.naam}?`)) {
+      set(baseRef, null).then(loadEverything);
     }
+    return;
+  }
 
-    if (act === "toggle") obj.hidden = !obj.hidden;
-    if (act === "up") obj.volgorde = (obj.volgorde ?? 999) - 1;
-    if (act === "down") obj.volgorde = (obj.volgorde ?? 999) + 1;
+  // Verborgen / zichtbaar wisselen
+  if (act === "toggle") {
+    update(baseRef, { hidden: !obj.hidden }).then(loadEverything);
+    return;
+  }
 
-    update(baseRef, obj).then(loadEverything);
+  // Omhoog / omlaag schuiven
+  if (act === "up" || act === "down") {
+    const dir = act === "up" ? -1 : 1;
+    const idx = list.findIndex(m => m.id === obj.id);
+    const swapIdx = idx + dir;
+
+    // Bovenste kan niet verder omhoog, onderste niet verder omlaag
+    if (swapIdx < 0 || swapIdx >= list.length) return;
+
+    const current = list[idx];
+    const other = list[swapIdx];
+
+    const currentOrder = current.volgorde ?? ((idx + 1) * 10);
+    const otherOrder = other.volgorde ?? ((swapIdx + 1) * 10);
+
+    const updates = {};
+    updates[`${speltak}/${path}/${current.id}/volgorde`] = otherOrder;
+    updates[`${speltak}/${path}/${other.id}/volgorde`] = currentOrder;
+
+    // Multi-path update zodat beide volgordes in één keer worden omgewisseld
+    update(ref(db), updates).then(loadEverything);
+    return;
+  }
 }
 
 /* ======================================================================

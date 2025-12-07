@@ -111,44 +111,78 @@ let leiding = [];
 let nextUpcomingId = null;
 let infoEditActive = false;
 
+// ----------------------------------------------------------------------
+// MODE STATE
+// ----------------------------------------------------------------------
 let mode = localStorage.getItem("mode") || "ouder";
 let editMode = false;
+
+// Oude opgeslagen waarde 'bewerken' (of iets anders) herstellen naar 'ouder'
+if (mode !== "ouder" && mode !== "leiding") {
+  mode = "ouder";
+  localStorage.setItem("mode", "ouder");
+}
 
 /* ======================================================================
    MODE FUNCTIONS
    ====================================================================== */
-function isOuder() { return mode === "ouder"; }
-function isLeiding() { return mode === "leiding"; }
-function isEdit() { return mode === "bewerken"; }
+function isOuder() { 
+  return mode === "ouder"; 
+}
 
+function isLeiding() { 
+  return mode === "leiding"; 
+}
+
+// Edit-modus is nu een aparte vlag, en alleen geldig als je leiding bent
+function isEdit() { 
+  return editMode && isLeiding(); 
+}
+
+// Start met de huidige (genormaliseerde) mode
 setMode(mode);
 loadEverything();
 
 function setMode(newMode) {
-    mode = newMode;
-    localStorage.setItem("mode", newMode);
+  // Basismode is altijd ouder of leiding
+  if (newMode !== "ouder" && newMode !== "leiding") {
+    newMode = "ouder";
+  }
 
-    document.body.classList.remove("mode-ouder", "mode-leiding", "mode-bewerken");
-    document.body.classList.add(`mode-${newMode}`);
+  mode = newMode;
+  localStorage.setItem("mode", newMode);
 
-    applyModeVisibility();
-    renderTable();
+  document.body.classList.remove("mode-ouder", "mode-leiding", "mode-bewerken");
+  document.body.classList.add(`mode-${newMode}`);
+
+  // Extra body-class alleen wanneer je in edit-modus én leiding bent
+  if (editMode && mode === "leiding") {
+    document.body.classList.add("mode-bewerken");
+  }
+
+  applyModeVisibility();
+  renderTable();
 }
 
 function applyModeVisibility() {
-    document.querySelectorAll(".only-leiding").forEach(el => {
-        el.classList.toggle("hide-view", isOuder());
-    });
+  // Leiding-only elementen verbergen voor ouders
+  document.querySelectorAll(".only-leiding").forEach(el => {
+    el.classList.toggle("hide-view", isOuder());
+  });
 
-    document.querySelectorAll(".col-locatie, .col-materiaal, .col-type, .col-leiding").forEach(el => {
-        el.classList.toggle("hide-view", isOuder());
-    });
+  // Kolommen die ouders niet mogen zien
+  document.querySelectorAll(".col-locatie, .col-materiaal, .col-type, .col-leiding").forEach(el => {
+    el.classList.toggle("hide-view", isOuder());
+  });
 
-    if (fab) fab.classList.toggle("hide-view", isOuder());
+  // FAB (opkomst toevoegen) alleen zichtbaar voor leiding
+  if (fab) fab.classList.toggle("hide-view", isOuder());
 
-    const sidebar = document.getElementById("leidingSidebar");
-    if (sidebar) sidebar.classList.toggle("hidden", isOuder());
+  // Sidebar alleen voor leiding
+  const sidebar = document.getElementById("leidingSidebar");
+  if (sidebar) sidebar.classList.toggle("hidden", isOuder());
 }
+
 
 /* ======================================================================
    LOAD EVERYTHING
@@ -797,19 +831,20 @@ printButton?.addEventListener("click", () => {
     }, 150);
 });
 
-/* ======================================================================
-   EDIT MODE BUTTON
-   ====================================================================== */
 editModeButton?.addEventListener("click", () => {
-    if (!isLeiding()) return alert("Log in als leiding om te bewerken.");
+  if (!isLeiding()) {
+    alert("Log in als leiding om te bewerken.");
+    return;
+  }
 
-    editMode = !editMode;
-    setMode(editMode ? "bewerken" : "leiding");
+  editMode = !editMode;          // toggle edit state
+  setMode(mode);                 // zelfde basismode, maar nu met/zonder edit
 
-    editModeButton.textContent = editMode
-        ? "💾 Wijzigingen opslaan"
-        : "✏️ Opkomsten bewerken";
+  editModeButton.textContent = editMode
+    ? "💾 Wijzigingen opslaan"
+    : "✏️ Opkomsten bewerken";
 });
+
 
 /* ======================================================================
    INFO EDIT — Toolbar

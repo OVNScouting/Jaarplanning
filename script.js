@@ -523,7 +523,7 @@ if (inputType === "textarea") {
     setTimeout(autoSize, 0);
 }
 
-    } else if (inputType === "date") {
+   else if (inputType === "date") {
         input = document.createElement("input");
         input.type = "date";
         input.value = value?.substring(0, 10) || "";

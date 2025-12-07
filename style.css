@@ -307,7 +307,16 @@ body {
   overflow-x: auto;
   border-radius: var(--radius-small);
 }
+/* Native horizontale scrollbar van de tabel verbergen –
+   we gebruiken nu alleen de zwevende proxy-balk */
+.table-wrapper {
+  -ms-overflow-style: none;  /* IE/Edge legacy */
+  scrollbar-width: none;     /* Firefox */
+}
 
+.table-wrapper::-webkit-scrollbar {
+  display: none;             /* Chrome/Safari/Edge */
+}
 .planning-table {
   width: 100%;
   border-collapse: collapse;

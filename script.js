@@ -79,6 +79,16 @@ const leidingDrempel = document.getElementById("leidingDrempel");
 const memberModal = document.getElementById("addMemberModal");
 const memberType = document.getElementById("memberType");
 const memberName = document.getElementById("memberName");
+
+const memberWelpenNaam = document.getElementById("memberWelpenNaam");
+const memberNest = document.getElementById("memberNest");
+const memberNestLeider = document.getElementById("memberNestLeider");
+
+const welpenExtraFields = document.getElementById("welpenExtraFields");
+
+// Alleen tonen als speltak welpen is
+if (speltak !== "welpen") welpenExtraFields.style.display = "none";
+
 const saveMember = document.getElementById("saveMember");
 const cancelMember = document.getElementById("cancelMember");
 
@@ -1022,11 +1032,33 @@ saveMember?.addEventListener("click", () => {
     const path = memberType.value === "jeugd" ? "jeugdleden" : "leiding";
     const newRef = push(ref(db, `${speltak}/${path}`));
 
-    set(newRef, { naam, hidden: false, volgorde: 999 }).then(() => {
+    // Basismodel
+    let newObj = {
+        naam,
+        hidden: false,
+        volgorde: 999
+    };
+
+    // Alleen voor Welpen extra velden
+    if (speltak === "welpen") {
+        newObj.welpenNaam = memberWelpenNaam.value.trim() || "";
+        newObj.nest = memberNest.value || "";
+        newObj.nestLeider = memberNestLeider.checked || false;
+    }
+
+    // Speciale regel: leiding heeft wel welpenNaam maar GEEN nest
+    if (speltak === "welpen" && path === "leiding") {
+        delete newObj.nest;
+        delete newObj.nestLeider;
+    }
+
+    set(newRef, newObj).then(() => {
         memberModal.classList.add("hidden");
         loadEverything();
     });
 });
+
+
 
 /* ======================================================================
    MODALS — OPKOMST

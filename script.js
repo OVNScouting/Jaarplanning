@@ -860,6 +860,28 @@ editModeButton?.addEventListener("click", () => {
     }
 });
 
+// =====================
+// INFO-EDITOR SELECTIE
+// =====================
+let infoSelection = null;
+
+function storeInfoSelection() {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    infoSelection = sel.getRangeAt(0);
+}
+
+function restoreInfoSelection() {
+    if (!infoSelection) return;
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(infoSelection);
+}
+
+// selectie opslaan als je in de editor klikt / typt
+infoEdit?.addEventListener("mouseup", storeInfoSelection);
+infoEdit?.addEventListener("keyup", storeInfoSelection);
+infoEdit?.addEventListener("blur", storeInfoSelection);
 
 /* ======================================================================
    INFO EDIT — Toolbar
@@ -869,16 +891,26 @@ infoEditButton?.addEventListener("click", toggleInfoEdit);
 toolbarButtons.forEach(btn => {
     btn.addEventListener("click", () => {
         const cmd = btn.dataset.cmd;
-        if (!cmd) return;
-        document.execCommand(cmd, false, null);
+        if (!cmd || !infoEdit) return;
+
+        // focus + selectie herstellen in de editor
         infoEdit.focus();
+        restoreInfoSelection();
+
+        document.execCommand(cmd, false, null);
     });
 });
 
 colorPicker?.addEventListener("change", () => {
-    document.execCommand("foreColor", false, colorPicker.value);
+    if (!infoEdit) return;
+
+    // focus + selectie herstellen in de editor
     infoEdit.focus();
+    restoreInfoSelection();
+
+    document.execCommand("foreColor", false, colorPicker.value);
 });
+
 
 /* ======================================================================
    LOGOUT

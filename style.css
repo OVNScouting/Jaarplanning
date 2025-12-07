@@ -812,13 +812,7 @@ body.mode-ouder .col-divider {
 
   .planning-table { font-size: 11pt; }
 
-  /* Verberg delete-kolom */
-  .planning-table th:first-child,
-  .planning-table td:first-child {
-    display: none !important;
-  }
-
-  /* Locatie verbergen (print wordt ouder-modus) */
+    /* Locatie verbergen (print wordt ouder-modus) */
   .col-locatie { display: none !important; }
    
   /* Aanwezigheid (jeugd + leiding) niet meeprinten */

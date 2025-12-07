@@ -735,6 +735,27 @@ body.mode-ouder .col-divider {
   margin-top: 0;
   margin-bottom: 0.8rem;
 }
+/* Inputs moeten exact de celbreedte volgen */
+.cell-input,
+.cell-select,
+.cell-textarea {
+    width: 100%;
+    box-sizing: border-box;
+
+    /* prettige klikbare hoogte */
+    min-height: 38px;
+
+    padding: 6px 8px;
+    font-size: 0.92rem;
+
+    border-radius: 6px;
+    border: 1px solid var(--border);
+}
+
+/* textarea mag wat hoger */
+.cell-textarea {
+    min-height: 60px;
+}
 
 /* ============================================================
    PRINT

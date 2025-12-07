@@ -323,13 +323,15 @@ if (config.showBert) tr.appendChild(makeHeader("Bert logeert bij", "col-bert"));
     if (isOuder()) thMat.classList.add("hide-view");
     tr.appendChild(thMat);
 
-    jeugd.forEach(j => {
-        if (!j.hidden) {
-            const th = document.createElement("th");
-            th.innerHTML = `<div class="name-vertical">${j.naam}</div>`;
-            tr.appendChild(th);
-        }
-    });
+       jeugd.forEach(j => {
+          if (!j.hidden) {
+              const th = document.createElement("th");
+              th.classList.add("col-jeugd");
+              th.innerHTML = `<div class="name-vertical">${j.naam}</div>`;
+              tr.appendChild(th);
+          }
+      });
+
 
     if (!isOuder()) tr.appendChild(makeHeader("Kijkers"));
 
@@ -597,10 +599,13 @@ function makePresenceCell(o, key, hidden, isLeidingCell) {
 
     // basis-classes
     if (hidden) td.classList.add("hide-view");
-   if (isLeidingCell) {
-    td.classList.add("col-leiding");
-    if (!isLeiding()) td.classList.add("hide-view");
-}
+
+    if (isLeidingCell) {
+        td.classList.add("col-leiding");
+        if (!isLeiding()) td.classList.add("hide-view");
+    } else {
+        td.classList.add("col-jeugd");
+    }
 
     // volledig verbergen als het lid zelf verborgen is
     const isHiddenMember = key.startsWith("leiding-")

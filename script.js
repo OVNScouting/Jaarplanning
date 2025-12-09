@@ -335,24 +335,24 @@ async function loadEverything() {
         jeugd = Object.entries(data.jeugdleden || {}).map(([id, v]) => ({
     id,
     naam: v.naam || "",
-    welpennaam: v.welpennaam || "",
+    WelpenNaam: v.WelpenNaam || "",
     // nest altijd lowercase voor sortering
-    nest: (v.nest || "").toLowerCase(),
-    nestleider: !!v.nestleider,
+    Nest: (v.Nest || "").toLowerCase(),
+    NestLeider: !!v.NestLeider,
     hidden: !!v.hidden,
     volgorde: v.volgorde ?? 999
 })).sort((a, b) => a.volgorde - b.volgorde);
 
 if (speltak === "welpen") {
-    const nestOrder = { zwart: 1, bruin: 2, wit: 3, grijs: 4, "": 5, none: 5 };
+    const NestOrder = { zwart: 1, bruin: 2, wit: 3, grijs: 4, "": 5, none: 5 };
 
     jeugd.sort((a, b) => {
-        const na = nestOrder[a.nest || "none"];
-        const nb = nestOrder[b.nest || "none"];
+        const na = NestOrder[a.Nest || "none"];
+        const nb = NestOrder[b.Nest || "none"];
         if (na !== nb) return na - nb;
 
         // binnen een nest eerst nestleider
-        if (a.nestleider !== b.nestleider) return a.nestleider ? -1 : 1;
+        if (a.NestLeider !== b.NestLeider) return a.NestLeider ? -1 : 1;
 
         return a.naam.localeCompare(b.naam);
     });
@@ -362,7 +362,7 @@ if (speltak === "welpen") {
           leiding = Object.entries(data.leiding || {}).map(([id, v]) => ({
              id,
              naam: v.naam || "",
-             welpennaam: v.welpennaam || "",
+             WelpenNaam: v.WelpenNaam || "",
              hidden: !!v.hidden,
              volgorde: v.volgorde ?? 999
          })).sort((a, b) => a.volgorde - b.volgorde);
@@ -498,20 +498,20 @@ function addHeaders() {
     } else {
         // Welpen: boven welpennaam, onder echte naam
         zichtbareJeugd.forEach(j => {
-            const nest = (j.nest || "").toLowerCase();
-            const missing = !j.welpennaam || !j.welpennaam.trim();
+            const nest = (j.Nest || "").toLowerCase();
+            const missing = !j.WelpenNaam || !j.WelpenNaam.trim();
 
             // Bovenste rij: welpennaam
             const thTop = document.createElement("th");
             thTop.classList.add("col-jeugd");
-            if (nest) thTop.classList.add(`nest-${nest}`);
+            if (Nest) thTop.classList.add(`nest-${nest}`);
 
             const divTop = document.createElement("div");
             divTop.classList.add("name-vertical", "welpen-naam");
             if (missing) divTop.classList.add("welpen-missing");
-            if (j.nestleider) divTop.classList.add("welpen-leider");
+            if (j.NestLeider) divTop.classList.add("welpen-leider");
 
-            divTop.textContent = missing ? "❗" : j.welpennaam;
+            divTop.textContent = missing ? "❗" : j.WelpenNaam;
             thTop.appendChild(divTop);
             trTop.appendChild(thTop);
 
@@ -555,7 +555,7 @@ function addHeaders() {
             });
         } else {
             zichtbareLeiding.forEach(l => {
-                const missing = !l.welpennaam || !l.welpennaam.trim();
+                const missing = !l.WelpenNaam || !l.WelpenNaam.trim();
 
                 // bovenste rij: welpennaam
                 const thTop = document.createElement("th");
@@ -565,7 +565,7 @@ function addHeaders() {
                 const divTop = document.createElement("div");
                 divTop.classList.add("name-vertical", "welpen-naam");
                 if (missing) divTop.classList.add("welpen-missing");
-                divTop.textContent = missing ? "❗" : l.welpennaam;
+                divTop.textContent = missing ? "❗" : l.WelpenNaam;
 
                 thTop.appendChild(divTop);
                 trTop.appendChild(thTop);
@@ -1038,11 +1038,11 @@ function openEditMember(obj, type) {
     memberName.value = obj.naam || "";
 
     if (speltak === "welpen" && welpenExtraFields) {
-        memberWelpenNaam.value = obj.welpennaam || "";
+        memberWelpenNaam.value = obj.WelpenNaam || "";
 
         if (type === "jeugd") {
             memberNest.value = (obj.nest || "").toLowerCase();
-            memberNestLeider.checked = !!obj.nestleider;
+            memberNestLeider.checked = !!obj.NestLeider;
         } else {
             memberNest.value = "";
             memberNestLeider.checked = false;
@@ -1139,25 +1139,25 @@ saveMember?.addEventListener("click", async () => {
 
     if (isWelpen) {
         const welpNaam = (memberWelpenNaam?.value || "").trim();
-        let nest = "";
-        let nestleider = false;
+        let Nest = "";
+        let NestLeider = false;
 
         if (type === "jeugd") {
-            nest = (memberNest?.value || "").toLowerCase();
-            nestleider = !!(memberNestLeider && memberNestLeider.checked) && !!nest;
+            Nest = (memberNest?.value || "").toLowerCase();
+            NestLeider = !!(memberNestLeider && memberNestLeider.checked) && !!nest;
         }
 
-        updateObj.welpennaam = welpNaam;
-        updateObj.nest = type === "jeugd" ? nest : "";
-        updateObj.nestleider = type === "jeugd" ? nestleider : false;
+        updateObj.WelpenNaam = welpNaam;
+        updateObj.Nest = type === "jeugd" ? nest : "";
+        updateObj.NestLeider = type === "jeugd" ? NestLeider : false;
     }
 
     try {
         // Unieke nestleider per nest afdwingen
-        if (isWelpen && type === "jeugd" && updateObj.nest && updateObj.nestleider) {
+        if (isWelpen && type === "jeugd" && updateObj.Nest && updateObj.NestLeider) {
             const conflict = jeugd.find(j =>
-                j.nest === updateObj.nest &&
-                j.nestleider &&
+                j.Nest === updateObj.nest &&
+                j.NestLeider &&
                 j.id !== editingMemberId
             );
 

@@ -931,6 +931,12 @@ body.mode-ouder .col-divider {
     background: #eef6ff;
 }
 
+/* Scrollbar mag niet dominant boven content liggen */
+.table-h-scroll {
+    pointer-events: auto;
+    backdrop-filter: blur(2px);
+}
+
 
 /* ============================================================
    PRINT

@@ -182,37 +182,27 @@ function updateHorizontalScrollPosition() {
     if (!tableWrapper || !tableHScroll) return;
 
     const rect = tableWrapper.getBoundingClientRect();
-    const vh = window.innerHeight;
     const barHeight = tableHScroll.offsetHeight || 24;
-    const margin = 8;
+    const margin = 6;
 
-    // Alleen tonen als er horizontale overflow is én de tabel zichtbaar is
+    // Alleen tonen als er horizontale overflow is
     const hasOverflow = tableWrapper.scrollWidth > tableWrapper.clientWidth + 1;
-    const isVisible = rect.bottom > 0 && rect.top < vh;
-
-    if (!hasOverflow || !isVisible) {
+    if (!hasOverflow) {
         tableHScroll.style.display = "none";
         return;
     }
 
     tableHScroll.style.display = "block";
 
-    // Horizontale positie en breedte laten matchen met de tabel
+    // Scrollbar horizontaal gelijk aan de tabel
     tableHScroll.style.left = rect.left + "px";
     tableHScroll.style.width = rect.width + "px";
 
-    // Doelpositie: net boven de onderkant van het viewport
-    const desiredTop = vh - barHeight - margin;
-
-    // Max: onderkant van de tabel (balk moet daar stoppen)
-    const maxTop = rect.bottom - barHeight - margin;
-
-    // Min: iets onder de bovenkant van de tabel (balk niet bovenaan laten hangen)
-    const minTop = rect.top + margin;
-
-    const top = Math.max(minTop, Math.min(desiredTop, maxTop));
-    tableHScroll.style.top = top + "px";
+    // Nieuw: scrollbar ALTIJD strak onder de tabel, nooit in het midden
+    const top = rect.bottom - barHeight - margin;
+    tableHScroll.style.top = `${top}px`;
 }
+
 
 // Direct bij load de proxy aanmaken
 initHorizontalScrollProxy();

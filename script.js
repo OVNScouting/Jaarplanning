@@ -504,7 +504,7 @@ function addHeaders() {
             // Bovenste rij: WelpenNaam
             const thTop = document.createElement("th");
             thTop.classList.add("col-jeugd");
-            if (Nest) thTop.classList.add(`Nest-${Nest}`);
+            if (Nest) thTop.classList.add(`nest-${nest}`);
 
             const divTop = document.createElement("div");
             divTop.classList.add("name-vertical", "welpen-naam");

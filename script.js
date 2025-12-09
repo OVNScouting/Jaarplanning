@@ -103,7 +103,7 @@ function toggleWelpenExtraFields() {
         return;
     }
 
-    // Alleen jeugdleden hebben nest/nestleider
+    // Alleen jeugdleden hebben Nest/NestLeider
     if (memberType.value === "jeugd") {
         welpenExtraFields.style.display = "block";
     } else {
@@ -336,7 +336,7 @@ async function loadEverything() {
     id,
     naam: v.naam || "",
     WelpenNaam: v.WelpenNaam || "",
-    // nest altijd lowercase voor sortering
+    // Nest altijd lowercase voor sortering
     Nest: (v.Nest || "").toLowerCase(),
     NestLeider: !!v.NestLeider,
     hidden: !!v.hidden,
@@ -351,7 +351,7 @@ if (speltak === "welpen") {
         const nb = NestOrder[b.Nest || "none"];
         if (na !== nb) return na - nb;
 
-        // binnen een nest eerst nestleider
+        // binnen een Nest eerst NestLeider
         if (a.NestLeider !== b.NestLeider) return a.NestLeider ? -1 : 1;
 
         return a.naam.localeCompare(b.naam);
@@ -496,15 +496,15 @@ function addHeaders() {
             trTop.appendChild(th);
         });
     } else {
-        // Welpen: boven welpennaam, onder echte naam
+        // Welpen: boven WelpenNaam, onder echte naam
         zichtbareJeugd.forEach(j => {
-            const nest = (j.Nest || "").toLowerCase();
+            const Nest = (j.Nest || "").toLowerCase();
             const missing = !j.WelpenNaam || !j.WelpenNaam.trim();
 
-            // Bovenste rij: welpennaam
+            // Bovenste rij: WelpenNaam
             const thTop = document.createElement("th");
             thTop.classList.add("col-jeugd");
-            if (Nest) thTop.classList.add(`nest-${nest}`);
+            if (Nest) thTop.classList.add(`Nest-${Nest}`);
 
             const divTop = document.createElement("div");
             divTop.classList.add("name-vertical", "welpen-naam");
@@ -557,7 +557,7 @@ function addHeaders() {
             zichtbareLeiding.forEach(l => {
                 const missing = !l.WelpenNaam || !l.WelpenNaam.trim();
 
-                // bovenste rij: welpennaam
+                // bovenste rij: WelpenNaam
                 const thTop = document.createElement("th");
                 thTop.classList.add("col-leiding");
                 if (isOuder()) thTop.classList.add("hide-view");
@@ -1041,7 +1041,7 @@ function openEditMember(obj, type) {
         memberWelpenNaam.value = obj.WelpenNaam || "";
 
         if (type === "jeugd") {
-            memberNest.value = (obj.nest || "").toLowerCase();
+            memberNest.value = (obj.Nest || "").toLowerCase();
             memberNestLeider.checked = !!obj.NestLeider;
         } else {
             memberNest.value = "";
@@ -1138,37 +1138,37 @@ saveMember?.addEventListener("click", async () => {
     let updateObj = { naam };
 
     if (isWelpen) {
-        const welpNaam = (memberWelpenNaam?.value || "").trim();
+        const WelpNaam = (memberWelpenNaam?.value || "").trim();
         let Nest = "";
         let NestLeider = false;
 
         if (type === "jeugd") {
             Nest = (memberNest?.value || "").toLowerCase();
-            NestLeider = !!(memberNestLeider && memberNestLeider.checked) && !!nest;
+            NestLeider = !!(memberNestLeider && memberNestLeider.checked) && !!Nest;
         }
 
-        updateObj.WelpenNaam = welpNaam;
-        updateObj.Nest = type === "jeugd" ? nest : "";
+        updateObj.WelpenNaam = WelpNaam;
+        updateObj.Nest = type === "jeugd" ? Nest : "";
         updateObj.NestLeider = type === "jeugd" ? NestLeider : false;
     }
 
     try {
-        // Unieke nestleider per nest afdwingen
+        // Unieke NestLeider per Nest afdwingen
         if (isWelpen && type === "jeugd" && updateObj.Nest && updateObj.NestLeider) {
             const conflict = jeugd.find(j =>
-                j.Nest === updateObj.nest &&
+                j.Nest === updateObj.Nest &&
                 j.NestLeider &&
                 j.id !== editingMemberId
             );
 
             if (conflict) {
                 const overschrijf = confirm(
-                    `Er is al een nestleider (${conflict.naam}) in nest ${updateObj.nest}. Overschrijven?`
+                    `Er is al een NestLeider (${conflict.naam}) in Nest ${updateObj.Nest}. Overschrijven?`
                 );
                 if (!overschrijf) return;
 
                 await update(ref(db, `${speltak}/jeugdleden/${conflict.id}`), {
-                    nestleider: false
+                    NestLeider: false
                 });
             }
         }

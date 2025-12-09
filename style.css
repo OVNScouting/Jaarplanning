@@ -449,7 +449,7 @@ tr.row-grey > .col-datum      { background: var(--opkomst-verleden-bg) !importan
 /* Zwevende horizontale scrollbar – gekoppeld aan de tabel */
 .table-h-scroll {
   position: fixed;                 /* hangt los boven de inhoud */
-  z-index: 2000;                   /* boven de tabel maar onder modals */
+  z-index: 1000;                   /* boven de tabel maar onder modals */
   background: rgba(255, 255, 255, 0.95);
   padding: 4px 0;
   border-radius: 999px;
@@ -694,11 +694,11 @@ tr.row-grey > .col-datum      { background: var(--opkomst-verleden-bg) !importan
   max-width: 180px;
 }
 
-/* In view-modus mag aantal volledig weg */
 body.mode-ouder .col-extra-aantal,
-body.mode-leiding .col-extra-aantal:not(.mode-bewerken) {
-  display: none !important;
+body.mode-leiding:not(.mode-bewerken) .col-extra-aantal {
+    display: none !important;
 }
+
 /* Force verbergen leiding-cellen voor ouders */
 body.mode-ouder td.col-leiding,
 body.mode-ouder th.col-leiding {
@@ -836,18 +836,6 @@ body.mode-ouder .col-divider {
 /* textarea mag wat hoger */
 .cell-textarea {
     min-height: 60px;
-}
-
-/* ============================================
-   WELPEN – HEADER STYLE
-============================================ */
-
-.welpen-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 4px 2px;
-    border-radius: 6px;
 }
 
 /* Welpennaam bovenaan */

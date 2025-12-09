@@ -82,9 +82,9 @@ const memberModal = document.getElementById("addMemberModal");
 const memberType = document.getElementById("memberType");
 const memberName = document.getElementById("memberName");
 
-const memberwelpennaam = document.getElementById("memberWelpenNaam");
+const memberWelpenNaam = document.getElementById("memberWelpenNaam");
 const memberNest = document.getElementById("memberNest");
-const membernestleider = document.getElementById("memberNestLeider");
+const memberNestLeider = document.getElementById("memberNestLeider");
 
 const welpenExtraFields = document.getElementById("welpenExtraFields");
 
@@ -986,56 +986,6 @@ function makeMemberRow(obj, type) {
 
     return li;
 }
-
-
-let dragSrcEl = null;
-
-function onDragStart(e) {
-    dragSrcEl = this;
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", this.dataset.id);
-}
-
-function onDragOver(e) {
-    e.preventDefault();
-    this.classList.add("drag-over");
-}
-
-function onDragLeave() {
-    this.classList.remove("drag-over");
-}
-
-function onDrop(e) {
-    e.preventDefault();
-    this.classList.remove("drag-over");
-
-    const draggedId = e.dataTransfer.getData("text/plain");
-    const targetId = this.dataset.id;
-
-    if (draggedId === targetId) return;
-
-    const type = this.dataset.type; // jeugd of leiding
-    const list = type === "jeugd" ? jeugd : leiding;
-
-    // Indexen bepalen
-    const fromIndex = list.findIndex(m => m.id === draggedId);
-    const toIndex = list.findIndex(m => m.id === targetId);
-
-    if (fromIndex === -1 || toIndex === -1) return;
-
-    // Element verplaatsen in array
-    const [moved] = list.splice(fromIndex, 1);
-    list.splice(toIndex, 0, moved);
-
-    // Nieuwe volgorde opslaan in Firebase
-    const updates = {};
-    list.forEach((m, i) => {
-        updates[`${speltak}/${type === "jeugd" ? "jeugdleden" : "leiding"}/${m.id}/volgorde`] = i + 1;
-    });
-
-    update(ref(db), updates).then(loadEverything);
-}
-
 
 function handleMemberAction(obj, type, act) {
   if (!isLeiding()) {

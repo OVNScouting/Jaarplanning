@@ -35,6 +35,20 @@ const config = window.speltakConfig || { showBert: false, showLeiding: true };
 const app = initializeApp(window.firebaseConfig);
 const db = getDatabase(app);
 
+// Standaard start/eindtijden per speltak
+const defaultTimes = {
+    bevers:   { start: "10:30", eind: "12:30" },
+    welpen:   { start: "14:00", eind: "17:00" },
+    scouts:   { start: "14:00", eind: "17:00" },
+    explorers:{ start: "19:30", eind: "22:30" },
+    rovers:   { start: "19:30", eind: "22:30" },
+    stam:     { start: "19:30", eind: "22:30" },
+};
+
+// fallback als speltak niet voorkomt
+const defaultTime = defaultTimes[speltak] || { start: "*", eind: "*" };
+
+
 /* ======================================================================
    DOM ELEMENTS
    ====================================================================== */
@@ -1197,8 +1211,8 @@ cancelOpkomst?.addEventListener("click", () =>
 
 function resetOpkomstFields() {
     opDatum.value = "";
-    opStart.value = "10:30";
-    opEind.value = "12:30";
+    opStart.value = defaultTime.start;
+    opEind.value = defaultTime.eind;
     opThema.value = "";
     opProcor.value = "";
     opLocatie.value = "";

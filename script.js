@@ -504,7 +504,7 @@ function addHeaders() {
             // Bovenste rij: WelpenNaam
             const thTop = document.createElement("th");
             thTop.classList.add("col-jeugd");
-            if (Nest) thTop.classList.add(`nest-${nest}`);
+            if (Nest) thTop.classList.add(`nest-${Nest}`);
 
             const divTop = document.createElement("div");
             divTop.classList.add("name-vertical", "welpen-naam");
@@ -1144,7 +1144,7 @@ saveMember?.addEventListener("click", async () => {
 
         if (type === "jeugd") {
             Nest = (memberNest?.value || "").toLowerCase();
-            NestLeider = !!(memberNestLeider && memberNestLeider.checked) && !!Nest;
+            NestLeider = memberNestLeider.checked && !!Nest;
         }
 
         updateObj.WelpenNaam = WelpNaam;
@@ -1163,7 +1163,7 @@ saveMember?.addEventListener("click", async () => {
 
             if (conflict) {
                 const overschrijf = confirm(
-                    `Er is al een NestLeider (${conflict.naam}) in Nest ${updateObj.Nest}. Overschrijven?`
+                    `Er is al een nestleider (${conflict.naam}) in Nest ${updateObj.Nest}. Overschrijven?`
                 );
                 if (!overschrijf) return;
 

@@ -182,25 +182,24 @@ function updateHorizontalScrollPosition() {
     if (!tableWrapper || !tableHScroll) return;
 
     const rect = tableWrapper.getBoundingClientRect();
-    const barHeight = tableHScroll.offsetHeight || 24;
-    const margin = 6;
 
-    // Alleen tonen als er horizontale overflow is
+    // Check of horizontale scrollbar nodig is
     const hasOverflow = tableWrapper.scrollWidth > tableWrapper.clientWidth + 1;
     if (!hasOverflow) {
         tableHScroll.style.display = "none";
         return;
     }
 
+    // Altijd tonen zodra er overflow is
     tableHScroll.style.display = "block";
 
-    // Scrollbar horizontaal gelijk aan de tabel
+    // Scrollbar even breed als de tabel
     tableHScroll.style.left = rect.left + "px";
     tableHScroll.style.width = rect.width + "px";
 
-    // Nieuw: scrollbar ALTIJD strak onder de tabel, nooit in het midden
-    const top = rect.bottom - barHeight - margin;
-    tableHScroll.style.top = `${top}px`;
+    // ⭐ Belangrijk: Vastgeplakt aan onderkant viewport
+    const bottomOffset = 20; // afstand vanaf onderrand scherm
+    tableHScroll.style.top = `${window.innerHeight - bottomOffset}px`;
 }
 
 

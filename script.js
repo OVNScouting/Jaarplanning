@@ -1125,6 +1125,13 @@ addMemberButton?.addEventListener("click", () => {
     memberModal.classList.remove("hidden");
 });
 
+cancelMember?.addEventListener("click", () => {
+    memberModal.classList.add("hidden");
+    editingMemberId = null;
+    editingMemberType = null;
+    memberType.disabled = false;
+});
+
 saveMember?.addEventListener("click", async () => {
     if (!isLeiding()) return;
 

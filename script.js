@@ -96,11 +96,16 @@ const memberModal = document.getElementById("addMemberModal");
 const memberType = document.getElementById("memberType");
 const memberName = document.getElementById("memberName");
 
+const welpenExtraFields = document.getElementById("welpenExtraFields");
 const memberWelpenNaam = document.getElementById("memberWelpenNaam");
 const memberNest = document.getElementById("memberNest");
 const memberNestLeider = document.getElementById("memberNestLeider");
 
-const welpenExtraFields = document.getElementById("welpenExtraFields");
+const scoutsExtraFields = document.getElementById("scoutsExtraFields");
+const memberPloeg = document.getElementById("memberPloeg");
+const memberPL = document.getElementById("memberPL");
+const memberAPL = document.getElementById("memberAPL");
+
 
 // Alleen tonen als speltak welpen is
 if (welpenExtraFields) {
@@ -124,6 +129,26 @@ function toggleWelpenExtraFields() {
         welpenExtraFields.style.display = "none";
     }
 }
+
+function toggleScoutsExtraFields() {
+    if (!scoutsExtraFields) return;
+
+    if (speltak !== "scouts") {
+        scoutsExtraFields.style.display = "none";
+        return;
+    }
+
+    if (memberType.value === "jeugd") {
+        scoutsExtraFields.style.display = "block";
+    } else {
+        scoutsExtraFields.style.display = "none";
+        memberPloeg.value = "";
+        memberPL.checked = false;
+        memberAPL.checked = false;
+    }
+}
+
+
 
 const saveMember = document.getElementById("saveMember");
 const cancelMember = document.getElementById("cancelMember");
@@ -1177,9 +1202,21 @@ function openEditMember(obj, type) {
         toggleWelpenExtraFields();
     }
 
-    memberModal.classList.remove("hidden");
+      if (speltak === "scouts" && scoutsExtraFields) {
+          if (type === "jeugd") {
+              memberPloeg.value = obj.Ploeg || "";
+              memberPL.checked = !!obj.PL;
+              memberAPL.checked = !!obj.APL;
+          } else {
+              memberPloeg.value = "";
+              memberPL.checked = false;
+              memberAPL.checked = false;
+          }
+      
+          toggleScoutsExtraFields();
+      }
+   memberModal.classList.remove("hidden");
 }
-
 /* ======================================================================
    MELDINGEN
    ====================================================================== */
@@ -1271,6 +1308,7 @@ saveMember?.addEventListener("click", async () => {
     const type = memberType.value === "leiding" ? "leiding" : "jeugd";
     const path = type === "jeugd" ? "jeugdleden" : "leiding";
     const isWelpen = speltak === "welpen";
+    const isScouts = speltak === "scouts";
 
     let updateObj = { naam };
 
@@ -1288,6 +1326,22 @@ saveMember?.addEventListener("click", async () => {
         updateObj.Nest = type === "jeugd" ? Nest : "";
         updateObj.NestLeider = type === "jeugd" ? NestLeider : false;
     }
+
+        if (isScouts) {
+                let Ploeg = "";
+                let PL = false;
+                let APL = false;
+            
+                if (type === "jeugd") {
+                    Ploeg = (memberPloeg?.value || "").toLowerCase();
+                    PL = memberPL.checked;
+                    APL = memberAPL.checked;
+                }
+            
+                updateObj.Ploeg = Ploeg;
+                updateObj.PL = PL;
+                updateObj.APL = APL;
+            }
 
     try {
         // Unieke NestLeider per Nest afdwingen
@@ -1310,6 +1364,46 @@ saveMember?.addEventListener("click", async () => {
             }
         }
 
+            // SCOUTS — Uniciteit PL + APL per ploeg
+            if (isScouts && type === "jeugd" && updateObj.Ploeg) {
+            
+                // Check PL
+                if (updateObj.PL) {
+                    const conflictPL = jeugd.find(j =>
+                        j.Ploeg === updateObj.Ploeg &&
+                        j.PL &&
+                        j.id !== editingMemberId
+                    );
+            
+                    if (conflictPL) {
+                        const ok = confirm(
+                            `Er is al een PL (${conflictPL.naam}) in ploeg ${updateObj.Ploeg}. Overschrijven?`
+                        );
+                        if (!ok) return;
+            
+                        await update(ref(db, `${speltak}/jeugdleden/${conflictPL.id}`), { PL: false });
+                    }
+                }
+                // Check APL
+                if (updateObj.APL) {
+                    const conflictAPL = jeugd.find(j =>
+                        j.Ploeg === updateObj.Ploeg &&
+                        j.APL &&
+                        j.id !== editingMemberId
+                    );
+            
+                    if (conflictAPL) {
+                        const ok = confirm(
+                            `Er is al een APL (${conflictAPL.naam}) in ploeg ${updateObj.Ploeg}. Overschrijven?`
+                        );
+                        if (!ok) return;
+            
+                        await update(ref(db, `${speltak}/jeugdleden/${conflictAPL.id}`), { APL: false });
+                    }
+                }
+            }
+            
+                          
         if (editingMemberId) {
             // Bestaand lid bijwerken
             await update(ref(db, `${speltak}/${path}/${editingMemberId}`), updateObj);

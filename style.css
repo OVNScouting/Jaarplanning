@@ -1083,44 +1083,6 @@ th[class^="ploeg-"]::after {
 }
 
 /* ============================================================
-   SCOUTS — kleuraccent per ploeg in aanwezigheidscellen
-   ============================================================ */
-
-/* Basisstijl die kleur accepteert */
-.scouts-accent {
-    position: relative;
-}
-
-/* SPERWER —  */
-.presence-scout-sperwer {
-    background-color: #572600);
-}
-
-/* KIEVIT —  */
-.presence-scout-kievit {
-    background-color: #c5d09a);
-}
-
-/* REIGER — */
-.presence-scout-reiger {
-    background-color: #419639);
-}
-
-/* MEEUW — */
-.presence-scout-meeuw {
-    background-color: #0E1F4C);
-}
-
-/* Hover voor leiding (mag subtieler) */
-.mode-leiding .presence-cell:hover {
-    filter: brightness(1.05);
-}
-
-/* Ouder-mode: geen hover of editkleur */
-.mode-ouder .presence-cell:hover {
-    filter: none;
-}
-/* ============================================================
    PRINT
 ============================================================ */
 @media print {

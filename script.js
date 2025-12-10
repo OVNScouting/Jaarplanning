@@ -491,6 +491,155 @@ const SCOUT_PLOEG_LABELS = {
     "meeuw": "Meeuwen",
     "": "Zonder ploeg"
 };
+
+/* ======================================================================
+   SCOUTS — LEDENBEHEER
+====================================================================== */
+function renderLedenbeheerScouts() {
+    const jeugdContainer = document.getElementById("jeugdLeden");
+    const leidingContainer = ledenbeheerLeiding;
+    if (!jeugdContainer || !leidingContainer) return;
+
+    jeugdContainer.innerHTML = "";
+    leidingContainer.innerHTML = "";
+
+    const SCOUT_PLOEGEN = ["sperwer", "kievit", "reiger", "meeuw", ""];
+    const LABELS = {
+        "sperwer": "Sperwers",
+        "kievit": "Kieviten",
+        "reiger": "Reigers",
+        "meeuw": "Meeuwen",
+        "": "Zonder ploeg"
+    };
+
+    const ICONS = {
+        "sperwer": "assets/Ploegteken-sperwer.png",
+        "kievit": "assets/Ploegteken-kievit.png",
+        "reiger": "assets/Ploegteken-reiger.png",
+        "meeuw": "assets/Ploegteken-meeuw.png",
+        "": ""
+    };
+
+    const byPloeg = {};
+    SCOUT_PLOEGEN.forEach(p => (byPloeg[p] = []));
+
+    jeugd.forEach(j => {
+        const key = j.Ploeg || "";
+        if (!byPloeg[key]) byPloeg[key] = [];
+        byPloeg[key].push(j);
+    });
+
+    SCOUT_PLOEGEN.forEach(ploeg => {
+        const leden = byPloeg[ploeg];
+        const label = LABELS[ploeg];
+        const icon = ICONS[ploeg];
+
+        const header = document.createElement("div");
+        header.className = `ploeg-header ploeg-${ploeg}`;
+        header.innerHTML = icon
+            ? `<img src="${icon}" class="ploeg-icoon"> ${label}`
+            : `${label}`;
+        jeugdContainer.appendChild(header);
+
+        leden
+            .sort((a, b) => {
+                if (a.PL !== b.PL) return a.PL ? -1 : 1;
+                if (a.APL !== b.APL) return a.APL ? -1 : 1;
+                return a.naam.localeCompare(b.naam);
+            })
+            .forEach(j => jeugdContainer.appendChild(makeMemberRowScouts(j)));
+    });
+
+    leiding.forEach(l => leidingContainer.appendChild(makeMemberRow(l, "leiding")));
+}
+function makeMemberRowScouts(obj) {
+    const li = document.createElement("li");
+    li.classList.add("draggable");
+    li.draggable = true;
+    li.dataset.id = obj.id;
+    li.dataset.type = "jeugd";
+    li.dataset.ploeg = obj.Ploeg || "";
+
+    const icon = obj.hidden ? "🚫" : (obj.PL ? "✪" : obj.APL ? "☆" : "👁️");
+
+    li.innerHTML = `
+        <span>${icon} ${obj.naam}</span>
+        <div class="ledenbeheer-controls">
+            <button data-act="edit">Bewerken</button>
+            <button data-act="toggle">${obj.hidden ? "Toon" : "Verberg"}</button>
+            <button data-act="del">🗑️</button>
+        </div>
+    `;
+
+    li.querySelectorAll("button").forEach(b =>
+        b.addEventListener("click", (e) => {
+            e.stopPropagation();
+            handleMemberAction(obj, "jeugd", b.dataset.act);
+        })
+    );
+
+    // DRAG & DROP
+    li.addEventListener("dragstart", e => {
+        e.dataTransfer.setData("id", obj.id);
+    });
+
+    li.addEventListener("dragover", e => {
+        e.preventDefault();
+        li.classList.add("drag-over");
+    });
+
+    li.addEventListener("dragleave", () => li.classList.remove("drag-over"));
+
+    li.addEventListener("drop", async e => {
+        e.preventDefault();
+        li.classList.remove("drag-over");
+
+        const draggedId = e.dataTransfer.getData("id");
+        if (draggedId === obj.id) return;
+
+        const dragged = jeugd.find(j => j.id === draggedId);
+        if (!dragged) return;
+
+        const oldPloeg = dragged.Ploeg || "";
+        const newPloeg = obj.Ploeg || "";
+
+        if (oldPloeg !== newPloeg) {
+            const ok = confirm(
+                `${dragged.naam} verplaatsen van ${oldPloeg || "Zonder ploeg"} naar ${newPloeg || "Zonder ploeg"}?`
+            );
+            if (!ok) return;
+
+            // Rollen vervallen bij ploegwissel
+            await update(ref(db, `${speltak}/jeugdleden/${dragged.id}`), {
+                Ploeg: newPloeg,
+                PL: false,
+                APL: false
+            });
+
+            return loadEverything();
+        }
+
+        // Geen ploegwissel → alleen volgorde herordenen
+        const leden = jeugd.filter(j => j.Ploeg === oldPloeg);
+
+        const from = leden.indexOf(dragged);
+        const to = leden.indexOf(obj);
+
+        leden.splice(from, 1);
+        leden.splice(to, 0, dragged);
+
+        const updates = {};
+        leden.forEach((j, i) => {
+            updates[`${speltak}/jeugdleden/${j.id}/volgorde`] = i + 1;
+        });
+
+        await update(ref(db), updates);
+        loadEverything();
+    });
+
+    return li;
+}
+
 /* ======================================================================
    TABEL — HEADER
    ====================================================================== */
@@ -1010,62 +1159,83 @@ function countPresence(o) {
 /* ======================================================================
    LEDENBEHEER
    ====================================================================== */
+/* ======================================================================
+   LEDENBEHEER
+   ====================================================================== */
 function renderLedenbeheer() {
-    // Ondersteuning voor nieuwe HTML-structuur met #nestGroups
-    const jeugdContainer = document.getElementById("jeugdLeden") 
-                        || document.getElementById("nestGroups");
+    const jeugdContainer = document.getElementById("jeugdLeden");
     const leidingContainer = ledenbeheerLeiding;
 
     if (!jeugdContainer || !leidingContainer) return;
 
+    // ============================
+    // SCOUTS → volledig eigen systeem
+    // ============================
+    if (speltak === "scouts") {
+        return renderLedenbeheerScouts();
+    }
+
+    // ============================
+    // WELPEN → bestaande nestlogica
+    // ============================
+    if (speltak === "welpen") {
+        jeugdContainer.innerHTML = "";
+        leidingContainer.innerHTML = "";
+
+        // Groeperen per nest
+        const byNest = {};
+        jeugd.forEach(j => {
+            const key = j.Nest || "";
+            if (!byNest[key]) byNest[key] = [];
+            byNest[key].push(j);
+        });
+
+        // Sorteren + renderen
+        Object.keys(byNest)
+            .sort((a, b) => getNestIndex(a) - getNestIndex(b))
+            .forEach(nest => {
+                const niceName =
+                    nest === "zwart" ? "Zwart" :
+                    nest === "bruin" ? "Bruin" :
+                    nest === "wit"   ? "Wit" :
+                    nest === "grijs" ? "Grijs" :
+                    "Nestloos";
+
+                const header = document.createElement("div");
+                header.className = "nest-header";
+                header.textContent = niceName;
+                jeugdContainer.appendChild(header);
+
+                byNest[nest]
+                    .sort((a, b) => a.volgorde - b.volgorde)
+                    .forEach(j =>
+                        jeugdContainer.appendChild(makeMemberRow(j, "jeugd"))
+                    );
+            });
+
+        // Leiding tonen
+        leiding.forEach(l =>
+            leidingContainer.appendChild(makeMemberRow(l, "leiding"))
+        );
+
+        return;
+    }
+
+    // ============================
+    // ANDERE SPELTAKKEN → simpele lijst
+    // ============================
     jeugdContainer.innerHTML = "";
     leidingContainer.innerHTML = "";
 
-    jeugdContainer.innerHTML = "";
-    ledenbeheerLeiding.innerHTML = "";
+    jeugd.forEach(j =>
+        jeugdContainer.appendChild(makeMemberRow(j, "jeugd"))
+    );
 
-    // GROEPEREN PER NEST
-    const byNest = {};
-
-    jeugd.forEach(j => {
-        const key = j.Nest || "";
-        if (!byNest[key]) byNest[key] = [];
-        byNest[key].push(j);
-    });
-
-    // Sorteren per nest + sorteren op volgorde in nest
-    Object.keys(byNest).sort((a, b) => getNestIndex(a) - getNestIndex(b)).forEach(nest => {
-        // Nestkopje toevoegen (alleen als er leden zijn)
-        const niceName =
-            nest === "zwart" ? "Zwart" :
-            nest === "bruin" ? "Bruin" :
-            nest === "wit"   ? "Wit" :
-            nest === "grijs" ? "Grijs" :
-            "Nestloos";
-
-        const iconClass = 
-            nest === "zwart" ? "nest-icon-zwart" :
-            nest === "bruin" ? "nest-icon-bruin" :
-            nest === "wit"   ? "nest-icon-wit" :
-            nest === "grijs" ? "nest-icon-grijs" :
-            "";
-
-        const header = document.createElement("div");
-        header.className = "nest-header " + iconClass;
-        header.innerHTML = `${niceName}`;
-        jeugdContainer.appendChild(header);
-
-        // Leden tonen
-        byNest[nest].sort((a, b) => a.volgorde - b.volgorde).forEach(j =>
-            jeugdContainer.appendChild(makeMemberRow(j, "jeugd"))
-        );
-    });
-
-    // Leiding blijft zoals het was
     leiding.forEach(l =>
-        ledenbeheerLeiding.appendChild(makeMemberRow(l, "leiding"))
+        leidingContainer.appendChild(makeMemberRow(l, "leiding"))
     );
 }
+
 function makeMemberRow(obj, type) {
     const li = document.createElement("li");
     li.classList.add("draggable");

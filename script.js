@@ -508,8 +508,6 @@ function renderLedenbeheerScouts() {
     jeugdContainer.innerHTML = "";
     leidingContainer.innerHTML = "";
 
-   };
-
     const ICONS = {
         "sperwer": "assets/Ploegteken-sperwer.png",
         "kievit": "assets/Ploegteken-kievit.png",
@@ -529,7 +527,7 @@ function renderLedenbeheerScouts() {
 
     SCOUT_PLOEGEN.forEach(ploeg => {
         const leden = byPloeg[ploeg];
-        const label = LABELS[ploeg];
+        const label = SCOUT_PLOEG_LABELS[ploeg];
         const icon = ICONS[ploeg];
 
         const header = document.createElement("div");
@@ -549,6 +547,7 @@ function renderLedenbeheerScouts() {
     });
 
     leiding.forEach(l => leidingContainer.appendChild(makeMemberRow(l, "leiding")));
+}
 
 function makeMemberRowScouts(obj) {
     const li = document.createElement("li");

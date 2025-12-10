@@ -1506,25 +1506,27 @@ function openEditMember(obj, type) {
         }
         toggleWelpenExtraFields();
     }
-if (speltak === "scouts" && scoutsExtraFields) {
-
-    // dropdown eerst vullen
-    fillScoutsPloegDropdown();
-
-    if (type === "jeugd") {
-        memberPloeg.value = obj.Ploeg || "";
-        memberPL.checked = !!obj.PL;
-        memberAPL.checked = !!obj.APL;
-    } else {
-        memberPloeg.value = "";
-        memberPL.checked = false;
-        memberAPL.checked = false;
-    }
-
-    toggleScoutsExtraFields();
-}
-
-   memberModal.classList.remove("hidden");
+      // SCOUTS extra velden resetten
+      if (speltak === "scouts" && scoutsExtraFields) {
+      
+          // 1. Eerst dropdown vullen
+          fillScoutsPloegDropdown();
+      
+          // 2. Reset waarden
+          memberPloeg.value = "";
+          memberPL.checked = false;
+          memberAPL.checked = false;
+      
+          // 3. PL/APL disablen tot er een ploeg is gekozen
+          memberPL.disabled = true;
+          memberAPL.disabled = true;
+      }
+      
+      // Nu pas toggles NA vullen
+      toggleWelpenExtraFields();
+      toggleScoutsExtraFields();
+      
+      memberModal.classList.remove("hidden");
 }
 /* ======================================================================
    MELDINGEN

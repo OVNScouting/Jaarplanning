@@ -548,7 +548,6 @@ function renderLedenbeheerScouts() {
 
     leiding.forEach(l => leidingContainer.appendChild(makeMemberRow(l, "leiding")));
 }
-
 function makeMemberRowScouts(obj) {
     const li = document.createElement("li");
     li.classList.add("draggable");
@@ -652,7 +651,8 @@ function makeMemberRowScouts(obj) {
     loadEverything();
 });
 
-
+return li;
+}
 /* ======================================================================
    TABEL — HEADER
    ====================================================================== */

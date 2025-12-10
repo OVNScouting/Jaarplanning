@@ -211,6 +211,11 @@ function fillScoutsPloegDropdown() {
     });
 }
 
+// Type-wissel: juiste extra velden tonen
+memberType?.addEventListener("change", () => {
+    toggleWelpenExtraFields();
+    toggleScoutsExtraFields();
+});
 
 
 
@@ -1583,13 +1588,26 @@ addMemberButton?.addEventListener("click", () => {
     memberType.value = "jeugd";
     memberName.value = "";
 
+    // WELPEN extra velden resetten
     if (speltak === "welpen" && welpenExtraFields) {
         memberWelpenNaam.value = "";
         memberNest.value = "";
         memberNestLeider.checked = false;
     }
 
+    // SCOUTS extra velden resetten
+    if (speltak === "scouts" && scoutsExtraFields) {
+        fillScoutsPloegDropdown();
+        memberPloeg.value = "";
+        memberPL.checked = false;
+        memberAPL.checked = false;
+        memberPL.disabled = true;
+        memberAPL.disabled = true;
+    }
+
     toggleWelpenExtraFields();
+    toggleScoutsExtraFields();
+
     memberModal.classList.remove("hidden");
 });
 

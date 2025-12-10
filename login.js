@@ -18,13 +18,15 @@ function updateLoginUI() {
     if (loginButton) loginButton.classList.toggle("hidden", mode === "leiding");
     if (logoutButton) logoutButton.classList.toggle("hidden", mode !== "leiding");
 
-    // Leiding-badge (op alle pagina's aanwezig)
+   // Leiding-badge (op alle pagina's aanwezig)
     if (loginStatus) loginStatus.classList.toggle("hidden", mode !== "leiding");
-    
-        const dashboardCard = document.getElementById("dashboardCard");
-    if (dashboardCard) {
-        dashboardCard.classList.toggle("hidden", mode !== "leiding");
-    }
+
+    // Dashboard- / bestuurskaarten alleen zichtbaar voor leiding (index)
+    const dashboardCards = document.querySelectorAll(".speltak-card.dashboard");
+    dashboardCards.forEach(card => {
+        card.classList.toggle("hidden", mode !== "leiding");
+    });
+}
 }
 
 // --------------------------------------------------------

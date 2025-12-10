@@ -1074,7 +1074,7 @@ th[class^="ploeg-"]::after {
 .ploeg-header.ploeg-sperwer { background: #19388a; color: white; }
 .ploeg-header.ploeg-kievit  { background: #c5d09a; color: white; }
 .ploeg-header.ploeg-reiger  { background: #419639; color: white; }
-.ploeg-header.ploeg-meeuw   { background: #0E1F4C; color: black; }
+.ploeg-header.ploeg-meeuw   { background: #0E1F4C; color: white; }
 
 .ploeg-header .ploeg-icoon {
     height: 22px;

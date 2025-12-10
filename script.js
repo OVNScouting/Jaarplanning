@@ -360,13 +360,18 @@ async function loadEverything() {
 
         nextUpcomingId = opkomsten.find(o => !isPast(o.datum))?.id || null;
 
-        jeugd = Object.entries(data.jeugdleden || {}).map(([id, v]) => ({
+jeugd = Object.entries(data.jeugdleden || {}).map(([id, v]) => ({
     id,
     naam: v.naam || "",
     WelpenNaam: v.WelpenNaam || "",
-    // Nest altijd lowercase voor sortering
     Nest: (v.Nest || "").toLowerCase(),
     NestLeider: !!v.NestLeider,
+
+    // SCOUTS FIELDS
+    Ploeg: (v.Ploeg || "").toLowerCase(),
+    PL: !!v.PL,
+    APL: !!v.APL,
+
     hidden: !!v.hidden,
     volgorde: v.volgorde ?? 999
 })).sort((a, b) => a.volgorde - b.volgorde);
@@ -503,14 +508,7 @@ function renderLedenbeheerScouts() {
     jeugdContainer.innerHTML = "";
     leidingContainer.innerHTML = "";
 
-    const SCOUT_PLOEGEN = ["sperwer", "kievit", "reiger", "meeuw", ""];
-    const LABELS = {
-        "sperwer": "Sperwers",
-        "kievit": "Kieviten",
-        "reiger": "Reigers",
-        "meeuw": "Meeuwen",
-        "": "Zonder ploeg"
-    };
+   };
 
     const ICONS = {
         "sperwer": "assets/Ploegteken-sperwer.png",
@@ -590,7 +588,6 @@ function makeMemberRowScouts(obj) {
 
     li.addEventListener("dragleave", () => li.classList.remove("drag-over"));
 
-    li.addEventListener("drop", async e => {
     li.addEventListener("drop", async e => {
     e.preventDefault();
     li.classList.remove("drag-over");
@@ -1173,9 +1170,6 @@ function countPresence(o) {
     return [j, l];
 }
 
-/* ======================================================================
-   LEDENBEHEER
-   ====================================================================== */
 /* ======================================================================
    LEDENBEHEER
    ====================================================================== */

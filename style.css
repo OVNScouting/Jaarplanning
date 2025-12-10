@@ -1020,6 +1020,39 @@ body.mode-ouder .col-divider {
     z-index: 2;
 }
 
+/* ============================================
+   SCOUTS – PLOEGKLEUREN (header only)
+============================================ */
+th.ploeg-sperwer {
+    background-color: #2E1501;
+    color: white;
+    position: relative;
+}
+th.ploeg-kievit {
+    background-color: #6C7254;
+    color: white;
+}
+th.ploeg-reiger {
+    background-color: #24511F;
+    color: white;
+}
+th.ploeg-meeuw {
+    background-color: #0E1F4C;
+    color: white;
+}
+th.ploeg- {
+    background-color: #BBBBBB;
+    color: black;
+}
+
+/* Subtiele white overlay zoals bij Welpen */
+th[class^="ploeg-"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.12);
+    pointer-events: none;
+}
 
 
 /* ============================================================

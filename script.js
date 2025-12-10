@@ -823,16 +823,17 @@ function makeRestrictedEditable(o, field, opties, extraClass = "") {
         select.appendChild(op);
     });
 
-   select.addEventListener("change", () => {
+  select.addEventListener("change", async () => {
 
-    // Eerst type direct opslaan
-    update(ref(db, `${speltak}/opkomsten/${o.id}`), {
-        [field]: select.value
+    const newType = select.value;
+
+    // 1. Eerst het type opslaan
+    await update(ref(db, `${speltak}/opkomsten/${o.id}`), {
+        [field]: newType
     });
 
-    // Daarna: automatisch alle aanwezigheden op ✖ als typeOpkomst = "geen"
-    if (field === "typeOpkomst" && select.value === "geen") {
-
+    // 2. Als type = "geen" → alle aanwezigheid op "afwezig"
+    if (field === "typeOpkomst" && newType === "geen") {
         const updates = {};
 
         jeugd.forEach(j => {
@@ -843,8 +844,11 @@ function makeRestrictedEditable(o, field, opties, extraClass = "") {
             updates[`${speltak}/opkomsten/${o.id}/aanwezigheid/leiding-${l.id}`] = "afwezig";
         });
 
-        update(ref(db), updates).then(loadEverything);
+        await update(ref(db), updates);
     }
+
+    // 3. Herladen voor correcte kleuren + tellingen
+    loadEverything();
 });
 
 
@@ -1475,27 +1479,27 @@ printButton?.addEventListener("click", () => {
     }, 150);
 });
 
-editModeButton?.addEventListener("click", () => {
+editModeButton?.addEventListener("click", async () => {
     if (!isLeiding()) {
         alert("Log in als leiding om te bewerken.");
         return;
     }
 
+    // --- UIT bewerken: opslaan ---
     if (editMode) {
-        // We gaan VAN bewerken NAAR bekijken → "opslaan"
         editMode = false;
-        setMode("leiding");                 // terug naar normale leiding-weergave
+        setMode("leiding"); // hertekent tabel
         editModeButton.textContent = "✏️ Opkomsten bewerken";
 
-        // Opnieuw uit de database laden zodat alle wijzigingen (incl. kleuren/tellers) zichtbaar zijn
-        loadEverything();
-    } else {
-        // We gaan NAAR bewerkmodus
-        editMode = true;
-        setMode("leiding");                 // basis blijft leiding
-        editModeButton.textContent = "💾 Wijzigingen opslaan";
+        // Alleen opnieuw laden uit DB, NIET opnieuw renderen
+        await loadEverything();
+        return;
     }
-});
+
+    // --- NAAR bewerkmodus ---
+    editMode = true;
+    setMode("leiding");
+    editModeButton.textContent = "💾 Wijzigingen opslaan";
 
 // =====================
 // INFO-EDITOR SELECTIE

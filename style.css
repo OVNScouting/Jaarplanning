@@ -958,6 +958,27 @@ body.mode-ouder .col-divider {
     backdrop-filter: blur(2px);
 }
 
+/* ============================================
+   LEDENBEHEER – NESTKOPJES (Optie A)
+============================================ */
+
+.nest-header {
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin: 0.8rem 0 0.3rem;
+    padding-bottom: 2px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0.85;
+}
+
+/* Icoontjes per nest */
+.nest-icon-zwart::before  { content: "⚫"; }
+.nest-icon-bruin::before  { content: "🟤"; }
+.nest-icon-wit::before    { content: "⚪"; }
+.nest-icon-grijs::before  { content: "⚫"; opacity: 0.5; }
 
 
 /* ============================================================

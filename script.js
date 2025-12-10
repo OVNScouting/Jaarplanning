@@ -1560,3 +1560,4 @@ logoutButton?.addEventListener("click", () => {
     localStorage.setItem("mode", "ouder");
     setMode("ouder");
 });
+   });

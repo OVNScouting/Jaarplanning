@@ -94,7 +94,8 @@
     <!-- Tabel + sidebar naast elkaar -->
     <div class="planning-main">
       <!-- Tabel -->
-      <div class="table-wrapper">
+      <div id="tableScrollAnchor">
+        <div class="table-wrapper">
           <table class="planning-table">
             <thead>
               <tr id="headerRowTop"></tr>
@@ -135,15 +136,29 @@
   </div>
   
       <div class="ledenbeheer-columns">
-          <div class="ledenbeheer-col">
-              <h3>Jeugdleden</h3>
-              <ul id="jeugdLeden"></ul>
-          </div>
-          <div class="ledenbeheer-col">
-              <h3>Leiding</h3>
-              <ul id="leidingLeden"></ul>
-          </div>
-      </div>
+
+    <div class="ledenbeheer-col">
+        <h3>Jeugdleden</h3>
+
+        <!-- Container die in script.js automatisch per nest wordt gevuld -->
+        <div id="nestGroups">
+            <!-- JS maakt hier 4 blokken:
+                 - Zwart
+                 - Bruin
+                 - Wit
+                 - Grijs
+                 + “Geen nest”
+            -->
+        </div>
+    </div>
+
+    <div class="ledenbeheer-col">
+        <h3>Leiding</h3>
+        <ul id="leidingLeden"></ul>
+    </div>
+
+</div>
+
     
       <button id="addMemberButton" class="pill-btn primary">Lid toevoegen</button>
 
@@ -198,6 +213,9 @@
 
         <label>Naam:</label>
         <input type="text" id="memberName" />
+
+        <input type="hidden" id="memberOriginalNest" value="">
+
 
         <div class="modal-actions">
           <button id="saveMember" class="pill-btn primary">Opslaan</button>
@@ -312,6 +330,23 @@
   <script type="module" src="utils.js"></script>
   <script type="module" src="script.js"></script>
   
+<!-- ============================================================
+     MODAL — Nest wisselen bevestigen
+============================================================ -->
+<div id="confirmNestModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>Nestwissel bevestigen</h3>
+
+    <p id="confirmNestText">
+      <!-- Dynamisch gevuld door script.js -->
+    </p>
+
+    <div class="modal-actions">
+      <button id="confirmNestYes" class="primary-btn">Bevestigen</button>
+      <button id="confirmNestNo" class="pill-btn outline">Annuleren</button>
+    </div>
+  </div>
+</div>
 
 
 

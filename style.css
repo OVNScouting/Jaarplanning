@@ -355,14 +355,29 @@ body.mode-bewerken .col-datum {
   left: 40px !important;
 }
 
-/* Verticale namen */
+/* ============================================
+   VERTICALE NAMEN – BETER LEESBAAR
+============================================ */
 .name-vertical {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  padding: 0.3rem 0.2rem;
-  background: #f9fafb;
-  font-size: 0.75rem;
+    writing-mode: vertical-rl;
+    text-orientation: sideways;     /* beter leesbaar dan mixed */
+    font-size: 0.82rem;             /* iets groter */
+    font-weight: 600;               /* meer body */
+    letter-spacing: 0.5px;          /* luchtiger */
+    padding: 4px 3px;               /* meer ruimte rond letters */
+    color: #111;                    /* maximale leesbaarheid */
 }
+
+.welpen-naam {
+    font-size: 0.9rem;
+    letter-spacing: 0.6px;
+}
+
+.welpen-naam-reallife {
+    font-size: 0.75rem;
+    letter-spacing: 0.4px;
+}
+
 
 /* Presence */
 .presence-cell {
@@ -465,27 +480,33 @@ tr.row-grey > .col-datum      { background: var(--opkomst-verleden-bg) !importan
   height: 1px;                     /* onzichtbare “spoor”-div, alleen scrollbar telt */
 }
 
-/* WebKit (Chrome/Edge/Safari) */
+/* ============================================
+   ZWEVENDE SCROLLBAR – DIKKER + BLAUW
+============================================ */
 .table-h-scroll::-webkit-scrollbar {
-  height: 10px;
+    height: 14px;                       /* duidelijk dikker */
 }
 
 .table-h-scroll::-webkit-scrollbar-track {
-  background: #e5e7eb;
-  border-radius: 999px;
+    background: #dae7ff;                /* zacht blauw */
+    border-radius: 999px;
 }
 
 .table-h-scroll::-webkit-scrollbar-thumb {
-  background: #6b7280;
-  border-radius: 999px;
+    background: var(--blue);            /* jouw blauwe kleur */
+    border-radius: 999px;
+    border: 3px solid #dae7ff;          /* witte rand voor premium-look */
 }
 
-/* Firefox styling */
+.table-h-scroll::-webkit-scrollbar-thumb:hover {
+    background: #0059d4;                /* donkerblauw hover */
+}
+
+/* Firefox */
 .table-h-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: #6b7280 #e5e7eb;
+    scrollbar-width: thick;
+    scrollbar-color: var(--blue) #dae7ff;
 }
-
 
 
 /* ============================================================
@@ -936,6 +957,7 @@ body.mode-ouder .col-divider {
     pointer-events: auto;
     backdrop-filter: blur(2px);
 }
+
 
 
 /* ============================================================

@@ -84,7 +84,7 @@ const openMeldingenButton = document.getElementById("openMeldingenButton");
 const ledenbeheerSection = document.getElementById("ledenbeheerSection");
 const meldingenSection = document.getElementById("meldingenSection");
 
-const ledenbeheerJeugd = document.getElementById("jeugdLeden");
+const jeugdContainer = document.getElementById("jeugdLeden");
 const ledenbeheerLeiding = document.getElementById("leidingLeden");
 const addMemberButton = document.getElementById("addMemberButton");
 
@@ -873,14 +873,15 @@ function makePresenceCell(o, key, hidden, isLeidingCell) {
     }
 
     // volledig verbergen als het lid zelf verborgen is
-    const isHiddenMember = key.startsWith("leiding-")
-        ? leiding.find(l => l.id === key.replace("leiding-", ""))?.hidden
-        : jeugd.find(j => j.id === key)?.hidden;
+   const m = key.startsWith("leiding-")
+    ? leiding.find(l => l.id === key.replace("leiding-", ""))
+    : jeugd.find(j => j.id === key);
 
-    if (isHiddenMember) {
-        td.classList.add("hide-view");
-        return td;
-    }
+if (!m) {
+    td.classList.add("hide-view");
+    return td;
+}
+
 
     // huidige status + icoontje
     const cur = o.aanwezigheid?.[key] || "onbekend";
@@ -938,7 +939,17 @@ function countPresence(o) {
    LEDENBEHEER
    ====================================================================== */
 function renderLedenbeheer() {
-    ledenbeheerJeugd.innerHTML = "";
+    // Ondersteuning voor nieuwe HTML-structuur met #nestGroups
+    const jeugdContainer = document.getElementById("jeugdLeden") 
+                        || document.getElementById("nestGroups");
+    const leidingContainer = ledenbeheerLeiding;
+
+    if (!jeugdContainer || !leidingContainer) return;
+
+    jeugdContainer.innerHTML = "";
+    leidingContainer.innerHTML = "";
+
+    jeugdContainer.innerHTML = "";
     ledenbeheerLeiding.innerHTML = "";
 
     // GROEPEREN PER NEST
@@ -970,11 +981,11 @@ function renderLedenbeheer() {
         const header = document.createElement("div");
         header.className = "nest-header " + iconClass;
         header.innerHTML = `${niceName}`;
-        ledenbeheerJeugd.appendChild(header);
+        jeugdContainer.appendChild(header);
 
         // Leden tonen
         byNest[nest].sort((a, b) => a.volgorde - b.volgorde).forEach(j =>
-            ledenbeheerJeugd.appendChild(makeMemberRow(j, "jeugd"))
+            jeugdContainer.appendChild(makeMemberRow(j, "jeugd"))
         );
     });
 
@@ -1173,6 +1184,7 @@ function openEditMember(obj, type) {
    MELDINGEN
    ====================================================================== */
 function renderMeldingen() {
+   if (!meldingLeidingAan || !meldingOnbekendAan || !leidingDrempel) return;
     meldingLeidingAan.checked = !!data.meldingLeidingAan;
     meldingOnbekendAan.checked = !!data.meldingOnbekendAan;
     leidingDrempel.value = typeof data.leidingDrempel === "number" ? data.leidingDrempel : 2;
@@ -1196,9 +1208,11 @@ leidingDrempel?.addEventListener("input", saveMeldingen);
    OPEN/CLOSE SECTIONS
    ====================================================================== */
 function openSection(section) {
+    if (!section) return;
     if (!isLeiding()) return alert("Alleen leiding kan deze sectie openen.");
+
     section.classList.remove("hidden");
-    section.scrollIntoView({ behavior: "smooth" });
+    try { section.scrollIntoView({ behavior: "smooth" }); } catch (e) {}
 }
 
 openLedenbeheerButton?.addEventListener("click", () => openSection(ledenbeheerSection));

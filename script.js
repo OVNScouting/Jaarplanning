@@ -1514,6 +1514,7 @@ editModeButton?.addEventListener("click", async () => {
     editMode = true;
     setMode("leiding");
     editModeButton.textContent = "💾 Wijzigingen opslaan";
+});
 
 // =====================
 // INFO-EDITOR SELECTIE
@@ -1566,12 +1567,3 @@ colorPicker?.addEventListener("change", () => {
     document.execCommand("foreColor", false, colorPicker.value);
 });
 
-
-/* ======================================================================
-   LOGOUT
-   ====================================================================== */
-logoutButton?.addEventListener("click", () => {
-    localStorage.setItem("mode", "ouder");
-    setMode("ouder");
-});
-   });

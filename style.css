@@ -1028,16 +1028,16 @@ body.mode-ouder .col-divider {
    SCOUTS – PLOEGKLEUREN (header only)
 ============================================ */
 th.ploeg-sperwer {
-    background-color: #2E1501;
+    background-color: #19388a;
     color: white;
     position: relative;
 }
 th.ploeg-kievit {
-    background-color: #6C7254;
+    background-color: #c5d09a;
     color: white;
 }
 th.ploeg-reiger {
-    background-color: #24511F;
+    background-color: #419639;
     color: white;
 }
 th.ploeg-meeuw {
@@ -1071,10 +1071,10 @@ th[class^="ploeg-"]::after {
     text-transform: capitalize;
 }
 
-.ploeg-header.ploeg-sperwer { background: #5C3F13; color: white; }
-.ploeg-header.ploeg-kievit  { background: #228B22; color: white; }
-.ploeg-header.ploeg-reiger  { background: #3C6E91; color: white; }
-.ploeg-header.ploeg-meeuw   { background: #CFCFCF; color: black; }
+.ploeg-header.ploeg-sperwer { background: #19388a; color: white; }
+.ploeg-header.ploeg-kievit  { background: #c5d09a; color: white; }
+.ploeg-header.ploeg-reiger  { background: #419639; color: white; }
+.ploeg-header.ploeg-meeuw   { background: #0E1F4C; color: black; }
 
 .ploeg-header .ploeg-icoon {
     height: 22px;
@@ -1093,17 +1093,17 @@ th[class^="ploeg-"]::after {
 
 /* SPERWER —  */
 .presence-scout-sperwer {
-    background-color: #2E1501);
+    background-color: #19388a);
 }
 
 /* KIEVIT —  */
 .presence-scout-kievit {
-    background-color: #6C7254 );
+    background-color: #c5d09a);
 }
 
 /* REIGER — */
 .presence-scout-reiger {
-    background-color: #24511F);
+    background-color: #419639);
 }
 
 /* MEEUW — */

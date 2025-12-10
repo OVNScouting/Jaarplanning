@@ -1058,6 +1058,29 @@ th[class^="ploeg-"]::after {
     pointer-events: none;
 }
 
+/* Ledenbeheer ploeg-headers */
+.ploeg-header {
+    font-weight: 600;
+    padding: 8px 10px;
+    margin-top: 10px;
+    margin-bottom: 4px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: capitalize;
+}
+
+.ploeg-header.ploeg-sperwer { background: #5C3F13; color: white; }
+.ploeg-header.ploeg-kievit  { background: #228B22; color: white; }
+.ploeg-header.ploeg-reiger  { background: #3C6E91; color: white; }
+.ploeg-header.ploeg-meeuw   { background: #CFCFCF; color: black; }
+
+.ploeg-header .ploeg-icoon {
+    height: 22px;
+    width: auto;
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.3));
+}
 
 /* ============================================================
    PRINT

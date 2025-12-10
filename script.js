@@ -826,6 +826,19 @@ function makeRestrictedEditable(o, field, opties, extraClass = "") {
     select.addEventListener("change", () => {
         update(ref(db, `${speltak}/opkomsten/${o.id}`), {
             [field]: select.value
+         // Automatisch alle aanwezigheid op kruisje bij "geen opkomst"
+         if (field === "typeOpkomst" && select.value === "geen") {
+             const updates = {};
+             jeugd.forEach(j => {
+                 updates[`${speltak}/opkomsten/${o.id}/aanwezigheid/${j.id}`] = "afwezig";
+             });
+             leiding.forEach(l => {
+                 updates[`${speltak}/opkomsten/${o.id}/aanwezigheid/leiding-${l.id}`] = "afwezig";
+             });
+         
+             update(ref(db), updates).then(loadEverything);
+         }
+         
         });
     });
 
@@ -1324,9 +1337,18 @@ function resetOpkomstFields() {
 
 fab?.addEventListener("click", () => {
     if (!isLeiding()) return;
-    resetOpkomstFields();
-    opModal.classList.remove("hidden");
-});
+   resetOpkomstFields();
+
+// Automatisch datum +7 dagen
+if (opkomsten.length > 0) {
+    const last = opkomsten[opkomsten.length - 1];
+    const nextDate = new Date(last.datum);
+    nextDate.setDate(nextDate.getDate() + 7);
+
+    opDatum.value = nextDate.toISOString().substring(0, 10);
+}
+
+opModal.classList.remove("hidden");
 
 saveOpkomst?.addEventListener("click", () => {
     if (!isLeiding()) return;
@@ -1353,9 +1375,16 @@ saveOpkomst?.addEventListener("click", () => {
 
     if (config.showBert) newObj.bert_met = opBert.value || "";
 
+if (opType.value === "geen") {
+    jeugd.forEach(j => newObj.aanwezigheid[j.id] = "afwezig");
+    if (config.showLeiding)
+        leiding.forEach(l => newObj.aanwezigheid[`leiding-${l.id}`] = "afwezig");
+} else {
     jeugd.forEach(j => newObj.aanwezigheid[j.id] = "onbekend");
     if (config.showLeiding)
         leiding.forEach(l => newObj.aanwezigheid[`leiding-${l.id}`] = "onbekend");
+}
+
    
       set(newRef, newObj).then(() => {
     opModal.classList.add("hidden");

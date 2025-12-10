@@ -1179,7 +1179,16 @@ if (!m) {
     td.classList.add("hide-view");
     return td;
 }
+   // SCOUTS — kleuraccent per ploeg
+if (speltak === "scouts" && !isLeidingCell) {
+    const ploeg = (m.Ploeg || "").toLowerCase();
+    td.classList.add("scouts-accent");
 
+    if (ploeg === "sperwer") td.classList.add("presence-scout-sperwer");
+    else if (ploeg === "kievit") td.classList.add("presence-scout-kievit");
+    else if (ploeg === "reiger") td.classList.add("presence-scout-reiger");
+    else if (ploeg === "meeuw") td.classList.add("presence-scout-meeuw");
+}
 
     // huidige status + icoontje
     const cur = o.aanwezigheid?.[key] || "onbekend";

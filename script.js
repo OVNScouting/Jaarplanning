@@ -420,7 +420,15 @@ function toggleInfoEdit() {
         });
     }
 }
+// ===============================================
+// WELPEN – NEST ORDER HELPERS
+// ===============================================
+const NEST_ORDER = ["zwart", "bruin", "wit", "grijs", ""];
 
+function getNestIndex(nest) {
+    const idx = NEST_ORDER.indexOf(nest || "");
+    return idx === -1 ? 999 : idx;
+}
 
 /* ======================================================================
    TABEL — HEADER
@@ -910,8 +918,47 @@ function renderLedenbeheer() {
     ledenbeheerJeugd.innerHTML = "";
     ledenbeheerLeiding.innerHTML = "";
 
-    jeugd.forEach(j => ledenbeheerJeugd.appendChild(makeMemberRow(j, "jeugd")));
-    leiding.forEach(l => ledenbeheerLeiding.appendChild(makeMemberRow(l, "leiding")));
+    // GROEPEREN PER NEST
+    const byNest = {};
+
+    jeugd.forEach(j => {
+        const key = j.Nest || "";
+        if (!byNest[key]) byNest[key] = [];
+        byNest[key].push(j);
+    });
+
+    // Sorteren per nest + sorteren op volgorde in nest
+    Object.keys(byNest).sort((a, b) => getNestIndex(a) - getNestIndex(b)).forEach(nest => {
+        // Nestkopje toevoegen (alleen als er leden zijn)
+        const niceName =
+            nest === "zwart" ? "Zwart" :
+            nest === "bruin" ? "Bruin" :
+            nest === "wit"   ? "Wit" :
+            nest === "grijs" ? "Grijs" :
+            "Nestloos";
+
+        const iconClass = 
+            nest === "zwart" ? "nest-icon-zwart" :
+            nest === "bruin" ? "nest-icon-bruin" :
+            nest === "wit"   ? "nest-icon-wit" :
+            nest === "grijs" ? "nest-icon-grijs" :
+            "";
+
+        const header = document.createElement("div");
+        header.className = "nest-header " + iconClass;
+        header.innerHTML = `${niceName}`;
+        ledenbeheerJeugd.appendChild(header);
+
+        // Leden tonen
+        byNest[nest].sort((a, b) => a.volgorde - b.volgorde).forEach(j =>
+            ledenbeheerJeugd.appendChild(makeMemberRow(j, "jeugd"))
+        );
+    });
+
+    // Leiding blijft zoals het was
+    leiding.forEach(l =>
+        ledenbeheerLeiding.appendChild(makeMemberRow(l, "leiding"))
+    );
 }
 function makeMemberRow(obj, type) {
     const li = document.createElement("li");
@@ -956,31 +1003,74 @@ function makeMemberRow(obj, type) {
         this.classList.remove("drag-over");
     }
 
-    function onDrop(e) {
-        e.preventDefault();
-        this.classList.remove("drag-over");
+function onDrop(e) {
+    e.preventDefault();
+    this.classList.remove("drag-over");
 
-        const draggedId = e.dataTransfer.getData("text/plain");
-        const targetId = this.dataset.id;
+    const draggedId = e.dataTransfer.getData("text/plain");
+    const targetId = this.dataset.id;
 
-        if (draggedId === targetId) return;
+    if (draggedId === targetId) return;
 
-        const list = type === "jeugd" ? jeugd : leiding;
+    const list = type === "jeugd" ? jeugd : leiding;
 
-        const fromIndex = list.findIndex(m => m.id === draggedId);
-        const toIndex = list.findIndex(m => m.id === targetId);
-        if (fromIndex === -1 || toIndex === -1) return;
-
-        const [moved] = list.splice(fromIndex, 1);
-        list.splice(toIndex, 0, moved);
-
-        const updates = {};
-        list.forEach((m, i) => {
-            updates[`${speltak}/${type === "jeugd" ? "jeugdleden" : "leiding"}/${m.id}/volgorde`] = i + 1;
-        });
-
-        update(ref(db), updates).then(loadEverything);
+    // Misdrop tussen jeugd ↔ leiding → altijd terug
+    if (this.dataset.type !== type) {
+        renderLedenbeheer();
+        return;
     }
+
+    const dragged = list.find(m => m.id === draggedId);
+    const target  = list.find(m => m.id === targetId);
+
+    const oldNest = dragged.Nest || "";
+    const newNest = target.Nest || "";
+
+    // ❗ Als nest verandert → popup
+    if (type === "jeugd" && oldNest !== newNest) {
+        const oldLabel = oldNest || "Nestloos";
+        const newLabel = newNest || "Nestloos";
+
+        const icons = {
+            zwart: "⚫", bruin: "🟤", wit: "⚪", grijs: "⚫"
+        };
+
+        const iconOld = icons[oldNest] || "";
+        const iconNew = icons[newNest] || "";
+
+        const ok = confirm(
+            `${dragged.naam} verplaatsen van ${iconOld} ${oldLabel} naar ${iconNew} ${newLabel}?`
+        );
+
+        if (!ok) {
+            renderLedenbeheer();
+            return;
+        }
+
+        // Nest daadwerkelijk aanpassen
+        dragged.Nest = newNest;
+        dragged.NestLeider = false; // nestleider wordt niet automatisch meegenomen
+    }
+
+    // NORMAAL sorteren
+    const fromIndex = list.indexOf(dragged);
+    const toIndex = list.indexOf(target);
+    list.splice(fromIndex, 1);
+    list.splice(toIndex, 0, dragged);
+
+    // volgorde opslaan
+    const updates = {};
+    list.forEach((m, i) => {
+        updates[`${speltak}/${type === "jeugd" ? "jeugdleden" : "leiding"}/${m.id}/volgorde`] = i + 1;
+
+        if (type === "jeugd") {
+            updates[`${speltak}/jeugdleden/${m.id}/Nest`] = m.Nest || "";
+        }
+    });
+
+    update(ref(db), updates).then(loadEverything);
+}
+
 
     li.addEventListener("dragstart", onDragStart);
     li.addEventListener("dragover", onDragOver);

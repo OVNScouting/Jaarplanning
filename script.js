@@ -117,18 +117,21 @@ if (welpenExtraFields) {
 function toggleWelpenExtraFields() {
     if (!welpenExtraFields) return;
 
+    // Alleen zichtbaar bij welpen
     if (speltak !== "welpen") {
-        welpenExtraFields.style.display = "none";
+        welpenExtraFields.classList.add("hidden");
         return;
     }
 
-    // Alleen jeugdleden hebben Nest/NestLeider
+    // Alleen jeugdleden krijgen extra velden
     if (memberType.value === "jeugd") {
-        welpenExtraFields.style.display = "block";
+        welpenExtraFields.classList.remove("hidden");
     } else {
-        welpenExtraFields.style.display = "none";
+        welpenExtraFields.classList.add("hidden");
     }
 }
+
+
 function toggleScoutsExtraFields() {
     if (!scoutsExtraFields) return;
 
@@ -1595,6 +1598,12 @@ addMemberButton?.addEventListener("click", () => {
         memberNest.value = "";
         memberNestLeider.checked = false;
     }
+   
+   if (welpenExtraFields) {
+    welpenExtraFields.classList.add("hidden");
+}
+
+   
 
     // SCOUTS extra velden resetten
     if (speltak === "scouts" && scoutsExtraFields) {
@@ -1605,7 +1614,7 @@ addMemberButton?.addEventListener("click", () => {
         memberPL.disabled = true;
         memberAPL.disabled = true;
     }
-
+    welpenExtraFields.classList.add("hidden");
     toggleWelpenExtraFields();
     toggleScoutsExtraFields();
 

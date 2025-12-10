@@ -129,24 +129,88 @@ function toggleWelpenExtraFields() {
         welpenExtraFields.style.display = "none";
     }
 }
-
 function toggleScoutsExtraFields() {
     if (!scoutsExtraFields) return;
 
+    // Alleen zichtbaar bij speltak scouts
     if (speltak !== "scouts") {
         scoutsExtraFields.style.display = "none";
         return;
     }
 
+    // Alleen jeugdleden hebben een ploeg + PL/APL
     if (memberType.value === "jeugd") {
         scoutsExtraFields.style.display = "block";
+
+        // Dropdown altijd opnieuw vullen
+        fillScoutsPloegDropdown();
+
+        // Ploeg gekozen?
+        const heeftPloeg = memberPloeg.value !== "";
+
+        // PL/APL disablen of niet
+        memberPL.disabled = !heeftPloeg;
+        memberAPL.disabled = !heeftPloeg;
+
+        // Reset als geen ploeg
+        if (!heeftPloeg) {
+            memberPL.checked = false;
+            memberAPL.checked = false;
+        }
+
     } else {
+        // Voor leiding alles verbergen en resetten
         scoutsExtraFields.style.display = "none";
         memberPloeg.value = "";
         memberPL.checked = false;
         memberAPL.checked = false;
+        memberPL.disabled = true;
+        memberAPL.disabled = true;
     }
 }
+// PL/APL wederzijds exclusief
+memberPL?.addEventListener("change", () => {
+    if (memberPL.checked) memberAPL.checked = false;
+});
+
+memberAPL?.addEventListener("change", () => {
+    if (memberAPL.checked) memberPL.checked = false;
+});
+
+memberPloeg?.addEventListener("change", () => {
+    const heeftPloeg = memberPloeg.value !== "";
+
+    if (!heeftPloeg) {
+        memberPL.checked = false;
+        memberAPL.checked = false;
+    }
+
+    memberPL.disabled = !heeftPloeg;
+    memberAPL.disabled = !heeftPloeg;
+});
+
+// Scouts ploegopties dynamisch vullen
+const SCOUTS_OPTIES = [
+    { value: "", label: "Geen ploeg" },
+    { value: "sperwer", label: "Sperwers" },
+    { value: "kievit", label: "Kieviten" },
+    { value: "reiger", label: "Reigers" },
+    { value: "meeuw", label: "Meeuwen" }
+];
+
+function fillScoutsPloegDropdown() {
+    if (!memberPloeg) return;
+
+    memberPloeg.innerHTML = ""; // leegmaken
+
+    SCOUTS_OPTIES.forEach(opt => {
+        const o = document.createElement("option");
+        o.value = opt.value;
+        o.textContent = opt.label;
+        memberPloeg.appendChild(o);
+    });
+}
+
 
 
 
@@ -1428,20 +1492,24 @@ function openEditMember(obj, type) {
         }
         toggleWelpenExtraFields();
     }
+if (speltak === "scouts" && scoutsExtraFields) {
 
-      if (speltak === "scouts" && scoutsExtraFields) {
-          if (type === "jeugd") {
-              memberPloeg.value = obj.Ploeg || "";
-              memberPL.checked = !!obj.PL;
-              memberAPL.checked = !!obj.APL;
-          } else {
-              memberPloeg.value = "";
-              memberPL.checked = false;
-              memberAPL.checked = false;
-          }
-      
-          toggleScoutsExtraFields();
-      }
+    // dropdown eerst vullen
+    fillScoutsPloegDropdown();
+
+    if (type === "jeugd") {
+        memberPloeg.value = obj.Ploeg || "";
+        memberPL.checked = !!obj.PL;
+        memberAPL.checked = !!obj.APL;
+    } else {
+        memberPloeg.value = "";
+        memberPL.checked = false;
+        memberAPL.checked = false;
+    }
+
+    toggleScoutsExtraFields();
+}
+
    memberModal.classList.remove("hidden");
 }
 /* ======================================================================

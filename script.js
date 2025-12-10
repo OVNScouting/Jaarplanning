@@ -117,17 +117,22 @@ if (welpenExtraFields) {
 function toggleWelpenExtraFields() {
     if (!welpenExtraFields) return;
 
-    // Alleen zichtbaar bij welpen
     if (speltak !== "welpen") {
         welpenExtraFields.classList.add("hidden");
+        welpenExtraFields.style.display = "none";
         return;
     }
 
-    // Alleen jeugdleden krijgen extra velden
     if (memberType.value === "jeugd") {
         welpenExtraFields.classList.remove("hidden");
+        welpenExtraFields.style.display = "block";
     } else {
-        welpenExtraFields.classList.add("hidden");
+        // Leiding moet wel naamveld zien, maar geen nestvelden
+        welpenExtraFields.classList.remove("hidden");
+        welpenExtraFields.style.display = "block";
+
+        document.getElementById("memberNest").parentElement.style.display = "none";
+        document.getElementById("memberNestLeider").parentElement.style.display = "none";
     }
 }
 
@@ -1496,38 +1501,56 @@ function openEditMember(obj, type) {
 
     memberName.value = obj.naam || "";
 
-    if (speltak === "welpen" && welpenExtraFields) {
-        memberWelpenNaam.value = obj.WelpenNaam || "";
+if (speltak === "welpen" && welpenExtraFields) {
 
-        if (type === "jeugd") {
-            memberNest.value = (obj.Nest || "").toLowerCase();
-            memberNestLeider.checked = !!obj.NestLeider;
-        } else {
-            memberNest.value = "";
-            memberNestLeider.checked = false;
-        }
-        toggleWelpenExtraFields();
+    memberWelpenNaam.value = obj.WelpenNaam || "";
+
+    if (type === "jeugd") {
+        memberNest.parentElement.style.display = "block";
+        memberNestLeider.parentElement.style.display = "block";
+
+        memberNest.value = (obj.Nest || "").toLowerCase();
+        memberNestLeider.checked = !!obj.NestLeider;
+
+    } else {
+        // Leiding → wel WelpenNaam, geen nestinfo
+        memberNest.parentElement.style.display = "none";
+        memberNestLeider.parentElement.style.display = "none";
     }
-      // SCOUTS extra velden resetten
-      if (speltak === "scouts" && scoutsExtraFields) {
-      
-          // 1. Eerst dropdown vullen
-          fillScoutsPloegDropdown();
-      
-          // 2. Reset waarden
-          memberPloeg.value = "";
-          memberPL.checked = false;
-          memberAPL.checked = false;
-      
-          // 3. PL/APL disablen tot er een ploeg is gekozen
-          memberPL.disabled = true;
-          memberAPL.disabled = true;
-      }
-      
-      // Nu pas toggles NA vullen
-      toggleWelpenExtraFields();
-      toggleScoutsExtraFields();
-      
+
+    welpenExtraFields.classList.remove("hidden");
+    welpenExtraFields.style.display = "block";
+}
+   
+    // SCOUTS — juiste werking bij bewerken
+if (speltak === "scouts" && scoutsExtraFields) {
+
+    fillScoutsPloegDropdown();
+
+    if (type === "jeugd") {
+        memberPloeg.value = obj.Ploeg || "";
+        memberPL.checked = !!obj.PL;
+        memberAPL.checked = !!obj.APL;
+
+        const heeftPloeg = memberPloeg.value !== "";
+        memberPL.disabled = !heeftPloeg;
+        memberAPL.disabled = !heeftPloeg;
+
+        scoutsExtraFields.classList.remove("hidden");
+        scoutsExtraFields.style.display = "block";
+
+    } else {
+        // Leiding heeft geen scout-extra's
+        memberPloeg.value = "";
+        memberPL.checked = false;
+        memberAPL.checked = false;
+        memberPL.disabled = true;
+        memberAPL.disabled = true;
+
+        scoutsExtraFields.classList.add("hidden");
+        scoutsExtraFields.style.display = "none";
+    }
+}
       memberModal.classList.remove("hidden");
 }
 /* ======================================================================
@@ -1600,7 +1623,9 @@ addMemberButton?.addEventListener("click", () => {
     }
    
    if (welpenExtraFields) {
-    welpenExtraFields.classList.add("hidden");
+   welpenExtraFields.classList.add("hidden");
+welpenExtraFields.style.display = "none";
+
 }
 
    

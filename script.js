@@ -385,6 +385,33 @@ if (speltak === "welpen") {
         return a.naam.localeCompare(b.naam);
     });
 }
+   
+  // ===============================
+// SCOUTS — SORTERING
+// ===============================
+if (speltak === "scouts") {
+
+    const PLOEG_ORDER = {
+        "sperwer": 1,
+        "kievit": 2,
+        "reiger": 3,
+        "meeuw": 4,
+        "": 5
+    };
+
+    jeugd.sort((a, b) => {
+        const pa = PLOEG_ORDER[a.Ploeg || ""] || 999;
+        const pb = PLOEG_ORDER[b.Ploeg || ""] || 999;
+
+        if (pa !== pb) return pa - pb;
+
+        // Binnen een ploeg: PL → APL → alfabetisch
+        if (a.PL !== b.PL) return a.PL ? -1 : 1;
+        if (a.APL !== b.APL) return a.APL ? -1 : 1;
+
+        return a.naam.localeCompare(b.naam);
+    });
+}
 
 
           leiding = Object.entries(data.leiding || {}).map(([id, v]) => ({
@@ -524,13 +551,24 @@ function addHeaders() {
     const zichtbareJeugd = jeugd.filter(j => !j.hidden);
 
     if (!twoRows) {
-        // Niet-welpen: bestaande verticale namen
-        zichtbareJeugd.forEach(j => {
-            const th = document.createElement("th");
-            th.classList.add("col-jeugd");
-            th.innerHTML = `<div class="name-vertical">${j.naam}</div>`;
-            trTop.appendChild(th);
-        });
+    zichtbareJeugd.forEach(j => {
+        const th = document.createElement("th");
+        th.classList.add("col-jeugd");
+
+        // SCOUTS kleurmarkeringen
+        if (speltak === "scouts") {
+            const ploeg = j.Ploeg || "";
+            th.classList.add(`ploeg-${ploeg}`);
+        }
+
+        // Icons bij PL/APL
+        let icon = "";
+        if (j.PL) icon = "✪ ";
+        else if (j.APL) icon = "☆ ";
+
+        th.innerHTML = `<div class="name-vertical">${icon}${j.naam}</div>`;
+        trTop.appendChild(th);
+    });
     } else {
         // Welpen: boven WelpenNaam, onder echte naam
         zichtbareJeugd.forEach(j => {

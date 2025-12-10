@@ -430,6 +430,7 @@ tr.row-grey > .col-datum      { background: var(--opkomst-verleden-bg) !importan
 
 
 .cell-textarea {
+overflow-y: hidden;
   resize: vertical;
   min-height: 55px;
 }

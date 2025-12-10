@@ -134,33 +134,32 @@ function toggleScoutsExtraFields() {
 
     // Alleen zichtbaar bij speltak scouts
     if (speltak !== "scouts") {
-        scoutsExtraFields.style.display = "none";
+        scoutsExtraFields.classList.add("hidden");
+        scoutsExtraFields.style.display = "";
         return;
     }
 
     // Alleen jeugdleden hebben een ploeg + PL/APL
     if (memberType.value === "jeugd") {
+        scoutsExtraFields.classList.remove("hidden");
         scoutsExtraFields.style.display = "block";
 
         // Dropdown altijd opnieuw vullen
         fillScoutsPloegDropdown();
 
-        // Ploeg gekozen?
         const heeftPloeg = memberPloeg.value !== "";
 
-        // PL/APL disablen of niet
         memberPL.disabled = !heeftPloeg;
         memberAPL.disabled = !heeftPloeg;
 
-        // Reset als geen ploeg
         if (!heeftPloeg) {
             memberPL.checked = false;
             memberAPL.checked = false;
         }
-
     } else {
         // Voor leiding alles verbergen en resetten
-        scoutsExtraFields.style.display = "none";
+        scoutsExtraFields.classList.add("hidden");
+        scoutsExtraFields.style.display = "";
         memberPloeg.value = "";
         memberPL.checked = false;
         memberAPL.checked = false;

@@ -1028,7 +1028,7 @@ body.mode-ouder .col-divider {
    SCOUTS – PLOEGKLEUREN (header only)
 ============================================ */
 th.ploeg-sperwer {
-    background-color: #19388a;
+    background-color: #572600;
     color: white;
     position: relative;
 }
@@ -1071,7 +1071,7 @@ th[class^="ploeg-"]::after {
     text-transform: capitalize;
 }
 
-.ploeg-header.ploeg-sperwer { background: #19388a; color: white; }
+.ploeg-header.ploeg-sperwer { background: #572600; color: white; }
 .ploeg-header.ploeg-kievit  { background: #c5d09a; color: white; }
 .ploeg-header.ploeg-reiger  { background: #419639; color: white; }
 .ploeg-header.ploeg-meeuw   { background: #0E1F4C; color: white; }
@@ -1093,7 +1093,7 @@ th[class^="ploeg-"]::after {
 
 /* SPERWER —  */
 .presence-scout-sperwer {
-    background-color: #19388a);
+    background-color: #572600);
 }
 
 /* KIEVIT —  */

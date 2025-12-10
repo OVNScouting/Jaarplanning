@@ -18,7 +18,7 @@
   <header class="topbar">
   <div class="topbar-left">
     <a href="index.html" class="backlink">← Terug</a>
-    <img src="assets/OVN.logo.png" class="topbar-logo" alt="Bevers logo">
+    <img src="assets/OVN.logo.png" class="topbar-logo" alt="Welpen logo">
     <div class="topbar-title">
       <h1>Welpen</h1>
       <span>Jaarplanning & Aanwezigheid</span>
@@ -29,7 +29,7 @@
     <span id="loginStatus" class="leiding-badge only-leiding">Je bent ingelogd als leiding</span>
     <button id="loginButton" class="pill-btn outline">Leiding inloggen</button>
     <button id="logoutButton" class="pill-btn outline only-leiding">Uitloggen</button>
-    <img src="assets/Welpen-speltakteken.png" class="speltak-icon" alt="">
+    <img src="assets/Welpen-speltakteken.png" class="speltak-icon" alt="Welpen speltakteken">
   </div>
 </header>
 
@@ -138,7 +138,9 @@
       <div class="ledenbeheer-columns">
           <div class="ledenbeheer-col">
               <h3>Jeugdleden</h3>
-              <ul id="jeugdLeden"></ul>
+                <div id="nestGroups">
+        <!-- Dynamisch gevuld door script.js -->
+                </div>
           </div>
           <div class="ledenbeheer-col">
               <h3>Leiding</h3>
@@ -308,7 +310,7 @@
        SCRIPTS
   ============================================================ -->
   <script>
-    // Configuratie specifiek voor BEVERS
+    // Configuratie specifiek voor Jeugdspeltakken
     window.speltakConfig = {
       showBert: false,
       showLeiding: true
@@ -330,6 +332,19 @@
   <script type="module" src="utils.js"></script>
   <script type="module" src="script.js"></script>
   
+<!-- MODAL — Nest wisselen -->
+<div id="confirmNestModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>Nestwissel bevestigen</h3>
+
+    <p id="confirmNestText"></p>
+
+    <div class="modal-actions">
+      <button id="confirmNestYes" class="primary-btn">Bevestigen</button>
+      <button id="confirmNestNo" class="pill-btn outline">Annuleren</button>
+    </div>
+  </div>
+</div>
 
 
 

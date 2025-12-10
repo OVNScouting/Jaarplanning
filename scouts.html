@@ -199,6 +199,25 @@
         <label>Naam:</label>
         <input type="text" id="memberName" />
 
+        <!-- SCOUTS EXTRA FIELDS -->
+<div id="scoutsExtraFields" class="scouts-extra hidden">
+    <label>Ploeg:</label>
+    <select id="memberPloeg">
+        <option value="">Zonder ploeg</option>
+        <option value="sperwer">Sperwer</option>
+        <option value="kievit">Kievit</option>
+        <option value="reiger">Reiger</option>
+        <option value="meeuw">Meeuw</option>
+    </select>
+
+    <label>Rollen:</label>
+    <div class="scouts-roles">
+        <label><input type="checkbox" id="memberPL"> Ploegleider (PL)</label>
+        <label><input type="checkbox" id="memberAPL"> Assistent Ploegleider (APL)</label>
+    </div>
+</div>
+
+
         <div class="modal-actions">
           <button id="saveMember" class="pill-btn primary">Opslaan</button>
           <button id="cancelMember" class="pill-btn outline">Annuleren</button>

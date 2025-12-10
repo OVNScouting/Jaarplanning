@@ -980,6 +980,46 @@ body.mode-ouder .col-divider {
 .nest-icon-wit::before    { content: "⚪"; }
 .nest-icon-grijs::before  { content: "⚫"; opacity: 0.5; }
 
+/* ============================================
+   WELPEN – WITTE HIGHLIGHT IN NESTCELLEN
+   ============================================ */
+
+/* Alle nestcellen krijgen een highlight overlay */
+.nest-zwart,
+.nest-wit,
+.nest-grijs,
+.nest-bruin {
+    position: relative;   /* noodzakelijk voor overlay */
+    overflow: hidden;     /* voorkomt dat highlight uitsteekt */
+}
+
+/* De highlight zelf */
+.nest-zwart::before,
+.nest-wit::before,
+.nest-grijs::before,
+.nest-bruin::before {
+    content: "";
+    position: absolute;
+    top: 4px;               /* kleine margin: ziet er premium uit */
+    bottom: 4px;
+    left: 4px;
+    right: 4px;
+    background: rgba(255, 255, 255, 0.28);  /* subtiele, zachte highlight */
+    border-radius: 6px;     /* mooi afgerond */
+    z-index: 1;             /* onder de tekst maar boven de achtergrond */
+    pointer-events: none;   /* highlight blokkeert niets */
+}
+
+/* Tekst moet boven de highlight liggen */
+.nest-zwart > *,
+.nest-wit > *,
+.nest-grijs > *,
+.nest-bruin > * {
+    position: relative;
+    z-index: 2;
+}
+
+
 
 /* ============================================================
    PRINT

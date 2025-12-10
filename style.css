@@ -1124,6 +1124,30 @@ th[class^="ploeg-"]::after {
     filter: drop-shadow(0 0 2px rgba(0,0,0,0.3));
 }
 
+/* ===============================
+   SCOUTS — Modal checkbox alignment
+   =============================== */
+
+#scoutsExtraFields .form-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+#scoutsExtraFields .form-row label {
+    margin: 0;
+    font-weight: 500;
+}
+
+#scoutsExtraFields .form-row input[type="checkbox"] {
+    margin: 0;
+    width: 18px;
+    height: 18px;
+}
+
+
+
 /* ============================================================
    PRINT
 ============================================================ */

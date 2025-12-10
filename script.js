@@ -591,54 +591,71 @@ function makeMemberRowScouts(obj) {
     li.addEventListener("dragleave", () => li.classList.remove("drag-over"));
 
     li.addEventListener("drop", async e => {
-        e.preventDefault();
-        li.classList.remove("drag-over");
+    li.addEventListener("drop", async e => {
+    e.preventDefault();
+    li.classList.remove("drag-over");
 
-        const draggedId = e.dataTransfer.getData("id");
-        if (draggedId === obj.id) return;
+    const draggedId = e.dataTransfer.getData("id");
+    const targetId = obj.id;
 
-        const dragged = jeugd.find(j => j.id === draggedId);
-        if (!dragged) return;
+    if (!draggedId || draggedId === targetId) return;
 
-        const oldPloeg = dragged.Ploeg || "";
-        const newPloeg = obj.Ploeg || "";
+    const dragged = jeugd.find(j => j.id === draggedId);
+    if (!dragged) return;
 
-        if (oldPloeg !== newPloeg) {
-            const ok = confirm(
-                `${dragged.naam} verplaatsen van ${oldPloeg || "Zonder ploeg"} naar ${newPloeg || "Zonder ploeg"}?`
-            );
-            if (!ok) return;
+    const oldPloeg = dragged.Ploeg || "";
+    const newPloeg = obj.Ploeg || "";
 
-            // Rollen vervallen bij ploegwissel
-            await update(ref(db, `${speltak}/jeugdleden/${dragged.id}`), {
-                Ploeg: newPloeg,
-                PL: false,
-                APL: false
-            });
+    // ===============================
+    // PLOEGWISSEL?
+    // ===============================
+    if (oldPloeg !== newPloeg) {
+        const oldLabel = SCOUT_PLOEG_LABELS[oldPloeg];
+        const newLabel = SCOUT_PLOEG_LABELS[newPloeg];
 
-            return loadEverything();
-        }
+        const ok = confirm(
+            `${dragged.naam} verplaatsen van '${oldLabel}' naar '${newLabel}'?\n\n` +
+            `Let op: PL/APL rollen vervallen bij ploegwissel.`
+        );
+        if (!ok) return;
 
-        // Geen ploegwissel → alleen volgorde herordenen
-        const leden = jeugd.filter(j => j.Ploeg === oldPloeg);
-
-        const from = leden.indexOf(dragged);
-        const to = leden.indexOf(obj);
-
-        leden.splice(from, 1);
-        leden.splice(to, 0, dragged);
-
-        const updates = {};
-        leden.forEach((j, i) => {
-            updates[`${speltak}/jeugdleden/${j.id}/volgorde`] = i + 1;
+        await update(ref(db, `${speltak}/jeugdleden/${dragged.id}`), {
+            Ploeg: newPloeg,
+            PL: false,
+            APL: false,
+            volgorde: 999
         });
 
-        await update(ref(db), updates);
-        loadEverything();
+        return loadEverything();
+    }
+
+    // ===============================
+    // ZELFDE PLOEG → HERORDENEN
+    // ===============================
+
+    const ledenZelfdePloeg = jeugd
+        .filter(j => (j.Ploeg || "") === oldPloeg)
+        .sort((a, b) => a.volgorde - b.volgorde);
+
+    const from = ledenZelfdePloeg.findIndex(j => j.id === draggedId);
+    const to = ledenZelfdePloeg.findIndex(j => j.id === targetId);
+
+    if (from === -1 || to === -1) return;
+
+    // Verplaats
+    ledenZelfdePloeg.splice(from, 1);
+    ledenZelfdePloeg.splice(to, 0, dragged);
+
+    // Volgorde veilig herschrijven
+    const updates = {};
+    ledenZelfdePloeg.forEach((j, i) => {
+        updates[`${speltak}/jeugdleden/${j.id}/volgorde`] = i + 1;
     });
 
-    return li;
-}
+    await update(ref(db), updates);
+    loadEverything();
+});
+
 
 /* ======================================================================
    TABEL — HEADER

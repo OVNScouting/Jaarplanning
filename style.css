@@ -1146,8 +1146,23 @@ th[class^="ploeg-"]::after {
     height: 18px;
 }
 
-
-
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 4px;
+}
+.checkbox-row input[type="checkbox"] {
+    transform: scale(1.2);
+}
+#welpenExtraFields label {
+    font-weight: 500;
+}
+.modal-extra-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
 /* ============================================================
    PRINT
 ============================================================ */

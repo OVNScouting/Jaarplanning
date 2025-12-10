@@ -27,7 +27,6 @@ function updateLoginUI() {
         card.classList.toggle("hidden", mode !== "leiding");
     });
 }
-}
 
 // --------------------------------------------------------
 // Login handler

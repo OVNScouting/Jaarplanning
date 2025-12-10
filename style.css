@@ -1024,6 +1024,48 @@ body.mode-ouder .col-divider {
     z-index: 2;
 }
 
+/* ======================================================================
+   SCOUTS — premium highlight overlay (zelfde systeem als Welpen)
+   ====================================================================== */
+
+.ploeg-sperwer,
+.ploeg-kievit,
+.ploeg-reiger,
+.ploeg-meeuw {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Highlight overlay */
+.ploeg-sperwer::before,
+.ploeg-kievit::before,
+.ploeg-reiger::before,
+.ploeg-meeuw::before {
+    content: "";
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    right: 4px;
+
+    /* Zelfde subtiele premium overlay als welpen */
+    background: rgba(255, 255, 255, 0.28);
+    border-radius: 6px;
+
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Tekst boven overlay */
+.ploeg-sperwer > *,
+.ploeg-kievit > *,
+.ploeg-reiger > *,
+.ploeg-meeuw > * {
+    position: relative;
+    z-index: 2;
+}
+
+
 /* ============================================
    SCOUTS – PLOEGKLEUREN (header only)
 ============================================ */

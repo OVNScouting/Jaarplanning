@@ -699,7 +699,11 @@ overflow-y: hidden;
   min-width: 150px;
 }
 
-
+.draggable.drag-over {
+    border: 2px dashed var(--accent, #888);
+    border-radius: 6px;
+    background: rgba(255,255,255,0.15);
+}
 /* ============================================================
    RESPONSIVE
 ============================================================ */

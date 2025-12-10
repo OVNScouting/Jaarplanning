@@ -823,24 +823,30 @@ function makeRestrictedEditable(o, field, opties, extraClass = "") {
         select.appendChild(op);
     });
 
-    select.addEventListener("change", () => {
-        update(ref(db, `${speltak}/opkomsten/${o.id}`), {
-            [field]: select.value
-         // Automatisch alle aanwezigheid op kruisje bij "geen opkomst"
-         if (field === "typeOpkomst" && select.value === "geen") {
-             const updates = {};
-             jeugd.forEach(j => {
-                 updates[`${speltak}/opkomsten/${o.id}/aanwezigheid/${j.id}`] = "afwezig";
-             });
-             leiding.forEach(l => {
-                 updates[`${speltak}/opkomsten/${o.id}/aanwezigheid/leiding-${l.id}`] = "afwezig";
-             });
-         
-             update(ref(db), updates).then(loadEverything);
-         }
-         
-        });
+   select.addEventListener("change", () => {
+
+    // Eerst type direct opslaan
+    update(ref(db, `${speltak}/opkomsten/${o.id}`), {
+        [field]: select.value
     });
+
+    // Daarna: automatisch alle aanwezigheden op ✖ als typeOpkomst = "geen"
+    if (field === "typeOpkomst" && select.value === "geen") {
+
+        const updates = {};
+
+        jeugd.forEach(j => {
+            updates[`${speltak}/opkomsten/${o.id}/aanwezigheid/${j.id}`] = "afwezig";
+        });
+
+        leiding.forEach(l => {
+            updates[`${speltak}/opkomsten/${o.id}/aanwezigheid/leiding-${l.id}`] = "afwezig";
+        });
+
+        update(ref(db), updates).then(loadEverything);
+    }
+});
+
 
     td.appendChild(select);
     return td;
@@ -1337,18 +1343,19 @@ function resetOpkomstFields() {
 
 fab?.addEventListener("click", () => {
     if (!isLeiding()) return;
-   resetOpkomstFields();
 
-// Automatisch datum +7 dagen
-if (opkomsten.length > 0) {
-    const last = opkomsten[opkomsten.length - 1];
-    const nextDate = new Date(last.datum);
-    nextDate.setDate(nextDate.getDate() + 7);
+    resetOpkomstFields();
 
-    opDatum.value = nextDate.toISOString().substring(0, 10);
-}
+    // Automatisch datum +7 dagen
+    if (opkomsten.length > 0) {
+        const last = opkomsten[opkomsten.length - 1];
+        const nextDate = new Date(last.datum);
+        nextDate.setDate(nextDate.getDate() + 7);
+        opDatum.value = nextDate.toISOString().substring(0, 10);
+    }
 
-opModal.classList.remove("hidden");
+    opModal.classList.remove("hidden");
+});
 
 saveOpkomst?.addEventListener("click", () => {
     if (!isLeiding()) return;
@@ -1373,32 +1380,30 @@ saveOpkomst?.addEventListener("click", () => {
         aanwezigheid: {}
     };
 
+    // BERT
     if (config.showBert) newObj.bert_met = opBert.value || "";
 
-if (opType.value === "geen") {
-    jeugd.forEach(j => newObj.aanwezigheid[j.id] = "afwezig");
-    if (config.showLeiding)
+    // Automatisch kruisjes bij "geen opkomst"
+    if (opType.value === "geen") {
+        jeugd.forEach(j => newObj.aanwezigheid[j.id] = "afwezig");
         leiding.forEach(l => newObj.aanwezigheid[`leiding-${l.id}`] = "afwezig");
-} else {
-    jeugd.forEach(j => newObj.aanwezigheid[j.id] = "onbekend");
-    if (config.showLeiding)
+    } else {
+        jeugd.forEach(j => newObj.aanwezigheid[j.id] = "onbekend");
         leiding.forEach(l => newObj.aanwezigheid[`leiding-${l.id}`] = "onbekend");
-}
+    }
 
-   
-      set(newRef, newObj).then(() => {
-    opModal.classList.add("hidden");
+    set(newRef, newObj).then(() => {
+        opModal.classList.add("hidden");
 
-    loadEverything().then(() => {
-        const row = document.querySelector(`tr[data-id="${newRef.key}"]`);
-        if (row) {
-            row.scrollIntoView({ behavior: "smooth", block: "center" });
-            row.classList.add("row-highlight");
-            setTimeout(() => row.classList.remove("row-highlight"), 2000);
-        }
+        loadEverything().then(() => {
+            const row = document.querySelector(`tr[data-id="${newRef.key}"]`);
+            if (row) {
+                row.scrollIntoView({ behavior: "smooth", block: "center" });
+                row.classList.add("row-highlight");
+                setTimeout(() => row.classList.remove("row-highlight"), 2000);
+            }
+        });
     });
-});
-
 });
 
 /* ======================================================================

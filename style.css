@@ -546,9 +546,17 @@ overflow-y: hidden;
 }
 
 .lid-verborgen {
-  opacity: 0.6;
+  opacity: 0.45;
   font-style: italic;
+  background: repeating-linear-gradient(
+    45deg,
+    #f9fafb,
+    #f9fafb 6px,
+    #eef1f5 6px,
+    #eef1f5 12px
+  );
 }
+
 
 .ledenbeheer-controls {
   display: flex;

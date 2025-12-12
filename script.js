@@ -1622,14 +1622,18 @@ addMemberButton?.addEventListener("click", () => {
         memberNestLeider.checked = false;
     }
    
-   if (welpenExtraFields) {
-   welpenExtraFields.classList.add("hidden");
-welpenExtraFields.style.display = "none";
-
+// WELPEN extra velden resetten (alleen als ze bestaan)
+if (welpenExtraFields) {
+    welpenExtraFields.classList.add("hidden");
+    welpenExtraFields.style.display = "none";
 }
 
+   // SCOUTS extra velden resetten
+if (scoutsExtraFields) {
+    scoutsExtraFields.classList.add("hidden");
+    scoutsExtraFields.style.display = "none";
+}
    
-
     // SCOUTS extra velden resetten
     if (speltak === "scouts" && scoutsExtraFields) {
         fillScoutsPloegDropdown();
@@ -1639,10 +1643,9 @@ welpenExtraFields.style.display = "none";
         memberPL.disabled = true;
         memberAPL.disabled = true;
     }
-    welpenExtraFields.classList.add("hidden");
-    toggleWelpenExtraFields();
-    toggleScoutsExtraFields();
-
+// juiste extra velden tonen obv type + speltak
+toggleWelpenExtraFields();
+toggleScoutsExtraFields();
     memberModal.classList.remove("hidden");
 });
 

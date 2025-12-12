@@ -200,10 +200,10 @@ memberPloeg?.addEventListener("change", () => {
 // Scouts ploegopties dynamisch vullen
 const SCOUTS_OPTIES = [
     { value: "", label: "Geen ploeg" },
-    { value: "sperwer", label: "Sperwers" },
-    { value: "kievit", label: "Kieviten" },
+    { value: "meeuw", label: "Meeuwen" },
     { value: "reiger", label: "Reigers" },
-    { value: "meeuw", label: "Meeuwen" }
+    { value: "kievit", label: "Kieviten" },
+    { value: "sperwer", label: "Sperwers" }
 ];
 
 function fillScoutsPloegDropdown() {
@@ -474,10 +474,10 @@ if (speltak === "welpen") {
 if (speltak === "scouts") {
 
     const PLOEG_ORDER = {
-        "sperwer": 1,
-        "kievit": 2,
-        "reiger": 3,
-        "meeuw": 4,
+        "meeuw": 1,
+        "reiger": 2,
+        "kievit": 3,
+        "sperwer": 4,
         "": 5
     };
 

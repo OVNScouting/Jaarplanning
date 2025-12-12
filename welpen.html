@@ -127,10 +127,11 @@
 
 </section> <!-- sluit planning-section -->
 
-    <!-- ============================================================
-         LEDENBEHEER
-    ============================================================ -->
-<section id="ledenbeheerSection" class="ledenbeheer hidden">
+<!-- ============================================================
+     LEDENBEHEER
+============================================================ -->
+<section class="planning-section">
+  <section id="ledenbeheerSection" class="ledenbeheer hidden">
   <div class="section-header">
     <h2>Ledenbeheer</h2>
     <button class="close-section" data-target="ledenbeheerSection">×</button>
@@ -152,6 +153,7 @@
       <button id="addMemberButton" class="pill-btn primary">Lid toevoegen</button>
 
     </section>
+</section>
 
     <!-- ============================================================
          MELDINGEN
@@ -205,9 +207,13 @@
 
     <!-- Alleen voor welpen: welpennaam -->
         <div id="welpenExtraFields" class="hidden">
-        <label>Welpennaam:</label>
-        <input id="memberWelpenNaam" type="text" />
+          
+       <div id="welpenNaamField">
+    <label>Welpennaam:</label>
+    <input id="memberWelpenNaam" type="text" />
+  </div>
 
+        <div id="welpenNestFields">
         <label>Nest:</label>
         <select id="memberNest">
             <option value="">Geen</option>
@@ -222,14 +228,13 @@
           Nestleider
         </label>
     </div>
+          
+    </div>
 
     <div class="modal-actions">
         <button id="saveMember" class="primary-btn">Opslaan</button>
         <button id="cancelMember" class="pill-btn outline">Annuleren</button>
     </div>
-  </div>
-</div>
-
 
     <!-- ============================================================
          MODAL — Opkomst toevoegen

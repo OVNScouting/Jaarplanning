@@ -123,17 +123,18 @@ function toggleWelpenExtraFields() {
         return;
     }
 
-    if (memberType.value === "jeugd") {
-        welpenExtraFields.classList.remove("hidden");
-        welpenExtraFields.style.display = "block";
-    } else {
-        // Leiding moet wel naamveld zien, maar geen nestvelden
-        welpenExtraFields.classList.remove("hidden");
-        welpenExtraFields.style.display = "block";
+  if (memberType.value === "jeugd") {
+    welpenExtraFields.classList.remove("hidden");
+    welpenExtraFields.style.display = "block";
 
-        document.getElementById("memberNest").parentElement.style.display = "none";
-        document.getElementById("memberNestLeider").parentElement.style.display = "none";
-    }
+    document.getElementById("welpenNestFields").style.display = "block";
+} else {
+    // Leiding: wel welpennaam, geen nestinfo
+    welpenExtraFields.classList.remove("hidden");
+    welpenExtraFields.style.display = "block";
+
+    document.getElementById("welpenNestFields").style.display = "none";
+}
 }
 
 

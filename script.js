@@ -565,12 +565,12 @@ function getNestIndex(nest) {
 }
 
 // SCOUTS – PLOEG ORDER & MAPPING
-const SCOUT_PLOEGEN = ["sperwer", "kievit", "reiger", "meeuw", ""];
+const SCOUT_PLOEGEN = ["meeuw", "reiger", "kievit", "sperwer", ""];
 const SCOUT_PLOEG_LABELS = {
-    "sperwer": "Sperwers",
-    "kievit": "Kieviten",
-    "reiger": "Reigers",
     "meeuw": "Meeuwen",
+    "reiger": "Reigers",
+    "kievit": "Kieviten",
+    "sperwer": "Sperwers",
     "": "Zonder ploeg"
 };
 

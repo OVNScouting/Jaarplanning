@@ -1136,13 +1136,6 @@ th[class^="ploeg-"]::after {
    SCOUTS — Modal checkbox alignment
    =============================== */
 
-#scoutsExtraFields .form-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-}
-
 #scoutsExtraFields .form-row label {
     margin: 0;
     font-weight: 500;
@@ -1171,6 +1164,34 @@ th[class^="ploeg-"]::after {
     flex-direction: column;
     gap: 12px;
 }
+
+/* ===============================
+   SCOUTS — Modal checkbox alignment
+   =============================== */
+
+#scoutsExtraFields .scouts-roles {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#scoutsExtraFields .scouts-roles label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    margin: 0;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+#scoutsExtraFields .scouts-roles input[type="checkbox"] {
+    margin: 0;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
 /* ============================================================
    PRINT
 ============================================================ */

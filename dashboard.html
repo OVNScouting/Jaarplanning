@@ -7,7 +7,6 @@
 
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="assets/OVN.logo.png" type="image/png">
-
 </head>
 
 <body>
@@ -23,31 +22,42 @@
 
     <div class="topbar-title">
       <h1>Dashboard</h1>
-      <span>Komende opkomsten (alle speltakken)</span>
+      <span>Komende opkomsten – alle speltakken</span>
     </div>
   </div>
 
   <div class="topbar-right-icons">
-    <span id="loginStatus" class="leiding-badge only-leiding">Je bent ingelogd als leiding</span>
-    <button id="loginButton" class="pill-btn outline">Leiding inloggen</button>
+    <!-- Login status badge (wordt dynamisch gevuld) -->
+    <span id="loginStatus" class="leiding-badge only-leiding"></span>
+
+    <!-- Login / logout -->
+    <button id="loginButton" class="pill-btn outline">Inloggen</button>
     <button id="logoutButton" class="pill-btn outline only-leiding">Uitloggen</button>
+
     <img src="assets/Scouting.logo.png" class="speltak-icon" alt="">
   </div>
 </header>
 
-
+<!-- ============================================================
+     MAIN CONTAINER
+============================================================ -->
 <div class="container">
 
   <!-- ============================================================
-       DASHBOARD
+       DASHBOARD OVERZICHT
   ============================================================ -->
-  <section id="dashboardSection">
-    <h2>Komende 4 dagen</h2>
-    <div id="dashboardList"></div>
+  <section id="dashboardSection" class="dashboard-section">
+    <h2>Overzicht komende opkomsten</h2>
+    <p class="section-intro">
+      Dit overzicht toont alle opkomsten vanaf de eerstvolgende opkomst
+      tot twee maanden vooruit, gegroepeerd per datum.
+    </p>
+
+    <!-- Wordt volledig gevuld door dashboard.js -->
+    <section id="dashboardOverview" class="dashboard-overview"></section>
   </section>
 
 </div>
-
 
 <!-- ============================================================
      SCRIPTS
@@ -64,3 +74,4 @@
 
 </body>
 </html>
+

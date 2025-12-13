@@ -45,6 +45,14 @@ const authMode = localStorage.getItem("mode");
 const hasLeidingRechtenOpDezeSpeltak =
     authMode === "admin" ||
     (authMode === "leiding" && authSpeltak === speltak);
+// Forceer view-modus per speltak
+// Ingelogd blijven ≠ leiding-view hebben
+if (!hasLeidingRechtenOpDezeSpeltak) {
+    mode = "ouder";
+} else {
+    mode = "leiding";
+}
+
 
 const config = window.speltakConfig || { showBert: false, showLeiding: true };
 
@@ -357,12 +365,6 @@ let editingMemberType = null;
 let mode = localStorage.getItem("mode") || "ouder";
 let editMode = false;
 
-// Oude opgeslagen waarde 'bewerken' (of iets anders) herstellen naar 'ouder'
-if (mode !== "ouder" && mode !== "leiding") {
-  mode = "ouder";
-  localStorage.setItem("mode", "ouder");
-}
-
 /* ======================================================================
    MODE FUNCTIONS
    ====================================================================== */
@@ -392,7 +394,7 @@ function setMode(newMode) {
 
   // Basis-modus opslaan
   mode = newMode;
-  localStorage.setItem("mode", newMode);
+  // NIET opslaan in localStorage — mode is page-local
 
   // ALTIJD eerst compleet resetten
   document.body.classList.remove("mode-ouder", "mode-leiding", "mode-bewerken");

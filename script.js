@@ -1,4 +1,22 @@
 /* ======================================================================
+  Wachtwoorden en modus
+   ====================================================================== */
+
+const authSpeltak = localStorage.getItem("authSpeltak");
+const authMode = localStorage.getItem("mode");
+
+// Admin mag alles
+if (authMode === "admin") {
+    // niets blokkeren
+}
+// Beheerder maar verkeerde speltak → terug naar ouder-modus
+else if (authMode === "leiding" && authSpeltak && authSpeltak !== speltak) {
+    localStorage.removeItem("mode");
+    localStorage.removeItem("authSpeltak");
+    localStorage.removeItem("authBadge");
+}
+
+/* ======================================================================
    IMPORTS
    ====================================================================== */
 import {

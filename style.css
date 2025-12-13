@@ -682,6 +682,10 @@ overflow-y: hidden;
 .col-procor {
   min-width: 90px;
 }
+/* Explorers — Buddy kolom */
+.col-buddy {
+  min-width: 120px;
+}
 
 .col-type {
   min-width: 110px;

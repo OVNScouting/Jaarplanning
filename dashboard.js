@@ -84,12 +84,8 @@ async function loadDashboard() {
         const m = getMoment(o);
         return m >= nextMoment && m <= endMoment;
       })
-      .sort((a, b) =>
-        compareDateTime(
-          `${a.datum}T${a.starttijd || "00:00"}`,
-          `${b.datum}T${b.starttijd || "00:00"}`
-        )
-      );
+      
+      .sort((a, b) => getMoment(a) - getMoment(b));
 
     // 4) Groeperen op datum
     const grouped = groupByDate(windowed);
@@ -174,12 +170,8 @@ function groupByDate(items) {
 
   // Binnen elke datum op tijd sorteren
   for (const date of Object.keys(grouped)) {
-    grouped[date].sort((a, b) =>
-      compareDateTime(
-        `${a.datum}T${a.starttijd || "00:00"}`,
-        `${b.datum}T${b.starttijd || "00:00"}`
-      )
-    );
+grouped[date].sort((a, b) => getMoment(a) - getMoment(b));
+
   }
 
   return grouped;
@@ -192,10 +184,11 @@ function groupByDate(items) {
 function render(grouped) {
   container.innerHTML = "";
 
-  // Oplopend: eerstvolgende datum bovenaan
-const dates = Object.keys(grouped).sort((a, b) =>
-  compareDateTime(`${a}T00:00`, `${b}T00:00`)
+  // Eerstvolgende datum bovenaan, laatste onderaan
+const dates = Object.keys(grouped).sort(
+  (a, b) => new Date(a) - new Date(b)
 );
+;
 
   if (!dates.length) {
     container.innerHTML = "<p>Geen opkomsten in deze periode.</p>";

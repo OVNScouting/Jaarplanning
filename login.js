@@ -1,8 +1,50 @@
 // ========================================================
-// login.js — universeel login systeem voor ALLE pagina’s
+// LOGIN CONFIG — wachtwoorden + context
 // ========================================================
 
-const LOGIN_PW = "Olivier48Leiding";
+const LOGIN_MAP = {
+    "LeidingBevers48": {
+        mode: "leiding",
+        speltak: "bevers",
+        badge: "Je bent ingelogd: Bever Leiding"
+    },
+    "WelpenLeiding48": {
+        mode: "leiding",
+        speltak: "welpen",
+        badge: "Je bent ingelogd: Welpen Leiding"
+    },
+    "Scout48Leiding": {
+        mode: "leiding",
+        speltak: "scouts",
+        badge: "Je bent ingelogd: Scouts Leiding"
+    },
+    "Leiding48Explo": {
+        mode: "leiding",
+        speltak: "explorers",
+        badge: "Je bent ingelogd: Explorer Leiding"
+    },
+    "Rovers48": {
+        mode: "leiding",
+        speltak: "rovers",
+        badge: "Je bent ingelogd als Rover"
+    },
+    "OVN48stam": {
+        mode: "leiding",
+        speltak: "stam",
+        badge: "Je bent ingelogd als Stam"
+    },
+    "Admin48": {
+        mode: "admin",
+        speltak: null,
+        badge: "Je bent ingelogd als Admin"
+    }
+};
+
+
+
+// ========================================================
+// login.js — universeel login systeem 
+// ========================================================
 
 const loginButton = document.getElementById("loginButton");
 const logoutButton = document.getElementById("logoutButton");
@@ -19,12 +61,16 @@ function updateLoginUI() {
     if (logoutButton) logoutButton.classList.toggle("hidden", mode !== "leiding");
 
    // Leiding-badge (op alle pagina's aanwezig)
-    if (loginStatus) loginStatus.classList.toggle("hidden", mode !== "leiding");
+ if (loginStatus) {
+    const badge = localStorage.getItem("authBadge");
+    loginStatus.textContent = badge || "";
+    loginStatus.classList.toggle("hidden", !badge);
+}
 
     // Dashboard- / bestuurskaarten alleen zichtbaar voor leiding (index)
     const dashboardCards = document.querySelectorAll(".speltak-card.dashboard");
     dashboardCards.forEach(card => {
-        card.classList.toggle("hidden", mode !== "leiding");
+    card.classList.toggle("hidden", mode !== "leiding" && mode !== "admin");
     });
 }
 
@@ -33,15 +79,20 @@ function updateLoginUI() {
 // --------------------------------------------------------
 if (loginButton) {
     loginButton.addEventListener("click", () => {
-        const pw = prompt("Voer leiding wachtwoord in:");
-        if (pw === LOGIN_PW) {
-            localStorage.setItem("mode", "leiding");
-            updateLoginUI();
-            alert("Je bent ingelogd als leiding.");
-            location.reload();
-        } else {
+        const pw = prompt("Voer wachtwoord in:");
+        const auth = LOGIN_MAP[pw];
+
+        if (!auth) {
             alert("Onjuist wachtwoord.");
+            return;
         }
+
+        localStorage.setItem("mode", auth.mode);
+        localStorage.setItem("authSpeltak", auth.speltak ?? "");
+        localStorage.setItem("authBadge", auth.badge);
+
+        updateLoginUI();
+        location.reload();
     });
 }
 
@@ -50,7 +101,9 @@ if (loginButton) {
 // --------------------------------------------------------
 if (logoutButton) {
     logoutButton.addEventListener("click", () => {
-        localStorage.setItem("mode", "ouder");
+        localStorage.removeItem("mode");
+        localStorage.removeItem("authSpeltak");
+        localStorage.removeItem("authBadge");
         updateLoginUI();
         alert("Je bent uitgelogd.");
         location.reload();

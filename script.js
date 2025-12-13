@@ -34,20 +34,17 @@ const speltak = window.location.pathname
    AUTH — speltak-beperking
    ====================================================================== */
 
+/* ======================================================================
+   AUTH — rechten per speltak (zonder uitloggen)
+   ====================================================================== */
+
 const authSpeltak = localStorage.getItem("authSpeltak");
 const authMode = localStorage.getItem("mode");
 
-// Admin mag alles
-if (authMode === "admin") {
-    // geen beperking
-}
-// Leiding maar andere speltak → terug naar ouder-view
-else if (authMode === "leiding" && authSpeltak && authSpeltak !== speltak) {
-    localStorage.removeItem("mode");
-    localStorage.removeItem("authSpeltak");
-    localStorage.removeItem("authBadge");
-}
-
+// Bepaal of gebruiker leidingrechten heeft op DEZE speltak
+const hasLeidingRechtenOpDezeSpeltak =
+    authMode === "admin" ||
+    (authMode === "leiding" && authSpeltak === speltak);
 
 const config = window.speltakConfig || { showBert: false, showLeiding: true };
 
@@ -373,9 +370,10 @@ function isOuder() {
   return mode === "ouder"; 
 }
 
-function isLeiding() { 
-  return mode === "leiding"; 
+function isLeiding() {
+    return hasLeidingRechtenOpDezeSpeltak;
 }
+
 
 // Edit-modus is nu een aparte vlag, en alleen geldig als je leiding bent
 function isEdit() { 

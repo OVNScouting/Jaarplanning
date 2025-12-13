@@ -780,6 +780,12 @@ function addHeaders() {
     addMainHeader("Eind");
 
     if (!isOuder()) addMainHeader("Procor", "col-procor");
+   
+    // Explorers: Buddy-kolom (altijd zichtbaar)
+      if (speltak === "explorers") {
+          addMainHeader("Buddy", "col-buddy");
+      }
+
 
     const thType = addMainHeader("Type", "col-type");
     if (isOuder()) thType.classList.add("hide-view");
@@ -965,8 +971,16 @@ function addRow(o) {
     tr.appendChild(makeEditableCell(o, "eindtijd", "", "time"));
 
     if (!isOuder()) {
-        tr.appendChild(makeEditableCell(o, "procor", "col-procor", "text"));
+        tr.appendChild(
+           makeEditableCell(o, "procor", "col-procor", "text"));
     }
+   // Explorers: Buddy-veld (altijd zichtbaar)
+      if (speltak === "explorers") {
+          tr.appendChild(
+              makeEditableCell(o, "buddy", "col-buddy", "text")
+          );
+      }
+
 
     if (!isOuder()) {
         tr.appendChild(makeRestrictedEditable(

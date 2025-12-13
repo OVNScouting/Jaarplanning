@@ -1196,6 +1196,106 @@ th[class^="ploeg-"]::after {
     flex-shrink: 0;
 }
 
+/* ======================================================================
+   DASHBOARD — Overzicht komende opkomsten
+   ====================================================================== */
+
+.dashboard-overview {
+    margin-top: 1.5rem;
+}
+
+/* Datumkop */
+.dashboard-date {
+    margin: 2rem 0 0.75rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary, #222);
+}
+
+/* Tabel */
+.dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    margin-bottom: 1.5rem;
+}
+
+/* Header */
+.dashboard-table thead th {
+    background: #f4f6f8;
+    color: #444;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-align: left;
+    padding: 0.6rem 0.7rem;
+    border-bottom: 1px solid #e0e0e0;
+    white-space: nowrap;
+}
+
+/* Cell */
+.dashboard-table td {
+    padding: 0.55rem 0.7rem;
+    font-size: 0.85rem;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+}
+
+/* Zebra striping */
+.dashboard-table tbody tr:nth-child(even) {
+    background: #fafafa;
+}
+
+/* Hover (subtiel, read-only) */
+.dashboard-table tbody tr:hover {
+    background: #f1f5f9;
+}
+
+/* Speltak-kolom */
+.dashboard-table td:first-child {
+    width: 120px;
+    min-width: 120px;
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* Tijd-kolom iets compacter */
+.dashboard-table td:nth-child(2),
+.dashboard-table th:nth-child(2) {
+    width: 110px;
+    white-space: nowrap;
+}
+
+/* Lange tekstvelden netjes laten wrappen */
+.dashboard-table td:nth-child(3),
+.dashboard-table td:nth-child(7),
+.dashboard-table td:nth-child(8) {
+    max-width: 280px;
+    word-break: break-word;
+}
+
+/* Mobiel: horizontaal scrollen */
+@media (max-width: 900px) {
+    .dashboard-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .dashboard-table thead,
+    .dashboard-table tbody,
+    .dashboard-table tr {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+    }
+}
+
+
 /* ============================================================
    PRINT
 ============================================================ */

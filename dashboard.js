@@ -192,9 +192,10 @@ function groupByDate(items) {
 function render(grouped) {
   container.innerHTML = "";
 
-  const dates = Object.keys(grouped).sort((a, b) =>
-    compareDateTime(`${a}T00:00`, `${b}T00:00`)
-  );
+  // Oplopend: eerstvolgende datum bovenaan
+const dates = Object.keys(grouped).sort((a, b) =>
+  compareDateTime(`${a}T00:00`, `${b}T00:00`)
+);
 
   if (!dates.length) {
     container.innerHTML = "<p>Geen opkomsten in deze periode.</p>";

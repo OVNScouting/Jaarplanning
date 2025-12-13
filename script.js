@@ -782,7 +782,7 @@ function addHeaders() {
     if (!isOuder()) addMainHeader("Procor", "col-procor");
    
     // Explorers: Buddy-kolom (altijd zichtbaar)
-      if (speltak === "explorers") {
+      if (["explorers", "rovers"].includes(speltak)) {
           addMainHeader("Buddy", "col-buddy");
       }
 
@@ -975,7 +975,7 @@ function addRow(o) {
            makeEditableCell(o, "procor", "col-procor", "text"));
     }
    // Explorers: Buddy-veld (altijd zichtbaar)
-      if (speltak === "explorers") {
+   if (["explorers", "rovers"].includes(speltak)) {
           tr.appendChild(
               makeEditableCell(o, "buddy", "col-buddy", "text")
           );

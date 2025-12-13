@@ -45,13 +45,6 @@ const authMode = localStorage.getItem("mode");
 const hasLeidingRechtenOpDezeSpeltak =
     authMode === "admin" ||
     (authMode === "leiding" && authSpeltak === speltak);
-// Forceer view-modus per speltak
-// Ingelogd blijven ≠ leiding-view hebben
-if (!hasLeidingRechtenOpDezeSpeltak) {
-    mode = "ouder";
-} else {
-    mode = "leiding";
-}
 
 
 const config = window.speltakConfig || { showBert: false, showLeiding: true };
@@ -358,12 +351,8 @@ let infoEditActive = false;
 let editingMemberId = null;
 let editingMemberType = null;
 
-
-// ----------------------------------------------------------------------
-// MODE STATE
-// ----------------------------------------------------------------------
-let mode = localStorage.getItem("mode") || "ouder";
 let editMode = false;
+
 
 /* ======================================================================
    MODE FUNCTIONS
@@ -374,6 +363,18 @@ function isOuder() {
 
 function isLeiding() {
     return hasLeidingRechtenOpDezeSpeltak;
+}
+
+// ----------------------------------------------------------------------
+// MODE STATE
+// ----------------------------------------------------------------------
+let mode = localStorage.getItem("mode") || "ouder";
+
+// Forceer view-modus per speltak (zonder uitloggen)
+if (!hasLeidingRechtenOpDezeSpeltak) {
+    mode = "ouder";
+} else {
+    mode = "leiding";
 }
 
 

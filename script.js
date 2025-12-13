@@ -1,22 +1,4 @@
 /* ======================================================================
-  Wachtwoorden en modus
-   ====================================================================== */
-
-const authSpeltak = localStorage.getItem("authSpeltak");
-const authMode = localStorage.getItem("mode");
-
-// Admin mag alles
-if (authMode === "admin") {
-    // niets blokkeren
-}
-// Beheerder maar verkeerde speltak → terug naar ouder-modus
-else if (authMode === "leiding" && authSpeltak && authSpeltak !== speltak) {
-    localStorage.removeItem("mode");
-    localStorage.removeItem("authSpeltak");
-    localStorage.removeItem("authBadge");
-}
-
-/* ======================================================================
    IMPORTS
    ====================================================================== */
 import {
@@ -47,6 +29,25 @@ const speltak = window.location.pathname
     .pop()
     .replace(".html", "")
     .toLowerCase();
+
+/* ======================================================================
+   AUTH — speltak-beperking
+   ====================================================================== */
+
+const authSpeltak = localStorage.getItem("authSpeltak");
+const authMode = localStorage.getItem("mode");
+
+// Admin mag alles
+if (authMode === "admin") {
+    // geen beperking
+}
+// Leiding maar andere speltak → terug naar ouder-view
+else if (authMode === "leiding" && authSpeltak && authSpeltak !== speltak) {
+    localStorage.removeItem("mode");
+    localStorage.removeItem("authSpeltak");
+    localStorage.removeItem("authBadge");
+}
+
 
 const config = window.speltakConfig || { showBert: false, showLeiding: true };
 

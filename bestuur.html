@@ -1,1 +1,196 @@
+<!DOCTYPE html>
+
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bestuursagenda – Scouting OVN</title>
+
+  <link rel="icon" href="assets/OVN.logo.png" type="image/png">
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+<!-- ============================================================
+     TOPBAR
+============================================================ -->
+
+<header class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="backlink">← Terug</a>
+    <img src="assets/OVN.logo.png" class="topbar-logo" alt="OVN logo">
+    <div class="topbar-title">
+      <h1>Bestuursagenda</h1>
+      <span>Overkoepelende planning & documenten</span>
+    </div>
+  </div>
+
+  <div class="topbar-right-icons">
+    <span id="loginStatus" class="leiding-badge only-leiding"></span>
+    <button id="loginButton" class="pill-btn outline">Inloggen</button>
+    <button id="logoutButton" class="pill-btn outline only-leiding">Uitloggen</button>
+    <img src="assets/Scouting.logo.png" class="speltak-icon" alt="">
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ============================================================
+       INFO BLOK
+  ============================================================ -->
+
+  <section class="info-block">
+    <h2>Over de bestuursagenda</h2>
+    <p>
+      In deze agenda staan overkoepelende activiteiten, vergaderingen en
+      belangrijke data voor de hele groep. Bestuursleden kunnen items
+      toevoegen en beheren. Leiding ziet hier alleen de relevante,
+      gedeelde items.
+    </p>
+  </section>
+
+  <div id="loadingIndicator" class="loading hidden">
+    Bestuursagenda wordt geladen…
+  </div>
+
+  <div id="errorIndicator" class="error hidden">
+    Er ging iets mis bij het laden van de bestuursagenda.
+  </div>
+
+  <!-- ============================================================
+       BESTUURSAGENDA TABEL
+  ============================================================ -->
+
+  <section class="planning-section">
+
+```
+<div class="planning-header-row">
+  <div class="planning-controls">
+    <span id="filterAll" class="chip active">Alles</span>
+    <span id="filterFuture" class="chip">Komend</span>
+    <span id="filterPast" class="chip">Verleden</span>
+  </div>
+
+  <button id="editModeButton" class="pill-btn primary only-bestuur">
+    ✏️ Items bewerken
+  </button>
+</div>
+
+<div class="table-wrapper">
+  <table class="planning-table">
+    <thead>
+      <tr id="headerRow"></tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+```
+
+  </section>
+
+  <!-- ============================================================
+       DOCUMENTENBIBLIOTHEEK (voorbereid)
+  ============================================================ -->
+
+  <section class="planning-section">
+    <div class="section-header">
+      <h2>Documenten</h2>
+    </div>
+
+```
+<p class="section-intro">
+  Documenten zoals notulen en agenda’s van groepsraden.
+  (Uploads worden later toegevoegd.)
+</p>
+
+<div id="documentList">
+  <p class="text-muted">Nog geen documenten beschikbaar.</p>
+</div>
+```
+
+  </section>
+
+</div>
+
+<!-- ============================================================
+     FAB — nieuw bestuursitem
+============================================================ -->
+
+<button id="fabAddBestuursItem"
+     class="pill-btn primary fab-add-opkomst only-bestuur">
+Nieuw item + </button>
+
+<!-- ============================================================
+     MODAL — Bestuursitem toevoegen/bewerken
+============================================================ -->
+
+<div id="bestuursItemModal" class="modal hidden">
+  <div class="modal-content">
+    <h3 id="modalTitle">Nieuw bestuursitem</h3>
+
+```
+<label>Type:</label>
+<select id="biType">
+  <option value="bestuursvergadering">Bestuursvergadering</option>
+  <option value="groepsraad">Groepsraad</option>
+  <option value="extern">Extern</option>
+  <option value="overkoepelend">Overkoepelend</option>
+  <option value="deadline">Deadline</option>
+</select>
+
+<label>Titel:</label>
+<input type="text" id="biTitel" />
+
+<label>Datum:</label>
+<input type="date" id="biDatum" />
+
+<label>Tijd:</label>
+<select id="biTijdType">
+  <option value="none">Geen tijd</option>
+  <option value="allday">Hele dag</option>
+  <option value="range">Van / tot</option>
+</select>
+
+<div id="biTimeRange" class="hidden">
+  <label>Starttijd:</label>
+  <input type="time" id="biStart" />
+
+  <label>Eindtijd:</label>
+  <input type="time" id="biEind" />
+</div>
+
+<label>Beschrijving:</label>
+<textarea id="biBeschrijving" rows="4"></textarea>
+
+<div class="checkbox-row">
+  <input type="checkbox" id="biToonDashboard" />
+  <label for="biToonDashboard">Toon op dashboard (leiding)</label>
+</div>
+
+<div class="modal-actions">
+  <button id="saveBestuursItem" class="pill-btn primary">Opslaan</button>
+  <button id="cancelBestuursItem" class="pill-btn outline">Annuleren</button>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- ============================================================
+     SCRIPTS
+============================================================ -->
+
+<script src="firebase-config.js"></script>
+
+<script type="module" src="firebase-imports.js"></script>
+
+<script src="login.js"></script>
+
+<script type="module" src="utils.js"></script>
+
+<script type="module" src="bestuursagenda.js"></script>
+
+</body>
+</html>
 

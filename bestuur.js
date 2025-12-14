@@ -1,8 +1,8 @@
 // ======================================================================
-// bestuursagenda.js — Overkoepelende bestuursagenda
+// bestuur.js — Bestuursagenda (volledig en zelfvoorzienend)
 // Rollen:
-// - bestuur: view + edit + toevoegen
-// - leiding: read-only, alleen items die op dashboard mogen
+// - bestuur / admin: bekijken + bewerken + toevoegen
+// - leiding: read-only, alleen items met toonOpDashboard
 // ======================================================================
 
 import {
@@ -29,11 +29,17 @@ const app = initializeApp(window.firebaseConfig);
 const db = getDatabase(app);
 
 // ======================================================================
-// AUTH / ROL
+// AUTH / ROLLEN
 // ======================================================================
 const authMode = localStorage.getItem("mode");
 const isBestuur = authMode === "admin" || authMode === "bestuur";
 const isLeiding = authMode === "leiding" || isBestuur;
+
+// Geen toegang → harde stop
+if (!isLeiding) {
+  document.body.innerHTML = "<p>Geen toegang tot bestuursagenda.</p>";
+  throw new Error("Geen toegang");
+}
 
 // ======================================================================
 // DOM
@@ -63,7 +69,6 @@ const biStart = document.getElementById("biStart");
 const biEind = document.getElementById("biEind");
 const biBeschrijving = document.getElementById("biBeschrijving");
 const biToonDashboard = document.getElementById("biToonDashboard");
-
 const biTimeRange = document.getElementById("biTimeRange");
 
 const saveBtn = document.getElementById("saveBestuursItem");
@@ -77,27 +82,23 @@ let editMode = false;
 let editingId = null;
 let currentFilter = "all";
 
-// ======================================================================
-// INIT
-// ======================================================================
-if (!isLeiding) {
-  document.body.innerHTML = "<p>Geen toegang.</p>";
-  throw new Error("Geen toegang tot bestuursagenda");
-}
-
+// Bestuur-only UI verbergen indien nodig
 if (!isBestuur) {
   editModeButton?.classList.add("hidden");
   fab?.classList.add("hidden");
 }
 
+// ======================================================================
+// INIT
+// ======================================================================
 loadItems();
 
 // ======================================================================
-// LOAD
+// DATA LADEN
 // ======================================================================
 async function loadItems() {
-  loadingIndicator.classList.remove("hidden");
-  errorIndicator.classList.add("hidden");
+  loadingIndicator?.classList.remove("hidden");
+  errorIndicator?.classList.add("hidden");
 
   try {
     const snap = await get(ref(db, "bestuursItems"));
@@ -105,7 +106,7 @@ async function loadItems() {
 
     items = Object.entries(raw).map(([id, v]) => ({ id, ...v }));
 
-    // Leiding ziet alleen items die op dashboard mogen
+    // Leiding ziet alleen dashboard-items
     if (!isBestuur) {
       items = items.filter(i => i.toonOpDashboard);
     }
@@ -113,15 +114,13 @@ async function loadItems() {
     sortItems();
     render();
 
-    loadingIndicator.classList.add("hidden");
-
-    // Scroll naar item via hash
+    loadingIndicator?.classList.add("hidden");
     focusFromHash();
 
-  } catch (e) {
-    console.error(e);
-    loadingIndicator.classList.add("hidden");
-    errorIndicator.classList.remove("hidden");
+  } catch (err) {
+    console.error(err);
+    loadingIndicator?.classList.add("hidden");
+    errorIndicator?.classList.remove("hidden");
   }
 }
 
@@ -129,11 +128,11 @@ function sortItems() {
   items.sort((a, b) => {
     if (a.datum !== b.datum) return a.datum.localeCompare(b.datum);
 
-    // Geen tijd / hele dag bovenaan
-    if (a.tijdType !== b.tijdType) {
-      if (a.tijdType === "none" || a.tijdType === "allday") return -1;
-      if (b.tijdType === "none" || b.tijdType === "allday") return 1;
-    }
+    // Geen tijd / hele dag altijd bovenaan
+    const aNoTime = a.tijdType === "none" || a.tijdType === "allday";
+    const bNoTime = b.tijdType === "none" || b.tijdType === "allday";
+    if (aNoTime && !bNoTime) return -1;
+    if (!aNoTime && bNoTime) return 1;
 
     return (a.starttijd || "").localeCompare(b.starttijd || "");
   });
@@ -146,9 +145,7 @@ function render() {
   renderHeader();
   tableBody.innerHTML = "";
 
-  items
-    .filter(filterItem)
-    .forEach(addRow);
+  items.filter(filterItem).forEach(addRow);
 }
 
 function renderHeader() {
@@ -168,17 +165,13 @@ function addRow(item) {
   const tr = document.createElement("tr");
   tr.dataset.id = item.id;
 
-  // Deadline highlight
+  // Deadline → rood randje
   if (item.type === "deadline" && isFutureOrToday(item.datum)) {
-    const today = todayISO();
-    if (item.datum <= today) {
-      tr.style.borderLeft = "4px solid #dc2626";
-    }
+    tr.style.borderLeft = "4px solid #dc2626";
   }
 
   if (editMode && isBestuur) {
-    const del = document.createElement("td");
-    del.textContent = "🗑️";
+    const del = td("🗑️");
     del.style.cursor = "pointer";
     del.onclick = () => deleteItem(item.id);
     tr.appendChild(del);
@@ -188,8 +181,8 @@ function addRow(item) {
   tr.appendChild(td(renderTime(item)));
 
   const titleCell = td(item.titel);
-  titleCell.style.cursor = isBestuur ? "pointer" : "default";
   if (isBestuur) {
+    titleCell.style.cursor = "pointer";
     titleCell.onclick = () => openEdit(item);
   }
   tr.appendChild(titleCell);
@@ -212,7 +205,7 @@ function filterItem(item) {
 }
 
 // ======================================================================
-// MODAL
+// MODAL LOGICA
 // ======================================================================
 function openNew() {
   editingId = null;
@@ -255,11 +248,14 @@ function updateTimeFields() {
 }
 
 // ======================================================================
-// SAVE / DELETE
+// OPSLAAN / VERWIJDEREN
 // ======================================================================
 saveBtn?.addEventListener("click", async () => {
   if (!isBestuur) return;
-  if (!biTitel.value || !biDatum.value) return alert("Titel en datum verplicht");
+  if (!biTitel.value || !biDatum.value) {
+    alert("Titel en datum zijn verplicht");
+    return;
+  }
 
   const obj = {
     type: biType.value,
@@ -287,8 +283,8 @@ saveBtn?.addEventListener("click", async () => {
     modal.classList.add("hidden");
     loadItems();
 
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    console.error(err);
     alert("Opslaan mislukt");
   }
 });
@@ -335,7 +331,7 @@ editModeButton?.addEventListener("click", () => {
 fab?.addEventListener("click", openNew);
 
 // ======================================================================
-// HASH NAVIGATIE
+// HASH-NAVIGATIE (vanaf dashboard)
 // ======================================================================
 function focusFromHash() {
   const id = location.hash.replace("#item=", "");
@@ -347,4 +343,19 @@ function focusFromHash() {
   row.scrollIntoView({ behavior: "smooth", block: "center" });
   row.classList.add("row-highlight");
   setTimeout(() => row.classList.remove("row-highlight"), 2000);
+}
+
+// ======================================================================
+// TABLE HELPERS (EXPRES HIER, GEEN AFHANKELIJKHEDEN)
+// ======================================================================
+function th(text) {
+  const el = document.createElement("th");
+  el.textContent = text;
+  return el;
+}
+
+function td(text) {
+  const el = document.createElement("td");
+  el.textContent = text ?? "";
+  return el;
 }

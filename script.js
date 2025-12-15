@@ -144,7 +144,8 @@ function toggleWelpenExtraFields() {
     welpenExtraFields.classList.remove("hidden");
     welpenExtraFields.style.display = "block";
 
-    document.getElementById("welpenNestFields").style.display = "block";
+const nestFields = document.getElementById("welpenNestFields");
+if (nestFields) nestFields.style.display = "block";
 } else {
     // Leiding: wel welpennaam, geen nestinfo
     welpenExtraFields.classList.remove("hidden");
@@ -161,7 +162,7 @@ function toggleScoutsExtraFields() {
     // Alleen zichtbaar bij speltak scouts
     if (speltak !== "scouts") {
         scoutsExtraFields.classList.add("hidden");
-        scoutsExtraFields.style.display = "";
+        scoutsExtraFields.style.display = "none";
         return;
     }
 
@@ -539,7 +540,11 @@ function renderEverything() {
     renderTable();
     renderLedenbeheer();
     renderMeldingen();
+
+    // Na renderen pas scrollen/highlighten (dashboard → speltak)
+    scrollToOpkomstFromHash();
 }
+
 
 /* ======================================================================
    INFO BLOK
@@ -966,6 +971,7 @@ function makeDivider() {
 function addRow(o) {
     const tr = document.createElement("tr");
     tr.dataset.id = o.id; // nodig voor scroll + highlight na opslaan
+      tr.dataset.opkomstDatum = o.datum;
 
     if (o.typeOpkomst === "geen") tr.classList.add("row-geenopkomst");
     else if (o.typeOpkomst === "bijzonder") tr.classList.add("row-bijzonder");
@@ -1962,6 +1968,9 @@ printButton?.addEventListener("click", () => {
     // Tabel opnieuw renderen met alleen toekomstige opkomsten
     renderTable();
 
+   scrollToOpkomstFromHash();
+
+
     setTimeout(() => {
         window.print();
 
@@ -2004,6 +2013,38 @@ editModeButton?.addEventListener("click", async () => {
     setMode("leiding");
     editModeButton.textContent = "💾 Wijzigingen opslaan";
 });
+
+function scrollToOpkomstFromHash() {
+  const params = new URLSearchParams(window.location.hash.replace("#", ""));
+  const targetDate = params.get("opkomst");
+  if (!targetDate) return;
+
+  const row = document.querySelector(
+    `tr[data-opkomst-datum="${targetDate}"]`
+  );
+
+  if (!row) return;
+
+  // Scroll naar rij
+  row.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
+
+  // Highlight (hergebruikt bestaande CSS)
+  row.classList.add("row-highlight");
+
+  // Highlight na animatie weer verwijderen
+   setTimeout(() => {
+  row.classList.remove("row-highlight");
+}, 2000);
+   // Hash opruimen zodat we niet opnieuw gaan scrollen bij latere renders
+  try {
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+  } catch (e) {}
+
+}
+
 
 // =====================
 // INFO-EDITOR SELECTIE

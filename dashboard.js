@@ -6,7 +6,6 @@
 // ======================================================================
 
 import {
-  compareDateTime,
   formatDateDisplay,
   isFutureOrToday
 } from "./utils.js";
@@ -73,7 +72,13 @@ async function loadDashboard() {
     }
 
     const grouped = groupByDate(combined);
-    render(grouped);
+
+    const isMobile = window.matchMedia("(max-width: 900px)").matches;
+    if (isMobile) {
+      renderMobile(grouped);
+    } else {
+      renderDesktop(grouped);
+    }
 
   } catch (err) {
     console.error("Fout bij laden dashboard:", err);
@@ -147,6 +152,8 @@ async function loadBestuursItems() {
       tijd,
       titel: b.titel,
       type: b.type,
+      locatie: "",        // voor uniformiteit
+      materiaal: "",      // voor uniformiteit
       bijzonderheden: "",
       link: `bestuur.html#item=${id}`
     });
@@ -175,7 +182,10 @@ function groupByDate(items) {
   return grouped;
 }
 
-function render(grouped) {
+// =========================
+// DESKTOP RENDER (tabel)
+// =========================
+function renderDesktop(grouped) {
   container.innerHTML = "";
   const dates = Object.keys(grouped).sort((a, b) => new Date(a) - new Date(b));
 
@@ -187,21 +197,22 @@ function render(grouped) {
 
     const table = document.createElement("table");
     table.className = "dashboard-table";
-    table.appendChild(renderThead());
+    table.appendChild(renderTheadDesktop());
 
     const tbody = document.createElement("tbody");
-    grouped[date].forEach(o => tbody.appendChild(renderRow(o)));
+    grouped[date].forEach(o => tbody.appendChild(renderRowDesktop(o)));
 
     table.appendChild(tbody);
     container.appendChild(table);
   }
 }
 
-function renderThead() {
+function renderTheadDesktop() {
   const thead = document.createElement("thead");
   const tr = document.createElement("tr");
 
-  ["Speltak", "Tijd", "Titel", "Type", "Locatie", "Bijzonderheden"].forEach(label => {
+  // Materiaal toegevoegd op desktop
+  ["Speltak", "Tijd", "Titel", "Type", "Locatie", "Materiaal", "Bijzonderheden"].forEach(label => {
     const th = document.createElement("th");
     th.textContent = label;
     tr.appendChild(th);
@@ -211,7 +222,7 @@ function renderThead() {
   return thead;
 }
 
-function renderRow(o) {
+function renderRowDesktop(o) {
   const tr = document.createElement("tr");
 
   const tdSp = document.createElement("td");
@@ -225,6 +236,7 @@ function renderRow(o) {
   tr.appendChild(td(o.titel));
   tr.appendChild(td(o.type));
   tr.appendChild(td(o.locatie || ""));
+  tr.appendChild(td(o.materiaal || ""));          // Materiaal toegevoegd
   tr.appendChild(td(o.bijzonderheden || ""));
 
   if (o.kind === "bestuur") {
@@ -239,6 +251,90 @@ function td(value) {
   const cell = document.createElement("td");
   cell.textContent = value || "";
   return cell;
+}
+
+// =========================
+// MOBILE RENDER (cards)
+// =========================
+function renderMobile(grouped) {
+  container.innerHTML = "";
+
+  const dates = Object.keys(grouped).sort((a, b) => new Date(a) - new Date(b));
+
+  for (const date of dates) {
+    const dateBlock = document.createElement("section");
+    dateBlock.className = "dashboard-date-block";
+
+    const h = document.createElement("h3");
+    h.className = "dashboard-date";
+    h.textContent = formatDateDisplay(date);
+    dateBlock.appendChild(h);
+
+    grouped[date].forEach(o => {
+      const item = document.createElement("div");
+      item.className = "dashboard-item";
+
+      const colorBar = document.createElement("div");
+      colorBar.className = "dashboard-item-color";
+      colorBar.style.background = o.kleur;
+      item.appendChild(colorBar);
+
+      const content = document.createElement("div");
+      content.className = "dashboard-item-content";
+
+      const top = document.createElement("div");
+      top.className = "dashboard-item-top";
+      top.textContent = `${o.label} · ${o.tijd}`;
+      content.appendChild(top);
+
+      if (o.titel) {
+        const title = document.createElement("div");
+        title.className = "dashboard-item-title";
+        title.textContent = o.titel;
+        content.appendChild(title);
+      }
+
+      if (o.type) {
+        const type = document.createElement("div");
+        type.className = "dashboard-item-meta";
+        type.textContent = o.type;
+        content.appendChild(type);
+      }
+
+      // Alleen tonen als ingevuld
+      if (o.locatie) {
+        const loc = document.createElement("div");
+        loc.className = "dashboard-item-meta";
+        loc.textContent = `Locatie: ${o.locatie}`;
+        content.appendChild(loc);
+      }
+
+      if (o.materiaal) {
+        const mat = document.createElement("div");
+        mat.className = "dashboard-item-meta";
+        mat.textContent = `Materiaal: ${o.materiaal}`;
+        content.appendChild(mat);
+      }
+
+      if (o.bijzonderheden) {
+        const bijz = document.createElement("div");
+        bijz.className = "dashboard-item-meta";
+        bijz.textContent = o.bijzonderheden;
+        content.appendChild(bijz);
+      }
+
+      item.appendChild(content);
+
+      if (o.kind === "bestuur" && o.link) {
+        item.classList.add("dashboard-item-clickable");
+        item.onclick = () => window.location.href = o.link;
+      }
+
+      dateBlock.appendChild(item);
+    });
+
+    container.appendChild(dateBlock);
+  }
 }
 
 // ======================================================================

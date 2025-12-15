@@ -757,74 +757,6 @@ body.mode-ouder .col-divider {
     100% { background: transparent; }
 }
 
-/* ======================================================================
-   MOBILE — dashboard horizontale scroll
-   ====================================================================== */
-@media (max-width: 900px) {
-
-  /* Zwevende horizontale scrollbar UIT */
-  .table-h-scroll {
-    display: none !important;
-  }
-
-}
-@media (max-width: 900px) {
-
-  .table-wrapper {
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 12px;
-    padding-right: 12px;
-    box-sizing: border-box;
-  }
-
-}
-@media (max-width: 900px) {
-
-  .dashboard-table {
-    width: max-content;
-    border-spacing: 0;
-  }
-
-  .dashboard-table th,
-  .dashboard-table td {
-    white-space: nowrap;
-  }
-
-}
-@media (max-width: 900px) {
-
-  header,
-  .topbar,
-  .page-header {
-    flex-wrap: wrap;
-    row-gap: 8px;
-  }
-
-}
-@media (max-width: 900px) {
-
-  .login-badge {
-    font-size: 0.85rem;
-    padding: 6px 10px;
-    border-radius: 999px;
-    max-width: 100%;
-    white-space: nowrap;
-  }
-
-}
-@media (max-width: 900px) {
-
-  .controls,
-  .dashboard-controls,
-  .filter-bar {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-}
-
-
 /* ============================================
    SPELTAK KAARTEN – Variant B (Optie 3)
    ============================================ */
@@ -1279,22 +1211,6 @@ th[class^="ploeg-"]::after {
     font-weight: 600;
     color: var(--text-primary, #222);
 }
-.dashboard-date {
-  font-weight: 700;
-}
-
-/* Sticky datumkoppen — alleen dashboard */
-@media (max-width: 900px) {
-  .dashboard-date {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: #f6f7f9; /* match met pagina-achtergrond */
-    padding-top: 8px;
-    padding-bottom: 8px;
-  }
-}
-
 
 /* Tabel */
 .dashboard-table {

@@ -73,18 +73,15 @@ async function loadDashboard() {
 
     const grouped = groupByDate(combined);
 
-    const isMobile = window.matchMedia("(max-width: 900px)").matches;
-    if (isMobile) {
-      renderMobile(grouped);
-    } else {
-      renderDesktop(grouped);
-    }
+    // ✅ Altijd dezelfde tabelrender (desktop-style), ook op mobiel
+    renderDesktop(grouped);
 
   } catch (err) {
     console.error("Fout bij laden dashboard:", err);
     container.innerHTML = "<p>Er ging iets mis bij het laden.</p>";
   }
 }
+
 
 // ======================================================================
 // DATA LADEN
@@ -236,118 +233,57 @@ function renderRowDesktop(o) {
   tr.appendChild(td(o.titel));
   tr.appendChild(td(o.type));
   tr.appendChild(td(o.locatie || ""));
-  tr.appendChild(td(o.materiaal || ""));          // Materiaal toegevoegd
+  tr.appendChild(td(o.materiaal || ""));
   tr.appendChild(td(o.bijzonderheden || ""));
 
+  // ✅ Alles klikbaar
   tr.style.cursor = "pointer";
 
-if (o.kind === "bestuur" && o.link) {
-  tr.onclick = () => window.location.href = o.link;
-} else if (o.kind === "speltak") {
-  tr.onclick = () => {
-window.location.href = `${o.speltak}.html#opkomst=${o.datum}`;
-  };
-}
-
+  if (o.kind === "bestuur" && o.link) {
+    tr.onclick = () => window.location.href = o.link;
+  } else if (o.kind === "speltak") {
+    tr.onclick = () => {
+      // ✅ Dit matcht jouw script.js: scrollToOpkomstFromHash()
+      window.location.href = `${o.speltak}.html#opkomst=${encodeURIComponent(o.datum)}`;
+    };
+  }
 
   return tr;
 }
 
-function td(value) {
-  const cell = document.createElement("td");
-  cell.textContent = value || "";
-  return cell;
-}
-
-// =========================
-// MOBILE RENDER (cards)
-// =========================
-function renderMobile(grouped) {
-  container.innerHTML = "";
-
-  const dates = Object.keys(grouped).sort((a, b) => new Date(a) - new Date(b));
-
-  for (const date of dates) {
-    const dateBlock = document.createElement("section");
-    dateBlock.className = "dashboard-date-block";
-
-    const h = document.createElement("h3");
-    h.className = "dashboard-date";
-    h.textContent = formatDateDisplay(date);
-    dateBlock.appendChild(h);
-
-    grouped[date].forEach(o => {
-      const item = document.createElement("div");
-      item.className = "dashboard-item";
-
-      const colorBar = document.createElement("div");
-      colorBar.className = "dashboard-item-color";
-      colorBar.style.background = o.kleur;
-      item.appendChild(colorBar);
-
-      const content = document.createElement("div");
-      content.className = "dashboard-item-content";
-
-      const top = document.createElement("div");
-      top.className = "dashboard-item-top";
-      top.textContent = `${o.label} · ${o.tijd}`;
-      content.appendChild(top);
-
-      if (o.titel) {
-        const title = document.createElement("div");
-        title.className = "dashboard-item-title";
-        title.textContent = o.titel;
-        content.appendChild(title);
-      }
-
-      if (o.type) {
-        const type = document.createElement("div");
-        type.className = "dashboard-item-meta";
-        type.textContent = o.type;
-        content.appendChild(type);
-      }
-
-      // Alleen tonen als ingevuld
-      if (o.locatie) {
-        const loc = document.createElement("div");
-        loc.className = "dashboard-item-meta";
-        loc.textContent = `Locatie: ${o.locatie}`;
-        content.appendChild(loc);
-      }
-
-      if (o.materiaal) {
-        const mat = document.createElement("div");
-        mat.className = "dashboard-item-meta";
-        mat.textContent = `Materiaal: ${o.materiaal}`;
-        content.appendChild(mat);
-      }
-
-      if (o.bijzonderheden) {
-        const bijz = document.createElement("div");
-        bijz.className = "dashboard-item-meta";
-        bijz.textContent = o.bijzonderheden;
-        content.appendChild(bijz);
-      }
-
-      item.appendChild(content);
-
-     item.classList.add("dashboard-item-clickable");
-
-if (o.kind === "bestuur" && o.link) {
-  item.onclick = () => window.location.href = o.link;
-} else if (o.kind === "speltak") {
-  item.onclick = () => {
-    window.location.href = `${o.speltak}.html#${o.datum}`;
-  };
-}
-
-
-      dateBlock.appendChild(item);
-    });
-
-    container.appendChild(dateBlock);
-  }
-}
 
 // ======================================================================
 loadDashboard();
+
+// ======================================================================
+// MOBILE — login badge korter (Admin of speltaknaam)
+// ======================================================================
+(function simplifyLoginBadgeOnMobile() {
+  const isMobileNow = window.matchMedia("(max-width: 900px)").matches;
+  if (!isMobileNow) return;
+
+  const badge = document.getElementById("loginStatus");
+  if (!badge) return;
+
+  const mode = (localStorage.getItem("mode") || "").toLowerCase();         // "admin" / "leiding" / "ouder"
+  const authSpeltak = (localStorage.getItem("authSpeltak") || "").toLowerCase();
+
+  if (mode === "admin") {
+    badge.textContent = "Admin";
+    return;
+  }
+
+  // Leiding: toon speltaknaam (netjes geformat)
+  if (mode === "leiding" && authSpeltak) {
+    const nice =
+      SPELTAK_LABEL[authSpeltak] ||
+      (authSpeltak.charAt(0).toUpperCase() + authSpeltak.slice(1));
+
+    badge.textContent = nice;
+    return;
+  }
+
+  // Anders leeg houden (ouder / niet ingelogd)
+  badge.textContent = "";
+})();
+

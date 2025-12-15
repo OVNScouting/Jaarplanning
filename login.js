@@ -71,6 +71,24 @@ function findUser(username, password) {
       u.password === password
   );
 }
+export function isLoggedIn() {
+  return !!getCurrentUser();
+}
+
+export function getCurrentUser() {
+  return JSON.parse(localStorage.getItem("currentUser"));
+}
+
+export function hasRole(role) {
+  const user = getCurrentUser();
+  return user?.roles?.[role] === true;
+}
+
+export function hasSpeltak(speltak) {
+  const user = getCurrentUser();
+  return user?.roles?.speltakken?.includes(speltak);
+}
+
 
 /* ======================================================================
    UI UPDATE

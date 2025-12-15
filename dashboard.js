@@ -250,6 +250,14 @@ function renderRowDesktop(o) {
 
   return tr;
 }
+// ======================================================================
+// HELPER — eenvoudige td
+// ======================================================================
+function td(value) {
+  const cell = document.createElement("td");
+  cell.textContent = value || "";
+  return cell;
+}
 
 
 // ======================================================================

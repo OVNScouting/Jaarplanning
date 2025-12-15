@@ -239,10 +239,16 @@ function renderRowDesktop(o) {
   tr.appendChild(td(o.materiaal || ""));          // Materiaal toegevoegd
   tr.appendChild(td(o.bijzonderheden || ""));
 
-  if (o.kind === "bestuur") {
-    tr.style.cursor = "pointer";
-    tr.onclick = () => window.location.href = o.link;
-  }
+  tr.style.cursor = "pointer";
+
+if (o.kind === "bestuur" && o.link) {
+  tr.onclick = () => window.location.href = o.link;
+} else if (o.kind === "speltak") {
+  tr.onclick = () => {
+    window.location.href = `${o.speltak}.html#${o.datum}`;
+  };
+}
+
 
   return tr;
 }
@@ -325,10 +331,16 @@ function renderMobile(grouped) {
 
       item.appendChild(content);
 
-      if (o.kind === "bestuur" && o.link) {
-        item.classList.add("dashboard-item-clickable");
-        item.onclick = () => window.location.href = o.link;
-      }
+     item.classList.add("dashboard-item-clickable");
+
+if (o.kind === "bestuur" && o.link) {
+  item.onclick = () => window.location.href = o.link;
+} else if (o.kind === "speltak") {
+  item.onclick = () => {
+    window.location.href = `${o.speltak}.html#${o.datum}`;
+  };
+}
+
 
       dateBlock.appendChild(item);
     });

@@ -1392,23 +1392,6 @@ th[class^="ploeg-"]::after {
     word-break: break-word;
 }
 
-/* Mobiel: horizontaal scrollen */
-@media (max-width: 900px) {
-    .dashboard-table {
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap;
-    }
-
-    .dashboard-table thead,
-    .dashboard-table tbody,
-    .dashboard-table tr {
-        display: table;
-        width: 100%;
-        table-layout: fixed;
-    }
-}
-
 
 /* ============================================================
    PRINT

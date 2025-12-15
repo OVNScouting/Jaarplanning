@@ -193,13 +193,29 @@ function renderDesktop(grouped) {
     container.appendChild(h);
 
     const wrapper = document.createElement("div");
-wrapper.className = "dashboard-table-wrapper";
+    wrapper.className = "dashboard-table-wrapper";
+
+    // Swipe-hint (alleen mobiel)
+let swipeHint = null;
+if (window.matchMedia("(max-width: 900px)").matches) {
+  swipeHint = document.createElement("div");
+  swipeHint.className = "table-swipe-hint";
+  swipeHint.innerHTML = "<span>← swipe →</span>";
+  wrapper.appendChild(swipeHint);
+}
 
 const table = document.createElement("table");
 table.className = "dashboard-table";
 table.appendChild(renderTheadDesktop());
 
 wrapper.appendChild(table);
+
+    // Swipe-hint verbergen na eerste horizontale scroll
+if (swipeHint) {
+  wrapper.addEventListener("scroll", () => {
+    swipeHint.classList.add("hidden");
+  }, { once: true });
+}
 
 
     const tbody = document.createElement("tbody");

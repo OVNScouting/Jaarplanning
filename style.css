@@ -1222,6 +1222,52 @@ th[class^="ploeg-"]::after {
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     margin-bottom: 1.5rem;
 }
+/* ===============================
+   DASHBOARD – vaste kolombreedtes
+   =============================== */
+
+.dashboard-table th:nth-child(1),
+.dashboard-table td:nth-child(1) {
+  width: 120px;   /* Speltak */
+}
+
+.dashboard-table th:nth-child(2),
+.dashboard-table td:nth-child(2) {
+  width: 110px;   /* Tijd */
+  white-space: nowrap;
+}
+
+.dashboard-table th:nth-child(3),
+.dashboard-table td:nth-child(3) {
+  min-width: 180px; /* Titel */
+}
+
+.dashboard-table th:nth-child(4),
+.dashboard-table td:nth-child(4) {
+  width: 110px;   /* Type */
+}
+
+.dashboard-table th:nth-child(5),
+.dashboard-table td:nth-child(5) {
+  min-width: 140px; /* Locatie */
+}
+
+.dashboard-table th:nth-child(6),
+.dashboard-table td:nth-child(6) {
+  min-width: 160px; /* Materiaal */
+}
+
+.dashboard-table th:nth-child(7),
+.dashboard-table td:nth-child(7) {
+  min-width: 200px; /* Bijzonderheden */
+}
+/* Lege dashboard-cellen subtiel maken */
+.dashboard-table td:empty::after {
+  content: "—";
+  color: #cbd5e1;
+  font-weight: 400;
+}
+
 
 /* Header */
 .dashboard-table thead th {

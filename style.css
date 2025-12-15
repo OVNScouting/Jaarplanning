@@ -1279,6 +1279,22 @@ th[class^="ploeg-"]::after {
     font-weight: 600;
     color: var(--text-primary, #222);
 }
+.dashboard-date {
+  font-weight: 700;
+}
+
+/* Sticky datumkoppen — alleen dashboard */
+@media (max-width: 900px) {
+  .dashboard-date {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #f6f7f9; /* match met pagina-achtergrond */
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+}
+
 
 /* Tabel */
 .dashboard-table {

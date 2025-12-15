@@ -1,6 +1,6 @@
 // ======================================================================
 // index-bestuur.js — Highlight recente bestuursitems op index
-// Alleen zichtbaar voor leiding
+// Alleen zichtbaar voor leiding / bestuur / admin
 // ======================================================================
 
 import {
@@ -10,21 +10,38 @@ import {
   get
 } from "./firebase-imports.js";
 
-const app = initializeApp(window.firebaseConfig);
-const db = getDatabase(app);
-
-const section = document.getElementById("bestuurHighlight");
-const list = document.getElementById("bestuurHighlightList");
-
-// Alleen laden als leiding ingelogd
+// ======================================================================
+// AUTH CHECK
+// ======================================================================
 const mode = localStorage.getItem("mode");
-if (mode !== "leiding" && mode !== "bestuur" && mode !== "admin") {
-  return;
+const isLeiding = mode === "leiding" || mode === "bestuur" || mode === "admin";
+
+// Als geen leiding → niks doen, script stopt hier netjes
+if (!isLeiding) {
+  // bewust leeg
+} else {
+  init();
 }
 
-loadHighlights();
+// ======================================================================
+// INIT
+// ======================================================================
+function init() {
+  const app = initializeApp(window.firebaseConfig);
+  const db = getDatabase(app);
 
-async function loadHighlights() {
+  const section = document.getElementById("bestuurHighlight");
+  const list = document.getElementById("bestuurHighlightList");
+
+  if (!section || !list) return;
+
+  loadHighlights(db, section, list);
+}
+
+// ======================================================================
+// LOAD HIGHLIGHTS
+// ======================================================================
+async function loadHighlights(db, section, list) {
   try {
     const snap = await get(ref(db, "bestuursItems"));
     if (!snap.exists()) return;
@@ -53,10 +70,10 @@ async function loadHighlights() {
 
       row.innerHTML = `
         <div class="meldingen-label">
-            📌 ${i.titel}
+          📌 ${i.titel}
         </div>
         <div class="meldingen-sub">
-            ${i.type} · ${i.datum}
+          ${i.type} · ${i.datum}
         </div>
       `;
 

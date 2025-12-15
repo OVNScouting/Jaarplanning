@@ -1,11 +1,28 @@
 /* ======================================================================
-   MOBILE OVERRIDES — dashboard
-   Geldt alleen voor schermen <= 900px
+   MOBILE LAYER — alle mobile overrides
+   Geldt voor <= 900px
    ====================================================================== */
 @media (max-width: 900px) {
 
   /* ===============================
-     Dashboard container spacing
+     Algemene layout
+     =============================== */
+  body {
+    font-size: 15px;
+  }
+
+  /* ===============================
+     Login badge (simpel & stabiel)
+     =============================== */
+  .login-badge {
+    font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  /* ===============================
+     Dashboard container
      =============================== */
   #dashboardOverview {
     padding-left: 12px;
@@ -13,51 +30,49 @@
   }
 
   /* ===============================
-     Horizontaal scrollbare tabel
+     Sticky datumkoppen (dashboard)
      =============================== */
+  .dashboard-date {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #f6f7f9;
+    padding: 8px 4px;
+    margin: 0;
+  }
+
+  /* ===============================
+     Horizontaal scrollbare tabellen
+     =============================== */
+  .dashboard-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 16px;
+  }
+
   .dashboard-table {
-    display: table;              /* echte table houden */
-    width: max-content;          /* mag breder zijn dan viewport */
+    width: max-content;
     min-width: 100%;
     border-collapse: collapse;
   }
 
-  /* Wrapper moet scrollen */
-  .dashboard-table-wrapper,
-  .dashboard-table-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Cells mogen niet wrappen */
   .dashboard-table th,
   .dashboard-table td {
     white-space: nowrap;
+    font-size: 14px;
   }
 
-  /* Iets compactere tekst op mobiel */
   .dashboard-table th {
     font-size: 13px;
   }
 
-  .dashboard-table td {
-    font-size: 14px;
-  }
-
-  /* Klikbare rijen voelen mobieler */
-  .dashboard-table tr {
-    cursor: pointer;
-  }
-}
-/* ======================================================================
-   Swipe hint — dashboard tables
-   ====================================================================== */
-@media (max-width: 900px) {
-
+  /* ===============================
+     Swipe hint
+     =============================== */
   .table-swipe-hint {
     position: sticky;
-    top: 0;
-    z-index: 5;
+    top: 40px; /* onder datumkop */
+    z-index: 15;
     display: flex;
     justify-content: flex-end;
     pointer-events: none;
@@ -67,7 +82,7 @@
   .table-swipe-hint span {
     font-size: 12px;
     color: #888;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95);
     padding: 2px 8px;
     border-radius: 999px;
   }
@@ -76,4 +91,3 @@
     display: none;
   }
 }
-

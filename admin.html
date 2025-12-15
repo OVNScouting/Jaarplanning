@@ -1,1 +1,111 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin – OVN Scouting</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="mobile.css" />
+</head>
+<body class="only-admin hidden">
+
+<!-- ============================================================
+     TOPBAR
+============================================================ -->
+<header class="topbar">
+  <div class="topbar-left">
+    <img src="assets/logo-ovn.png" class="topbar-logo" alt="OVN">
+    <div class="topbar-title">
+      <h1>Admin</h1>
+      <span>Account- & rechtenbeheer</span>
+    </div>
+  </div>
+
+  <div class="topbar-right-icons">
+    <span id="loginStatus" class="leiding-badge hidden">Ingelogd</span>
+    <button id="logoutButton" class="pill-btn outline hidden">Uitloggen</button>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- ============================================================
+       INFO
+  ============================================================ -->
+  <section class="info-block">
+    <h2>Beheeromgeving</h2>
+    <p class="text-muted">
+      Dit is de admin-omgeving. Alleen admins hebben toegang tot deze pagina.
+      Hier beheren we straks gebruikers, rechten en aanvragen.
+    </p>
+  </section>
+
+  <!-- ============================================================
+       GEBRUIKERS (FASE 1: lokaal)
+  ============================================================ -->
+  <section class="planning-section">
+    <div class="section-header">
+      <h2>Gebruikers</h2>
+      <span class="text-muted">Fase 1 – lokaal</span>
+    </div>
+
+    <table class="planning-table">
+      <thead>
+        <tr>
+          <th>Gebruikersnaam</th>
+          <th>Admin</th>
+          <th>Bestuur</th>
+          <th>Speltakken</th>
+        </tr>
+      </thead>
+      <tbody id="userTable">
+        <!-- Wordt gevuld via JS -->
+      </tbody>
+    </table>
+  </section>
+
+</main>
+
+<script src="login.js"></script>
+
+<script>
+/* ============================================================
+   ADMIN PAGE LOGIC (FASE 1)
+============================================================ */
+
+// Bescherming: alleen admins
+(function guardAdmin() {
+  const session = JSON.parse(localStorage.getItem("ovn_auth_session"));
+  if (!session?.roles?.admin) {
+    document.body.innerHTML = "<p style='padding:2rem'>Geen toegang</p>";
+  } else {
+    document.body.classList.remove("hidden");
+  }
+})();
+
+// USERS komt uit login.js (fase 1)
+(function renderUsers() {
+  if (typeof USERS === "undefined") return;
+
+  const tbody = document.getElementById("userTable");
+
+  USERS.forEach(user => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${user.username}</td>
+      <td>${user.roles.admin ? "✔️" : "—"}</td>
+      <td>${user.roles.bestuur ? "✔️" : "—"}</td>
+      <td>${(user.roles.speltakken || []).join(", ")}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+})();
+</script>
+
+</body>
+</html>
 

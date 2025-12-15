@@ -1,34 +1,17 @@
 // ======================================================================
 // login.js — Auth systeem (stabiele basis)
 // - Popup login (gebruikersnaam + wachtwoord)
-// - Sessies via localStorage
-// - Badge: altijd "Ingelogd"
-// - Logout overal beschikbaar
-// - Rollen voorbereid (admin / bestuur / speltakken)
+// - Eén sessie in localStorage
+// - Badge: "Ingelogd"
+// - Zichtbaarheid via CSS classes
+// - Voorbereid op rollen & rechten
 // ======================================================================
 
+const AUTH_KEY = "ovn_auth_session";
+
 /* ======================================================================
-   CONFIG
+   TIJDELIJKE USERS (FASE 1)
    ====================================================================== */
-
-const AUTH_STORAGE_KEY = "ovn_auth_session";
-
-/*
-Gebruiker-structuur (fase 1: lokaal, later Firebase):
-
-{
-  id: "uuid",
-  username: "voornaam achternaam",
-  password: "plain (fase 1)",
-  roles: {
-    admin: false,
-    bestuur: false,
-    speltakken: ["bevers", "scouts"]
-  }
-}
-*/
-
-// ⚠️ FASE 1 — tijdelijke lokale users (bootstrap)
 const USERS = [
   {
     id: "admin-1",
@@ -43,111 +26,86 @@ const USERS = [
 ];
 
 /* ======================================================================
-   SESSION HELPERS (ENIGE BRON VAN WAARHEID)
+   SESSION HELPERS
    ====================================================================== */
-
-function getAuthSession() {
-  const raw = localStorage.getItem(AUTH_STORAGE_KEY);
-  if (!raw) return null;
-
+function getSession() {
   try {
-    return JSON.parse(raw);
+    return JSON.parse(localStorage.getItem(AUTH_KEY));
   } catch {
     return null;
   }
 }
 
-function setAuthSession(session) {
-  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+function setSession(user) {
+  localStorage.setItem(AUTH_KEY, JSON.stringify({
+    id: user.id,
+    username: user.username,
+    roles: user.roles,
+    loginAt: Date.now()
+  }));
 }
 
-function clearAuthSession() {
-  localStorage.removeItem(AUTH_STORAGE_KEY);
+function clearSession() {
+  localStorage.removeItem(AUTH_KEY);
 }
 
-/* ======================================================================
-   PUBLIC API — gebruikt door andere scripts
-   ====================================================================== */
-
-export function getCurrentUser() {
-  return getAuthSession();
+function isLoggedIn() {
+  return !!getSession();
 }
 
-export function isLoggedIn() {
-  return !!getAuthSession();
-}
-
-export function hasRole(role) {
-  const session = getAuthSession();
-  return session?.roles?.[role] === true;
-}
-
-export function hasSpeltak(speltak) {
-  const session = getAuthSession();
-  return session?.roles?.speltakken?.includes(speltak);
+function hasRole(role) {
+  const s = getSession();
+  return !!s?.roles?.[role];
 }
 
 /* ======================================================================
-   USER LOOKUP (fase 1)
+   UI VISIBILITY
    ====================================================================== */
+function applyAuthVisibility() {
+  const loggedIn = isLoggedIn();
 
-function findUser(username, password) {
-  return USERS.find(
-    u =>
-      u.username.toLowerCase() === username.toLowerCase() &&
-      u.password === password
+  document.body.classList.toggle("is-logged-in", loggedIn);
+
+  document.querySelectorAll(".only-auth").forEach(el =>
+    el.classList.toggle("hidden", !loggedIn)
+  );
+
+  document.querySelectorAll(".only-bestuur").forEach(el =>
+    el.classList.toggle("hidden", !loggedIn || !hasRole("bestuur"))
+  );
+
+  document.querySelectorAll(".only-admin").forEach(el =>
+    el.classList.toggle("hidden", !loggedIn || !hasRole("admin"))
   );
 }
 
 /* ======================================================================
-   UI STATE
+   HEADER (badge + knoppen)
    ====================================================================== */
-
-function updateLoginUI() {
+function updateHeader() {
   const badge = document.getElementById("loginStatus");
   const loginBtn = document.getElementById("loginButton");
   const logoutBtn = document.getElementById("logoutButton");
 
-  const loggedIn = isLoggedIn();
+  if (!badge || !loginBtn || !logoutBtn) return;
 
-  if (badge) {
+  if (isLoggedIn()) {
     badge.textContent = "Ingelogd";
-    badge.classList.toggle("hidden", !loggedIn);
+    badge.classList.remove("hidden");
+
+    loginBtn.classList.add("hidden");
+    logoutBtn.classList.remove("hidden");
+  } else {
+    badge.classList.add("hidden");
+
+    loginBtn.classList.remove("hidden");
+    logoutBtn.classList.add("hidden");
   }
-
-  if (loginBtn) {
-    loginBtn.classList.toggle("hidden", loggedIn);
-  }
-
-  if (logoutBtn) {
-    logoutBtn.classList.toggle("hidden", !loggedIn);
-  }
-
-  document.body.classList.toggle("is-logged-in", loggedIn);
-}
-
-/* ======================================================================
-   VISIBILITY RULES
-   ====================================================================== */
-
-function applyAuthVisibility() {
-  const loggedIn = isLoggedIn();
-
-  // Alleen zichtbaar als ingelogd
-  document.querySelectorAll(".only-auth").forEach(el => {
-    el.classList.toggle("hidden", !loggedIn);
-  });
-
-  // Alleen admin
-  document.querySelectorAll(".only-admin").forEach(el => {
-    el.classList.toggle("hidden", !hasRole("admin"));
-  });
 }
 
 /* ======================================================================
    LOGIN MODAL
    ====================================================================== */
-
 function openLoginModal() {
   if (document.getElementById("loginModal")) return;
 
@@ -160,98 +118,75 @@ function openLoginModal() {
       <h3>Inloggen</h3>
 
       <label>Gebruikersnaam</label>
-      <input id="loginUsername" type="text" />
+      <input id="loginUser" type="text" placeholder="Voornaam Achternaam">
 
       <label>Wachtwoord</label>
-      <input id="loginPassword" type="password" />
+      <input id="loginPass" type="password">
 
-      <div id="loginError"
-           style="color:#b91c1c;font-size:0.85rem;display:none;">
-        Onjuiste gebruikersnaam of wachtwoord
+      <div id="loginError" style="display:none;color:#b91c1c;font-size:.85rem;">
+        Onjuiste gegevens
       </div>
 
       <div class="modal-actions">
-        <button id="loginCancel" class="pill-btn outline" type="button">
-          Annuleren
-        </button>
-        <button id="loginSubmit" class="pill-btn primary" type="button">
-          Inloggen
-        </button>
+        <button id="loginCancel" class="pill-btn outline">Annuleren</button>
+        <button id="loginSubmit" class="pill-btn primary">Inloggen</button>
       </div>
     </div>
   `;
 
   document.body.appendChild(modal);
 
-  const usernameInput = modal.querySelector("#loginUsername");
-  const passwordInput = modal.querySelector("#loginPassword");
+  const userInput = modal.querySelector("#loginUser");
+  const passInput = modal.querySelector("#loginPass");
   const errorBox = modal.querySelector("#loginError");
 
-  usernameInput.focus();
+  userInput.focus();
 
   modal.querySelector("#loginCancel").onclick = closeLoginModal;
 
   modal.querySelector("#loginSubmit").onclick = () => {
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value;
+    const u = userInput.value.trim().toLowerCase();
+    const p = passInput.value;
 
-    const user = findUser(username, password);
+    const user = USERS.find(x =>
+      x.username.toLowerCase() === u && x.password === p
+    );
 
     if (!user) {
       errorBox.style.display = "block";
       return;
     }
 
-    setAuthSession({
-      userId: user.id,
-      username: user.username,
-      roles: user.roles,
-      loginAt: Date.now()
-    });
-
+    setSession(user);
     closeLoginModal();
-    updateLoginUI();
+    updateHeader();
     applyAuthVisibility();
   };
 
-  modal.addEventListener("click", e => {
+  modal.onclick = e => {
     if (e.target === modal) closeLoginModal();
-  });
-
-  modal.addEventListener("keydown", e => {
-    if (e.key === "Escape") closeLoginModal();
-    if (e.key === "Enter") {
-      modal.querySelector("#loginSubmit").click();
-    }
-  });
+  };
 }
 
 function closeLoginModal() {
-  const modal = document.getElementById("loginModal");
-  if (modal) modal.remove();
+  document.getElementById("loginModal")?.remove();
 }
 
 /* ======================================================================
-   INIT
+   EVENTS
    ====================================================================== */
-
 document.addEventListener("DOMContentLoaded", () => {
-  updateLoginUI();
+  updateHeader();
   applyAuthVisibility();
 
-  const loginBtn = document.getElementById("loginButton");
-  const logoutBtn = document.getElementById("logoutButton");
+  document.getElementById("loginButton")
+    ?.addEventListener("click", openLoginModal);
 
-  if (loginBtn) {
-    loginBtn.addEventListener("click", openLoginModal);
-  }
-
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      clearAuthSession();
-      updateLoginUI();
+  document.getElementById("logoutButton")
+    ?.addEventListener("click", () => {
+      clearSession();
+      updateHeader();
       applyAuthVisibility();
-      window.location.reload();
+      location.reload();
     });
-  }
 });

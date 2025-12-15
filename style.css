@@ -1324,6 +1324,25 @@ th[class^="ploeg-"]::after {
     word-break: break-word;
 }
 
+/* ======================================================================
+   DESKTOP ONLY — expliciete defaults
+   ====================================================================== */
+
+.dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dashboard-table th,
+.dashboard-table td {
+  white-space: normal;
+}
+
+.login-badge {
+  display: inline-flex;
+  align-items: center;
+}
+
 
 /* ============================================================
    PRINT

@@ -245,7 +245,7 @@ if (o.kind === "bestuur" && o.link) {
   tr.onclick = () => window.location.href = o.link;
 } else if (o.kind === "speltak") {
   tr.onclick = () => {
-    window.location.href = `${o.speltak}.html#${o.datum}`;
+window.location.href = `${o.speltak}.html#opkomst=${o.datum}`;
   };
 }
 

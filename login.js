@@ -1,10 +1,10 @@
 // ======================================================================
-// login.js — Auth systeem (fase 1)
+// login.js — Auth systeem (stabiele basis)
 // - Popup login (gebruikersnaam + wachtwoord)
 // - Sessies via localStorage
 // - Badge: altijd "Ingelogd"
 // - Logout overal beschikbaar
-// - Voorbereid op rollen (nog niet afdwingen)
+// - Rollen voorbereid (admin / bestuur / speltakken)
 // ======================================================================
 
 /* ======================================================================
@@ -14,11 +14,12 @@
 const AUTH_STORAGE_KEY = "ovn_auth_session";
 
 /*
-Gebruiker-structuur (voor nu lokaal, later Firebase):
+Gebruiker-structuur (fase 1: lokaal, later Firebase):
+
 {
   id: "uuid",
   username: "voornaam achternaam",
-  password: "hash-of-plain (fase 1)",
+  password: "plain (fase 1)",
   roles: {
     admin: false,
     bestuur: false,
@@ -27,7 +28,7 @@ Gebruiker-structuur (voor nu lokaal, later Firebase):
 }
 */
 
-// ⚠️ FASE 1: tijdelijke lokale gebruikers (admin kan dit later beheren)
+// ⚠️ FASE 1 — tijdelijke lokale users (bootstrap)
 const USERS = [
   {
     id: "admin-1",
@@ -42,7 +43,7 @@ const USERS = [
 ];
 
 /* ======================================================================
-   HELPERS
+   SESSION HELPERS (ENIGE BRON VAN WAARHEID)
    ====================================================================== */
 
 function getAuthSession() {
@@ -64,6 +65,32 @@ function clearAuthSession() {
   localStorage.removeItem(AUTH_STORAGE_KEY);
 }
 
+/* ======================================================================
+   PUBLIC API — gebruikt door andere scripts
+   ====================================================================== */
+
+export function getCurrentUser() {
+  return getAuthSession();
+}
+
+export function isLoggedIn() {
+  return !!getAuthSession();
+}
+
+export function hasRole(role) {
+  const session = getAuthSession();
+  return session?.roles?.[role] === true;
+}
+
+export function hasSpeltak(speltak) {
+  const session = getAuthSession();
+  return session?.roles?.speltakken?.includes(speltak);
+}
+
+/* ======================================================================
+   USER LOOKUP (fase 1)
+   ====================================================================== */
+
 function findUser(username, password) {
   return USERS.find(
     u =>
@@ -71,27 +98,9 @@ function findUser(username, password) {
       u.password === password
   );
 }
-export function isLoggedIn() {
-  return !!getCurrentUser();
-}
-
-export function getCurrentUser() {
-  return JSON.parse(localStorage.getItem("currentUser"));
-}
-
-export function hasRole(role) {
-  const user = getCurrentUser();
-  return user?.roles?.[role] === true;
-}
-
-export function hasSpeltak(speltak) {
-  const user = getCurrentUser();
-  return user?.roles?.speltakken?.includes(speltak);
-}
-
 
 /* ======================================================================
-   UI UPDATE
+   UI STATE
    ====================================================================== */
 
 function updateLoginUI() {
@@ -99,26 +108,40 @@ function updateLoginUI() {
   const loginBtn = document.getElementById("loginButton");
   const logoutBtn = document.getElementById("logoutButton");
 
-  const session = getAuthSession();
+  const loggedIn = isLoggedIn();
 
-  if (!badge || !loginBtn || !logoutBtn) return;
-
-  if (session) {
+  if (badge) {
     badge.textContent = "Ingelogd";
-    badge.classList.remove("hidden");
-
-    loginBtn.classList.add("hidden");
-    logoutBtn.classList.remove("hidden");
-
-    document.body.classList.add("is-logged-in");
-  } else {
-    badge.classList.add("hidden");
-
-    loginBtn.classList.remove("hidden");
-    logoutBtn.classList.add("hidden");
-
-    document.body.classList.remove("is-logged-in");
+    badge.classList.toggle("hidden", !loggedIn);
   }
+
+  if (loginBtn) {
+    loginBtn.classList.toggle("hidden", loggedIn);
+  }
+
+  if (logoutBtn) {
+    logoutBtn.classList.toggle("hidden", !loggedIn);
+  }
+
+  document.body.classList.toggle("is-logged-in", loggedIn);
+}
+
+/* ======================================================================
+   VISIBILITY RULES
+   ====================================================================== */
+
+function applyAuthVisibility() {
+  const loggedIn = isLoggedIn();
+
+  // Alleen zichtbaar als ingelogd
+  document.querySelectorAll(".only-auth").forEach(el => {
+    el.classList.toggle("hidden", !loggedIn);
+  });
+
+  // Alleen admin
+  document.querySelectorAll(".only-admin").forEach(el => {
+    el.classList.toggle("hidden", !hasRole("admin"));
+  });
 }
 
 /* ======================================================================
@@ -136,13 +159,14 @@ function openLoginModal() {
     <div class="modal-content">
       <h3>Inloggen</h3>
 
-      <label for="loginUsername">Gebruikersnaam</label>
-      <input id="loginUsername" type="text" placeholder="Voornaam Achternaam" />
+      <label>Gebruikersnaam</label>
+      <input id="loginUsername" type="text" />
 
-      <label for="loginPassword">Wachtwoord</label>
-      <input id="loginPassword" type="password" placeholder="••••••••" />
+      <label>Wachtwoord</label>
+      <input id="loginPassword" type="password" />
 
-      <div id="loginError" style="color:#b91c1c;font-size:0.85rem;display:none;">
+      <div id="loginError"
+           style="color:#b91c1c;font-size:0.85rem;display:none;">
         Onjuiste gebruikersnaam of wachtwoord
       </div>
 
@@ -187,6 +211,7 @@ function openLoginModal() {
 
     closeLoginModal();
     updateLoginUI();
+    applyAuthVisibility();
   };
 
   modal.addEventListener("click", e => {
@@ -207,11 +232,12 @@ function closeLoginModal() {
 }
 
 /* ======================================================================
-   EVENTS
+   INIT
    ====================================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
   updateLoginUI();
+  applyAuthVisibility();
 
   const loginBtn = document.getElementById("loginButton");
   const logoutBtn = document.getElementById("logoutButton");
@@ -224,7 +250,8 @@ document.addEventListener("DOMContentLoaded", () => {
     logoutBtn.addEventListener("click", () => {
       clearAuthSession();
       updateLoginUI();
-      window.location.reload(); // veilige reset
+      applyAuthVisibility();
+      window.location.reload();
     });
   }
 });

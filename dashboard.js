@@ -1,13 +1,14 @@
 // ======================================================================
-// dashboard.js — toont komende opkomsten van ALLE speltakken
-// Vanaf eerstvolgende opkomst: +2 maanden
-// Groepering per datum, sortering op starttijd
-// Kolommen: Tijd, Thema, Procor, Type, Locatie, Materiaal, Bijzonderheden
+// dashboard.js — toont komende opkomsten + bestuursitems
+// Bestuursitems:
+// - altijd bovenaan per datum
+// - klikbaar → bestuur.html#item=<id>
 // ======================================================================
 
 import {
   compareDateTime,
-  formatDateDisplay
+  formatDateDisplay,
+  isFutureOrToday
 } from "./utils.js";
 
 import {
@@ -20,14 +21,14 @@ import {
 // ======================================================================
 // FIREBASE INIT
 // ======================================================================
-
 const app = initializeApp(window.firebaseConfig);
 const db = getDatabase(app);
 
-// Speltakken die we meenemen op dashboard
+// ======================================================================
+// CONFIG
+// ======================================================================
 const SPELTAKKEN = ["bevers", "welpen", "scouts", "explorers", "rovers", "stam"];
 
-// Labels + kleuren (zoals je index-kaarten / style.css)
 const SPELTAK_LABEL = {
   bevers: "Bevers",
   welpen: "Welpen",
@@ -43,66 +44,46 @@ const SPELTAK_COLOR = {
   scouts: "#c4b584",
   explorers: "#8a0a03",
   rovers: "#590501",
-  stam: "#f0d800"
+  stam: "#f0d800",
+  bestuur: "#1822b5"
 };
 
-// DOM
 const container = document.getElementById("dashboardOverview");
 
 // ======================================================================
 // LOAD DASHBOARD
 // ======================================================================
-
 async function loadDashboard() {
   if (!container) return;
-
   container.innerHTML = "<p>Dashboard laden…</p>";
 
   try {
-    // 1) Alles ophalen en normaliseren
-    const all = await loadAllOpkomsten();
+    const [opkomsten, bestuurs] = await Promise.all([
+      loadAllOpkomsten(),
+      loadBestuursItems()
+    ]);
 
-    if (!all.length) {
-      container.innerHTML = "<p>Geen opkomsten gevonden.</p>";
+    const combined = [...opkomsten, ...bestuurs]
+      .filter(o => isFutureOrToday(o.datum))
+      .sort((a, b) => new Date(`${a.datum}T${a.sortTime}`) - new Date(`${b.datum}T${b.sortTime}`));
+
+    if (!combined.length) {
+      container.innerHTML = "<p>Geen komende items.</p>";
       return;
     }
 
-    // 2) Eerstvolgende opkomstmoment bepalen (over alles heen)
-    const nextMoment = getNextMoment(all);
-
-    if (!nextMoment) {
-      container.innerHTML = "<p>Geen toekomstige opkomsten.</p>";
-      return;
-    }
-
-    // 3) Window: vanaf eerstvolgende t/m +2 maanden
-    const endMoment = new Date(nextMoment);
-    endMoment.setMonth(endMoment.getMonth() + 2);
-
-    const windowed = all
-      .filter(o => {
-        const m = getMoment(o);
-        return m >= nextMoment && m <= endMoment;
-      })
-      
-      .sort((a, b) => getMoment(a) - getMoment(b));
-
-    // 4) Groeperen op datum
-    const grouped = groupByDate(windowed);
-
-    // 5) Render
+    const grouped = groupByDate(combined);
     render(grouped);
 
   } catch (err) {
     console.error("Fout bij laden dashboard:", err);
-    container.innerHTML = "<p>Er ging iets mis bij het laden van de opkomsten.</p>";
+    container.innerHTML = "<p>Er ging iets mis bij het laden.</p>";
   }
 }
 
 // ======================================================================
-// DATA HELPERS
+// DATA LADEN
 // ======================================================================
-
 async function loadAllOpkomsten() {
   const results = [];
 
@@ -111,30 +92,22 @@ async function loadAllOpkomsten() {
     if (!snap.exists()) continue;
 
     const data = snap.val();
-
-    // Ondersteun beide structuren:
-    // A) /speltak/opkomsten/{id: {...}}
-    // B) /speltak/{id: {...}} (zoals je voorbeeld)
-    const opkomstenObj =
-      (data && typeof data === "object" && data.opkomsten && typeof data.opkomsten === "object")
-        ? data.opkomsten
-        : data;
-
-    if (!opkomstenObj || typeof opkomstenObj !== "object") continue;
+    const opkomstenObj = data.opkomsten ?? data;
+    if (!opkomstenObj) continue;
 
     for (const [id, o] of Object.entries(opkomstenObj)) {
-      if (!o || typeof o !== "object") continue;
-      if (!o.datum) continue;
+      if (!o?.datum) continue;
 
-      // starttijd is gewenst voor sortering; als hij ontbreekt, tonen we wel, maar met "??"
       results.push({
+        kind: "speltak",
         speltak: sp,
+        label: SPELTAK_LABEL[sp],
+        kleur: SPELTAK_COLOR[sp],
         id,
         datum: o.datum,
-        starttijd: o.starttijd || "",
-        eindtijd: o.eindtijd || "",
-        thema: o.thema || "",
-        procor: o.procor || "",
+        sortTime: o.starttijd || "99:99",
+        tijd: `${o.starttijd || "??:??"}–${o.eindtijd || "??:??"}`,
+        titel: o.thema || "",
         type: o.typeOpkomst || "",
         locatie: o.locatie || "",
         materiaal: o.materiaal || "",
@@ -146,21 +119,45 @@ async function loadAllOpkomsten() {
   return results;
 }
 
-function getMoment(o) {
-  const t = o.starttijd || "00:00";
-  return new Date(`${o.datum}T${t}`);
+async function loadBestuursItems() {
+  const snap = await get(ref(db, "bestuursItems"));
+  if (!snap.exists()) return [];
+
+  const items = [];
+
+  for (const [id, b] of Object.entries(snap.val())) {
+    if (!b.toonOpDashboard) continue;
+
+    let sortTime = "00:00";
+    let tijd = "—";
+
+    if (b.tijdType === "range") {
+      sortTime = b.starttijd || "00:00";
+      tijd = `${b.starttijd || ""}–${b.eindtijd || ""}`;
+    }
+
+    items.push({
+      kind: "bestuur",
+      speltak: "bestuur",
+      label: "Bestuur",
+      kleur: SPELTAK_COLOR.bestuur,
+      id,
+      datum: b.datum,
+      sortTime,
+      tijd,
+      titel: b.titel,
+      type: b.type,
+      bijzonderheden: "",
+      link: `bestuur.html#item=${id}`
+    });
+  }
+
+  return items;
 }
 
-function getNextMoment(all) {
-  const now = new Date();
-  const future = all
-    .map(getMoment)
-    .filter(m => !Number.isNaN(m.getTime()) && m >= now)
-    .sort((a, b) => a - b);
-
-  return future[0] || null;
-}
-
+// ======================================================================
+// GROUP & RENDER
+// ======================================================================
 function groupByDate(items) {
   const grouped = {};
   for (const o of items) {
@@ -168,50 +165,32 @@ function groupByDate(items) {
     grouped[o.datum].push(o);
   }
 
-  // Binnen elke datum op tijd sorteren
   for (const date of Object.keys(grouped)) {
-grouped[date].sort((a, b) => getMoment(a) - getMoment(b));
-
+    grouped[date].sort((a, b) => {
+      if (a.kind !== b.kind) return a.kind === "bestuur" ? -1 : 1;
+      return a.sortTime.localeCompare(b.sortTime);
+    });
   }
 
   return grouped;
 }
 
-// ======================================================================
-// RENDER
-// ======================================================================
-
 function render(grouped) {
   container.innerHTML = "";
-
-  // Eerstvolgende datum bovenaan, laatste onderaan
-const dates = Object.keys(grouped).sort(
-  (a, b) => new Date(a) - new Date(b)
-);
-;
-
-  if (!dates.length) {
-    container.innerHTML = "<p>Geen opkomsten in deze periode.</p>";
-    return;
-  }
+  const dates = Object.keys(grouped).sort((a, b) => new Date(a) - new Date(b));
 
   for (const date of dates) {
-    // Datum header
     const h = document.createElement("h3");
     h.className = "dashboard-date";
     h.textContent = formatDateDisplay(date);
     container.appendChild(h);
 
-    // Tabel
     const table = document.createElement("table");
     table.className = "dashboard-table";
-
     table.appendChild(renderThead());
-    const tbody = document.createElement("tbody");
 
-    for (const o of grouped[date]) {
-      tbody.appendChild(renderRow(o));
-    }
+    const tbody = document.createElement("tbody");
+    grouped[date].forEach(o => tbody.appendChild(renderRow(o)));
 
     table.appendChild(tbody);
     container.appendChild(table);
@@ -222,22 +201,11 @@ function renderThead() {
   const thead = document.createElement("thead");
   const tr = document.createElement("tr");
 
-  const headers = [
-    "Speltak",
-    "Tijd",
-    "Thema",
-    "Procor",
-    "Type",
-    "Locatie",
-    "Materiaal",
-    "Bijzonderheden"
-  ];
-
-  for (const label of headers) {
+  ["Speltak", "Tijd", "Titel", "Type", "Locatie", "Bijzonderheden"].forEach(label => {
     const th = document.createElement("th");
     th.textContent = label;
     tr.appendChild(th);
-  }
+  });
 
   thead.appendChild(tr);
   return thead;
@@ -246,25 +214,23 @@ function renderThead() {
 function renderRow(o) {
   const tr = document.createElement("tr");
 
-  // Speltak (gekleurde cel)
   const tdSp = document.createElement("td");
-  tdSp.textContent = SPELTAK_LABEL[o.speltak] || o.speltak;
-  tdSp.className = "dash-speltak-cell";
-  tdSp.style.background = SPELTAK_COLOR[o.speltak] || "#687a96";
+  tdSp.textContent = o.label;
+  tdSp.style.background = o.kleur;
   tdSp.style.color = "#fff";
   tdSp.style.fontWeight = "700";
   tr.appendChild(tdSp);
 
-  // Tijd
-  const tijd = `${o.starttijd || "??:??"}–${o.eindtijd || "??:??"}`;
-  tr.appendChild(td(tijd));
-
-  tr.appendChild(td(o.thema));
-  tr.appendChild(td(o.procor));
+  tr.appendChild(td(o.tijd));
+  tr.appendChild(td(o.titel));
   tr.appendChild(td(o.type));
-  tr.appendChild(td(o.locatie));
-  tr.appendChild(td(o.materiaal));
-  tr.appendChild(td(o.bijzonderheden));
+  tr.appendChild(td(o.locatie || ""));
+  tr.appendChild(td(o.bijzonderheden || ""));
+
+  if (o.kind === "bestuur") {
+    tr.style.cursor = "pointer";
+    tr.onclick = () => window.location.href = o.link;
+  }
 
   return tr;
 }

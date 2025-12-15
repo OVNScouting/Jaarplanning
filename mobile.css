@@ -1,0 +1,51 @@
+/* ======================================================================
+   MOBILE OVERRIDES — dashboard
+   Geldt alleen voor schermen <= 900px
+   ====================================================================== */
+@media (max-width: 900px) {
+
+  /* ===============================
+     Dashboard container spacing
+     =============================== */
+  #dashboardOverview {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  /* ===============================
+     Horizontaal scrollbare tabel
+     =============================== */
+  .dashboard-table {
+    display: table;              /* echte table houden */
+    width: max-content;          /* mag breder zijn dan viewport */
+    min-width: 100%;
+    border-collapse: collapse;
+  }
+
+  /* Wrapper moet scrollen */
+  .dashboard-table-wrapper,
+  .dashboard-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Cells mogen niet wrappen */
+  .dashboard-table th,
+  .dashboard-table td {
+    white-space: nowrap;
+  }
+
+  /* Iets compactere tekst op mobiel */
+  .dashboard-table th {
+    font-size: 13px;
+  }
+
+  .dashboard-table td {
+    font-size: 14px;
+  }
+
+  /* Klikbare rijen voelen mobieler */
+  .dashboard-table tr {
+    cursor: pointer;
+  }
+}

@@ -1,116 +1,212 @@
-// ========================================================
-// LOGIN CONFIG — wachtwoorden + context
-// ========================================================
+// ======================================================================
+// login.js — Auth systeem (fase 1)
+// - Popup login (gebruikersnaam + wachtwoord)
+// - Sessies via localStorage
+// - Badge: altijd "Ingelogd"
+// - Logout overal beschikbaar
+// - Voorbereid op rollen (nog niet afdwingen)
+// ======================================================================
 
-const LOGIN_MAP = {
-    "LeidingBevers48": {
-        mode: "leiding",
-        speltak: "bevers",
-        badge: "Je bent ingelogd: Bever Leiding"
-    },
-    "WelpenLeiding48": {
-        mode: "leiding",
-        speltak: "welpen",
-        badge: "Je bent ingelogd: Welpen Leiding"
-    },
-    "Scout48Leiding": {
-        mode: "leiding",
-        speltak: "scouts",
-        badge: "Je bent ingelogd: Scouts Leiding"
-    },
-    "Leiding48Explo": {
-        mode: "leiding",
-        speltak: "explorers",
-        badge: "Je bent ingelogd: Explorer Leiding"
-    },
-    "Rovers48": {
-        mode: "leiding",
-        speltak: "rovers",
-        badge: "Je bent ingelogd als Rover"
-    },
-    "OVN48stam": {
-        mode: "leiding",
-        speltak: "stam",
-        badge: "Je bent ingelogd als Stam"
-    },
-    "Admin48": {
-        mode: "admin",
-        speltak: null,
-        badge: "Je bent ingelogd als Admin"
+/* ======================================================================
+   CONFIG
+   ====================================================================== */
+
+const AUTH_STORAGE_KEY = "ovn_auth_session";
+
+/*
+Gebruiker-structuur (voor nu lokaal, later Firebase):
+{
+  id: "uuid",
+  username: "voornaam achternaam",
+  password: "hash-of-plain (fase 1)",
+  roles: {
+    admin: false,
+    bestuur: false,
+    speltakken: ["bevers", "scouts"]
+  }
+}
+*/
+
+// ⚠️ FASE 1: tijdelijke lokale gebruikers (admin kan dit later beheren)
+const USERS = [
+  {
+    id: "admin-1",
+    username: "admin",
+    password: "admin",
+    roles: {
+      admin: true,
+      bestuur: true,
+      speltakken: ["bevers", "welpen", "scouts", "explorers", "rovers", "stam"]
     }
-};
+  }
+];
 
+/* ======================================================================
+   HELPERS
+   ====================================================================== */
 
+function getAuthSession() {
+  const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+  if (!raw) return null;
 
-// ========================================================
-// login.js — universeel login systeem 
-// ========================================================
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
 
-const loginButton = document.getElementById("loginButton");
-const logoutButton = document.getElementById("logoutButton");
-const loginStatus = document.getElementById("loginStatus");
+function setAuthSession(session) {
+  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+}
 
-// --------------------------------------------------------
-// UI update functie
-// --------------------------------------------------------
+function clearAuthSession() {
+  localStorage.removeItem(AUTH_STORAGE_KEY);
+}
+
+function findUser(username, password) {
+  return USERS.find(
+    u =>
+      u.username.toLowerCase() === username.toLowerCase() &&
+      u.password === password
+  );
+}
+
+/* ======================================================================
+   UI UPDATE
+   ====================================================================== */
+
 function updateLoginUI() {
-    const mode = localStorage.getItem("mode") || "ouder";
+  const badge = document.getElementById("loginStatus");
+  const loginBtn = document.getElementById("loginButton");
+  const logoutBtn = document.getElementById("logoutButton");
 
-    // Login/Logout knoppen (alleen op index aanwezig)
-    if (loginButton) loginButton.classList.toggle("hidden", mode === "leiding");
-    if (logoutButton) logoutButton.classList.toggle("hidden", mode !== "leiding");
+  const session = getAuthSession();
 
-   // Leiding-badge (op alle pagina's aanwezig)
- if (loginStatus) {
-    const badge = localStorage.getItem("authBadge");
-    loginStatus.textContent = badge || "";
-    loginStatus.classList.toggle("hidden", !badge);
+  if (!badge || !loginBtn || !logoutBtn) return;
+
+  if (session) {
+    badge.textContent = "Ingelogd";
+    badge.classList.remove("hidden");
+
+    loginBtn.classList.add("hidden");
+    logoutBtn.classList.remove("hidden");
+
+    document.body.classList.add("is-logged-in");
+  } else {
+    badge.classList.add("hidden");
+
+    loginBtn.classList.remove("hidden");
+    logoutBtn.classList.add("hidden");
+
+    document.body.classList.remove("is-logged-in");
+  }
 }
 
-    // Dashboard- / bestuurskaarten alleen zichtbaar voor leiding (index)
-    const dashboardCards = document.querySelectorAll(".speltak-card.dashboard");
-    dashboardCards.forEach(card => {
-    card.classList.toggle("hidden", mode !== "leiding" && mode !== "admin");
+/* ======================================================================
+   LOGIN MODAL
+   ====================================================================== */
+
+function openLoginModal() {
+  if (document.getElementById("loginModal")) return;
+
+  const modal = document.createElement("div");
+  modal.className = "modal";
+  modal.id = "loginModal";
+
+  modal.innerHTML = `
+    <div class="modal-content">
+      <h3>Inloggen</h3>
+
+      <label for="loginUsername">Gebruikersnaam</label>
+      <input id="loginUsername" type="text" placeholder="Voornaam Achternaam" />
+
+      <label for="loginPassword">Wachtwoord</label>
+      <input id="loginPassword" type="password" placeholder="••••••••" />
+
+      <div id="loginError" style="color:#b91c1c;font-size:0.85rem;display:none;">
+        Onjuiste gebruikersnaam of wachtwoord
+      </div>
+
+      <div class="modal-actions">
+        <button id="loginCancel" class="pill-btn outline" type="button">
+          Annuleren
+        </button>
+        <button id="loginSubmit" class="pill-btn primary" type="button">
+          Inloggen
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  const usernameInput = modal.querySelector("#loginUsername");
+  const passwordInput = modal.querySelector("#loginPassword");
+  const errorBox = modal.querySelector("#loginError");
+
+  usernameInput.focus();
+
+  modal.querySelector("#loginCancel").onclick = closeLoginModal;
+
+  modal.querySelector("#loginSubmit").onclick = () => {
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value;
+
+    const user = findUser(username, password);
+
+    if (!user) {
+      errorBox.style.display = "block";
+      return;
+    }
+
+    setAuthSession({
+      userId: user.id,
+      username: user.username,
+      roles: user.roles,
+      loginAt: Date.now()
     });
+
+    closeLoginModal();
+    updateLoginUI();
+  };
+
+  modal.addEventListener("click", e => {
+    if (e.target === modal) closeLoginModal();
+  });
+
+  modal.addEventListener("keydown", e => {
+    if (e.key === "Escape") closeLoginModal();
+    if (e.key === "Enter") {
+      modal.querySelector("#loginSubmit").click();
+    }
+  });
 }
 
-// --------------------------------------------------------
-// Login handler
-// --------------------------------------------------------
-if (loginButton) {
-    loginButton.addEventListener("click", () => {
-        const pw = prompt("Voer wachtwoord in:");
-        const auth = LOGIN_MAP[pw];
+function closeLoginModal() {
+  const modal = document.getElementById("loginModal");
+  if (modal) modal.remove();
+}
 
-        if (!auth) {
-            alert("Onjuist wachtwoord.");
-            return;
-        }
+/* ======================================================================
+   EVENTS
+   ====================================================================== */
 
-        localStorage.setItem("mode", auth.mode);
-        localStorage.setItem("authSpeltak", auth.speltak ?? "");
-        localStorage.setItem("authBadge", auth.badge);
+document.addEventListener("DOMContentLoaded", () => {
+  updateLoginUI();
 
-        updateLoginUI();
-        location.reload();
+  const loginBtn = document.getElementById("loginButton");
+  const logoutBtn = document.getElementById("logoutButton");
+
+  if (loginBtn) {
+    loginBtn.addEventListener("click", openLoginModal);
+  }
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      clearAuthSession();
+      updateLoginUI();
+      window.location.reload(); // veilige reset
     });
-}
-
-// --------------------------------------------------------
-// Logout handler
-// --------------------------------------------------------
-if (logoutButton) {
-    logoutButton.addEventListener("click", () => {
-        localStorage.removeItem("mode");
-        localStorage.removeItem("authSpeltak");
-        localStorage.removeItem("authBadge");
-        updateLoginUI();
-        alert("Je bent uitgelogd.");
-        location.reload();
-    });
-}
-
-// --------------------------------------------------------
-// Initial UI update
-// --------------------------------------------------------
-updateLoginUI();
+  }
+});

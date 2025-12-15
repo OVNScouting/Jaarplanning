@@ -192,15 +192,22 @@ function renderDesktop(grouped) {
     h.textContent = formatDateDisplay(date);
     container.appendChild(h);
 
-    const table = document.createElement("table");
-    table.className = "dashboard-table";
-    table.appendChild(renderTheadDesktop());
+    const wrapper = document.createElement("div");
+wrapper.className = "dashboard-table-wrapper";
+
+const table = document.createElement("table");
+table.className = "dashboard-table";
+table.appendChild(renderTheadDesktop());
+
+wrapper.appendChild(table);
+
 
     const tbody = document.createElement("tbody");
     grouped[date].forEach(o => tbody.appendChild(renderRowDesktop(o)));
 
-    table.appendChild(tbody);
-    container.appendChild(table);
+   table.appendChild(tbody);
+   container.appendChild(wrapper);
+
   }
 }
 

@@ -127,6 +127,26 @@ body {
   font-size: 0.85rem;
   font-weight: 500;
 }
+/* ============================================================
+   LOGIN BADGE (nieuw auth-systeem)
+============================================================ */
+.login-badge {
+  background: var(--blue);
+  color: #fff;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Mobile: iets compacter */
+@media (max-width: 900px) {
+  .login-badge {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.7rem;
+  }
+}
 
 /* ============================================================
    INFO BLOK

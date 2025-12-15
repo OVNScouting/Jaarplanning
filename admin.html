@@ -69,42 +69,7 @@
 </main>
 
 <script src="login.js"></script>
-
-<script>
-/* ============================================================
-   ADMIN PAGE LOGIC (FASE 1)
-============================================================ */
-
-// Bescherming: alleen admins
-(function guardAdmin() {
-  const session = JSON.parse(localStorage.getItem("ovn_auth_session"));
-  if (!session?.roles?.admin) {
-    document.body.innerHTML = "<p style='padding:2rem'>Geen toegang</p>";
-  } else {
-    document.body.classList.remove("hidden");
-  }
-})();
-
-// USERS komt uit login.js (fase 1)
-(function renderUsers() {
-  if (typeof USERS === "undefined") return;
-
-  const tbody = document.getElementById("userTable");
-
-  USERS.forEach(user => {
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>${user.username}</td>
-      <td>${user.roles.admin ? "✔️" : "—"}</td>
-      <td>${user.roles.bestuur ? "✔️" : "—"}</td>
-      <td>${(user.roles.speltakken || []).join(", ")}</td>
-    `;
-
-    tbody.appendChild(tr);
-  });
-})();
-</script>
+<script src="admin.js"></script>
 
 </body>
 </html>

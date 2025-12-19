@@ -11,9 +11,10 @@ const AUTH_KEY = "ovn_auth_session";
 
 const USERS_STORAGE_KEY = "ovn_users";
 
-/* ======================================
-   USERS — centrale opslag
-====================================== */
+/* ===============================
+   USERS LOAD / INIT
+=============================== */
+let USERS = loadUsers();
 
 function loadUsers() {
   const raw = localStorage.getItem(USERS_STORAGE_KEY);
@@ -21,12 +22,12 @@ function loadUsers() {
     try {
       return JSON.parse(raw);
     } catch {
-      console.warn("Kon ovn_users niet lezen, reset naar default");
+      console.warn("USERS corrupt, reset");
     }
   }
 
-  // Eerste keer: admin bootstrap
-  const initialUsers = [
+  // Eerste keer: default admin
+  const initial = [
     {
       id: "admin-1",
       username: "admin",
@@ -34,32 +35,19 @@ function loadUsers() {
       roles: {
         admin: true,
         bestuur: true,
-        speltakken: [
-          "bevers",
-          "welpen",
-          "scouts",
-          "explorers",
-          "rovers",
-          "stam"
-        ]
+        speltakken: ["bevers", "welpen", "scouts", "explorers", "rovers", "stam"]
       }
     }
   ];
 
-  localStorage.setItem(
-    USERS_STORAGE_KEY,
-    JSON.stringify(initialUsers)
-  );
-
-  return initialUsers;
+  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(initial));
+  return initial;
 }
 
 function saveUsers(users) {
-  localStorage.setItem(
-    USERS_STORAGE_KEY,
-    JSON.stringify(users)
-  );
+  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
 }
+
 
 // 👉 DEZE is nu globaal beschikbaar
 window.USERS = loadUsers();

@@ -12,8 +12,17 @@ const USERS_STORAGE_KEY = "ovn_users";
 // ======================================================================
 // FIREBASE INIT (FASE 1)
 // ======================================================================
-const app = window._firebase.initializeApp(window.firebaseConfig);
-const auth = window._firebase.getAuth(app);
+let auth = null;
+
+function initFirebaseAuth() {
+  if (!window._firebase || !window.firebaseConfig) {
+    console.error("Firebase not ready");
+    return;
+  }
+
+  const app = window._firebase.initializeApp(window.firebaseConfig);
+  auth = window._firebase.getAuth(app);
+}
 // ======================================================================
 // LEGACY USERS (nog nodig voor admin.js – FASE 2)
 // ======================================================================
@@ -210,6 +219,10 @@ auth.onAuthStateChanged(user => {
 // ======================================================================
 // EVENTS
 // ======================================================================
+document.addEventListener("DOMContentLoaded", () => {
+  initFirebaseAuth();
+});
+
 document.addEventListener("DOMContentLoaded", () => {
   updateHeader();
   applyAuthVisibility();

@@ -31,6 +31,8 @@ if (!USERS) {
   localStorage.setItem("ovn_users", JSON.stringify(USERS));
 }
 
+function loadUsers() {
+
 
 /* ======================================================================
    SESSION HELPERS

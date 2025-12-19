@@ -5,21 +5,6 @@
 ============================================================ */
 
 /* ===============================
-   ADMIN GUARD
-=============================== */
-(function guardAdmin() {
-  const session = JSON.parse(localStorage.getItem("ovn_auth_session"));
-
-  if (!session?.roles?.admin) {
-    document.body.innerHTML =
-      "<p style='padding:2rem'>Geen toegang</p>";
-    return;
-  }
-
-  document.body.classList.remove("hidden");
-})();
-
-/* ===============================
    USERS RENDER + EDIT (FASE 1)
 =============================== */
 (function renderUsers() {

@@ -31,6 +31,9 @@ const db = getDatabase(app);
 // ======================================================================
 // AUTH / ROLLEN
 // ======================================================================
+// FASE 0:
+// authMode/mode is momenteel een UI/view-state (historisch gegroeid) en wordt hier gebruikt
+// als toegangssignaal. In FASE 1+ wordt dit afgeleid van Firebase roles en gecentraliseerd.
 const authMode = localStorage.getItem("mode");
 const isBestuur = authMode === "admin" || authMode === "bestuur";
 const isLeiding = authMode === "leiding" || isBestuur;

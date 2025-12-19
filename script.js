@@ -31,21 +31,35 @@ const speltak = window.location.pathname
     .toLowerCase();
 
 /* ======================================================================
-   AUTH — speltak-beperking
+   AUTH — rollen & rechten (nieuw login-systeem)
    ====================================================================== */
 
-/* ======================================================================
-   AUTH — rechten per speltak (zonder uitloggen)
-   ====================================================================== */
+function getSession() {
+    try {
+        return JSON.parse(localStorage.getItem("ovn_auth_session"));
+    } catch {
+        return null;
+    }
+}
 
-const authSpeltak = localStorage.getItem("authSpeltak");
-const authMode = localStorage.getItem("mode");
+function isLoggedIn() {
+    return !!getSession();
+}
 
-// Bepaal of gebruiker leidingrechten heeft op DEZE speltak
-const hasLeidingRechtenOpDezeSpeltak =
-    authMode === "admin" ||
-    (authMode === "leiding" && authSpeltak === speltak);
+function isAdmin() {
+    return !!getSession()?.roles?.admin;
+}
 
+function isBestuur() {
+    return !!getSession()?.roles?.bestuur;
+}
+
+function hasSpeltakRechten() {
+    const s = getSession();
+    if (!s) return false;
+    if (s.roles?.admin) return true;
+    return s.roles?.speltakken?.includes(speltak);
+}
 
 const config = window.speltakConfig || { showBert: false, showLeiding: true };
 
@@ -358,26 +372,18 @@ let editMode = false;
 /* ======================================================================
    MODE FUNCTIONS
    ====================================================================== */
-function isOuder() { 
-  return mode === "ouder"; 
+function isOuder() {
+    return !isLoggedIn() || !hasSpeltakRechten();
 }
 
 function isLeiding() {
-    return hasLeidingRechtenOpDezeSpeltak;
+    return isLoggedIn() && hasSpeltakRechten();
 }
 
 // ----------------------------------------------------------------------
 // MODE STATE
 // ----------------------------------------------------------------------
-let mode = localStorage.getItem("mode") || "ouder";
-
-// Forceer view-modus per speltak (zonder uitloggen)
-if (!hasLeidingRechtenOpDezeSpeltak) {
-    mode = "ouder";
-} else {
-    mode = "leiding";
-}
-
+let mode = isLeiding() ? "leiding" : "ouder";
 
 // Edit-modus is nu een aparte vlag, en alleen geldig als je leiding bent
 function isEdit() { 

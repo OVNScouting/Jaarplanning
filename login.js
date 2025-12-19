@@ -1,10 +1,5 @@
-
 // ======================================================================
-// login.js — Auth systeem (FASE 1: Firebase Auth)
-// - Centrale auth-controller (non-module)
-// - UI gestuurd via CSS classes
-// - ovn_auth_session blijft leidend voor de rest van de app
-// - Legacy USERS blijft bestaan voor admin.js (FASE 2), maar login gaat via Firebase
+// login.js — Auth systeem (FASE 2)
 // ======================================================================
 
 const AUTH_KEY = "ovn_auth_session";
@@ -13,7 +8,7 @@ const USERS_STORAGE_KEY = "ovn_users";
 let auth = null;
 
 // ======================================================================
-// LEGACY USERS (nog nodig voor admin.js – FASE 2)
+// LEGACY USERS (nodig voor admin.js – wordt later uitgefaseerd)
 // ======================================================================
 let USERS = window.USERS = loadUsers();
 
@@ -27,7 +22,6 @@ function loadUsers() {
     }
   }
 
-  // Eerste keer: default admin (legacy)
   const initial = [
     {
       id: "admin-1",
@@ -78,7 +72,7 @@ function hasRole(role) {
 }
 
 // ======================================================================
-// UI VISIBILITY
+// UI
 // ======================================================================
 function applyAuthVisibility() {
   const loggedIn = isLoggedIn();
@@ -100,9 +94,6 @@ function applyAuthVisibility() {
   );
 }
 
-// ======================================================================
-// HEADER (badge + knoppen)
-// ======================================================================
 function updateHeader() {
   const badge = document.getElementById("loginStatus");
   const loginBtn = document.getElementById("loginButton");
@@ -123,47 +114,54 @@ function updateHeader() {
 }
 
 // ======================================================================
-// FIREBASE INIT + LISTENER (FASE 1)
+// FIREBASE INIT + AUTH LISTENER
 // ======================================================================
 function initFirebaseAuth(retries = 10) {
   if (!window._firebase || !window.firebaseConfig) {
     if (retries > 0) {
       setTimeout(() => initFirebaseAuth(retries - 1), 50);
     }
-    return false;
+    return;
   }
 
-  // --------------------------------------------------
-  // Rollen ophalen uit Firebase Realtime Database
-  // /users/{uid}/roles
-  // --------------------------------------------------
-  let roles = {};
+  const app = window._firebase.getApps().length
+    ? window._firebase.getApp()
+    : window._firebase.initializeApp(window.firebaseConfig);
 
-  try {
-    const db = window._firebase.getDatabase();
-    const rolesRef = window._firebase.ref(db, `users/${user.uid}/roles`);
-    const snapshot = await window._firebase.get(rolesRef);
+  auth = window._firebase.getAuth(app);
 
-    if (snapshot.exists()) {
-      roles = snapshot.val();
+  window._firebase.onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      clearSession();
+      updateHeader();
+      applyAuthVisibility();
+      return;
     }
-  } catch (err) {
-    console.warn("Kon rollen niet laden:", err);
-  }
 
-  setSession({
-    id: user.uid,
-    email: user.email,
-    roles,
-    loginAt: Date.now()
+    let roles = {};
+
+    try {
+      const db = window._firebase.getDatabase();
+      const rolesRef = window._firebase.ref(db, `users/${user.uid}/roles`);
+      const snapshot = await window._firebase.get(rolesRef);
+
+      if (snapshot.exists()) {
+        roles = snapshot.val();
+      }
+    } catch (err) {
+      console.warn("Kon rollen niet laden:", err);
+    }
+
+    setSession({
+      id: user.uid,
+      email: user.email,
+      roles,
+      loginAt: Date.now()
+    });
+
+    updateHeader();
+    applyAuthVisibility();
   });
-
-  updateHeader();
-  applyAuthVisibility();
-});
-
-
-  return true;
 }
 
 // ======================================================================
@@ -179,50 +177,31 @@ function openLoginModal() {
   modal.innerHTML = `
     <div class="modal-content">
       <h3>Inloggen</h3>
-
       <label>Email</label>
-      <input id="loginUser" type="email" autocomplete="username">
-
+      <input id="loginUser" type="email">
       <label>Wachtwoord</label>
-      <input id="loginPass" type="password" autocomplete="current-password">
-
-      <div id="loginError" class="hidden" style="color:#b91c1c;font-size:.85rem;">
-        Onjuiste gegevens
-      </div>
-
+      <input id="loginPass" type="password">
+      <div id="loginError" class="hidden">Onjuiste gegevens</div>
       <div class="modal-actions">
-        <button id="loginCancel" class="pill-btn outline">Annuleren</button>
-        <button id="loginSubmit" class="pill-btn primary">Inloggen</button>
+        <button id="loginCancel">Annuleren</button>
+        <button id="loginSubmit">Inloggen</button>
       </div>
     </div>
   `;
 
   document.body.appendChild(modal);
 
-  const userInput = modal.querySelector("#loginUser");
-  const passInput = modal.querySelector("#loginPass");
-  const errorBox = modal.querySelector("#loginError");
-
-  userInput.focus();
-
   modal.querySelector("#loginCancel").onclick = closeLoginModal;
 
   modal.querySelector("#loginSubmit").onclick = async () => {
-    errorBox.classList.add("hidden");
-
-    const email = userInput.value.trim();
-    const password = passInput.value;
-
-    if (!auth) {
-      errorBox.classList.remove("hidden");
-      return;
-    }
+    const email = modal.querySelector("#loginUser").value.trim();
+    const password = modal.querySelector("#loginPass").value;
 
     try {
       await window._firebase.signInWithEmailAndPassword(auth, email, password);
-      closeLoginModal(); // verdere UI update komt via onAuthStateChanged
+      closeLoginModal();
     } catch {
-      errorBox.classList.remove("hidden");
+      modal.querySelector("#loginError").classList.remove("hidden");
     }
   };
 
@@ -236,14 +215,11 @@ function closeLoginModal() {
 }
 
 // ======================================================================
-// EVENTS (één keer, strak)
+// EVENTS
 // ======================================================================
 document.addEventListener("DOMContentLoaded", () => {
-  // UI alvast in “huidige sessie” toestand zetten
   updateHeader();
   applyAuthVisibility();
-
-  // Firebase Auth init + listener
   initFirebaseAuth();
 
   document.getElementById("loginButton")
@@ -251,7 +227,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("logoutButton")
     ?.addEventListener("click", () => {
-      if (!auth) return;
-      window._firebase.signOut(auth);
+      if (auth) window._firebase.signOut(auth);
     });
 });

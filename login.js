@@ -125,29 +125,12 @@ function updateHeader() {
 // ======================================================================
 // FIREBASE INIT + LISTENER (FASE 1)
 // ======================================================================
-function initFirebaseAuth() {
-  if (!window._firebase) {
-    console.error("Firebase imports not ready: window._firebase missing");
+function initFirebaseAuth(retries = 10) {
+  if (!window._firebase || !window.firebaseConfig) {
+    if (retries > 0) {
+      setTimeout(() => initFirebaseAuth(retries - 1), 50);
+    }
     return false;
-  }
-  if (!window.firebaseConfig) {
-    console.error("Firebase config not ready: window.firebaseConfig missing");
-    return false;
-  }
-
-  // Voorkom dubbele initializeApp tussen login.js en module scripts
-  const app = (window._firebase.getApps && window._firebase.getApps().length)
-    ? window._firebase.getApp()
-    : window._firebase.initializeApp(window.firebaseConfig);
-
-  auth = window._firebase.getAuth(app);
-
- window._firebase.onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    clearSession();
-    updateHeader();
-    applyAuthVisibility();
-    return;
   }
 
   // --------------------------------------------------

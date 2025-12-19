@@ -85,14 +85,28 @@
 =============================== */
 
 function bindRoleEvents() {
+   const session = JSON.parse(localStorage.getItem("ovn_auth_session"));
+   if (!session?.roles?.admin) return;
+
   // Admin / Bestuur toggles
   document.querySelectorAll("input[data-role]").forEach(input => {
     input.addEventListener("change", e => {
       const userIndex = e.target.dataset.user;
       const role = e.target.dataset.role;
 
-      USERS[userIndex].roles[role] = e.target.checked;
-      persistUsers();
+   // Voorkom dat laatste admin zichzelf uitschakelt
+if (
+  role === "admin" &&
+  !e.target.checked &&
+  USERS.filter(u => u.roles.admin).length === 1
+) {
+  alert("Er moet minimaal één admin blijven.");
+  e.target.checked = true;
+  return;
+}
+
+USERS[userIndex].roles[role] = e.target.checked;
+persistUsers();
     });
   });
 
@@ -122,8 +136,11 @@ function bindRoleEvents() {
 /* ===============================
    LOCAL PERSISTENCE (FASE 1)
 =============================== */
-
 function persistUsers() {
+  if (typeof saveUsers !== "function") {
+    console.error("saveUsers() niet beschikbaar — check script volgorde");
+    return;
+  }
   saveUsers(USERS);
 }
 

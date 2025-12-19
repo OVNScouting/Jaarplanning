@@ -12,14 +12,8 @@ const USERS_STORAGE_KEY = "ovn_users";
 // ======================================================================
 // FIREBASE INIT (FASE 1)
 // ======================================================================
-// firebase-config.js moet eerder geladen zijn
-// firebase-imports.js initialiseert Firebase globals
-const app = firebase.initializeApp
-  ? firebase.initializeApp(window.firebaseConfig)
-  : initializeApp(window.firebaseConfig);
-
-const auth = firebase.auth ? firebase.auth() : getAuth(app);
-
+const app = window._firebase.initializeApp(window.firebaseConfig);
+const auth = window._firebase.getAuth(app);
 // ======================================================================
 // LEGACY USERS (nog nodig voor admin.js – FASE 2)
 // ======================================================================

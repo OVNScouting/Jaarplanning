@@ -37,11 +37,18 @@ export {
 // Expose Firebase helpers for non-module scripts (login.js)
 // ============================================================
 window._firebase = {
+  // app / auth
   initializeApp,
   getApp,
   getApps,
   getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
-  signOut
+  signOut,
+
+  // database (voor login.js)
+  getDatabase,
+  ref,
+  get
 };
+

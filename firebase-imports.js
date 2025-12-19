@@ -1,22 +1,25 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { 
-  getDatabase, 
-  ref, 
-  get, 
-  set, 
-  update, 
-  push, 
-  remove 
+import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import {
+  getDatabase,
+  ref,
+  get,
+  set,
+  update,
+  push,
+  remove
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-// Firebase Authentication (FASE 0: alleen beschikbaar maken, nog niet gebruiken)
-import { 
-  getAuth 
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-
 
 export {
   initializeApp,
+  getApp,
+  getApps,
   getDatabase,
   ref,
   get,
@@ -24,12 +27,21 @@ export {
   update,
   push,
   remove,
-  getAuth // FASE 0: nog niet actief gebruikt
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut
 };
+
 // ============================================================
 // Expose Firebase helpers for non-module scripts (login.js)
 // ============================================================
 window._firebase = {
   initializeApp,
-  getAuth
+  getApp,
+  getApps,
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut
 };

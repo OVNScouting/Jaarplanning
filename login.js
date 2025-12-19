@@ -142,26 +142,43 @@ function initFirebaseAuth() {
 
   auth = window._firebase.getAuth(app);
 
-  // Auth state listener (ENIGE bron van waarheid voor in/uitloggen)
-  window._firebase.onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      clearSession();
-      updateHeader();
-      applyAuthVisibility();
-      return;
-    }
-
-    // Rollen komen in FASE 2; voorlopig leeg object zodat checks veilig zijn
-    setSession({
-      id: user.uid,
-      email: user.email,
-      roles: {},
-      loginAt: Date.now()
-    });
-
+ window._firebase.onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    clearSession();
     updateHeader();
     applyAuthVisibility();
+    return;
+  }
+
+  // --------------------------------------------------
+  // Rollen ophalen uit Firebase Realtime Database
+  // /users/{uid}/roles
+  // --------------------------------------------------
+  let roles = {};
+
+  try {
+    const db = window._firebase.getDatabase();
+    const rolesRef = window._firebase.ref(db, `users/${user.uid}/roles`);
+    const snapshot = await window._firebase.get(rolesRef);
+
+    if (snapshot.exists()) {
+      roles = snapshot.val();
+    }
+  } catch (err) {
+    console.warn("Kon rollen niet laden:", err);
+  }
+
+  setSession({
+    id: user.uid,
+    email: user.email,
+    roles,
+    loginAt: Date.now()
   });
+
+  updateHeader();
+  applyAuthVisibility();
+});
+
 
   return true;
 }

@@ -2,6 +2,22 @@
    admin.js — Admin omgeving (fase 1)
    - Alleen admin toegang
    - Read-only gebruikersoverzicht
+============================================================
+FASE 0 — DOELMODEL (straks in Firebase Realtime DB):
+/users/{uid} {
+  email: string,
+  roles: {
+    admin: boolean,
+    bestuur: boolean,
+    speltakken: string[]
+  },
+  createdAt: number,
+  approved: boolean
+}
+
+In FASE 1+:
+- localStorage USERS verdwijnt
+- admin.js bewerkt bovenstaande DB-structuur
 ============================================================ */
 (function guardAdmin() {
   const session = JSON.parse(localStorage.getItem("ovn_auth_session"));

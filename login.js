@@ -23,6 +23,29 @@ function initFirebaseAuth() {
   const app = window._firebase.initializeApp(window.firebaseConfig);
   auth = window._firebase.getAuth(app);
 }
+
+// ======================================================================
+// FIREBASE AUTH STATE LISTENER (ENIGE BRON VAN WAARHEID)
+// ======================================================================
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    clearSession();
+    updateHeader();
+    applyAuthVisibility();
+    return;
+  }
+
+  setSession({
+    id: user.uid,
+    email: user.email,
+    roles: {}, // FASE 2
+    loginAt: Date.now()
+  });
+
+  updateHeader();
+  applyAuthVisibility();
+});
+
 // ======================================================================
 // LEGACY USERS (nog nodig voor admin.js – FASE 2)
 // ======================================================================
@@ -195,28 +218,6 @@ function closeLoginModal() {
 }
 
 // ======================================================================
-// FIREBASE AUTH STATE LISTENER (ENIGE BRON VAN WAARHEID)
-// ======================================================================
-auth.onAuthStateChanged(user => {
-  if (!user) {
-    clearSession();
-    updateHeader();
-    applyAuthVisibility();
-    return;
-  }
-
-  setSession({
-    id: user.uid,
-    email: user.email,
-    roles: {}, // FASE 2
-    loginAt: Date.now()
-  });
-
-  updateHeader();
-  applyAuthVisibility();
-});
-
-// ======================================================================
 // EVENTS
 // ======================================================================
 document.addEventListener("DOMContentLoaded", () => {
@@ -231,5 +232,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ?.addEventListener("click", openLoginModal);
 
   document.getElementById("logoutButton")
-    ?.addEventListener("click", () => auth.signOut());
+?.addEventListener("click", () => {
+  if (auth) auth.signOut();
+});
 });

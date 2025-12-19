@@ -1,25 +1,28 @@
 // ======================================================================
-// login.js — Auth systeem (stabiele basis)
-// - Popup login (gebruikersnaam + wachtwoord)
-// - Eén sessie in localStorage
-// - Badge: "Ingelogd"
-// - Zichtbaarheid via CSS classes
-// - Voorbereid op rollen & rechten
+// login.js — Auth systeem (FASE 1: Firebase Auth)
+// - Centrale auth-controller
+// - UI gestuurd via CSS classes
+// - ovn_auth_session blijft leidend voor de rest van de app
+// - Geen modules, geen imports (past bij bestaande HTML)
 // ======================================================================
-//
-// FASE 0:
-// - Dit bestand blijft de ENIGE plek waar auth-state wordt bepaald
-// - Firebase Auth wordt hier later gekoppeld
-// - ovn_auth_session blijft voorlopig leidend (geen gedrag wijzigen)
-//
 
 const AUTH_KEY = "ovn_auth_session";
-
 const USERS_STORAGE_KEY = "ovn_users";
 
-/* ===============================
-   USERS LOAD / INIT
-=============================== */
+// ======================================================================
+// FIREBASE INIT (FASE 1)
+// ======================================================================
+// firebase-config.js moet eerder geladen zijn
+// firebase-imports.js initialiseert Firebase globals
+const app = firebase.initializeApp
+  ? firebase.initializeApp(window.firebaseConfig)
+  : initializeApp(window.firebaseConfig);
+
+const auth = firebase.auth ? firebase.auth() : getAuth(app);
+
+// ======================================================================
+// LEGACY USERS (nog nodig voor admin.js – FASE 2)
+// ======================================================================
 let USERS = window.USERS = loadUsers();
 
 function loadUsers() {
@@ -32,7 +35,6 @@ function loadUsers() {
     }
   }
 
-  // Eerste keer: default admin
   const initial = [
     {
       id: "admin-1",
@@ -50,17 +52,13 @@ function loadUsers() {
   return initial;
 }
 
-function saveUsers(users) {
+window.saveUsers = function (users) {
   localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
-}
+};
 
-
-window.saveUsers = saveUsers;
-
-
-/* ======================================================================
-   SESSION HELPERS
-   ====================================================================== */
+// ======================================================================
+// SESSION HELPERS
+// ======================================================================
 function getSession() {
   try {
     return JSON.parse(localStorage.getItem(AUTH_KEY));
@@ -69,13 +67,8 @@ function getSession() {
   }
 }
 
-function setSession(user) {
-  localStorage.setItem(AUTH_KEY, JSON.stringify({
-    id: user.id,
-    username: user.username,
-    roles: user.roles,
-    loginAt: Date.now()
-  }));
+function setSession(session) {
+  localStorage.setItem(AUTH_KEY, JSON.stringify(session));
 }
 
 function clearSession() {
@@ -91,15 +84,15 @@ function hasRole(role) {
   return !!s?.roles?.[role];
 }
 
-/* ======================================================================
-   UI VISIBILITY
-   ====================================================================== */
+// ======================================================================
+// UI VISIBILITY
+// ======================================================================
 function applyAuthVisibility() {
   const loggedIn = isLoggedIn();
-   const session = getSession();
-   
-   document.body.classList.toggle("is-logged-in", loggedIn);
-   document.body.classList.toggle("only-admin", !!session?.roles?.admin);
+  const session = getSession();
+
+  document.body.classList.toggle("is-logged-in", loggedIn);
+  document.body.classList.toggle("only-admin", !!session?.roles?.admin);
 
   document.querySelectorAll(".only-auth").forEach(el =>
     el.classList.toggle("hidden", !loggedIn)
@@ -114,9 +107,9 @@ function applyAuthVisibility() {
   );
 }
 
-/* ======================================================================
-   HEADER (badge + knoppen)
-   ====================================================================== */
+// ======================================================================
+// HEADER (badge + knoppen)
+// ======================================================================
 function updateHeader() {
   const badge = document.getElementById("loginStatus");
   const loginBtn = document.getElementById("loginButton");
@@ -127,20 +120,18 @@ function updateHeader() {
   if (isLoggedIn()) {
     badge.textContent = "Ingelogd";
     badge.classList.remove("hidden");
-
     loginBtn.classList.add("hidden");
     logoutBtn.classList.remove("hidden");
   } else {
     badge.classList.add("hidden");
-
     loginBtn.classList.remove("hidden");
     logoutBtn.classList.add("hidden");
   }
 }
 
-/* ======================================================================
-   LOGIN MODAL
-   ====================================================================== */
+// ======================================================================
+// LOGIN MODAL
+// ======================================================================
 function openLoginModal() {
   if (document.getElementById("loginModal")) return;
 
@@ -152,13 +143,13 @@ function openLoginModal() {
     <div class="modal-content">
       <h3>Inloggen</h3>
 
-      <label>Gebruikersnaam</label>
-      <input id="loginUser" type="text" placeholder="Voornaam Achternaam">
+      <label>Email</label>
+      <input id="loginUser" type="email">
 
       <label>Wachtwoord</label>
       <input id="loginPass" type="password">
 
-      <div id="loginError" style="display:none;color:#b91c1c;font-size:.85rem;">
+      <div id="loginError" class="hidden" style="color:#b91c1c;font-size:.85rem;">
         Onjuiste gegevens
       </div>
 
@@ -179,23 +170,16 @@ function openLoginModal() {
 
   modal.querySelector("#loginCancel").onclick = closeLoginModal;
 
-  modal.querySelector("#loginSubmit").onclick = () => {
-    const u = userInput.value.trim().toLowerCase();
-    const p = passInput.value;
-
-    const user = USERS.find(x =>
-      x.username.toLowerCase() === u && x.password === p
-    );
-
-    if (!user) {
-      errorBox.style.display = "block";
-      return;
+  modal.querySelector("#loginSubmit").onclick = async () => {
+    try {
+      await auth.signInWithEmailAndPassword(
+        userInput.value.trim(),
+        passInput.value
+      );
+      closeLoginModal();
+    } catch {
+      errorBox.classList.remove("hidden");
     }
-
-    setSession(user);
-    closeLoginModal();
-    updateHeader();
-    applyAuthVisibility();
   };
 
   modal.onclick = e => {
@@ -207,9 +191,31 @@ function closeLoginModal() {
   document.getElementById("loginModal")?.remove();
 }
 
-/* ======================================================================
-   EVENTS
-   ====================================================================== */
+// ======================================================================
+// FIREBASE AUTH STATE LISTENER (ENIGE BRON VAN WAARHEID)
+// ======================================================================
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    clearSession();
+    updateHeader();
+    applyAuthVisibility();
+    return;
+  }
+
+  setSession({
+    id: user.uid,
+    email: user.email,
+    roles: {}, // FASE 2
+    loginAt: Date.now()
+  });
+
+  updateHeader();
+  applyAuthVisibility();
+});
+
+// ======================================================================
+// EVENTS
+// ======================================================================
 document.addEventListener("DOMContentLoaded", () => {
   updateHeader();
   applyAuthVisibility();
@@ -218,10 +224,5 @@ document.addEventListener("DOMContentLoaded", () => {
     ?.addEventListener("click", openLoginModal);
 
   document.getElementById("logoutButton")
-    ?.addEventListener("click", () => {
-      clearSession();
-      updateHeader();
-      applyAuthVisibility();
-      location.reload();
-    });
+    ?.addEventListener("click", () => auth.signOut());
 });

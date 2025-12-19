@@ -94,6 +94,7 @@ function applyAuthVisibility() {
   const loggedIn = isLoggedIn();
 
   document.body.classList.toggle("is-logged-in", loggedIn);
+  document.body.classList.toggle("only-admin", session.roles?.admin);
 
   document.querySelectorAll(".only-auth").forEach(el =>
     el.classList.toggle("hidden", !loggedIn)

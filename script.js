@@ -13,6 +13,8 @@ import {
 
 import {
     initializeApp,
+    getApp,
+    getApps,
     getDatabase,
     ref,
     get,
@@ -20,6 +22,7 @@ import {
     update,
     push
 } from "./firebase-imports.js";
+
 
 /* ======================================================================
    FIREBASE INIT

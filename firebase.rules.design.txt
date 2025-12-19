@@ -1,0 +1,20 @@
+FASE 0 — Firebase Rules Ontwerp (nog niet actief)
+
+- auth == null
+  - read: publieke data (index)
+  - write: nooit
+
+- role: ouder
+  - read: speltak planning (beperkt)
+  - write: nooit
+
+- role: leiding
+  - read: alle speltakken + dashboard
+  - write: eigen speltak
+
+- role: bestuur
+  - read: alles
+  - write: bestuursItems
+
+- role: admin
+  - full access

@@ -14,7 +14,7 @@ const USERS_STORAGE_KEY = "ovn_users";
 /* ===============================
    USERS LOAD / INIT
 =============================== */
-let USERS = loadUsers();
+let USERS = window.USERS = loadUsers();
 
 function loadUsers() {
   const raw = localStorage.getItem(USERS_STORAGE_KEY);
@@ -49,8 +49,6 @@ function saveUsers(users) {
 }
 
 
-// 👉 DEZE is nu globaal beschikbaar
-window.USERS = loadUsers();
 window.saveUsers = saveUsers;
 
 
@@ -92,9 +90,10 @@ function hasRole(role) {
    ====================================================================== */
 function applyAuthVisibility() {
   const loggedIn = isLoggedIn();
-
-  document.body.classList.toggle("is-logged-in", loggedIn);
-  document.body.classList.toggle("only-admin", session.roles?.admin);
+   const session = getSession();
+   
+   document.body.classList.toggle("is-logged-in", loggedIn);
+   document.body.classList.toggle("only-admin", !!session?.roles?.admin);
 
   document.querySelectorAll(".only-auth").forEach(el =>
     el.classList.toggle("hidden", !loggedIn)

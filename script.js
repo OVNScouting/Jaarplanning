@@ -66,7 +66,7 @@ function hasSpeltakRechten() {
 
 const config = window.speltakConfig || { showBert: false, showLeiding: true };
 
-const app = initializeApp(window.firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(window.firebaseConfig);
 const db = getDatabase(app);
 
 // Standaard start/eindtijden per speltak

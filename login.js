@@ -12,7 +12,7 @@ const AUTH_KEY = "ovn_auth_session";
 /* ======================================================================
    TIJDELIJKE USERS (FASE 1)
    ====================================================================== */
-const USERS = [
+const USERS = JSON.parse(localStorage.getItem("ovn_users")) || [
   {
     id: "admin-1",
     username: "admin",

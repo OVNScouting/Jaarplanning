@@ -12,18 +12,25 @@ const AUTH_KEY = "ovn_auth_session";
 /* ======================================================================
    TIJDELIJKE USERS (FASE 1)
    ====================================================================== */
-const USERS = JSON.parse(localStorage.getItem("ovn_users")) || [
-  {
-    id: "admin-1",
-    username: "admin",
-    password: "admin",
-    roles: {
-      admin: true,
-      bestuur: true,
-      speltakken: ["bevers", "welpen", "scouts", "explorers", "rovers", "stam"]
+let USERS = JSON.parse(localStorage.getItem("ovn_users"));
+
+if (!USERS) {
+  USERS = [
+    {
+      id: "admin-1",
+      username: "admin",
+      password: "admin",
+      roles: {
+        admin: true,
+        bestuur: true,
+        speltakken: ["bevers", "welpen", "scouts", "explorers", "rovers", "stam"]
+      }
     }
-  }
-];
+  ];
+
+  localStorage.setItem("ovn_users", JSON.stringify(USERS));
+}
+
 
 /* ======================================================================
    SESSION HELPERS

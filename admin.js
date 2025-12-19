@@ -128,6 +128,6 @@ function bindRoleEvents() {
 =============================== */
 
 function persistUsers() {
-  localStorage.setItem("ovn_users", JSON.stringify(USERS));
+  saveUsers(USERS);
 }
 

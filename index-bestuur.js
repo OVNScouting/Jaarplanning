@@ -13,6 +13,9 @@ import {
 // ======================================================================
 // AUTH CHECK
 // ======================================================================
+// FASE 0:
+// mode is een UI/view-state. In FASE 1+ wordt toegang afgeleid van Firebase roles,
+// maar dit script blijft “defensief” (doet niks als je geen leiding bent).
 const mode = localStorage.getItem("mode");
 const isLeiding = mode === "leiding" || mode === "bestuur" || mode === "admin";
 

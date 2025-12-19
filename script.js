@@ -35,6 +35,9 @@ const speltak = window.location.pathname
    ====================================================================== */
 
 function getSession() {
+   // FASE 0:
+    // Sessie komt nu nog uit localStorage.
+    // In FASE 1 wordt deze gevuld vanuit Firebase Auth (zonder dat callers veranderen).
     try {
         return JSON.parse(localStorage.getItem("ovn_auth_session"));
     } catch {

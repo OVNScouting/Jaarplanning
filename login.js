@@ -6,6 +6,12 @@
 // - Zichtbaarheid via CSS classes
 // - Voorbereid op rollen & rechten
 // ======================================================================
+//
+// FASE 0:
+// - Dit bestand blijft de ENIGE plek waar auth-state wordt bepaald
+// - Firebase Auth wordt hier later gekoppeld
+// - ovn_auth_session blijft voorlopig leidend (geen gedrag wijzigen)
+//
 
 const AUTH_KEY = "ovn_auth_session";
 

@@ -26,4 +26,10 @@ export {
   remove,
   getAuth // FASE 0: nog niet actief gebruikt
 };
-
+// ============================================================
+// Expose Firebase helpers for non-module scripts (login.js)
+// ============================================================
+window._firebase = {
+  initializeApp,
+  getAuth
+};

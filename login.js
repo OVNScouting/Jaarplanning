@@ -218,8 +218,7 @@ function closeLoginModal() {
 // EVENTS
 // ======================================================================
 document.addEventListener("DOMContentLoaded", () => {
-  updateHeader();
-  applyAuthVisibility();
+ 
   initFirebaseAuth();
 
   document.getElementById("loginButton")

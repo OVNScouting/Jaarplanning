@@ -3,22 +3,47 @@
    - Alleen admin toegang
    - Read-only gebruikersoverzicht
 ============================================================
-FASE 0 — DOELMODEL (straks in Firebase Realtime DB):
-/users/{uid} {
-  email: string,
-  roles: {
-    admin: boolean,
-    bestuur: boolean,
-    speltakken: string[]
-  },
-  createdAt: number,
-  approved: boolean
+============================================================ */
+function getCurrentRolesFromRow(uid) {
+  const roles = {};
+
+  document
+    .querySelectorAll(`input[data-uid="${uid}"][data-role]`)
+    .forEach(input => {
+      roles[input.dataset.role] = input.checked;
+    });
+
+  const speltakken = [];
+  document
+    .querySelectorAll(`input[data-uid="${uid}"][data-speltak]`)
+    .forEach(input => {
+      if (input.checked) speltakken.push(input.dataset.speltak);
+    });
+
+  roles.speltakken = speltakken;
+
+  return roles;
 }
 
-In FASE 1+:
-- localStorage USERS verdwijnt
-- admin.js bewerkt bovenstaande DB-structuur
-============================================================ */
+
+
+function saveRolesToFirebase(targetUid, roles) {
+  if (!window._firebase || !targetUid) return;
+
+  try {
+    const app = window._firebase.getApps().length
+      ? window._firebase.getApp()
+      : window._firebase.initializeApp(window.firebaseConfig);
+
+    const db = window._firebase.getDatabase(app);
+    const rolesRef = window._firebase.ref(db, `users/${targetUid}/roles`);
+
+    return window._firebase.update(rolesRef, roles);
+  } catch (err) {
+    console.error("Opslaan rollen mislukt:", err);
+  }
+}
+
 (function guardAdmin() {
   const session = JSON.parse(localStorage.getItem("ovn_auth_session"));
 
@@ -35,66 +60,70 @@ In FASE 1+:
    USERS RENDER + EDIT (FASE 1)
 =============================== */
 (function renderUsers() {
-  if (typeof USERS === "undefined") {
-    console.warn("USERS niet gevonden (login.js)");
+  if (!window._firebase) {
+    console.error("Firebase niet beschikbaar");
     return;
   }
 
-  const SPELTAKKEN = [
-    "bevers",
-    "welpen",
-    "scouts",
-    "explorers",
-    "rovers",
-    "stam"
-  ];
+  const app = window._firebase.getApps().length
+    ? window._firebase.getApp()
+    : window._firebase.initializeApp(window.firebaseConfig);
 
-  const tbody = document.getElementById("userTable");
-  if (!tbody) return;
+  const db = window._firebase.getDatabase(app);
+  const usersRef = window._firebase.ref(db, "users");
 
-  tbody.innerHTML = "";
+  window._firebase.get(usersRef).then(snapshot => {
+    if (!snapshot.exists()) return;
 
-  USERS.forEach((user, index) => {
-    const tr = document.createElement("tr");
+    const users = snapshot.val();
+    const tbody = document.getElementById("userTable");
+    if (!tbody) return;
 
-    const speltakCheckboxes = SPELTAKKEN.map(sp => {
-      const checked = user.roles.speltakken?.includes(sp) ? "checked" : "";
-      return `
-        <label style="display:block;font-size:0.8rem;">
+    tbody.innerHTML = "";
+
+    Object.entries(users).forEach(([uid, user]) => {
+      const roles = user.roles || {};
+      const speltakken = roles.speltakken || [];
+
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td>${user.email || uid}</td>
+
+        <td style="text-align:center;">
           <input type="checkbox"
-                 data-user="${index}"
-                 data-speltak="${sp}"
-                 ${checked}>
-          ${sp}
-        </label>
+                 data-uid="${uid}"
+                 data-role="admin"
+                 ${roles.admin ? "checked" : ""}>
+        </td>
+
+        <td style="text-align:center;">
+          <input type="checkbox"
+                 data-uid="${uid}"
+                 data-role="bestuur"
+                 ${roles.bestuur ? "checked" : ""}>
+        </td>
+
+        <td>
+          ${["bevers","welpen","scouts","explorers","rovers","stam"].map(sp => `
+            <label style="display:block;font-size:0.8rem;">
+              <input type="checkbox"
+                     data-uid="${uid}"
+                     data-speltak="${sp}"
+                     ${speltakken.includes(sp) ? "checked" : ""}>
+              ${sp}
+            </label>
+          `).join("")}
+        </td>
       `;
-    }).join("");
 
-    tr.innerHTML = `
-      <td>${user.username}</td>
+      tbody.appendChild(tr);
+    });
 
-      <td style="text-align:center;">
-        <input type="checkbox"
-               data-user="${index}"
-               data-role="admin"
-               ${user.roles.admin ? "checked" : ""}>
-      </td>
-
-      <td style="text-align:center;">
-        <input type="checkbox"
-               data-user="${index}"
-               data-role="bestuur"
-               ${user.roles.bestuur ? "checked" : ""}>
-      </td>
-
-      <td>${speltakCheckboxes}</td>
-    `;
-
-    tbody.appendChild(tr);
+    bindRoleEvents();
   });
-
-  bindRoleEvents();
 })();
+
 
 /* ===============================
    ROLE UPDATE HANDLERS
@@ -121,8 +150,13 @@ if (
   return;
 }
 
-USERS[userIndex].roles[role] = e.target.checked;
-persistUsers();
+const uid = e.target.dataset.uid;
+
+saveRolesToFirebase(uid, {
+  ...getCurrentRolesFromRow(uid),
+  [role]: e.target.checked
+});
+
     });
   });
 
@@ -143,8 +177,13 @@ persistUsers();
           list.filter(s => s !== speltak);
       }
 
-      USERS[userIndex].roles.speltakken = list;
-      persistUsers();
+      const uid = e.target.dataset.uid;
+
+saveRolesToFirebase(uid, {
+  ...getCurrentRolesFromRow(uid),
+  speltakken: list
+});
+
     });
   });
 }

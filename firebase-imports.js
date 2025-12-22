@@ -46,9 +46,12 @@ window._firebase = {
   signInWithEmailAndPassword,
   signOut,
 
-  // database (voor login.js)
+  // database
   getDatabase,
   ref,
-  get
+  get,
+  set,
+  update
 };
+
 

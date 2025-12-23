@@ -362,3 +362,20 @@ function td(text) {
   el.textContent = text ?? "";
   return el;
 }
+
+document.addEventListener("auth-changed", async () => {
+  // Edit-modus altijd resetten
+  if (typeof editMode !== "undefined") {
+    editMode = false;
+  }
+
+  // Mode opnieuw bepalen
+  if (typeof setMode === "function") {
+    setMode(isLeiding() ? "leiding" : "ouder");
+  }
+
+  // Data + UI opnieuw renderen
+  if (typeof loadEverything === "function") {
+    await loadEverything();
+  }
+});

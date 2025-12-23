@@ -161,6 +161,8 @@ function initFirebaseAuth(retries = 10) {
 
     updateHeader();
     applyAuthVisibility();
+    document.dispatchEvent(new Event("auth-changed"));
+  
   });
 }
 

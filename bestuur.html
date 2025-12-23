@@ -1,194 +1,329 @@
-<!DOCTYPE html>
+// ======================================================================
+// bestuur.js — Bestuursagenda (FASE 2, opgeschoond)
+// Rollen:
+// - bestuur / admin: bekijken + bewerken + toevoegen
+// - leiding: read-only, alleen items met toonOpDashboard
+// ======================================================================
 
-<html lang="nl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bestuursagenda – Scouting OVN</title>
+import {
+  isPast,
+  isFutureOrToday,
+  formatDateDisplay
+} from "./utils.js";
 
-  <link rel="icon" href="assets/OVN.logo.png" type="image/png">
-  <link rel="stylesheet" href="style.css" />
-</head>
+import {
+  initializeApp,
+  getDatabase,
+  ref,
+  get,
+  set,
+  update,
+  push
+} from "./firebase-imports.js";
 
-<body>
+// ======================================================================
+// FIREBASE
+// ======================================================================
+const app = initializeApp(window.firebaseConfig);
+const db = getDatabase(app);
 
-<!-- ============================================================
-     TOPBAR
-============================================================ -->
+// ======================================================================
+// AUTH / ROLLEN
+// ======================================================================
+function getSession() {
+  try {
+    return JSON.parse(localStorage.getItem("ovn_auth_session"));
+  } catch {
+    return null;
+  }
+}
 
-<header class="topbar">
-  <div class="topbar-left">
-    <a href="index.html" class="backlink">← Terug</a>
-    <img src="assets/OVN.logo.png" class="topbar-logo" alt="OVN logo">
-    <div class="topbar-title">
-      <h1>Bestuursagenda</h1>
-      <span>Overkoepelende planning & documenten</span>
-    </div>
-  </div>
+function isLoggedIn() {
+  return !!getSession();
+}
 
-  <div class="topbar-right-icons">
-    <span id="loginStatus" class="leiding-badge only-auth"></span>
-    <button id="loginButton" class="pill-btn outline">Inloggen</button>
-    <button id="logoutButton" class="pill-btn outline only-auth">Uitloggen</button>
-    <img src="assets/Scouting.logo.png" class="speltak-icon" alt="">
-  </div>
-</header>
+function isBestuur() {
+  const s = getSession();
+  return !!(s?.roles?.bestuur || s?.roles?.admin);
+}
 
-<div class="container">
+// Iedereen moet ingelogd zijn
+if (!isLoggedIn()) {
+  document.body.innerHTML = "<p style='padding:2rem'>Geen toegang</p>";
+  throw new Error("Niet ingelogd");
+}
 
-  <!-- ============================================================
-       INFO BLOK
-  ============================================================ -->
+// ======================================================================
+// DOM
+// ======================================================================
+const headerRow = document.getElementById("headerRow");
+const tableBody = document.getElementById("tableBody");
 
-  <section class="info-block">
-    <h2>Over de bestuursagenda</h2>
-    <p>
-      In deze agenda staan overkoepelende activiteiten, vergaderingen en
-      belangrijke data voor de hele groep. Bestuursleden kunnen items
-      toevoegen en beheren. Leiding ziet hier alleen de relevante data. 
-    </p>
-  </section>
+const filterAll    = document.getElementById("filterAll");
+const filterFuture = document.getElementById("filterFuture");
+const filterPast   = document.getElementById("filterPast");
 
-  <div id="loadingIndicator" class="loading hidden">
-    Bestuursagenda wordt geladen…
-  </div>
+const editModeButton = document.getElementById("editModeButton");
+const fab = document.getElementById("fabAddBestuursItem");
 
-  <div id="errorIndicator" class="error hidden">
-    Er ging iets mis bij het laden van de bestuursagenda.
-  </div>
+const modal = document.getElementById("bestuursItemModal");
+const modalTitle = document.getElementById("modalTitle");
 
-  <!-- ============================================================
-       BESTUURSAGENDA TABEL
-  ============================================================ -->
+const biType = document.getElementById("biType");
+const biTitel = document.getElementById("biTitel");
+const biDatum = document.getElementById("biDatum");
+const biTijdType = document.getElementById("biTijdType");
+const biStart = document.getElementById("biStart");
+const biEind = document.getElementById("biEind");
+const biBeschrijving = document.getElementById("biBeschrijving");
+const biToonDashboard = document.getElementById("biToonDashboard");
+const biTimeRange = document.getElementById("biTimeRange");
 
-  <section class="planning-section">
+const saveBtn = document.getElementById("saveBestuursItem");
+const cancelBtn = document.getElementById("cancelBestuursItem");
 
-```
-<div class="planning-header-row">
-  <div class="planning-controls">
-    <span id="filterAll" class="chip active">Alles</span>
-    <span id="filterFuture" class="chip">Komend</span>
-    <span id="filterPast" class="chip">Verleden</span>
-  </div>
+// ======================================================================
+// STATE
+// ======================================================================
+let allItems = [];
+let editMode = false;
+let editingId = null;
+let currentFilter = "all";
 
-  <button id="editModeButton" class="pill-btn primary only-bestuur">
-    ✏️ Items bewerken
-  </button>
-</div>
+// Bestuur-only UI
+if (!isBestuur()) {
+  editModeButton?.classList.add("hidden");
+  fab?.classList.add("hidden");
+}
 
-<div class="table-wrapper">
-  <table class="planning-table">
-    <thead>
-      <tr id="headerRow"></tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
-  </table>
-</div>
-```
+// ======================================================================
+// INIT
+// ======================================================================
+loadItems();
 
-  </section>
+// ======================================================================
+// DATA
+// ======================================================================
+async function loadItems() {
+  const snap = await get(ref(db, "bestuursItems"));
+  const raw = snap.exists() ? snap.val() : {};
 
-  <!-- ============================================================
-       DOCUMENTENBIBLIOTHEEK (voorbereid)
-  ============================================================ -->
+  allItems = Object.entries(raw).map(([id, v]) => ({ id, ...v }));
+  sortItems();
+  render();
+}
 
-  <section class="planning-section">
-    <div class="section-header">
-      <h2>Documenten</h2>
-    </div>
+function sortItems() {
+  allItems.sort((a, b) => {
+    if (a.datum !== b.datum) return a.datum.localeCompare(b.datum);
+    return (a.starttijd || "").localeCompare(b.starttijd || "");
+  });
+}
 
-```
-<p class="section-intro">
-  Documenten zoals notulen en agenda’s.
-</p>
+// ======================================================================
+// RENDER
+// ======================================================================
+function getVisibleItems() {
+  const bestuur = isBestuur();
 
-<div id="documentList">
-  <p class="text-muted">Nog geen documenten beschikbaar.</p>
-</div>
-```
+  return allItems
+    .filter(i => bestuur || i.toonOpDashboard)
+    .filter(i => {
+      if (currentFilter === "future") return isFutureOrToday(i.datum);
+      if (currentFilter === "past") return isPast(i.datum);
+      return true;
+    });
+}
 
-  </section>
+function render() {
+  renderHeader();
+  tableBody.innerHTML = "";
 
-</div>
+  getVisibleItems().forEach(addRow);
+}
 
-<!-- ============================================================
-     FAB — nieuw bestuursitem
-============================================================ -->
+function renderHeader() {
+  headerRow.innerHTML = "";
 
-<button id="fabAddBestuursItem"
-     class="pill-btn primary fab-add-opkomst only-bestuur">
-Nieuw item + </button>
+  if (editMode && isBestuur()) {
+    headerRow.appendChild(th(""));
+  }
 
-<!-- ============================================================
-     MODAL — Bestuursitem toevoegen/bewerken
-============================================================ -->
+  headerRow.appendChild(th("Datum"));
+  headerRow.appendChild(th("Tijd"));
+  headerRow.appendChild(th("Titel"));
+  headerRow.appendChild(th("Type"));
+}
 
-<div id="bestuursItemModal" class="modal hidden">
-  <div class="modal-content">
-    <h3 id="modalTitle">Nieuw bestuursitem</h3>
+function addRow(item) {
+  const tr = document.createElement("tr");
+  tr.dataset.id = item.id;
 
-```
-<label>Type:</label>
-<select id="biType">
-  <option value="bestuursvergadering">Bestuursvergadering</option>
-  <option value="groepsraad">Groepsraad</option>
-  <option value="extern">Extern</option>
-  <option value="overkoepelend">Overkoepelend</option>
-  <option value="deadline">Deadline</option>
-</select>
+  if (editMode && isBestuur()) {
+    const del = td("🗑️");
+    del.style.cursor = "pointer";
+    del.onclick = () => deleteItem(item.id);
+    tr.appendChild(del);
+  }
 
-<label>Titel:</label>
-<input type="text" id="biTitel" />
+  tr.appendChild(td(formatDateDisplay(item.datum)));
+  tr.appendChild(td(renderTime(item)));
 
-<label>Datum:</label>
-<input type="date" id="biDatum" />
+  const titleCell = td(item.titel);
+  if (isBestuur()) {
+    titleCell.style.cursor = "pointer";
+    titleCell.onclick = () => openEdit(item);
+  }
+  tr.appendChild(titleCell);
 
-<label>Tijd:</label>
-<select id="biTijdType">
-  <option value="none">Geen tijd</option>
-  <option value="allday">Hele dag</option>
-  <option value="range">Van / tot</option>
-</select>
+  tr.appendChild(td(item.type));
+  tableBody.appendChild(tr);
+}
 
-<div id="biTimeRange" class="hidden">
-  <label>Starttijd:</label>
-  <input type="time" id="biStart" />
+function renderTime(item) {
+  if (item.tijdType === "none") return "—";
+  if (item.tijdType === "allday") return "Hele dag";
+  return `${item.starttijd || ""}–${item.eindtijd || ""}`;
+}
 
-  <label>Eindtijd:</label>
-  <input type="time" id="biEind" />
-</div>
+// ======================================================================
+// MODAL
+// ======================================================================
+function openNew() {
+  editingId = null;
+  modalTitle.textContent = "Nieuw bestuursitem";
+  resetModal();
+  modal.classList.remove("hidden");
+}
 
-<label>Beschrijving:</label>
-<textarea id="biBeschrijving" rows="4"></textarea>
+function openEdit(item) {
+  if (!isBestuur()) return;
 
-<div class="checkbox-row">
-  <input type="checkbox" id="biToonDashboard" />
-  <label for="biToonDashboard">Toon op dashboard (leiding)</label>
-</div>
+  editingId = item.id;
+  modalTitle.textContent = "Bestuursitem bewerken";
 
-<div class="modal-actions">
-  <button id="saveBestuursItem" class="pill-btn primary">Opslaan</button>
-  <button id="cancelBestuursItem" class="pill-btn outline">Annuleren</button>
-</div>
-```
+  biType.value = item.type;
+  biTitel.value = item.titel;
+  biDatum.value = item.datum;
+  biTijdType.value = item.tijdType;
+  biStart.value = item.starttijd || "";
+  biEind.value = item.eindtijd || "";
+  biBeschrijving.value = item.beschrijving || "";
+  biToonDashboard.checked = !!item.toonOpDashboard;
 
-  </div>
-</div>
+  updateTimeFields();
+  modal.classList.remove("hidden");
+}
 
-<!-- ============================================================
-     SCRIPTS
-============================================================ -->
+function resetModal() {
+  biType.value = "bestuursvergadering";
+  biTitel.value = "";
+  biDatum.value = "";
+  biTijdType.value = "none";
+  biStart.value = "";
+  biEind.value = "";
+  biBeschrijving.value = "";
+  biToonDashboard.checked = false;
+  updateTimeFields();
+}
 
-<script src="firebase-config.js"></script>
+function updateTimeFields() {
+  biTimeRange.classList.toggle("hidden", biTijdType.value !== "range");
+}
 
-<script type="module" src="firebase-imports.js"></script>
+// ======================================================================
+// OPSLAAN / VERWIJDEREN
+// ======================================================================
+saveBtn?.addEventListener("click", async () => {
+  if (!isBestuur()) return;
 
-<script src="login.js"></script>
+  if (!biTitel.value || !biDatum.value) {
+    alert("Titel en datum zijn verplicht");
+    return;
+  }
 
-<script type="module" src="utils.js"></script>
+  const obj = {
+    type: biType.value,
+    titel: biTitel.value,
+    datum: biDatum.value,
+    tijdType: biTijdType.value,
+    starttijd: biStart.value || "",
+    eindtijd: biEind.value || "",
+    beschrijving: biBeschrijving.value || "",
+    toonOpDashboard: !!biToonDashboard.checked,
+    updatedAt: Date.now()
+  };
 
-<script type="module" src="bestuur.js"></script>
+  if (editingId) {
+    await update(ref(db, `bestuursItems/${editingId}`), obj);
+  } else {
+    const r = push(ref(db, "bestuursItems"));
+    await set(r, { ...obj, createdAt: Date.now() });
+  }
 
-</body>
-</html>
+  modal.classList.add("hidden");
+  loadItems();
+});
 
+async function deleteItem(id) {
+  if (!isBestuur()) return;
+  if (!confirm("Dit item verwijderen?")) return;
+
+  await set(ref(db, `bestuursItems/${id}`), null);
+  loadItems();
+}
+
+cancelBtn?.addEventListener("click", () => modal.classList.add("hidden"));
+biTijdType?.addEventListener("change", updateTimeFields);
+
+// ======================================================================
+// FILTERS
+// ======================================================================
+filterAll?.addEventListener("click", () => setFilter("all"));
+filterFuture?.addEventListener("click", () => setFilter("future"));
+filterPast?.addEventListener("click", () => setFilter("past"));
+
+function setFilter(f) {
+  currentFilter = f;
+  filterAll.classList.toggle("active", f === "all");
+  filterFuture.classList.toggle("active", f === "future");
+  filterPast.classList.toggle("active", f === "past");
+  render();
+}
+
+// ======================================================================
+// EDIT MODE
+// ======================================================================
+editModeButton?.addEventListener("click", () => {
+  if (!isBestuur()) return;
+  editMode = !editMode;
+  editModeButton.textContent = editMode
+    ? "💾 Klaar met bewerken"
+    : "✏️ Items bewerken";
+  render();
+});
+
+fab?.addEventListener("click", openNew);
+
+// ======================================================================
+// AUTH CHANGE
+// ======================================================================
+document.addEventListener("auth-changed", () => {
+  editMode = false;
+  render();
+});
+
+// ======================================================================
+// TABLE HELPERS
+// ======================================================================
+function th(text) {
+  const el = document.createElement("th");
+  el.textContent = text;
+  return el;
+}
+
+function td(text) {
+  const el = document.createElement("td");
+  el.textContent = text ?? "";
+  return el;
+}

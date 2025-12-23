@@ -396,9 +396,25 @@ function isEdit() {
   return editMode && isLeiding(); 
 }
 
-// Start met de huidige (genormaliseerde) mode
-setMode(mode);
+// Initiele mode + data
+setMode(isLeiding() ? "leiding" : "ouder");
 loadEverything();
+
+// ==========================================
+// AUTH CHANGE LISTENER (LOGIN / LOGOUT)
+// ==========================================
+document.addEventListener("auth-changed", async () => {
+  const newMode = isLeiding() ? "leiding" : "ouder";
+
+  // Edit-mode altijd uit bij auth switch
+  editMode = false;
+
+  setMode(newMode);
+
+  // Volledig opnieuw laden zodat tabel, headers,
+  // kolommen en rechten kloppen
+  await loadEverything();
+});
 
 function setMode(newMode) {
   // Validatie

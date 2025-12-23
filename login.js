@@ -74,7 +74,7 @@ function hasRole(role) {
 // ======================================================================
 // UI
 // ======================================================================
-function applyAuthVisibility() {
+window.applyAuthVisibility = function applyAuthVisibility() {
   const loggedIn = isLoggedIn();
   const session = getSession();
 
@@ -135,6 +135,7 @@ function initFirebaseAuth(retries = 10) {
       clearSession();
       updateHeader();
       applyAuthVisibility();
+      document.dispatchEvent(new Event("auth-changed"));
       return;
     }
 

@@ -74,7 +74,7 @@ function hasRole(role) {
 // ======================================================================
 // UI
 // ======================================================================
-window.applyAuthVisibility = function applyAuthVisibility() {
+function applyAuthVisibility() {
   const loggedIn = isLoggedIn();
   const session = getSession();
 
@@ -94,24 +94,9 @@ window.applyAuthVisibility = function applyAuthVisibility() {
   );
 }
 
-function updateHeader() {
-  const badge = document.getElementById("loginStatus");
-  const loginBtn = document.getElementById("loginButton");
-  const logoutBtn = document.getElementById("logoutButton");
+// Expose voor andere pagina-scripts
+window.applyAuthVisibility = applyAuthVisibility;
 
-  if (!badge || !loginBtn || !logoutBtn) return;
-
-  if (isLoggedIn()) {
-    badge.textContent = "Ingelogd";
-    badge.classList.remove("hidden");
-    loginBtn.classList.add("hidden");
-    logoutBtn.classList.remove("hidden");
-  } else {
-    badge.classList.add("hidden");
-    loginBtn.classList.remove("hidden");
-    logoutBtn.classList.add("hidden");
-  }
-}
 
 // ======================================================================
 // FIREBASE INIT + AUTH LISTENER

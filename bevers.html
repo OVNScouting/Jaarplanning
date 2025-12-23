@@ -329,6 +329,15 @@
   <script src="login.js"></script>
   <script type="module" src="utils.js"></script>
   <script type="module" src="script.js"></script>
+
+  <script>
+  document.addEventListener("auth-changed", () => {
+    if (typeof window.applyAuthVisibility === "function") {
+      window.applyAuthVisibility();
+    }
+  });
+</script>
+
   
 <!-- ============================================================
      MODAL — Nest wisselen bevestigen

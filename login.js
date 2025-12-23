@@ -97,6 +97,34 @@ function applyAuthVisibility() {
 // Expose voor andere pagina-scripts
 window.applyAuthVisibility = applyAuthVisibility;
 
+// ======================================================================
+// HEADER UI
+// ======================================================================
+function updateHeader() {
+  const badge = document.getElementById("loginStatus");
+  const loginBtn = document.getElementById("loginButton");
+  const logoutBtn = document.getElementById("logoutButton");
+
+  if (!loginBtn || !logoutBtn) return;
+
+  if (isLoggedIn()) {
+    if (badge) {
+      badge.textContent = "Ingelogd";
+      badge.classList.remove("hidden");
+    }
+
+    loginBtn.classList.add("hidden");
+    logoutBtn.classList.remove("hidden");
+  } else {
+    if (badge) badge.classList.add("hidden");
+
+    loginBtn.classList.remove("hidden");
+    logoutBtn.classList.add("hidden");
+  }
+}
+
+// Expose voor andere pagina’s indien nodig
+window.updateHeader = updateHeader;
 
 // ======================================================================
 // FIREBASE INIT + AUTH LISTENER
@@ -206,7 +234,11 @@ function closeLoginModal() {
 // EVENTS
 // ======================================================================
 document.addEventListener("DOMContentLoaded", () => {
- 
+
+  // Init UI direct (voor refresh / bestaande sessie)
+  updateHeader();
+  applyAuthVisibility();
+
   initFirebaseAuth();
 
   document.getElementById("loginButton")

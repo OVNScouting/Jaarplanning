@@ -10,26 +10,12 @@ import {
   get
 } from "./firebase-imports.js";
 
-// ======================================================================
-// AUTH CHECK
-// ======================================================================
-// FASE 0:
-// mode is een UI/view-state. In FASE 1+ wordt toegang afgeleid van Firebase roles,
-// maar dit script blijft “defensief” (doet niks als je geen leiding bent).
-const mode = localStorage.getItem("mode");
-const isLeiding = mode === "leiding" || mode === "bestuur" || mode === "admin";
 
-// Als geen leiding → niks doen, script stopt hier netjes
-if (!isLeiding) {
-  // bewust leeg
-} else {
-  init();
-}
 
-// ======================================================================
-// INIT
-// ======================================================================
 function init() {
+  // Alleen doorgaan als gebruiker is ingelogd
+  if (!document.body.classList.contains("is-logged-in")) return;
+
   const app = initializeApp(window.firebaseConfig);
   const db = getDatabase(app);
 
@@ -40,6 +26,7 @@ function init() {
 
   loadHighlights(db, section, list);
 }
+
 
 // ======================================================================
 // LOAD HIGHLIGHTS
@@ -91,3 +78,9 @@ async function loadHighlights(db, section, list) {
     console.error("Fout bij laden bestuurs-highlights:", err);
   }
 }
+
+// Re-run init zodra auth-status verandert
+document.addEventListener("auth-changed", () => {
+  init();
+});
+

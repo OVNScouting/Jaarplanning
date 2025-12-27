@@ -91,3 +91,11 @@
     display: none;
   }
 }
+@media (max-width: 900px) {
+  #accountRequestButton {
+    bottom: 0.75rem;
+    right: 0.75rem;
+    z-index: 1600;
+  }
+}
+

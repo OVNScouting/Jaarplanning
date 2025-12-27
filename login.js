@@ -70,6 +70,34 @@ function hasRole(role) {
   const s = getSession();
   return !!s?.roles?.[role];
 }
+// ======================================================================
+// ACCOUNT REQUEST BUTTON (floating, rechtsonder)
+// ======================================================================
+function ensureAccountRequestButton() {
+  let btn = document.getElementById("accountRequestButton");
+
+  if (!btn) {
+    btn = document.createElement("button");
+    btn.id = "accountRequestButton";
+    btn.type = "button";
+    btn.className = "pill-btn outline floating-account hidden";
+    btn.textContent = "Account aanvragen";
+
+    btn.addEventListener("click", () => {
+      if (isLoggedIn()) return;
+      openAccountRequestModal();
+    });
+
+    document.body.appendChild(btn);
+  }
+
+  return btn;
+}
+
+function updateAccountRequestButton() {
+  const btn = ensureAccountRequestButton();
+  btn.classList.toggle("hidden", isLoggedIn());
+}
 
 // ======================================================================
 // UI
@@ -246,14 +274,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("loginButton")
     ?.addEventListener("click", openLoginModal);
-
-  document.getElementById("logoutButton")
-    ?.addEventListener("click", () => {
-      if (auth) window._firebase.signOut(auth);
-
-  document.getElementById("accountRequestButton")
-    ?.addEventListener("click", openAccountRequestModal);
-
     });
 });
 
@@ -283,13 +303,14 @@ function openAccountRequestModal() {
       <input id="reqEmail" type="email" />
 
       <label>Ik wil toegang tot:</label>
-      <div style="margin-bottom:0.5rem">
+      <div class="checklist">
         <label><input type="checkbox" id="reqBestuur"> Bestuur</label>
         <label><input type="checkbox" id="reqAdmin"> Admin</label>
       </div>
 
+
       <label>Speltakken</label>
-      <div id="reqSpeltakken">
+      <div id="reqSpeltakken" class="checklist">
         ${["bevers","welpen","scouts","explorers","rovers","stam"]
           .map(s => `<label><input type="checkbox" value="${s}"> ${s}</label>`)
           .join("")}
@@ -321,13 +342,18 @@ function openAccountRequestModal() {
 }
 
 async function submitAccountRequest() {
-  const name = document.getElementById("reqName").value.trim();
-  const email = document.getElementById("reqEmail").value.trim();
+  const errEl = document.getElementById("reqError");
+  const btn = document.getElementById("reqSubmit");
+
+  const name = document.getElementById("reqName")?.value?.trim() || "";
+  const email = document.getElementById("reqEmail")?.value?.trim() || "";
+
+  errEl.classList.add("hidden");
+  errEl.textContent = "Versturen mislukt";
 
   if (!name || !email) {
-    document.getElementById("reqError").textContent =
-      "Naam en email zijn verplicht";
-    document.getElementById("reqError").classList.remove("hidden");
+    errEl.textContent = "Naam en email zijn verplicht.";
+    errEl.classList.remove("hidden");
     return;
   }
 
@@ -340,9 +366,12 @@ async function submitAccountRequest() {
     document.querySelectorAll("#reqSpeltakken input:checked")
   ).map(i => i.value);
 
-  const message = document.getElementById("reqMessage").value;
+  const message = document.getElementById("reqMessage").value || "";
 
   try {
+    btn.disabled = true;
+    btn.textContent = "Bezig…";
+
     const res = await fetch(
       "https://us-central1-ovn-jaarplanning.cloudfunctions.net/sendAccountRequest",
       {
@@ -358,7 +387,13 @@ async function submitAccountRequest() {
       }
     );
 
-    if (!res.ok) throw new Error("Request failed");
+    const text = await res.text();
+
+    if (!res.ok) {
+      errEl.textContent = `Versturen mislukt (${res.status}): ${text}`;
+      errEl.classList.remove("hidden");
+      return;
+    }
 
     document.getElementById("accountRequestModal").innerHTML = `
       <div class="modal-content">
@@ -372,8 +407,12 @@ async function submitAccountRequest() {
         </div>
       </div>
     `;
-  } catch (err) {
-    document.getElementById("reqError").classList.remove("hidden");
+  } catch (e) {
+    errEl.textContent = `Versturen mislukt: ${e.message || e}`;
+    errEl.classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Aanvraag versturen";
   }
 }
 

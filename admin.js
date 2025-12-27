@@ -1,3 +1,27 @@
+function approveRequestViaFunction(requestId, rowEl) {
+  const app = window._firebase.getApps().length
+    ? window._firebase.getApp()
+    : window._firebase.initializeApp(window.firebaseConfig);
+
+  const functions = window._firebase.getFunctions(app);
+  const approve = window._firebase.httpsCallable(
+    functions,
+    "approveAccountRequest"
+  );
+
+  rowEl.classList.add("loading");
+
+  approve({ requestId })
+    .then(() => {
+      rowEl.querySelector("[data-status]").textContent = "approved";
+      rowEl.querySelector("[data-actions]").innerHTML = "—";
+      rowEl.classList.remove("loading");
+    })
+    .catch(err => {
+      rowEl.classList.remove("loading");
+      alert("Goedkeuren mislukt: " + err.message);
+    });
+}
 function updateAccountRequestStatus(requestId, newStatus, rowEl) {
   const app = window._firebase.getApps().length
     ? window._firebase.getApp()
@@ -273,7 +297,7 @@ function renderAccountRequests() {
         `;
         if (r.status === "pending") {
           tr.querySelector("[data-approve]")?.addEventListener("click", () => {
-            updateAccountRequestStatus(id, "approved", tr);
+          approveRequestViaFunction(id, tr);
           });
         
           tr.querySelector("[data-reject]")?.addEventListener("click", () => {

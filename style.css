@@ -677,6 +677,59 @@ overflow-y: hidden;
   gap: .5rem;
   justify-content: flex-end;
 }
+/* ============================================================
+   ACCOUNT REQUEST MODAL — professionele layout
+============================================================ */
+
+#accountRequestModal .modal-content {
+  width: 460px;
+}
+
+#accountRequestModal h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+/* Secties */
+.account-section {
+  margin-top: 1.1rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+}
+
+.account-section:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+/* Subkopjes */
+.account-section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+}
+
+/* Checkbox grid */
+.account-checkbox-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem 1.2rem;
+}
+
+/* Checkbox labels */
+.account-checkbox-grid label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+/* Foutmelding rustiger */
+#reqError {
+  font-size: 0.85rem;
+}
+
 
 /* ============================================================
    SIDEBAR (LEIDING)

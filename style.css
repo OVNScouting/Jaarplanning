@@ -375,6 +375,10 @@ body.mode-bewerken .col-datum {
   left: 40px !important;
 }
 
+/* Accountaanvragen subtiel onderscheid */
+#accountRequestTable td:nth-child(5) {
+  font-weight: 600;
+}
 /* ============================================
    VERTICALE NAMEN – BETER LEESBAAR
 ============================================ */

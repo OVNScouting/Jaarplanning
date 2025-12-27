@@ -275,26 +275,33 @@ function openAccountRequestModal() {
 
   modal.innerHTML = `
     <div class="modal-content">
-      <h3>Account aanvragen</h3>
+     <h3>Account aanvragen</h3>
 
-      <label>Naam</label>
-      <input id="reqName" type="text" />
+<div class="account-section">
+  <label>Naam</label>
+  <input id="reqName" type="text" />
 
-      <label>Email</label>
-      <input id="reqEmail" type="email" />
+  <label>Email</label>
+  <input id="reqEmail" type="email" />
+</div>
 
-      <label>Ik wil toegang tot:</label>
-      <div class="checklist" style="margin-bottom:0.5rem">
-        <label><input type="checkbox" id="reqBestuur"> Bestuur</label>
-        <label><input type="checkbox" id="reqAdmin"> Admin</label>
-      </div>
+<div class="account-section">
+  <div class="account-section-title">Toegang</div>
+  <div class="account-checkbox-grid">
+    <label><input type="checkbox" id="reqBestuur"> Bestuur</label>
+    <label><input type="checkbox" id="reqAdmin"> Admin</label>
+  </div>
+</div>
 
-      <label>Speltakken</label>
-      <div id="reqSpeltakken" class="checklist">
-        ${["bevers","welpen","scouts","explorers","rovers","stam"]
-          .map(s => `<label><input type="checkbox" value="${s}"> ${s}</label>`)
-          .join("")}
-      </div>
+<div class="account-section">
+  <div class="account-section-title">Speltakken</div>
+  <div id="reqSpeltakken" class="account-checkbox-grid">
+    ${["bevers","welpen","scouts","explorers","rovers","stam"]
+      .map(s => `<label><input type="checkbox" value="${s}"> ${s}</label>`)
+      .join("")}
+  </div>
+</div>
+
 
       <label>Toelichting (optioneel)</label>
       <textarea id="reqMessage" rows="3"></textarea>

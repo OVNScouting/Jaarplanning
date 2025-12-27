@@ -85,8 +85,7 @@ function ensureAccountRequestButton() {
     btn.textContent = "Account aanvragen";
 
     btn.addEventListener("click", () => {
-      // Als ingelogd: niet nodig / niet in de weg
-      if (isLoggedIn()) return;
+      // Knop is alleen zichtbaar als je ingelogd bent
       openAccountRequestModal();
     });
 
@@ -96,11 +95,13 @@ function ensureAccountRequestButton() {
   return btn;
 }
 
+
 function updateAccountRequestButton() {
   const btn = ensureAccountRequestButton();
-  // Alleen tonen als je NIET ingelogd bent
-  btn.classList.toggle("hidden", isLoggedIn());
+  // Alleen tonen als je WEL ingelogd bent
+  btn.classList.toggle("hidden", !isLoggedIn());
 }
+
 
 // ======================================================================
 // UI

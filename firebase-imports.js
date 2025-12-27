@@ -1,5 +1,10 @@
 import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import {
+  getFunctions,
+  httpsCallable
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-functions.js";
+
+import {
   getDatabase,
   ref,
   get,
@@ -30,7 +35,9 @@ export {
   getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
-  signOut
+  signOut,
+  getFunctions,
+  httpsCallable
 };
 
 // ============================================================
@@ -53,7 +60,11 @@ window._firebase = {
   set,
   update,
   push,
-  remove
+  remove,
+
+  // functions ✅ NIEUW
+  getFunctions,
+  httpsCallable
 };
 
 

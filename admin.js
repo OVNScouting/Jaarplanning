@@ -1,3 +1,22 @@
+function updateAccountRequestStatus(requestId, newStatus, rowEl) {
+  const app = window._firebase.getApps().length
+    ? window._firebase.getApp()
+    : window._firebase.initializeApp(window.firebaseConfig);
+
+  const db = window._firebase.getDatabase(app);
+  const ref = window._firebase.ref(db, `accountRequests/${requestId}`);
+
+  window._firebase.update(ref, { status: newStatus }).then(() => {
+    // UI direct bijwerken
+    const statusCell = rowEl.querySelector("[data-status]");
+    if (statusCell) statusCell.textContent = newStatus;
+
+    const actionsCell = rowEl.querySelector("[data-actions]");
+    if (actionsCell) actionsCell.innerHTML = "—";
+  });
+}
+
+
 // ============================================================
 // WACHT TOT FIREBASE BESCHIKBAAR IS
 // ============================================================
@@ -243,9 +262,26 @@ function renderAccountRequests() {
           <td>${r.email || "—"}</td>
           <td>${rollen}</td>
           <td>${speltakken}</td>
-          <td>${r.status || "pending"}</td>
+          <td data-status>${r.status || "pending"}</td>
           <td style="font-size:0.85rem">${created}</td>
+          <td data-actions>
+            ${r.status === "pending" ? `
+              <button class="pill-btn success" data-approve>Goedkeuren</button>
+              <button class="pill-btn danger" data-reject>Afwijzen</button>
+            ` : "—"}
+          </td>
         `;
+        if (r.status === "pending") {
+          tr.querySelector("[data-approve]")?.addEventListener("click", () => {
+            updateAccountRequestStatus(id, "approved", tr);
+          });
+        
+          tr.querySelector("[data-reject]")?.addEventListener("click", () => {
+            updateAccountRequestStatus(id, "rejected", tr);
+          });
+        }
+
+
 
         tbody.appendChild(tr);
       });

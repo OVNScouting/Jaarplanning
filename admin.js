@@ -1,3 +1,19 @@
+// ============================================================
+// WACHT TOT FIREBASE BESCHIKBAAR IS
+// ============================================================
+function waitForFirebase(callback, retries = 20) {
+  if (window._firebase && window.firebaseConfig) {
+    callback();
+    return;
+  }
+
+  if (retries <= 0) {
+    console.error("Firebase niet beschikbaar na wachten");
+    return;
+  }
+
+  setTimeout(() => waitForFirebase(callback, retries - 1), 100);
+}
 /* ============================================================
    admin.js — Admin omgeving (fase 1)
    - Alleen admin toegang
@@ -59,12 +75,7 @@ function saveRolesToFirebase(targetUid, roles) {
 /* ===============================
    USERS RENDER + EDIT (FASE 1)
 =============================== */
-(function renderUsers() {
-  if (!window._firebase) {
-    console.error("Firebase niet beschikbaar");
-    return;
-  }
-
+function renderUsers() {
   const app = window._firebase.getApps().length
     ? window._firebase.getApp()
     : window._firebase.initializeApp(window.firebaseConfig);
@@ -122,7 +133,7 @@ function saveRolesToFirebase(targetUid, roles) {
 
     bindRoleEvents();
   });
-})();
+}
 
 
 /* ===============================
@@ -202,12 +213,7 @@ function persistUsers() {
    ACCOUNT REQUESTS — READ ONLY (FASE C.1)
 ============================================================ */
 
-(function renderAccountRequests() {
-  if (!window._firebase) {
-    console.error("Firebase niet beschikbaar");
-    return;
-  }
-
+function renderAccountRequests() {
   const app = window._firebase.getApps().length
     ? window._firebase.getApp()
     : window._firebase.initializeApp(window.firebaseConfig);
@@ -224,7 +230,6 @@ function persistUsers() {
 
     tbody.innerHTML = "";
 
-    // Sorteer: nieuw → oud
     Object.entries(requests)
       .sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0))
       .forEach(([id, r]) => {
@@ -239,10 +244,9 @@ function persistUsers() {
           ? r.speltakken.join(", ")
           : "—";
 
-        const created =
-          r.createdAt
-            ? new Date(r.createdAt).toLocaleString("nl-NL")
-            : "—";
+        const created = r.createdAt
+          ? new Date(r.createdAt).toLocaleString("nl-NL")
+          : "—";
 
         tr.innerHTML = `
           <td>${r.naam || "—"}</td>
@@ -256,5 +260,8 @@ function persistUsers() {
         tbody.appendChild(tr);
       });
   });
-})();
+}
+waitForFirebase(renderAccountRequests);
+
+waitForFirebase(renderUsers);
 

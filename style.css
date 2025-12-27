@@ -1362,12 +1362,17 @@ th[class^="ploeg-"]::after {
   display: inline-flex;
   align-items: center;
 }
+
 .floating-account {
   position: fixed;
   right: 1rem;
   bottom: 1rem;
-  z-index: 1000;
+
+  /* Hoger dan sidebar, scrollbars en FABs */
+  z-index: 1600;
+
   opacity: 0.85;
+  pointer-events: auto;
 }
 
 .floating-account:hover {
@@ -1384,6 +1389,11 @@ th[class^="ploeg-"]::after {
 .modal .checklist input[type="checkbox"] {
   margin: 0;           /* voorkom rare verticale offsets */
   transform: translateY(-1px);
+}
+
+/* Zorg dat floating account knop nooit clicks verliest */
+#accountRequestButton {
+  pointer-events: auto !important;
 }
 
 /* ============================================================

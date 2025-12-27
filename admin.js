@@ -1,7 +1,7 @@
 // ============================================================
 // WACHT TOT FIREBASE BESCHIKBAAR IS
 // ============================================================
-function waitForFirebase(callback, retries = 20) {
+function waitForFirebase(callback, retries = 100) {
   if (window._firebase && window.firebaseConfig) {
     callback();
     return;
@@ -150,15 +150,14 @@ function bindRoleEvents() {
       const userIndex = e.target.dataset.user;
       const role = e.target.dataset.role;
 
-   // Voorkom dat laatste admin zichzelf uitschakelt
-if (
-  role === "admin" &&
-  !e.target.checked &&
-  USERS.filter(u => u.roles.admin).length === 1
-) {
-  alert("Er moet minimaal één admin blijven.");
-  e.target.checked = true;
-  return;
+// Voorkom dat laatste admin wordt uitgezet (DOM-based)
+if (role === "admin" && !e.target.checked) {
+  const checkedAdmins = document.querySelectorAll('input[data-role="admin"]:checked').length;
+  if (checkedAdmins === 0) {
+    alert("Er moet minimaal één admin blijven.");
+    e.target.checked = true;
+    return;
+  }
 }
 
 const uid = e.target.dataset.uid;
@@ -172,31 +171,22 @@ saveRolesToFirebase(uid, {
   });
 
   // Speltak toggles
-  document.querySelectorAll("input[data-speltak]").forEach(input => {
-    input.addEventListener("change", e => {
-      const userIndex = e.target.dataset.user;
-      const speltak = e.target.dataset.speltak;
+document.querySelectorAll("input[data-speltak]").forEach(input => {
+  input.addEventListener("change", e => {
+    const uid = e.target.dataset.uid;
 
-      const list = USERS[userIndex].roles.speltakken || [];
+    // Lees altijd de actuele selectie uit de DOM (bron van waarheid)
+    const speltakken = Array.from(
+      document.querySelectorAll(`input[data-uid="${uid}"][data-speltak]:checked`)
+    ).map(el => el.dataset.speltak);
 
-      if (e.target.checked && !list.includes(speltak)) {
-        list.push(speltak);
-      }
-
-      if (!e.target.checked) {
-        USERS[userIndex].roles.speltakken =
-          list.filter(s => s !== speltak);
-      }
-
-      const uid = e.target.dataset.uid;
-
-saveRolesToFirebase(uid, {
-  ...getCurrentRolesFromRow(uid),
-  speltakken: list
-});
-
+    saveRolesToFirebase(uid, {
+      ...getCurrentRolesFromRow(uid),
+      speltakken
     });
   });
+});
+
 }
 
 /* ===============================

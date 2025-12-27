@@ -1362,7 +1362,17 @@ th[class^="ploeg-"]::after {
   display: inline-flex;
   align-items: center;
 }
+.floating-account {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 1000;
+  opacity: 0.85;
+}
 
+.floating-account:hover {
+  opacity: 1;
+}
 
 /* ============================================================
    PRINT
@@ -1399,3 +1409,4 @@ th[class^="ploeg-"]::after {
     display: none !important;
   }
  }
+

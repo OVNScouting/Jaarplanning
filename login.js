@@ -10,7 +10,7 @@ let auth = null;
 // ======================================================================
 // LEGACY USERS (nodig voor admin.js – wordt later uitgefaseerd)
 // ======================================================================
-let USERS = window.USERS = loadUsers();
+let USERS = (window.USERS = loadUsers());
 
 function loadUsers() {
   const raw = localStorage.getItem(USERS_STORAGE_KEY);
@@ -30,9 +30,9 @@ function loadUsers() {
       roles: {
         admin: true,
         bestuur: true,
-        speltakken: ["bevers", "welpen", "scouts", "explorers", "rovers", "stam"]
-      }
-    }
+        speltakken: ["bevers", "welpen", "scouts", "explorers", "rovers", "stam"],
+      },
+    },
   ];
 
   localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(initial));
@@ -70,6 +70,7 @@ function hasRole(role) {
   const s = getSession();
   return !!s?.roles?.[role];
 }
+
 // ======================================================================
 // ACCOUNT REQUEST BUTTON (floating, rechtsonder)
 // ======================================================================
@@ -84,6 +85,7 @@ function ensureAccountRequestButton() {
     btn.textContent = "Account aanvragen";
 
     btn.addEventListener("click", () => {
+      // Als ingelogd: niet nodig / niet in de weg
       if (isLoggedIn()) return;
       openAccountRequestModal();
     });
@@ -96,6 +98,7 @@ function ensureAccountRequestButton() {
 
 function updateAccountRequestButton() {
   const btn = ensureAccountRequestButton();
+  // Alleen tonen als je NIET ingelogd bent
   btn.classList.toggle("hidden", isLoggedIn());
 }
 
@@ -109,17 +112,19 @@ function applyAuthVisibility() {
   document.body.classList.toggle("is-logged-in", loggedIn);
   document.body.classList.toggle("only-admin", !!session?.roles?.admin);
 
-  document.querySelectorAll(".only-auth").forEach(el =>
+  document.querySelectorAll(".only-auth").forEach((el) =>
     el.classList.toggle("hidden", !loggedIn)
   );
 
-  document.querySelectorAll(".only-bestuur").forEach(el =>
+  document.querySelectorAll(".only-bestuur").forEach((el) =>
     el.classList.toggle("hidden", !loggedIn || !hasRole("bestuur"))
   );
 
-  document.querySelectorAll(".only-admin").forEach(el =>
+  document.querySelectorAll(".only-admin").forEach((el) =>
     el.classList.toggle("hidden", !loggedIn || !hasRole("admin"))
   );
+
+  updateAccountRequestButton();
 }
 
 // Expose voor andere pagina-scripts
@@ -149,6 +154,8 @@ function updateHeader() {
     loginBtn.classList.remove("hidden");
     logoutBtn.classList.add("hidden");
   }
+
+  updateAccountRequestButton();
 }
 
 // Expose voor andere pagina’s indien nodig
@@ -176,8 +183,6 @@ function initFirebaseAuth(retries = 10) {
       clearSession();
       updateHeader();
       applyAuthVisibility();
-      updateAccountRequestButton();
-
       document.dispatchEvent(new Event("auth-changed"));
       return;
     }
@@ -189,9 +194,7 @@ function initFirebaseAuth(retries = 10) {
       const rolesRef = window._firebase.ref(db, `users/${user.uid}/roles`);
       const snapshot = await window._firebase.get(rolesRef);
 
-      if (snapshot.exists()) {
-        roles = snapshot.val();
-      }
+      if (snapshot.exists()) roles = snapshot.val();
     } catch (err) {
       console.warn("Kon rollen niet laden:", err);
     }
@@ -200,13 +203,12 @@ function initFirebaseAuth(retries = 10) {
       id: user.uid,
       email: user.email,
       roles,
-      loginAt: Date.now()
+      loginAt: Date.now(),
     });
 
     updateHeader();
     applyAuthVisibility();
     document.dispatchEvent(new Event("auth-changed"));
-  
   });
 }
 
@@ -251,7 +253,7 @@ function openLoginModal() {
     }
   };
 
-  modal.onclick = e => {
+  modal.onclick = (e) => {
     if (e.target === modal) closeLoginModal();
   };
 }
@@ -261,30 +263,8 @@ function closeLoginModal() {
 }
 
 // ======================================================================
-// EVENTS
+// ACCOUNT REQUEST MODAL
 // ======================================================================
-document.addEventListener("DOMContentLoaded", () => {
-
-  // Init UI direct (voor refresh / bestaande sessie)
-  updateHeader();
-  applyAuthVisibility();
-  updateAccountRequestButton();
-
-  initFirebaseAuth();
-
-  document.getElementById("loginButton")
-    ?.addEventListener("click", openLoginModal);
-    });
-});
-
-function updateAccountRequestButton() {
-  const btn = document.getElementById("accountRequestButton");
-  if (!btn) return;
-
-  // Alleen tonen als je NIET ingelogd bent
-  btn.classList.toggle("hidden", isLoggedIn());
-}
-
 function openAccountRequestModal() {
   if (document.getElementById("accountRequestModal")) return;
 
@@ -303,11 +283,10 @@ function openAccountRequestModal() {
       <input id="reqEmail" type="email" />
 
       <label>Ik wil toegang tot:</label>
-      <div class="checklist">
+      <div class="checklist" style="margin-bottom:0.5rem">
         <label><input type="checkbox" id="reqBestuur"> Bestuur</label>
         <label><input type="checkbox" id="reqAdmin"> Admin</label>
       </div>
-
 
       <label>Speltakken</label>
       <div id="reqSpeltakken" class="checklist">
@@ -333,10 +312,9 @@ function openAccountRequestModal() {
   document.body.appendChild(modal);
 
   modal.querySelector("#reqCancel").onclick = () => modal.remove();
-
   modal.querySelector("#reqSubmit").onclick = submitAccountRequest;
 
-  modal.onclick = e => {
+  modal.onclick = (e) => {
     if (e.target === modal) modal.remove();
   };
 }
@@ -359,12 +337,12 @@ async function submitAccountRequest() {
 
   const roles = {
     bestuur: document.getElementById("reqBestuur").checked,
-    admin: document.getElementById("reqAdmin").checked
+    admin: document.getElementById("reqAdmin").checked,
   };
 
   const speltakken = Array.from(
     document.querySelectorAll("#reqSpeltakken input:checked")
-  ).map(i => i.value);
+  ).map((i) => i.value);
 
   const message = document.getElementById("reqMessage").value || "";
 
@@ -382,8 +360,8 @@ async function submitAccountRequest() {
           email,
           requestedRoles: roles,
           speltakken,
-          message
-        })
+          message,
+        }),
       }
     );
 
@@ -408,7 +386,7 @@ async function submitAccountRequest() {
       </div>
     `;
   } catch (e) {
-    errEl.textContent = `Versturen mislukt: ${e.message || e}`;
+    errEl.textContent = `Versturen mislukt: ${e?.message || e}`;
     errEl.classList.remove("hidden");
   } finally {
     btn.disabled = false;
@@ -416,3 +394,25 @@ async function submitAccountRequest() {
   }
 }
 
+// ======================================================================
+// EVENTS
+// ======================================================================
+document.addEventListener("DOMContentLoaded", () => {
+  // Init UI direct (voor refresh / bestaande sessie)
+  updateHeader();
+  applyAuthVisibility();
+  updateAccountRequestButton();
+
+  initFirebaseAuth();
+
+  document
+    .getElementById("loginButton")
+    ?.addEventListener("click", openLoginModal);
+
+  document.getElementById("logoutButton")?.addEventListener("click", () => {
+    if (auth) window._firebase.signOut(auth);
+  });
+
+  // Knop wordt door ensureAccountRequestButton() aangemaakt; this ensures it exists now
+  ensureAccountRequestButton();
+});

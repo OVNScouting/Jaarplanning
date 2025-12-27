@@ -198,4 +198,63 @@ function persistUsers() {
   }
   saveUsers(USERS);
 }
+/* ============================================================
+   ACCOUNT REQUESTS — READ ONLY (FASE C.1)
+============================================================ */
+
+(function renderAccountRequests() {
+  if (!window._firebase) {
+    console.error("Firebase niet beschikbaar");
+    return;
+  }
+
+  const app = window._firebase.getApps().length
+    ? window._firebase.getApp()
+    : window._firebase.initializeApp(window.firebaseConfig);
+
+  const db = window._firebase.getDatabase(app);
+  const requestsRef = window._firebase.ref(db, "accountRequests");
+
+  window._firebase.get(requestsRef).then(snapshot => {
+    if (!snapshot.exists()) return;
+
+    const requests = snapshot.val();
+    const tbody = document.getElementById("accountRequestTable");
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+
+    // Sorteer: nieuw → oud
+    Object.entries(requests)
+      .sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0))
+      .forEach(([id, r]) => {
+        const tr = document.createElement("tr");
+
+        const rollen = [
+          r.requestedRoles?.admin ? "Admin" : null,
+          r.requestedRoles?.bestuur ? "Bestuur" : null
+        ].filter(Boolean).join(", ") || "—";
+
+        const speltakken = Array.isArray(r.speltakken) && r.speltakken.length
+          ? r.speltakken.join(", ")
+          : "—";
+
+        const created =
+          r.createdAt
+            ? new Date(r.createdAt).toLocaleString("nl-NL")
+            : "—";
+
+        tr.innerHTML = `
+          <td>${r.naam || "—"}</td>
+          <td>${r.email || "—"}</td>
+          <td>${rollen}</td>
+          <td>${speltakken}</td>
+          <td>${r.status || "pending"}</td>
+          <td style="font-size:0.85rem">${created}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+  });
+})();
 

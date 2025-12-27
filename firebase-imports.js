@@ -51,7 +51,10 @@ window._firebase = {
   ref,
   get,
   set,
-  update
+  update,
+  push,
+  remove
 };
+
 
 

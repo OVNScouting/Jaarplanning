@@ -148,6 +148,8 @@ function initFirebaseAuth(retries = 10) {
       clearSession();
       updateHeader();
       applyAuthVisibility();
+      updateAccountRequestButton();
+
       document.dispatchEvent(new Event("auth-changed"));
       return;
     }
@@ -238,6 +240,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Init UI direct (voor refresh / bestaande sessie)
   updateHeader();
   applyAuthVisibility();
+  updateAccountRequestButton();
 
   initFirebaseAuth();
 
@@ -247,5 +250,130 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("logoutButton")
     ?.addEventListener("click", () => {
       if (auth) window._firebase.signOut(auth);
+
+  document.getElementById("accountRequestButton")
+    ?.addEventListener("click", openAccountRequestModal);
+
     });
 });
+
+function updateAccountRequestButton() {
+  const btn = document.getElementById("accountRequestButton");
+  if (!btn) return;
+
+  // Alleen tonen als je NIET ingelogd bent
+  btn.classList.toggle("hidden", isLoggedIn());
+}
+
+function openAccountRequestModal() {
+  if (document.getElementById("accountRequestModal")) return;
+
+  const modal = document.createElement("div");
+  modal.className = "modal";
+  modal.id = "accountRequestModal";
+
+  modal.innerHTML = `
+    <div class="modal-content">
+      <h3>Account aanvragen</h3>
+
+      <label>Naam</label>
+      <input id="reqName" type="text" />
+
+      <label>Email</label>
+      <input id="reqEmail" type="email" />
+
+      <label>Ik wil toegang tot:</label>
+      <div style="margin-bottom:0.5rem">
+        <label><input type="checkbox" id="reqBestuur"> Bestuur</label>
+        <label><input type="checkbox" id="reqAdmin"> Admin</label>
+      </div>
+
+      <label>Speltakken</label>
+      <div id="reqSpeltakken">
+        ${["bevers","welpen","scouts","explorers","rovers","stam"]
+          .map(s => `<label><input type="checkbox" value="${s}"> ${s}</label>`)
+          .join("")}
+      </div>
+
+      <label>Toelichting (optioneel)</label>
+      <textarea id="reqMessage" rows="3"></textarea>
+
+      <div id="reqError" class="hidden" style="color:red;margin-top:0.5rem">
+        Versturen mislukt
+      </div>
+
+      <div class="modal-actions">
+        <button id="reqCancel">Annuleren</button>
+        <button id="reqSubmit">Aanvraag versturen</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  modal.querySelector("#reqCancel").onclick = () => modal.remove();
+
+  modal.querySelector("#reqSubmit").onclick = submitAccountRequest;
+
+  modal.onclick = e => {
+    if (e.target === modal) modal.remove();
+  };
+}
+
+async function submitAccountRequest() {
+  const name = document.getElementById("reqName").value.trim();
+  const email = document.getElementById("reqEmail").value.trim();
+
+  if (!name || !email) {
+    document.getElementById("reqError").textContent =
+      "Naam en email zijn verplicht";
+    document.getElementById("reqError").classList.remove("hidden");
+    return;
+  }
+
+  const roles = {
+    bestuur: document.getElementById("reqBestuur").checked,
+    admin: document.getElementById("reqAdmin").checked
+  };
+
+  const speltakken = Array.from(
+    document.querySelectorAll("#reqSpeltakken input:checked")
+  ).map(i => i.value);
+
+  const message = document.getElementById("reqMessage").value;
+
+  try {
+    const res = await fetch(
+      "https://us-central1-ovn-jaarplanning.cloudfunctions.net/sendAccountRequest",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          naam: name,
+          email,
+          requestedRoles: roles,
+          speltakken,
+          message
+        })
+      }
+    );
+
+    if (!res.ok) throw new Error("Request failed");
+
+    document.getElementById("accountRequestModal").innerHTML = `
+      <div class="modal-content">
+        <h3>Aanvraag ontvangen</h3>
+        <p>
+          We hebben je aanvraag ontvangen.<br>
+          Je hoort binnen enkele dagen van ons.
+        </p>
+        <div class="modal-actions">
+          <button onclick="this.closest('.modal').remove()">Sluiten</button>
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    document.getElementById("reqError").classList.remove("hidden");
+  }
+}
+

@@ -1,5 +1,12 @@
 async function approveRequestViaFunction(requestId, rowEl) {
+  // visuele state
   rowEl.classList.add("loading");
+
+  const actionCell = rowEl.querySelector("[data-actions]");
+  const originalActions = actionCell.innerHTML;
+
+  // voorkom dubbel klikken
+  actionCell.innerHTML = "⏳ Goedkeuren…";
 
   try {
     const app = window._firebase.getApps().length
@@ -12,12 +19,26 @@ async function approveRequestViaFunction(requestId, rowEl) {
       "approveAccountRequest"
     );
 
-    await approveFn({ requestId });
+    const result = await approveFn({ requestId });
+    const { uid } = result.data || {};
 
+    // ===== Optimistische UI =====
     rowEl.querySelector("[data-status]").textContent = "approved";
-    rowEl.querySelector("[data-actions]").innerHTML = "—";
+    actionCell.innerHTML = "✓ Goedgekeurd";
+
+    // visuele afronding
+    rowEl.classList.add("approved");
+
+    // 👉 stap 2: user direct toevoegen aan user-tabel
+    if (uid && window.addUserToTableFromRequest) {
+      window.addUserToTableFromRequest(requestId, uid);
+    }
   } catch (err) {
     console.error("Goedkeuren mislukt:", err);
+
+    // herstel UI
+    actionCell.innerHTML = originalActions;
+
     alert(
       "Goedkeuren mislukt: " +
       (err?.message || err?.details || "Onbekende fout")
@@ -26,6 +47,7 @@ async function approveRequestViaFunction(requestId, rowEl) {
     rowEl.classList.remove("loading");
   }
 }
+
 
 
 function updateAccountRequestStatus(requestId, newStatus, rowEl) {
@@ -248,6 +270,32 @@ function persistUsers() {
   }
   saveUsers(USERS);
 }
+
+window.addUserToTableFromRequest = function (requestId, uid) {
+  if (!window.accountRequests || !window.users) return;
+
+  const req = window.accountRequests.find(r => r.id === requestId);
+  if (!req) return;
+
+  const newUser = {
+    uid,
+    naam: req.naam,
+    email: req.email,
+    roles: req.requestedRoles || {},
+    speltakken: req.speltakken || []
+  };
+
+  // voorkom dubbel toevoegen
+  if (window.users.some(u => u.uid === uid)) return;
+
+  window.users.push(newUser);
+
+  // her-render user tabel
+  if (typeof window.renderUsers === "function") {
+    window.renderUsers();
+  }
+};
+
 /* ============================================================
    ACCOUNT REQUESTS — READ ONLY (FASE C.1)
 ============================================================ */

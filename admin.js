@@ -1,25 +1,32 @@
-function approveRequestViaFunction(requestId, rowEl) {
+async function approveRequestViaFunction(requestId, rowEl) {
   rowEl.classList.add("loading");
 
-  fetch("https://us-central1-ovn-jaarplanning.cloudfunctions.net/approveAccountRequest", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ requestId })
-  })
-    .then(async r => {
-      if (!r.ok) throw new Error(await r.text());
-      return r.json();
-    })
-    .then(() => {
-      rowEl.querySelector("[data-status]").textContent = "approved";
-      rowEl.querySelector("[data-actions]").innerHTML = "—";
-      rowEl.classList.remove("loading");
-    })
-    .catch(err => {
-      rowEl.classList.remove("loading");
-      alert("Goedkeuren mislukt: " + err.message);
-    });
+  try {
+    const app = window._firebase.getApps().length
+      ? window._firebase.getApp()
+      : window._firebase.initializeApp(window.firebaseConfig);
+
+    const functions = window._firebase.getFunctions(app);
+    const approveFn = window._firebase.httpsCallable(
+      functions,
+      "approveAccountRequest"
+    );
+
+    await approveFn({ requestId });
+
+    rowEl.querySelector("[data-status]").textContent = "approved";
+    rowEl.querySelector("[data-actions]").innerHTML = "—";
+  } catch (err) {
+    console.error("Goedkeuren mislukt:", err);
+    alert(
+      "Goedkeuren mislukt: " +
+      (err?.message || err?.details || "Onbekende fout")
+    );
+  } finally {
+    rowEl.classList.remove("loading");
+  }
 }
+
 
 function updateAccountRequestStatus(requestId, newStatus, rowEl) {
   const app = window._firebase.getApps().length

@@ -1453,6 +1453,16 @@ th[class^="ploeg-"]::after {
   pointer-events: auto !important;
 }
 
+tr.loading {
+  opacity: 0.6;
+}
+
+tr.approved {
+  background: #e6ffe6;
+  transition: background 0.4s ease;
+}
+
+
 /* ============================================================
    PRINT
 ============================================================ */

@@ -1,17 +1,15 @@
 function approveRequestViaFunction(requestId, rowEl) {
-  const app = window._firebase.getApps().length
-    ? window._firebase.getApp()
-    : window._firebase.initializeApp(window.firebaseConfig);
-
-  const functions = window._firebase.getFunctions(app);
-  const approve = window._firebase.httpsCallable(
-    functions,
-    "approveAccountRequest"
-  );
-
   rowEl.classList.add("loading");
 
-  approve({ requestId })
+  fetch("https://us-central1-ovn-jaarplanning.cloudfunctions.net/approveAccountRequest", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ requestId })
+  })
+    .then(async r => {
+      if (!r.ok) throw new Error(await r.text());
+      return r.json();
+    })
     .then(() => {
       rowEl.querySelector("[data-status]").textContent = "approved";
       rowEl.querySelector("[data-actions]").innerHTML = "—";
@@ -22,6 +20,7 @@ function approveRequestViaFunction(requestId, rowEl) {
       alert("Goedkeuren mislukt: " + err.message);
     });
 }
+
 function updateAccountRequestStatus(requestId, newStatus, rowEl) {
   const app = window._firebase.getApps().length
     ? window._firebase.getApp()

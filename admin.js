@@ -1,3 +1,15 @@
+async function callSetAdminRole(targetUid, makeAdmin) {
+  const app = window._firebase.getApps().length
+    ? window._firebase.getApp()
+    : window._firebase.initializeApp(window.firebaseConfig);
+
+  const functions = window._firebase.getFunctions(app);
+  const fn = window._firebase.httpsCallable(functions, "setAdminRole");
+
+  return fn({ targetUid, makeAdmin });
+}
+
+
 async function approveRequestViaFunction(requestId, rowEl) {
   // visuele state
   rowEl.classList.add("loading");
@@ -131,17 +143,51 @@ function saveRolesToFirebase(targetUid, roles) {
   }
 }
 
-(function guardAdmin() {
-  const session = JSON.parse(localStorage.getItem("ovn_auth_session"));
+waitForFirebase(() => {
+  (async function guardAdmin() {
+    const auth = window._firebase.getAuth();
 
-  if (!session || !session.roles?.admin) {
-    document.body.innerHTML =
-      "<p style='padding:2rem'>Geen toegang</p>";
-    return;
-  }
+    const unsubscribe = window._firebase.onAuthStateChanged(auth, async (user) => {
+      unsubscribe();
 
-  document.body.classList.remove("hidden");
-})();
+      if (!user) {
+        deny();
+        return;
+      }
+
+      try {
+        const token = await user.getIdTokenResult();
+        if (!token.claims?.admin) {
+          deny();
+          return;
+        }
+
+        document.body.classList.remove("hidden");
+      } catch (e) {
+        console.error("Kon admin-claim niet lezen:", e);
+        deny();
+      }
+    });
+
+    function deny() {
+      document.body.innerHTML = `
+        <div style="padding:2rem;text-align:center">
+          <h2>Oeps, je bent verdwaald</h2>
+          <p>
+            Deze pagina is alleen voor admins.<br>
+            Log in als admin om deze pagina te bekijken.
+          </p>
+          <p>Je wordt binnen 10 seconden teruggestuurd naar de homepagina.</p>
+        </div>
+      `;
+
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 10000);
+    }
+  })();
+});
+
 
 /* ===============================
    USERS RENDER + EDIT (FASE 1)
@@ -215,31 +261,53 @@ function bindRoleEvents() {
    const session = JSON.parse(localStorage.getItem("ovn_auth_session"));
    if (!session?.roles?.admin) return;
 
-  // Admin / Bestuur toggles
-  document.querySelectorAll("input[data-role]").forEach(input => {
-    input.addEventListener("change", e => {
-      const userIndex = e.target.dataset.user;
-      const role = e.target.dataset.role;
+ document.querySelectorAll('input[data-role="admin"]').forEach(input => {
+   // Bestuur toggle (direct naar RTDB, geen custom claim nodig)
+document.querySelectorAll('input[data-role="bestuur"]').forEach(input => {
+  input.addEventListener("change", (e) => {
+    const uid = e.target.dataset.uid;
+    const checked = e.target.checked;
 
-// Voorkom dat laatste admin wordt uitgezet (DOM-based)
-if (role === "admin" && !e.target.checked) {
-  const checkedAdmins = document.querySelectorAll('input[data-role="admin"]:checked').length;
-  if (checkedAdmins === 0) {
-    alert("Er moet minimaal één admin blijven.");
-    e.target.checked = true;
-    return;
-  }
-}
-
-const uid = e.target.dataset.uid;
-
-saveRolesToFirebase(uid, {
-  ...getCurrentRolesFromRow(uid),
-  [role]: e.target.checked
-});
-
+    saveRolesToFirebase(uid, {
+      ...getCurrentRolesFromRow(uid),
+      bestuur: checked
     });
   });
+});
+
+  input.addEventListener("change", async (e) => {
+    const checkbox = e.target;
+    const uid = checkbox.dataset.uid;
+    const makeAdmin = checkbox.checked;
+
+    const row = checkbox.closest("tr");
+    const name =
+      row?.querySelector("td")?.textContent || "deze gebruiker";
+
+    // herstelstandaard bij annuleren / fout
+    checkbox.checked = !makeAdmin;
+
+    const actionText = makeAdmin
+      ? `Admin rechten verlenen aan ${name}`
+      : `Admin rechten verwijderen van ${name}`;
+
+    if (!confirm(actionText)) return;
+
+    try {
+      await callSetAdminRole(uid, makeAdmin);
+
+      // token vernieuwen voor huidige admin
+      const auth = window._firebase.getAuth();
+      if (auth.currentUser) {
+        await auth.currentUser.getIdToken(true);
+      }
+
+      checkbox.checked = makeAdmin;
+    } catch (err) {
+      alert(err?.message || "Wijzigen admin-rechten mislukt");
+    }
+  });
+});
 
   // Speltak toggles
 document.querySelectorAll("input[data-speltak]").forEach(input => {

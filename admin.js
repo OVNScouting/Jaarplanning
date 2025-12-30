@@ -169,6 +169,7 @@ function renderUsers(users) {
   ).map(cb => cb.dataset.filter);
 
   Object.entries(users)
+    
     .filter(([_, u]) => {
       if (filters.includes("inactive") && u.status !== "inactive") return false;
       if (filters.includes("admin") && !u.roles?.admin) return false;
@@ -190,7 +191,11 @@ function renderUsers(users) {
         <td>
           ${user.roles?.admin ? "Admin " : ""}
           ${user.roles?.bestuur ? "Bestuur " : ""}
+          ${user.roles?.speltakken?.length
+            ? user.roles.speltakken.join(", ")
+            : ""}
         </td>
+
       `;
 
       tr.addEventListener("click", () => openUserPanel(uid));
@@ -328,6 +333,11 @@ function openUserPanel(uid) {
   roles.innerHTML = "";
   if (u.roles?.admin) roles.innerHTML += "<li>Admin</li>";
   if (u.roles?.bestuur) roles.innerHTML += "<li>Bestuur</li>";
+  if (u.roles?.speltakken?.length) {
+  u.roles.speltakken.forEach(s =>
+    roles.innerHTML += `<li>${s}</li>`
+  );
+}
 
   document.getElementById("panelView").classList.remove("hidden");
   document.getElementById("panelEdit").classList.add("hidden");

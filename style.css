@@ -273,6 +273,34 @@ body {
 }
 
 /* ============================================================
+   STATUS BADGES — Admin gebruikers
+============================================================ */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Actief */
+.status-active {
+  background: #e6f6ea;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+/* Gedeactiveerd */
+.status-inactive {
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+}
+
+/* ============================================================
    FILTER CHIPS
 ============================================================ */
 .chip {

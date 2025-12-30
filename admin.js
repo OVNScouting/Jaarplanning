@@ -351,6 +351,12 @@ document.getElementById("editUserBtn").onclick = () => {
   editBestuur.checked = !!u.roles?.bestuur;
   editInactive.checked = u.status === "inactive";
 
+  document
+  .querySelectorAll(".edit-speltak")
+  .forEach(cb => {
+    cb.checked = u.roles?.speltakken?.includes(cb.value) || false;
+  });
+
   panelView.classList.add("hidden");
   panelEdit.classList.remove("hidden");
 };
@@ -367,7 +373,9 @@ document.getElementById("saveUserBtn").onclick = async () => {
       roles: {
         admin: editAdmin.checked,
         bestuur: editBestuur.checked,
-        speltakken: []
+        speltakken: Array.from(
+          document.querySelectorAll(".edit-speltak:checked")
+        ).map(cb => cb.value)
       }
     });
 

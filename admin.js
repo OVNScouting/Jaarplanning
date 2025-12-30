@@ -42,9 +42,7 @@ async function approveRequestViaFunction(requestId, rowEl) {
     rowEl.classList.add("approved");
 
     // 👉 stap 2: user direct toevoegen aan user-tabel
-    if (uid && window.addUserToTableFromRequest) {
-      window.addUserToTableFromRequest(requestId, uid);
-    }
+   
   } catch (err) {
     console.error("Goedkeuren mislukt:", err);
 
@@ -112,53 +110,8 @@ function waitForFirebase(callback, retries = 100) {
 
   setTimeout(() => waitForFirebase(callback, retries - 1), 100);
 }
-/* ============================================================
-   admin.js — Admin omgeving (fase 1)
-   - Alleen admin toegang
-   - Read-only gebruikersoverzicht
-============================================================
-============================================================ */
-function getCurrentRolesFromRow(uid) {
-  const roles = {};
-
-  document
-    .querySelectorAll(`input[data-uid="${uid}"][data-role]`)
-    .forEach(input => {
-      roles[input.dataset.role] = input.checked;
-    });
-
-  const speltakken = [];
-  document
-    .querySelectorAll(`input[data-uid="${uid}"][data-speltak]`)
-    .forEach(input => {
-      if (input.checked) speltakken.push(input.dataset.speltak);
-    });
-
-  roles.speltakken = speltakken;
-
-  return roles;
-}
-
-
-
-function saveRolesToFirebase(targetUid, roles) {
-  if (!window._firebase || !targetUid) return;
-
-  try {
-    const app = window._firebase.getApps().length
-      ? window._firebase.getApp()
-      : window._firebase.initializeApp(window.firebaseConfig);
-
-    const db = window._firebase.getDatabase(app);
-    const rolesRef = window._firebase.ref(db, `users/${targetUid}/roles`);
-
-    return window._firebase.update(rolesRef, roles);
-  } catch (err) {
-    console.error("Opslaan rollen mislukt:", err);
-  }
-}
-
 waitForFirebase(() => {
+
   (async function guardAdmin() {
     const auth = window._firebase.getAuth();
 
@@ -202,6 +155,7 @@ waitForFirebase(() => {
     }
   })();
 });
+
 
 function renderUsers(users) {
   USERS_CACHE = users || {};
@@ -330,12 +284,32 @@ function loadUsers() {
   });
 }
 
+// ===============================
+// DOM references voor zijpaneel
+// ===============================
+let editAdmin, editBestuur, editInactive;
+let panelView, panelEdit;
+
 waitForFirebase(() => {
+  // DOM refs ophalen (DOM is nu zeker klaar)
+  editAdmin = document.getElementById("editAdmin");
+  editBestuur = document.getElementById("editBestuur");
+  editInactive = document.getElementById("editInactive");
+
+  panelView = document.getElementById("panelView");
+  panelEdit = document.getElementById("panelEdit");
+
+  // Users laden
   loadUsers();
+
+  // Filters binden
   document
     .querySelectorAll("#userFilters input")
-    .forEach(cb => cb.addEventListener("change", () => renderUsers(USERS_CACHE)));
+    .forEach(cb =>
+      cb.addEventListener("change", () => renderUsers(USERS_CACHE))
+    );
 });
+
 
 function openUserPanel(uid) {
   selectedUserId = uid;

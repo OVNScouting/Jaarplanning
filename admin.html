@@ -75,18 +75,23 @@
   <div style="display:flex;gap:1.5rem;align-items:flex-start;">
     <!-- USERS TABLE -->
     <div style="flex:2;min-width:0;">
-      <table class="planning-table">
-        <thead>
-          <tr>
-            <th>Naam</th>
-            <th>Status</th>
-            <th>Rollen</th>
-          </tr>
-        </thead>
-        <tbody id="userTable">
-          <!-- Wordt gevuld via JS -->
-        </tbody>
-      </table>
+  <table class="planning-table">
+  <thead>
+    <tr>
+      <th>Naam</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody id="userTable">
+    <!-- Wordt gevuld via JS -->
+  </tbody>
+</table>
+
+<!-- Lege staat -->
+<p id="noUsersMessage" class="text-muted hidden" style="margin-top:0.75rem;">
+  Geen gebruikers gevonden met deze filters.
+</p>
+
     </div>
 
     <!-- USER SIDE PANEL -->
@@ -108,7 +113,7 @@
 
         <button id="editUserBtn" class="pill-btn">Bewerken</button>
         <button id="deleteUserBtn" class="pill-btn danger">
-          Gebruiker verwijderen
+          Account verwijderen
         </button>
       </div>
 

@@ -44,28 +44,104 @@
   </section>
 
   <!-- ============================================================
-       GEBRUIKERS (FASE 1: lokaal)
+       GEBRUIKERS 
   ============================================================ -->
-  <section class="planning-section">
-    <div class="section-header">
-      <h2>Gebruikers</h2>
-      <span class="text-muted">Fase 1 – lokaal</span>
+<section class="planning-section">
+  <div class="section-header">
+    <h2>Gebruikers</h2>
+    <span class="text-muted">Beheer</span>
+  </div>
+
+  <!-- Filters -->
+  <div id="userFilters" style="display:flex;gap:1rem;margin-bottom:1rem;">
+    <label>
+      <input type="checkbox" data-filter="admin" />
+      Admin
+    </label>
+    <label>
+      <input type="checkbox" data-filter="bestuur" />
+      Bestuur
+    </label>
+    <label>
+      <input type="checkbox" data-filter="inactive" />
+      Inactief
+    </label>
+  </div>
+
+  <div style="display:flex;gap:1.5rem;align-items:flex-start;">
+    <!-- USERS TABLE -->
+    <div style="flex:2;min-width:0;">
+      <table class="planning-table">
+        <thead>
+          <tr>
+            <th>Naam</th>
+            <th>Status</th>
+            <th>Rollen</th>
+          </tr>
+        </thead>
+        <tbody id="userTable">
+          <!-- Wordt gevuld via JS -->
+        </tbody>
+      </table>
     </div>
 
-    <table class="planning-table">
-      <thead>
-        <tr>
-          <th>Gebruikersnaam</th>
-          <th>Admin</th>
-          <th>Bestuur</th>
-          <th>Speltakken</th>
-        </tr>
-      </thead>
-      <tbody id="userTable">
-        <!-- Wordt gevuld via JS -->
-      </tbody>
-    </table>
-  </section>
+    <!-- USER SIDE PANEL -->
+    <aside
+      id="userSidePanel"
+      class="hidden"
+      style="flex:1;border-left:1px solid #ddd;padding-left:1rem;"
+    >
+      <h3 id="panelName">Gebruiker</h3>
+
+      <!-- VIEW MODE -->
+      <div id="panelView">
+        <p><strong>Email:</strong> <span id="panelEmail"></span></p>
+        <p><strong>Status:</strong> <span id="panelStatus"></span></p>
+        <p><strong>Aangemaakt:</strong> <span id="panelCreated"></span></p>
+
+        <p><strong>Rollen:</strong></p>
+        <ul id="panelRoles"></ul>
+
+        <button id="editUserBtn" class="pill-btn">Bewerken</button>
+        <button id="deleteUserBtn" class="pill-btn danger">
+          Gebruiker verwijderen
+        </button>
+      </div>
+
+      <!-- EDIT MODE -->
+      <div id="panelEdit" class="hidden">
+        <h4>Rollen</h4>
+
+        <label>
+          <input type="checkbox" id="editAdmin" />
+          Admin
+        </label><br />
+
+        <label>
+          <input type="checkbox" id="editBestuur" />
+          Bestuur
+        </label>
+
+        <h4 style="margin-top:1rem;">Status</h4>
+
+        <label>
+          <input type="checkbox" id="editInactive" />
+          Inactief
+        </label>
+
+        <div style="margin-top:1.25rem;display:flex;gap:0.5rem;">
+          <button id="saveUserBtn" class="pill-btn primary">
+            Opslaan
+          </button>
+          <button id="cancelEditBtn" class="pill-btn outline">
+            Annuleren
+          </button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
 <!-- ============================================================
      ACCOUNT AANVRAGEN (FASE C.1 – read-only)
 ============================================================ -->

@@ -168,55 +168,62 @@ function renderUsers(users) {
     document.querySelectorAll("#userFilters input:checked")
   ).map(cb => cb.dataset.filter);
 
-  Object.entries(users)
-    
-.filter(([_, u]) => {
-  // status / rol filters
-  if (filters.includes("inactive") && u.status !== "inactive") return false;
-  if (filters.includes("admin") && !u.roles?.admin) return false;
-  if (filters.includes("bestuur") && !u.roles?.bestuur) return false;
+  const rows = Object.entries(USERS_CACHE)
+    .filter(([_, u]) => {
+      // status / rol filters
+      if (filters.includes("inactive") && u.status !== "inactive") return false;
+      if (filters.includes("admin") && !u.roles?.admin) return false;
+      if (filters.includes("bestuur") && !u.roles?.bestuur) return false;
 
-  // speltak filters
-  const speltakFilters = filters.filter(f =>
-    ["bevers", "welpen", "scouts", "explorers", "rovers"].includes(f)
-  );
+      // speltak filters
+      const speltakFilters = filters.filter(f =>
+        ["bevers", "welpen", "scouts", "explorers", "rovers"].includes(f)
+      );
 
-  if (speltakFilters.length > 0) {
-    const userSpeltakken = u.roles?.speltakken || [];
-    const heeftMatch = speltakFilters.some(s =>
-      userSpeltakken.includes(s)
+      if (speltakFilters.length > 0) {
+        const userSpeltakken = u.roles?.speltakken || [];
+        const heeftMatch = speltakFilters.some(s =>
+          userSpeltakken.includes(s)
+        );
+        if (!heeftMatch) return false;
+      }
+
+      return true;
+    })
+    .sort((a, b) =>
+      (a[1].naam || "").localeCompare(
+        b[1].naam || "",
+        "nl",
+        { sensitivity: "base" }
+      )
     );
-    if (!heeftMatch) return false;
+
+  // Lege staat
+  const noUsersMsg = document.getElementById("noUsersMessage");
+  if (noUsersMsg) {
+    noUsersMsg.classList.toggle("hidden", rows.length > 0);
   }
 
-  return true;
-})
+  // Render
+  rows.forEach(([uid, user]) => {
+    const tr = document.createElement("tr");
+    tr.dataset.uid = uid;
 
-    .sort((a, b) =>
-      (a[1].naam || "").localeCompare(b[1].naam || "", "nl", { sensitivity: "base" })
-    )
-    .forEach(([uid, user]) => {
-      const tr = document.createElement("tr");
-      tr.dataset.uid = uid;
+    const isInactive = user.status === "inactive";
+    if (isInactive) tr.style.opacity = "0.5";
 
-      if (user.status === "inactive") tr.style.opacity = "0.5";
+    tr.innerHTML = `
+      <td>${user.naam || user.email || uid}</td>
+      <td>
+        <span class="status-badge ${isInactive ? "status-inactive" : "status-active"}">
+          ${isInactive ? "Gedeactiveerd" : "Actief"}
+        </span>
+      </td>
+    `;
 
-      tr.innerHTML = `
-        <td>${user.naam || user.email || uid}</td>
-        <td>${user.status || "active"}</td>
-        <td>
-          ${user.roles?.admin ? "Admin " : ""}
-          ${user.roles?.bestuur ? "Bestuur " : ""}
-          ${user.roles?.speltakken?.length
-            ? user.roles.speltakken.join(", ")
-            : ""}
-        </td>
-
-      `;
-
-      tr.addEventListener("click", () => openUserPanel(uid));
-      tbody.appendChild(tr);
-    });
+    tr.addEventListener("click", () => openUserPanel(uid));
+    tbody.appendChild(tr);
+  });
 }
 
 
@@ -400,7 +407,7 @@ document.getElementById("saveUserBtn").onclick = async () => {
       status: editInactive.checked ? "inactive" : "active"
     });
 
-    alert("Gebruiker bijgewerkt");
+    alert("Account bijgewerkt");
     loadUsers();
     panelEdit.classList.add("hidden");
     panelView.classList.remove("hidden");
@@ -410,7 +417,7 @@ document.getElementById("saveUserBtn").onclick = async () => {
 };
 
 document.getElementById("deleteUserBtn").onclick = async () => {
-  if (!confirm("Gebruiker volledig verwijderen? Dit kan niet ongedaan worden gemaakt.")) return;
+  if (!confirm("Account volledig verwijderen? Dit kan niet ongedaan worden gemaakt.")) return;
   try {
     await callFunction("deleteUser", { uid: selectedUserId });
     document.getElementById("userSidePanel").classList.add("hidden");

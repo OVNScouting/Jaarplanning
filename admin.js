@@ -60,6 +60,21 @@ async function approveRequestViaFunction(requestId, rowEl) {
   }
 }
 
+let USERS_CACHE = {};
+let selectedUserId = null;
+
+function getFunctions() {
+  const app = window._firebase.getApps().length
+    ? window._firebase.getApp()
+    : window._firebase.initializeApp(window.firebaseConfig);
+  return window._firebase.getFunctions(app);
+}
+
+function callFunction(name, data) {
+  const fn = window._firebase.httpsCallable(getFunctions(), name);
+  return fn(data).then(r => r.data);
+}
+
 
 
 function updateAccountRequestStatus(requestId, newStatus, rowEl) {
@@ -188,181 +203,48 @@ waitForFirebase(() => {
   })();
 });
 
+function renderUsers(users) {
+  USERS_CACHE = users || {};
+  const tbody = document.getElementById("userTable");
+  if (!tbody) return;
 
-/* ===============================
-   USERS RENDER + EDIT (FASE 1)
-=============================== */
-function renderUsers() {
-  const app = window._firebase.getApps().length
-    ? window._firebase.getApp()
-    : window._firebase.initializeApp(window.firebaseConfig);
+  tbody.innerHTML = "";
 
-  const db = window._firebase.getDatabase(app);
-  const usersRef = window._firebase.ref(db, "users");
+  const filters = Array.from(
+    document.querySelectorAll("#userFilters input:checked")
+  ).map(cb => cb.dataset.filter);
 
-  window._firebase.get(usersRef).then(snapshot => {
-    if (!snapshot.exists()) return;
-
-    const users = snapshot.val();
-    const tbody = document.getElementById("userTable");
-    if (!tbody) return;
-
-    tbody.innerHTML = "";
-
-    Object.entries(users).forEach(([uid, user]) => {
-      const roles = user.roles || {};
-      const speltakken = roles.speltakken || [];
-
+  Object.entries(users)
+    .filter(([_, u]) => {
+      if (filters.includes("inactive") && u.status !== "inactive") return false;
+      if (filters.includes("admin") && !u.roles?.admin) return false;
+      if (filters.includes("bestuur") && !u.roles?.bestuur) return false;
+      return true;
+    })
+    .sort((a, b) =>
+      (a[1].naam || "").localeCompare(b[1].naam || "", "nl", { sensitivity: "base" })
+    )
+    .forEach(([uid, user]) => {
       const tr = document.createElement("tr");
+      tr.dataset.uid = uid;
+
+      if (user.status === "inactive") tr.style.opacity = "0.5";
 
       tr.innerHTML = `
-        <td>${user.email || uid}</td>
-
-        <td style="text-align:center;">
-          <input type="checkbox"
-                 data-uid="${uid}"
-                 data-role="admin"
-                 ${roles.admin ? "checked" : ""}>
-        </td>
-
-        <td style="text-align:center;">
-          <input type="checkbox"
-                 data-uid="${uid}"
-                 data-role="bestuur"
-                 ${roles.bestuur ? "checked" : ""}>
-        </td>
-
+        <td>${user.naam || user.email || uid}</td>
+        <td>${user.status || "active"}</td>
         <td>
-          ${["bevers","welpen","scouts","explorers","rovers","stam"].map(sp => `
-            <label style="display:block;font-size:0.8rem;">
-              <input type="checkbox"
-                     data-uid="${uid}"
-                     data-speltak="${sp}"
-                     ${speltakken.includes(sp) ? "checked" : ""}>
-              ${sp}
-            </label>
-          `).join("")}
+          ${user.roles?.admin ? "Admin " : ""}
+          ${user.roles?.bestuur ? "Bestuur " : ""}
         </td>
       `;
 
+      tr.addEventListener("click", () => openUserPanel(uid));
       tbody.appendChild(tr);
     });
-
-    bindRoleEvents();
-  });
 }
 
 
-/* ===============================
-   ROLE UPDATE HANDLERS
-=============================== */
-
-function bindRoleEvents() {
-   const session = JSON.parse(localStorage.getItem("ovn_auth_session"));
-   if (!session?.roles?.admin) return;
-
- document.querySelectorAll('input[data-role="admin"]').forEach(input => {
-   // Bestuur toggle (direct naar RTDB, geen custom claim nodig)
-document.querySelectorAll('input[data-role="bestuur"]').forEach(input => {
-  input.addEventListener("change", (e) => {
-    const uid = e.target.dataset.uid;
-    const checked = e.target.checked;
-
-    saveRolesToFirebase(uid, {
-      ...getCurrentRolesFromRow(uid),
-      bestuur: checked
-    });
-  });
-});
-
-  input.addEventListener("change", async (e) => {
-    const checkbox = e.target;
-    const uid = checkbox.dataset.uid;
-    const makeAdmin = checkbox.checked;
-
-    const row = checkbox.closest("tr");
-    const name =
-      row?.querySelector("td")?.textContent || "deze gebruiker";
-
-    // herstelstandaard bij annuleren / fout
-    checkbox.checked = !makeAdmin;
-
-    const actionText = makeAdmin
-      ? `Admin rechten verlenen aan ${name}`
-      : `Admin rechten verwijderen van ${name}`;
-
-    if (!confirm(actionText)) return;
-
-    try {
-      await callSetAdminRole(uid, makeAdmin);
-
-      // token vernieuwen voor huidige admin
-      const auth = window._firebase.getAuth();
-      if (auth.currentUser) {
-        await auth.currentUser.getIdToken(true);
-      }
-
-      checkbox.checked = makeAdmin;
-    } catch (err) {
-      alert(err?.message || "Wijzigen admin-rechten mislukt");
-    }
-  });
-});
-
-  // Speltak toggles
-document.querySelectorAll("input[data-speltak]").forEach(input => {
-  input.addEventListener("change", e => {
-    const uid = e.target.dataset.uid;
-
-    // Lees altijd de actuele selectie uit de DOM (bron van waarheid)
-    const speltakken = Array.from(
-      document.querySelectorAll(`input[data-uid="${uid}"][data-speltak]:checked`)
-    ).map(el => el.dataset.speltak);
-
-    saveRolesToFirebase(uid, {
-      ...getCurrentRolesFromRow(uid),
-      speltakken
-    });
-  });
-});
-
-}
-
-/* ===============================
-   LOCAL PERSISTENCE (FASE 1)
-=============================== */
-function persistUsers() {
-  if (typeof saveUsers !== "function") {
-    console.error("saveUsers() niet beschikbaar — check script volgorde");
-    return;
-  }
-  saveUsers(USERS);
-}
-
-window.addUserToTableFromRequest = function (requestId, uid) {
-  if (!window.accountRequests || !window.users) return;
-
-  const req = window.accountRequests.find(r => r.id === requestId);
-  if (!req) return;
-
-  const newUser = {
-    uid,
-    naam: req.naam,
-    email: req.email,
-    roles: req.requestedRoles || {},
-    speltakken: req.speltakken || []
-  };
-
-  // voorkom dubbel toevoegen
-  if (window.users.some(u => u.uid === uid)) return;
-
-  window.users.push(newUser);
-
-  // her-render user tabel
-  if (typeof window.renderUsers === "function") {
-    window.renderUsers();
-  }
-};
 
 /* ============================================================
    ACCOUNT REQUESTS — READ ONLY (FASE C.1)
@@ -435,5 +317,97 @@ function renderAccountRequests() {
 }
 waitForFirebase(renderAccountRequests);
 
-waitForFirebase(renderUsers);
+function loadUsers() {
+  const app = window._firebase.getApps().length
+    ? window._firebase.getApp()
+    : window._firebase.initializeApp(window.firebaseConfig);
 
+  const db = window._firebase.getDatabase(app);
+  const ref = window._firebase.ref(db, "users");
+
+  window._firebase.get(ref).then(snap => {
+    if (snap.exists()) renderUsers(snap.val());
+  });
+}
+
+waitForFirebase(() => {
+  loadUsers();
+  document
+    .querySelectorAll("#userFilters input")
+    .forEach(cb => cb.addEventListener("change", () => renderUsers(USERS_CACHE)));
+});
+
+function openUserPanel(uid) {
+  selectedUserId = uid;
+  const u = USERS_CACHE[uid];
+  if (!u) return;
+
+  document.getElementById("userSidePanel").classList.remove("hidden");
+
+  document.getElementById("panelName").textContent = u.naam || "—";
+  document.getElementById("panelEmail").textContent = u.email || "—";
+  document.getElementById("panelStatus").textContent = u.status || "active";
+  document.getElementById("panelCreated").textContent =
+    u.createdAt ? new Date(u.createdAt).toLocaleDateString("nl-NL") : "—";
+
+  const roles = document.getElementById("panelRoles");
+  roles.innerHTML = "";
+  if (u.roles?.admin) roles.innerHTML += "<li>Admin</li>";
+  if (u.roles?.bestuur) roles.innerHTML += "<li>Bestuur</li>";
+
+  document.getElementById("panelView").classList.remove("hidden");
+  document.getElementById("panelEdit").classList.add("hidden");
+}
+
+document.getElementById("editUserBtn").onclick = () => {
+  const u = USERS_CACHE[selectedUserId];
+  if (!u) return;
+
+  editAdmin.checked = !!u.roles?.admin;
+  editBestuur.checked = !!u.roles?.bestuur;
+  editInactive.checked = u.status === "inactive";
+
+  panelView.classList.add("hidden");
+  panelEdit.classList.remove("hidden");
+};
+
+document.getElementById("cancelEditBtn").onclick = () => {
+  panelEdit.classList.add("hidden");
+  panelView.classList.remove("hidden");
+};
+
+document.getElementById("saveUserBtn").onclick = async () => {
+  try {
+    await callFunction("updateUserRoles", {
+      uid: selectedUserId,
+      roles: {
+        admin: editAdmin.checked,
+        bestuur: editBestuur.checked,
+        speltakken: []
+      }
+    });
+
+    await callFunction("setUserStatus", {
+      uid: selectedUserId,
+      status: editInactive.checked ? "inactive" : "active"
+    });
+
+    alert("Gebruiker bijgewerkt");
+    loadUsers();
+    panelEdit.classList.add("hidden");
+    panelView.classList.remove("hidden");
+  } catch (e) {
+    alert(e.message || "Opslaan mislukt");
+  }
+};
+
+document.getElementById("deleteUserBtn").onclick = async () => {
+  if (!confirm("Gebruiker volledig verwijderen? Dit kan niet ongedaan worden gemaakt.")) return;
+  try {
+    await callFunction("deleteUser", { uid: selectedUserId });
+    document.getElementById("userSidePanel").classList.add("hidden");
+    loadUsers();
+  } catch (e) {
+    alert(e.message || "Verwijderen mislukt");
+  }
+};

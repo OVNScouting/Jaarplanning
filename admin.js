@@ -170,12 +170,28 @@ function renderUsers(users) {
 
   Object.entries(users)
     
-    .filter(([_, u]) => {
-      if (filters.includes("inactive") && u.status !== "inactive") return false;
-      if (filters.includes("admin") && !u.roles?.admin) return false;
-      if (filters.includes("bestuur") && !u.roles?.bestuur) return false;
-      return true;
-    })
+.filter(([_, u]) => {
+  // status / rol filters
+  if (filters.includes("inactive") && u.status !== "inactive") return false;
+  if (filters.includes("admin") && !u.roles?.admin) return false;
+  if (filters.includes("bestuur") && !u.roles?.bestuur) return false;
+
+  // speltak filters
+  const speltakFilters = filters.filter(f =>
+    ["bevers", "welpen", "scouts", "explorers", "rovers"].includes(f)
+  );
+
+  if (speltakFilters.length > 0) {
+    const userSpeltakken = u.roles?.speltakken || [];
+    const heeftMatch = speltakFilters.some(s =>
+      userSpeltakken.includes(s)
+    );
+    if (!heeftMatch) return false;
+  }
+
+  return true;
+})
+
     .sort((a, b) =>
       (a[1].naam || "").localeCompare(b[1].naam || "", "nl", { sensitivity: "base" })
     )

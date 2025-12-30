@@ -188,24 +188,46 @@ function initFirebaseAuth(retries = 10) {
       return;
     }
 
-    let roles = {};
+let roles = {};
+let status = "active";
 
-    try {
-      const db = window._firebase.getDatabase();
-      const rolesRef = window._firebase.ref(db, `users/${user.uid}/roles`);
-      const snapshot = await window._firebase.get(rolesRef);
+try {
+  const db = window._firebase.getDatabase();
 
-      if (snapshot.exists()) roles = snapshot.val();
-    } catch (err) {
-      console.warn("Kon rollen niet laden:", err);
-    }
+  const userRef = window._firebase.ref(db, `users/${user.uid}`);
+  const snapshot = await window._firebase.get(userRef);
 
-    setSession({
-      id: user.uid,
-      email: user.email,
-      roles,
-      loginAt: Date.now(),
-    });
+  if (snapshot.exists()) {
+    const data = snapshot.val();
+    roles = data.roles || {};
+    status = data.status || "active";
+  }
+} catch (err) {
+  console.warn("Kon gebruikersgegevens niet laden:", err);
+}
+
+if (status === "inactive") {
+  alert(
+    "Je account is gedeactiveerd.\n\n" +
+    "Neem contact op met het bestuur als dit niet klopt."
+  );
+
+  clearSession();
+  await window._firebase.signOut(auth);
+
+  updateHeader();
+  applyAuthVisibility();
+  document.dispatchEvent(new Event("auth-changed"));
+  return;
+}
+
+setSession({
+  id: user.uid,
+  email: user.email,
+  roles,
+  status,
+  loginAt: Date.now(),
+});
 
     updateHeader();
     applyAuthVisibility();

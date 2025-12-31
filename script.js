@@ -377,6 +377,10 @@ let editingMemberType = null;
 
 let editMode = false;
 
+// ===============================
+// UNDO BUFFER — OPKOMSTEN
+// ===============================
+let pendingDeleteOpkomst = null; // { id, data, timeout }
 
 /* ======================================================================
    MODE FUNCTIONS
@@ -817,6 +821,8 @@ function renderTable() {
         return;
     }
 
+   
+
     visible.forEach(o => addRow(o));
 
     syncHorizontalScrollProxy();
@@ -1055,6 +1061,35 @@ function renderEmptyTableState(kind) {
   tableBody.appendChild(tr);
 }
 
+function showUndoBanner(message, onUndo) {
+    let banner = document.getElementById("undoBanner");
+
+    if (!banner) {
+        banner = document.createElement("div");
+        banner.id = "undoBanner";
+        banner.className = "undo-banner";
+        document.body.appendChild(banner);
+    }
+
+    banner.innerHTML = `
+        <span>${message}</span>
+        <button id="undoDeleteBtn">Ongedaan maken</button>
+    `;
+
+    banner.classList.add("visible");
+
+    document.getElementById("undoDeleteBtn").onclick = () => {
+        banner.classList.remove("visible");
+        onUndo();
+    };
+}
+
+function hideUndoBanner() {
+    const banner = document.getElementById("undoBanner");
+    if (banner) banner.classList.remove("visible");
+}
+
+
 /* ======================================================================
    TABEL — ROWS
    ====================================================================== */
@@ -1070,17 +1105,57 @@ function addRow(o) {
     if (isPast(o.datum) && o.typeOpkomst !== "geen") tr.classList.add("row-grey");
     if (o.id === nextUpcomingId) tr.classList.add("row-next");
 
-    if (isEdit()) {
-        const del = document.createElement("td");
-        del.classList.add("editable-cell");
-        del.textContent = "🗑️";
-        del.addEventListener("click", () => {
-            if (confirm("Deze opkomst verwijderen?")) {
-                set(ref(db, `${speltak}/opkomsten/${o.id}`), null).then(loadEverything);
-            }
+   if (isEdit()) {
+    const del = document.createElement("td");
+    del.classList.add("editable-cell");
+    del.textContent = "🗑️";
+
+    del.addEventListener("click", () => {
+        if (!isLeiding()) return;
+
+        if (!confirm("Deze opkomst verwijderen?")) return;
+
+        // Als er al een pending delete is: eerst afronden
+        if (pendingDeleteOpkomst?.timeout) {
+            clearTimeout(pendingDeleteOpkomst.timeout);
+            pendingDeleteOpkomst = null;
+            hideUndoBanner();
+        }
+
+        // Data veiligstellen
+        const snapshot = { ...o };
+
+        // UI: direct verwijderen uit lokale state
+        opkomsten = opkomsten.filter(x => x.id !== o.id);
+        renderTable();
+
+        // Undo instellen
+        const timeout = setTimeout(async () => {
+            await set(ref(db, `${speltak}/opkomsten/${o.id}`), null);
+            pendingDeleteOpkomst = null;
+            hideUndoBanner();
+            loadEverything();
+        }, 5000); // 5 seconden undo-tijd
+
+        pendingDeleteOpkomst = {
+            id: o.id,
+            data: snapshot,
+            timeout
+        };
+
+        showUndoBanner("Opkomst verwijderd.", () => {
+            clearTimeout(timeout);
+            pendingDeleteOpkomst = null;
+
+            // Terugzetten in lokale state
+            opkomsten.push(snapshot);
+            // Her-sorteren + next bepalen gebeurt in loadEverything
+            loadEverything();
         });
-        tr.appendChild(del);
-    }
+    });
+
+    tr.appendChild(del);
+}
 
     tr.appendChild(makeEditableCell(o, "datum", "col-datum", "date"));
     tr.appendChild(makeEditableCell(o, "starttijd", "", "time"));

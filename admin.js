@@ -40,6 +40,13 @@ async function approveRequestViaFunction(requestId, rowEl) {
 
     // visuele afronding
     rowEl.classList.add("approved");
+    
+    setTimeout(() => {
+      rowEl.style.transition = "opacity 0.4s ease";
+      rowEl.style.opacity = "0";
+      setTimeout(() => rowEl.remove(), 400);
+    }, 900);
+
 
     // 👉 stap 2: user direct toevoegen aan user-tabel
    
@@ -272,7 +279,17 @@ function renderAccountRequests() {
           <td>${r.email || "—"}</td>
           <td>${rollen}</td>
           <td>${speltakken}</td>
-          <td data-status>${r.status || "pending"}</td>
+         <td data-status>
+            <span class="status-badge status-${r.status || "pending"}">
+              ${
+                r.status === "approved"
+                  ? "Goedgekeurd"
+                  : r.status === "rejected"
+                  ? "Afgewezen"
+                  : "In behandeling"
+              }
+            </span>
+          </td>
           <td style="font-size:0.85rem">${created}</td>
           <td data-actions>
             ${r.status === "pending" ? `

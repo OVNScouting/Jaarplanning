@@ -426,3 +426,21 @@ document.getElementById("deleteUserBtn").onclick = async () => {
     alert(e.message || "Verwijderen mislukt");
   }
 };
+
+// ===============================
+// Filters inklapbaar maken
+// ===============================
+const toggleBtn = document.getElementById("toggleUserFilters");
+const filtersEl = document.getElementById("userFilters");
+
+if (toggleBtn && filtersEl) {
+  toggleBtn.addEventListener("click", () => {
+    const isHidden = filtersEl.classList.contains("hidden");
+
+    filtersEl.classList.toggle("hidden", !isHidden);
+    toggleBtn.textContent = isHidden
+      ? "Verberg filters"
+      : "Toon filters";
+  });
+}
+

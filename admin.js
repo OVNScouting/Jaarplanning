@@ -361,7 +361,7 @@ function openUserPanel(uid) {
   const u = USERS_CACHE[uid];
   if (!u) return;
 
-  document.getElementById("userSidePanel").classList.remove("hidden");
+openSidePanel();
 
   document.getElementById("panelName").textContent = u.naam || "—";
   document.getElementById("panelEmail").textContent = u.email || "—";
@@ -377,6 +377,29 @@ function openUserPanel(uid) {
   u.roles.speltakken.forEach(s =>
     roles.innerHTML += `<li>${s}</li>`
   );
+}
+function openSidePanel() {
+  const panel = document.getElementById("userSidePanel");
+  const backdrop = document.getElementById("sidepanelBackdrop");
+
+  panel.classList.remove("hidden");
+  panel.classList.add("is-open");
+
+  backdrop.classList.remove("hidden");
+  document.body.classList.add("sidepanel-open");
+}
+
+function closeSidePanel() {
+  const panel = document.getElementById("userSidePanel");
+  const backdrop = document.getElementById("sidepanelBackdrop");
+
+  panel.classList.remove("is-open");
+  document.body.classList.remove("sidepanel-open");
+
+  setTimeout(() => {
+    panel.classList.add("hidden");
+    backdrop.classList.add("hidden");
+  }, 250);
 }
 
   document.getElementById("panelView").classList.remove("hidden");
@@ -461,3 +484,10 @@ if (toggleBtn && filtersEl) {
   });
 }
 
+document
+  .getElementById("closeUserPanelBtn")
+  ?.addEventListener("click", closeSidePanel);
+
+document
+  .getElementById("sidepanelBackdrop")
+  ?.addEventListener("click", closeSidePanel);

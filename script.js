@@ -8,8 +8,11 @@ import {
     isFutureOrToday,
     compareDateTime,
     formatDateDisplay,
-    isoFromInput
+    isoFromInput,
+    sortOpkomsten,
+    getNextUpcoming
 } from "./utils.js";
+
 
 import {
     initializeApp,
@@ -475,16 +478,15 @@ async function loadEverything() {
         data = snap.val() || {};
         loadingIndicator.classList.add("hidden");
 
-        opkomsten = Object.entries(data.opkomsten || {}).map(([id, v]) => ({ id, ...v }));
-
-        opkomsten.sort((a, b) => {
-            const pa = isPast(a.datum);
-            const pb = isPast(b.datum);
-            if (pa !== pb) return pa ? 1 : -1;
-            return compareDateTime(a, b);
-        });
-
-        nextUpcomingId = opkomsten.find(o => !isPast(o.datum))?.id || null;
+         opkomsten = Object.entries(data.opkomsten || {}).map(([id, v]) => ({ id, ...v }));
+         
+         // Canonieke sortering (toekomst incl. vandaag eerst)
+         opkomsten = sortOpkomsten(opkomsten);
+         
+         // Exact één eerstvolgende opkomst (of null)
+         const nextUpcoming = getNextUpcoming(opkomsten);
+         nextUpcomingId = nextUpcoming ? nextUpcoming.id : null;
+         
 
 jeugd = Object.entries(data.jeugdleden || {}).map(([id, v]) => ({
     id,
@@ -560,6 +562,9 @@ if (speltak === "scouts") {
         loadingIndicator.classList.add("hidden");
         errorIndicator.classList.remove("hidden");
         errorIndicator.textContent = "Kon geen verbinding maken met de database.";
+       opkomsten = [];
+renderTable();
+
     }
 }
 
@@ -793,16 +798,30 @@ function renderTable() {
 
     addHeaders();
 
-    opkomsten
-        .filter(o => {
-            if (currentFilter === "future") return isFutureOrToday(o.datum);
-            if (currentFilter === "past") return isPast(o.datum);
-            return true;
-        })
-        .forEach(o => addRow(o));
+    const visible = opkomsten.filter(o => {
+        if (currentFilter === "future") return isFutureOrToday(o.datum);
+        if (currentFilter === "past") return isPast(o.datum);
+        return true;
+    });
+
+    // Lege staten
+    if (!opkomsten || opkomsten.length === 0) {
+        renderEmptyTableState("nodata");
+        syncHorizontalScrollProxy();
+        return;
+    }
+
+    if (visible.length === 0) {
+        renderEmptyTableState("filtered");
+        syncHorizontalScrollProxy();
+        return;
+    }
+
+    visible.forEach(o => addRow(o));
 
     syncHorizontalScrollProxy();
 }
+
 
 function addHeaders() {
     const trTop = headerRowTop;
@@ -991,6 +1010,49 @@ function makeDivider() {
     const th = document.createElement("th");
     th.classList.add("col-divider");
     return th;
+}
+function getTableColCount() {
+  // Beste indicatie: aantal headers in de bovenste header-rij
+  // (werkt ook voor Welpen met 2 header-rijen)
+  return headerRowTop?.children?.length || 1;
+}
+
+function renderEmptyTableState(kind) {
+  // kind: "nodata" | "filtered" | "error"
+  const tr = document.createElement("tr");
+  tr.classList.add("row-empty");
+
+  const td = document.createElement("td");
+  td.classList.add("empty-state-cell");
+  td.colSpan = getTableColCount();
+
+  const isLead = isLeiding();
+
+  let title = "";
+  let body = "";
+
+  if (kind === "nodata") {
+    title = "Nog geen opkomsten.";
+    body = isLead
+      ? "Je kunt meteen een eerste opkomst toevoegen via ‘Nieuwe opkomst +’."
+      : "Er zijn nog geen opkomsten gepland. Kom later terug of vraag de leiding om de jaarplanning te vullen.";
+  } else if (kind === "filtered") {
+    title = "Geen opkomsten zichtbaar met dit filter.";
+    body = "Zet het filter op ‘Alles’ of kies ‘Komend’/‘Verleden’ om andere opkomsten te zien.";
+  } else {
+    title = "Jaarplanning kon niet geladen worden.";
+    body = "Controleer je verbinding en probeer het later opnieuw.";
+  }
+
+  td.innerHTML = `
+    <div class="empty-state">
+      <div class="empty-title">${title}</div>
+      <div class="empty-body">${body}</div>
+    </div>
+  `;
+
+  tr.appendChild(td);
+  tableBody.appendChild(tr);
 }
 
 /* ======================================================================

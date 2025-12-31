@@ -52,25 +52,37 @@
     <span class="text-muted">Beheer</span>
   </div>
 
-  <!-- Filters -->
-  <div id="userFilters" style="display:flex;gap:1rem;margin-bottom:1rem;">
-    <label>
-      <input type="checkbox" data-filter="admin" />
-      Admin
-    </label>
-    <label>
-      <input type="checkbox" data-filter="bestuur" />
-      Bestuur
-    </label>
-    <label>
-      <input type="checkbox" data-filter="inactive" />
-      Inactief
-    </label>
-    <label><input type="checkbox" data-filter="bevers"> Bevers</label>
-    <label><input type="checkbox" data-filter="welpen"> Welpen</label>
-    <label><input type="checkbox" data-filter="scouts"> Scouts</label>
-    <label><input type="checkbox" data-filter="rovers"> Rovers</label>
-  </div>
+ <button
+  id="toggleUserFilters"
+  class="pill-btn outline"
+  style="margin-bottom:0.75rem;"
+>
+  Toon filters
+</button>
+
+<div
+  id="userFilters"
+  class="hidden"
+  style="display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;"
+>
+  <label>
+    <input type="checkbox" data-filter="admin" />
+    Admin
+  </label>
+  <label>
+    <input type="checkbox" data-filter="bestuur" />
+    Bestuur
+  </label>
+  <label>
+    <input type="checkbox" data-filter="inactive" />
+    Inactief
+  </label>
+  <label><input type="checkbox" data-filter="bevers"> Bevers</label>
+  <label><input type="checkbox" data-filter="welpen"> Welpen</label>
+  <label><input type="checkbox" data-filter="scouts"> Scouts</label>
+  <label><input type="checkbox" data-filter="rovers"> Rovers</label>
+</div>
+
 
   <div style="display:flex;gap:1.5rem;align-items:flex-start;">
     <!-- USERS TABLE -->

@@ -6,14 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Bestuursagenda – OVN</title>
 
-  <!-- Basis styling / gedeelde styles -->
+  <!-- Gedeelde styling -->
 
   <link rel="stylesheet" href="./style.css" />
-
-  <!-- Optioneel: icons / font -->
-
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 </head>
 <body>
 
@@ -47,11 +42,11 @@
 
   <!-- ================= FAB ================= -->
 
-<button id="fabAddBestuursItem" class="fab">＋</button>
+<button id="fabAddBestuursItem" class="fab" aria-label="Nieuw bestuursitem">＋</button>
 
   <!-- ================= MODAL ================= -->
 
-  <div id="bestuursItemModal" class="modal hidden">
+  <div id="bestuursItemModal" class="modal hidden" role="dialog" aria-modal="true">
     <div class="modal-content">
       <h2 id="modalTitle">Bestuursitem</h2>
 
@@ -117,7 +112,11 @@
 
   <!-- ================= SCRIPTS ================= -->
 
-  <!-- login.js moet EERDER laden i.v.m. auth -->
+  <!-- Firebase config MOET eerst geladen worden -->
+
+  <script src="./firebase-config.js"></script>
+
+  <!-- Auth + pagina-logica -->
 
   <script type="module" src="./login.js"></script>
 

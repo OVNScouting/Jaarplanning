@@ -1,7 +1,6 @@
 async function callSetAdminRole(targetUid, makeAdmin) {
-  const app = window._firebase.getApps().length
-    ? window._firebase.getApp()
-    : window._firebase.initializeApp(window.firebaseConfig);
+const app = getFirebaseApp();
+
 
   const functions = window._firebase.getFunctions(app);
   const fn = window._firebase.httpsCallable(functions, "setAdminRole");
@@ -9,6 +8,11 @@ async function callSetAdminRole(targetUid, makeAdmin) {
   return fn({ targetUid, makeAdmin });
 }
 
+function getFirebaseApp() {
+  return window._firebase.getApps().length
+    ? window._firebase.getApp()
+    : window._firebase.initializeApp(window.firebaseConfig);
+}
 
 async function approveRequestViaFunction(requestId, rowEl) {
   // visuele state
@@ -21,9 +25,8 @@ async function approveRequestViaFunction(requestId, rowEl) {
   actionCell.innerHTML = "⏳ Goedkeuren…";
 
   try {
-    const app = window._firebase.getApps().length
-      ? window._firebase.getApp()
-      : window._firebase.initializeApp(window.firebaseConfig);
+    const app = getFirebaseApp();
+
 
     const functions = window._firebase.getFunctions(app);
     const approveFn = window._firebase.httpsCallable(
@@ -48,7 +51,8 @@ async function approveRequestViaFunction(requestId, rowEl) {
     }, 900);
 
 
-    // 👉 stap 2: user direct toevoegen aan user-tabel
+// Userlijst direct verversen (UX: vertrouwen)
+loadUsers();
    
   } catch (err) {
     console.error("Goedkeuren mislukt:", err);
@@ -69,9 +73,7 @@ let USERS_CACHE = {};
 let selectedUserId = null;
 
 function getFunctions() {
-  const app = window._firebase.getApps().length
-    ? window._firebase.getApp()
-    : window._firebase.initializeApp(window.firebaseConfig);
+const app = getFirebaseApp();
   return window._firebase.getFunctions(app);
 }
 
@@ -83,9 +85,8 @@ function callFunction(name, data) {
 
 
 function updateAccountRequestStatus(requestId, newStatus, rowEl) {
-  const app = window._firebase.getApps().length
-    ? window._firebase.getApp()
-    : window._firebase.initializeApp(window.firebaseConfig);
+  const app = getFirebaseApp();
+
 
   const db = window._firebase.getDatabase(app);
   const ref = window._firebase.ref(db, `accountRequests/${requestId}`);
@@ -240,9 +241,8 @@ function renderUsers(users) {
 ============================================================ */
 
 function renderAccountRequests() {
-  const app = window._firebase.getApps().length
-    ? window._firebase.getApp()
-    : window._firebase.initializeApp(window.firebaseConfig);
+ const app = getFirebaseApp();
+
 
   const db = window._firebase.getDatabase(app);
   const requestsRef = window._firebase.ref(db, "accountRequests");
@@ -317,9 +317,7 @@ function renderAccountRequests() {
 waitForFirebase(renderAccountRequests);
 
 function loadUsers() {
-  const app = window._firebase.getApps().length
-    ? window._firebase.getApp()
-    : window._firebase.initializeApp(window.firebaseConfig);
+ const app = getFirebaseApp();
 
   const db = window._firebase.getDatabase(app);
   const ref = window._firebase.ref(db, "users");
@@ -361,8 +359,14 @@ function openUserPanel(uid) {
   const u = USERS_CACHE[uid];
   if (!u) return;
 
-openSidePanel();
+  // UI openen
+  openSidePanel();
 
+  // View-state resetten
+  document.getElementById("panelView").classList.remove("hidden");
+  document.getElementById("panelEdit").classList.add("hidden");
+
+  // Data vullen
   document.getElementById("panelName").textContent = u.naam || "—";
   document.getElementById("panelEmail").textContent = u.email || "—";
   document.getElementById("panelStatus").textContent = u.status || "active";
@@ -371,13 +375,16 @@ openSidePanel();
 
   const roles = document.getElementById("panelRoles");
   roles.innerHTML = "";
+
   if (u.roles?.admin) roles.innerHTML += "<li>Admin</li>";
   if (u.roles?.bestuur) roles.innerHTML += "<li>Bestuur</li>";
   if (u.roles?.speltakken?.length) {
-  u.roles.speltakken.forEach(s =>
-    roles.innerHTML += `<li>${s}</li>`
-  );
+    u.roles.speltakken.forEach(s => {
+      roles.innerHTML += `<li>${s}</li>`;
+    });
+  }
 }
+
 function openSidePanel() {
   const panel = document.getElementById("userSidePanel");
   const backdrop = document.getElementById("sidepanelBackdrop");
@@ -402,9 +409,6 @@ function closeSidePanel() {
   }, 250);
 }
 
-  document.getElementById("panelView").classList.remove("hidden");
-  document.getElementById("panelEdit").classList.add("hidden");
-}
 
 document.getElementById("editUserBtn").onclick = () => {
   const u = USERS_CACHE[selectedUserId];

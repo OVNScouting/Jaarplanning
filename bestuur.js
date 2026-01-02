@@ -45,15 +45,29 @@ function getAuthState() {
   return { mode, isBestuur, isLeiding };
 }
 
-const { isBestuur, isLeiding } = getAuthState();
+let authReady = false;
 
-// Geen toegang → alleen boodschap tonen, geen aborts
-if (!isLeiding) {
-  document.body.innerHTML =
-    "<p style='padding:2rem'>Geen toegang tot bestuursagenda.</p>";
-} else {
-  init();
+function handleAuth() {
+  const { isBestuur, isLeiding } = getAuthState();
+
+  if (!isLeiding) {
+    document.body.innerHTML =
+      "<p style='padding:2rem'>Geen toegang tot bestuursagenda.</p>";
+    return;
+  }
+
+  if (!authReady) {
+    authReady = true;
+    init();
+  }
 }
+
+// Eerste poging (voor snelle auth)
+handleAuth();
+
+// Definitieve beslissing zodra login.js klaar is
+document.addEventListener("auth-changed", handleAuth);
+
 
 // ======================================================================
 // INIT — ALLE LOGICA ZIT HIERIN

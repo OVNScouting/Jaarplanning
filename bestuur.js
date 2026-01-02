@@ -39,10 +39,27 @@ const db = getDatabase(app);
 // AUTH / ROLLEN (consument van login.js)
 // ======================================================================
 function getAuthState() {
-  const mode = (localStorage.getItem("mode") || "").toLowerCase();
-  const isBestuur = mode === "admin" || mode === "bestuur";
-  const isLeiding = mode === "leiding" || isBestuur;
-  return { mode, isBestuur, isLeiding };
+  const raw = localStorage.getItem("ovn_auth_session");
+  if (!raw) return { isBestuur: false, isLeiding: false };
+
+  let session;
+  try {
+    session = JSON.parse(raw);
+  } catch {
+    return { isBestuur: false, isLeiding: false };
+  }
+
+  const roles = session.roles || {};
+
+  const isBestuur = !!roles.admin || !!roles.bestuur;
+
+  // Leiding = bestuur/admin OF iemand met minstens één speltak
+  const isLeiding =
+    isBestuur ||
+    (roles.speltakken &&
+      Object.values(roles.speltakken).some(Boolean));
+
+  return { isBestuur, isLeiding };
 }
 
 let authReady = false;
@@ -58,14 +75,11 @@ function handleAuth() {
 
   if (!authReady) {
     authReady = true;
-    init();
+    init(isBestuur);
   }
 }
 
-// Eerste poging (voor snelle auth)
-handleAuth();
-
-// Definitieve beslissing zodra login.js klaar is
+// Wacht op auth (login.js is leidend)
 document.addEventListener("auth-changed", handleAuth);
 
 

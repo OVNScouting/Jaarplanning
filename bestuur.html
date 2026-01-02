@@ -7,38 +7,72 @@
   <title>Bestuursagenda – OVN</title>
 
   <!-- Gedeelde styling -->
-
+  <link rel="icon" href="assets/OVN.logo.png" type="image/png">
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
 
-  <!-- ================= HEADER ================= -->
+ <body>
 
-  <header class="page-header">
-    <h1>Bestuursagenda</h1>
-    <div class="header-actions">
-      <button id="editModeButton" class="btn">✏️ Items bewerken</button>
+<header class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="backlink">← Terug</a>
+    <img src="assets/OVN.logo.png" class="topbar-logo" alt="OVN logo">
+    <div class="topbar-title">
+      <h1>Bestuursagenda</h1>
+      <span>Overzicht & planning</span>
     </div>
-  </header>
+  </div>
 
-  <!-- ================= FILTERS ================= -->
+  <div class="topbar-right-icons">
+    <span id="loginStatus" class="leiding-badge hidden only-auth">
+      Je bent ingelogd.
+    </span>
+    <button id="loginButton" class="pill-btn outline">Inloggen</button>
+    <button id="logoutButton" class="pill-btn outline hidden only-auth">
+      Uitloggen
+    </button>
+    <img src="assets/OVN.logo.png" class="speltak-icon" alt="">
+  </div>
+</header>
 
-  <nav class="filters">
-    <button id="filterAll" class="filter-btn active">Alles</button>
-    <button id="filterFuture" class="filter-btn">Toekomst</button>
-    <button id="filterPast" class="filter-btn">Verleden</button>
-  </nav>
+<div class="container">
 
-  <!-- ================= TABEL ================= -->
+  <section class="planning-section">
 
-  <main class="content">
-    <table class="agenda-table">
-      <thead>
-        <tr id="headerRow"></tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-  </main>
+    <div class="planning-header-row">
+      <div class="planning-controls">
+        <span id="filterAll" class="chip active">Alles</span>
+        <span id="filterFuture" class="chip">Toekomst</span>
+        <span id="filterPast" class="chip">Verleden</span>
+      </div>
+
+      <button id="editModeButton"
+        class="pill-btn hidden only-auth primary tabel-edit-btn">
+        ✏️ Items bewerken
+      </button>
+    </div>
+
+    <div class="planning-main">
+      <div class="table-wrapper">
+        <table class="planning-table">
+          <thead>
+            <tr id="headerRow"></tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </section>
+
+</div>
+
+<button id="fabAddBestuursItem"
+  class="pill-btn primary fab-add-opkomst only-auth">
+  Nieuw bestuursitem +
+</button>
+
 
   <!-- ================= FAB ================= -->
 

@@ -1,3 +1,10 @@
+
+function getFirebaseApp() {
+  return window._firebase.getApps().length
+    ? window._firebase.getApp()
+    : window._firebase.initializeApp(window.firebaseConfig);
+}
+
 async function callSetAdminRole(targetUid, makeAdmin) {
 const app = getFirebaseApp();
 
@@ -8,11 +15,6 @@ const app = getFirebaseApp();
   return fn({ targetUid, makeAdmin });
 }
 
-function getFirebaseApp() {
-  return window._firebase.getApps().length
-    ? window._firebase.getApp()
-    : window._firebase.initializeApp(window.firebaseConfig);
-}
 
 async function approveRequestViaFunction(requestId, rowEl) {
   // visuele state
@@ -47,13 +49,14 @@ async function approveRequestViaFunction(requestId, rowEl) {
     setTimeout(() => {
       rowEl.style.transition = "opacity 0.4s ease";
       rowEl.style.opacity = "0";
-      setTimeout(() => rowEl.remove(), 400);
+      setTimeout(() => {
+        rowEl.remove();
+        // Userlijst verversen na visuele afronding
+        loadUsers();
+      }, 400);
     }, 900);
-
-
-// Userlijst direct verversen (UX: vertrouwen)
-loadUsers();
-   
+    
+       
   } catch (err) {
     console.error("Goedkeuren mislukt:", err);
 
@@ -96,8 +99,20 @@ function updateAccountRequestStatus(requestId, newStatus, rowEl) {
     const statusCell = rowEl.querySelector("[data-status]");
     if (statusCell) statusCell.textContent = newStatus;
 
-    const actionsCell = rowEl.querySelector("[data-actions]");
-    if (actionsCell) actionsCell.innerHTML = "—";
+   const statusCell = rowEl.querySelector("[data-status]");
+if (statusCell) {
+  statusCell.innerHTML = `
+    <span class="status-badge status-${newStatus}">
+      ${
+        newStatus === "approved"
+          ? "Goedgekeurd"
+          : newStatus === "rejected"
+          ? "Afgewezen"
+          : "In behandeling"
+      }
+    </span>
+  `;
+}
   });
 }
 
@@ -303,9 +318,13 @@ function renderAccountRequests() {
           approveRequestViaFunction(id, tr);
           });
         
-          tr.querySelector("[data-reject]")?.addEventListener("click", () => {
-            updateAccountRequestStatus(id, "rejected", tr);
-          });
+        tr.querySelector("[data-reject]")?.addEventListener("click", () => {
+          updateAccountRequestStatus(id, "rejected", tr);
+          // Acties weg na afwijzen
+          const actionsCell = tr.querySelector("[data-actions]");
+          if (actionsCell) actionsCell.innerHTML = "—";
+        });
+
         }
 
 
@@ -464,7 +483,7 @@ document.getElementById("deleteUserBtn").onclick = async () => {
   if (!confirm("Account volledig verwijderen? Dit kan niet ongedaan worden gemaakt.")) return;
   try {
     await callFunction("deleteUser", { uid: selectedUserId });
-    document.getElementById("userSidePanel").classList.add("hidden");
+    closeSidePanel();
     loadUsers();
   } catch (e) {
     alert(e.message || "Verwijderen mislukt");

@@ -22,10 +22,15 @@ import {
   push
 } from "./firebase-imports.js";
 
+function getFirebaseApp() {
+  return initializeApp(window.firebaseConfig);
+}
+
+
 // ======================================================================
 // FIREBASE INIT
 // ======================================================================
-const app = initializeApp(window.firebaseConfig);
+const app = getFirebaseApp();
 const db = getDatabase(app);
 
 // ======================================================================
@@ -129,9 +134,19 @@ async function loadItems() {
 
 function sortItems() {
   items.sort((a, b) => {
-    if (a.datum !== b.datum) return a.datum.localeCompare(b.datum);
+    const aPast = isPast(a.datum);
+    const bPast = isPast(b.datum);
 
-    // Geen tijd / hele dag altijd bovenaan
+    // Verleden: nieuwste bovenaan
+    if (aPast && bPast) {
+      if (a.datum !== b.datum) return b.datum.localeCompare(a.datum);
+    } 
+    // Toekomst/heden: eerstvolgende bovenaan
+    else {
+      if (a.datum !== b.datum) return a.datum.localeCompare(b.datum);
+    }
+
+    // Geen tijd / hele dag altijd bovenaan binnen dezelfde datum
     const aNoTime = a.tijdType === "none" || a.tijdType === "allday";
     const bNoTime = b.tijdType === "none" || b.tijdType === "allday";
     if (aNoTime && !bNoTime) return -1;
@@ -140,6 +155,7 @@ function sortItems() {
     return (a.starttijd || "").localeCompare(b.starttijd || "");
   });
 }
+
 
 // ======================================================================
 // RENDER
@@ -363,19 +379,4 @@ function td(text) {
   return el;
 }
 
-document.addEventListener("auth-changed", async () => {
-  // Edit-modus altijd resetten
-  if (typeof editMode !== "undefined") {
-    editMode = false;
-  }
 
-  // Mode opnieuw bepalen
-  if (typeof setMode === "function") {
-    setMode(isLeiding() ? "leiding" : "ouder");
-  }
-
-  // Data + UI opnieuw renderen
-  if (typeof loadEverything === "function") {
-    await loadEverything();
-  }
-});

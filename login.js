@@ -3,44 +3,22 @@
 // ======================================================================
 
 const AUTH_KEY = "ovn_auth_session";
-const USERS_STORAGE_KEY = "ovn_users";
+// const USERS_STORAGE_KEY = "ovn_users"; // LEGACY — niet meer gebruiken
+
+const ACCOUNT_REQUEST_ENDPOINT =
+  "https://us-central1-ovn-jaarplanning.cloudfunctions.net/sendAccountRequest";
+
 
 let auth = null;
 
 // ======================================================================
-// LEGACY USERS (nodig voor admin.js – wordt later uitgefaseerd)
+// LEGACY USERS — UITGESCHAKELD
+// Bestaat alleen nog om oude referenties niet te laten crashen.
+// Firebase Auth + RTDB (/users) is de enige waarheid.
 // ======================================================================
-let USERS = (window.USERS = loadUsers());
-
-function loadUsers() {
-  const raw = localStorage.getItem(USERS_STORAGE_KEY);
-  if (raw) {
-    try {
-      return JSON.parse(raw);
-    } catch {
-      console.warn("USERS corrupt, reset");
-    }
-  }
-
-  const initial = [
-    {
-      id: "admin-1",
-      username: "admin",
-      password: "admin",
-      roles: {
-        admin: true,
-        bestuur: true,
-        speltakken: ["bevers", "welpen", "scouts", "explorers", "rovers", "stam"],
-      },
-    },
-  ];
-
-  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(initial));
-  return initial;
-}
-
-window.saveUsers = function (users) {
-  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+window.USERS = {};
+window.saveUsers = function () {
+  console.warn("saveUsers is legacy en wordt genegeerd");
 };
 
 // ======================================================================
@@ -110,6 +88,9 @@ function applyAuthVisibility() {
   const loggedIn = isLoggedIn();
   const session = getSession();
 
+  // NB: body-classes zijn UI-only.
+ // Nooit gebruiken als autorisatiebron.
+
   document.body.classList.toggle("is-logged-in", loggedIn);
   document.body.classList.toggle("only-admin", !!session?.roles?.admin);
 
@@ -166,12 +147,15 @@ window.updateHeader = updateHeader;
 // FIREBASE INIT + AUTH LISTENER
 // ======================================================================
 function initFirebaseAuth(retries = 10) {
-  if (!window._firebase || !window.firebaseConfig) {
-    if (retries > 0) {
-      setTimeout(() => initFirebaseAuth(retries - 1), 50);
-    }
-    return;
+if (!window._firebase || !window.firebaseConfig) {
+  if (retries > 0) {
+    setTimeout(() => initFirebaseAuth(retries - 1), 50);
+  } else {
+    console.error("Firebase niet beschikbaar voor auth init");
   }
+  return;
+}
+
 
   const app = window._firebase.getApps().length
     ? window._firebase.getApp()
@@ -184,7 +168,11 @@ function initFirebaseAuth(retries = 10) {
       clearSession();
       updateHeader();
       applyAuthVisibility();
-      document.dispatchEvent(new Event("auth-changed"));
+document.dispatchEvent(new CustomEvent("auth-changed", {
+  detail: {
+    loggedIn: false
+  }
+}));
       return;
     }
 
@@ -217,7 +205,11 @@ if (status === "inactive") {
 
   updateHeader();
   applyAuthVisibility();
-  document.dispatchEvent(new Event("auth-changed"));
+document.dispatchEvent(new CustomEvent("auth-changed", {
+  detail: {
+    loggedIn: false
+  }
+}));
   return;
 }
 
@@ -231,7 +223,11 @@ setSession({
 
     updateHeader();
     applyAuthVisibility();
-    document.dispatchEvent(new Event("auth-changed"));
+document.dispatchEvent(new CustomEvent("auth-changed", {
+  detail: {
+    loggedIn: true
+  }
+}));
   });
 }
 
@@ -380,8 +376,9 @@ async function submitAccountRequest() {
     btn.disabled = true;
     btn.textContent = "Bezig…";
 
-    const res = await fetch(
-      "https://us-central1-ovn-jaarplanning.cloudfunctions.net/sendAccountRequest",
+   const res = await fetch(
+  ACCOUNT_REQUEST_ENDPOINT,
+
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

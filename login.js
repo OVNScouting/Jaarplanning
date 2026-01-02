@@ -296,8 +296,11 @@ function openAccountRequestModal() {
      <h3>Account aanvragen</h3>
 
 <div class="account-section">
-  <label>Naam</label>
-  <input id="reqName" type="text" />
+ <label>Voornaam</label>
+<input id="reqFirstName" type="text" />
+
+<label>Achternaam</label>
+<input id="reqLastName" type="text" />
 
   <label>Email</label>
   <input id="reqEmail" type="email" />
@@ -349,13 +352,18 @@ async function submitAccountRequest() {
   const errEl = document.getElementById("reqError");
   const btn = document.getElementById("reqSubmit");
 
-  const name = document.getElementById("reqName")?.value?.trim() || "";
-  const email = document.getElementById("reqEmail")?.value?.trim() || "";
+const firstName =
+  document.getElementById("reqFirstName")?.value?.trim() || "";
+const lastName =
+  document.getElementById("reqLastName")?.value?.trim() || "";
+const email =
+  document.getElementById("reqEmail")?.value?.trim() || "";
+
 
   errEl.classList.add("hidden");
   errEl.textContent = "Versturen mislukt";
 
-  if (!name || !email) {
+if (!firstName || !lastName || !email) {
     errEl.textContent = "Naam en email zijn verplicht.";
     errEl.classList.remove("hidden");
     return;
@@ -382,8 +390,13 @@ async function submitAccountRequest() {
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        
+        const fullName = `${firstName} ${lastName}`;
+        
         body: JSON.stringify({
-          naam: name,
+          firstName,
+          lastName,
+          fullName,
           email,
           requestedRoles: roles,
           speltakken,

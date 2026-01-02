@@ -368,6 +368,7 @@ if (!firstName || !lastName || !email) {
     errEl.classList.remove("hidden");
     return;
   }
+const fullName = `${firstName} ${lastName}`;
 
   const roles = {
     bestuur: document.getElementById("reqBestuur").checked,
@@ -381,30 +382,26 @@ if (!firstName || !lastName || !email) {
   const message = document.getElementById("reqMessage").value || "";
 
   try {
-    btn.disabled = true;
-    btn.textContent = "Bezig…";
+  btn.disabled = true;
+  btn.textContent = "Bezig…";
 
-   const res = await fetch(
-  ACCOUNT_REQUEST_ENDPOINT,
-
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        
-        const fullName = `${firstName} ${lastName}`;
-        
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          fullName,
-          email,
-          requestedRoles: roles,
-          speltakken,
-          message,
-        }),
-      }
-    );
-
+  const res = await fetch(
+    ACCOUNT_REQUEST_ENDPOINT,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        firstName,
+        lastName,
+        fullName,
+        email,
+        requestedRoles: roles,
+        speltakken,
+        message,
+      }),
+    }
+  );
+    
     const text = await res.text();
 
     if (!res.ok) {

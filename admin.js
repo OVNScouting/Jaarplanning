@@ -96,10 +96,8 @@ function updateAccountRequestStatus(requestId, newStatus, rowEl) {
 
   window._firebase.update(ref, { status: newStatus }).then(() => {
     // UI direct bijwerken
-    const statusCell = rowEl.querySelector("[data-status]");
-    if (statusCell) statusCell.textContent = newStatus;
 
-   const statusCell = rowEl.querySelector("[data-status]");
+const statusCell = rowEl.querySelector("[data-status]");
 if (statusCell) {
   statusCell.innerHTML = `
     <span class="status-badge status-${newStatus}">
@@ -113,6 +111,7 @@ if (statusCell) {
     </span>
   `;
 }
+
   });
 }
 

@@ -1470,14 +1470,10 @@ th[class^="ploeg-"]::after {
 
 .floating-account {
   position: fixed;
-  right: 1rem;
-  bottom: 1rem;
-
-  /* Hoger dan sidebar, scrollbars en FABs */
-  z-index: 1600;
-
-  opacity: 0.85;
-  pointer-events: auto;
+  left: 20px;
+  right: auto;
+  bottom: 20px;
+  z-index: 1000;
 }
 
 .floating-account:hover {

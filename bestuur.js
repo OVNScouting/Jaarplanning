@@ -26,8 +26,14 @@ import {
 // ======================================================================
 // FIREBASE INIT
 // ======================================================================
-const app = initializeApp(window.firebaseConfig);
+import { getApps, getApp } from "./firebase-imports.js";
+
+const app = getApps().length
+  ? getApp()
+  : initializeApp(window.firebaseConfig);
+
 const db = getDatabase(app);
+
 
 // ======================================================================
 // AUTH / ROLLEN (consument van login.js)

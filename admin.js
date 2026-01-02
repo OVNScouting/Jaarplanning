@@ -235,7 +235,11 @@ function renderUsers(users) {
     if (isInactive) tr.style.opacity = "0.5";
 
     tr.innerHTML = `
-      <td>${user.naam || user.email || uid}</td>
+<td>
+  ${user.fullName ||
+    `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+    user.email}
+</td>
       <td>
         <span class="status-badge ${isInactive ? "status-inactive" : "status-active"}">
           ${isInactive ? "Gedeactiveerd" : "Actief"}

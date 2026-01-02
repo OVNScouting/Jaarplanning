@@ -1,8 +1,9 @@
 // ======================================================================
-// bestuur.js — Bestuursagenda (FASE 2, opgeschoond)
+// bestuur.js — Bestuursagenda (FASE 2, definitieve versie)
 // Rollen:
-// - bestuur / admin: bekijken + bewerken + toevoegen
+// - admin / bestuur: bekijken + bewerken + toevoegen
 // - leiding: read-only, alleen items met toonOpDashboard
+// Auth-consument: login.js is leidend
 // ======================================================================
 
 import {
@@ -22,35 +23,22 @@ import {
 } from "./firebase-imports.js";
 
 // ======================================================================
-// FIREBASE
+// FIREBASE INIT (gestabiliseerd patroon)
 // ======================================================================
 const app = initializeApp(window.firebaseConfig);
 const db = getDatabase(app);
 
 // ======================================================================
-// AUTH / ROLLEN
+// AUTH / ROLLEN (consument van login.js)
 // ======================================================================
-function getSession() {
-  try {
-    return JSON.parse(localStorage.getItem("ovn_auth_session"));
-  } catch {
-    return null;
-  }
-}
+const authMode = (localStorage.getItem("mode") || "").toLowerCase();
+const isBestuur = authMode === "admin" || authMode === "bestuur";
+const isLeiding = authMode === "leiding" || isBestuur;
 
-function isLoggedIn() {
-  return !!getSession();
-}
-
-function isBestuur() {
-  const s = getSession();
-  return !!(s?.roles?.bestuur || s?.roles?.admin);
-}
-
-// Iedereen moet ingelogd zijn
-if (!isLoggedIn()) {
-  document.body.innerHTML = "<p style='padding:2rem'>Geen toegang</p>";
-  throw new Error("Niet ingelogd");
+// Geen toegang → rustig stoppen, geen DOM-abort
+if (!isLeiding) {
+  document.body.innerHTML = "<p style='padding:2rem'>Geen toegang tot bestuursagenda.</p>";
+  return;
 }
 
 // ======================================================================
@@ -59,9 +47,9 @@ if (!isLoggedIn()) {
 const headerRow = document.getElementById("headerRow");
 const tableBody = document.getElementById("tableBody");
 
-const filterAll    = document.getElementById("filterAll");
+const filterAll = document.getElementById("filterAll");
 const filterFuture = document.getElementById("filterFuture");
-const filterPast   = document.getElementById("filterPast");
+const filterPast = document.getElementById("filterPast");
 
 const editModeButton = document.getElementById("editModeButton");
 const fab = document.getElementById("fabAddBestuursItem");
@@ -82,6 +70,12 @@ const biTimeRange = document.getElementById("biTimeRange");
 const saveBtn = document.getElementById("saveBestuursItem");
 const cancelBtn = document.getElementById("cancelBestuursItem");
 
+// Bestuur-only UI
+if (!isBestuur) {
+  editModeButton?.classList.add("hidden");
+  fab?.classList.add("hidden");
+}
+
 // ======================================================================
 // STATE
 // ======================================================================
@@ -89,12 +83,6 @@ let allItems = [];
 let editMode = false;
 let editingId = null;
 let currentFilter = "all";
-
-// Bestuur-only UI
-if (!isBestuur()) {
-  editModeButton?.classList.add("hidden");
-  fab?.classList.add("hidden");
-}
 
 // ======================================================================
 // INIT
@@ -115,7 +103,18 @@ async function loadItems() {
 
 function sortItems() {
   allItems.sort((a, b) => {
-    if (a.datum !== b.datum) return a.datum.localeCompare(b.datum);
+    const aPast = isPast(a.datum);
+    const bPast = isPast(b.datum);
+
+    // verleden: nieuwste bovenaan
+    if (aPast && bPast) {
+      if (a.datum !== b.datum) return b.datum.localeCompare(a.datum);
+    }
+    // toekomst/heden: eerstvolgende bovenaan
+    else {
+      if (a.datum !== b.datum) return a.datum.localeCompare(b.datum);
+    }
+
     return (a.starttijd || "").localeCompare(b.starttijd || "");
   });
 }
@@ -124,10 +123,8 @@ function sortItems() {
 // RENDER
 // ======================================================================
 function getVisibleItems() {
-  const bestuur = isBestuur();
-
   return allItems
-    .filter(i => bestuur || i.toonOpDashboard)
+    .filter(i => isBestuur || i.toonOpDashboard)
     .filter(i => {
       if (currentFilter === "future") return isFutureOrToday(i.datum);
       if (currentFilter === "past") return isPast(i.datum);
@@ -138,14 +135,13 @@ function getVisibleItems() {
 function render() {
   renderHeader();
   tableBody.innerHTML = "";
-
   getVisibleItems().forEach(addRow);
 }
 
 function renderHeader() {
   headerRow.innerHTML = "";
 
-  if (editMode && isBestuur()) {
+  if (editMode && isBestuur) {
     headerRow.appendChild(th(""));
   }
 
@@ -159,7 +155,7 @@ function addRow(item) {
   const tr = document.createElement("tr");
   tr.dataset.id = item.id;
 
-  if (editMode && isBestuur()) {
+  if (editMode && isBestuur) {
     const del = td("🗑️");
     del.style.cursor = "pointer";
     del.onclick = () => deleteItem(item.id);
@@ -170,7 +166,7 @@ function addRow(item) {
   tr.appendChild(td(renderTime(item)));
 
   const titleCell = td(item.titel);
-  if (isBestuur()) {
+  if (isBestuur) {
     titleCell.style.cursor = "pointer";
     titleCell.onclick = () => openEdit(item);
   }
@@ -197,7 +193,7 @@ function openNew() {
 }
 
 function openEdit(item) {
-  if (!isBestuur()) return;
+  if (!isBestuur) return;
 
   editingId = item.id;
   modalTitle.textContent = "Bestuursitem bewerken";
@@ -235,7 +231,7 @@ function updateTimeFields() {
 // OPSLAAN / VERWIJDEREN
 // ======================================================================
 saveBtn?.addEventListener("click", async () => {
-  if (!isBestuur()) return;
+  if (!isBestuur) return;
 
   if (!biTitel.value || !biDatum.value) {
     alert("Titel en datum zijn verplicht");
@@ -266,7 +262,7 @@ saveBtn?.addEventListener("click", async () => {
 });
 
 async function deleteItem(id) {
-  if (!isBestuur()) return;
+  if (!isBestuur) return;
   if (!confirm("Dit item verwijderen?")) return;
 
   await set(ref(db, `bestuursItems/${id}`), null);
@@ -295,7 +291,7 @@ function setFilter(f) {
 // EDIT MODE
 // ======================================================================
 editModeButton?.addEventListener("click", () => {
-  if (!isBestuur()) return;
+  if (!isBestuur) return;
   editMode = !editMode;
   editModeButton.textContent = editMode
     ? "💾 Klaar met bewerken"
@@ -306,7 +302,7 @@ editModeButton?.addEventListener("click", () => {
 fab?.addEventListener("click", openNew);
 
 // ======================================================================
-// AUTH CHANGE
+// AUTH CHANGE — alleen her-renderen
 // ======================================================================
 document.addEventListener("auth-changed", () => {
   editMode = false;

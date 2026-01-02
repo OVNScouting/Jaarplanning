@@ -212,9 +212,9 @@ function renderUsers(users) {
 
       return true;
     })
-    .sort((a, b) =>
-      (a[1].naam || "").localeCompare(
-        b[1].naam || "",
+.sort((a, b) =>
+  (a[1].fullName || "").localeCompare(
+    b[1].fullName || "",
         "nl",
         { sensitivity: "base" }
       )
@@ -289,7 +289,7 @@ function renderAccountRequests() {
           : "—";
 
         tr.innerHTML = `
-          <td>${r.naam || "—"}</td>
+          <td>${r.fullName || "—"}</td>
           <td>${r.email || "—"}</td>
           <td>${rollen}</td>
           <td>${speltakken}</td>
@@ -385,7 +385,8 @@ function openUserPanel(uid) {
   document.getElementById("panelEdit").classList.add("hidden");
 
   // Data vullen
-  document.getElementById("panelName").textContent = u.naam || "—";
+document.getElementById("panelName").textContent =
+  u.fullName || "—";
   document.getElementById("panelEmail").textContent = u.email || "—";
   document.getElementById("panelStatus").textContent = u.status || "active";
   document.getElementById("panelCreated").textContent =

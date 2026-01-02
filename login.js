@@ -405,14 +405,7 @@ await sendAccountRequest({
   message,
 });
 
-    
-    const text = await res.text();
 
-    if (!res.ok) {
-      errEl.textContent = `Versturen mislukt (${res.status}): ${text}`;
-      errEl.classList.remove("hidden");
-      return;
-    }
 
     document.getElementById("accountRequestModal").innerHTML = `
       <div class="modal-content">
@@ -426,6 +419,8 @@ await sendAccountRequest({
         </div>
       </div>
     `;
+return; // ⬅️ ESSENTIEEL
+    
 } catch (e) {
   const msg = String(e?.message || "");
 

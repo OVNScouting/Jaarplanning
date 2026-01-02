@@ -426,10 +426,29 @@ await sendAccountRequest({
         </div>
       </div>
     `;
-  } catch (e) {
-    errEl.textContent = `Versturen mislukt: ${e?.message || e}`;
-    errEl.classList.remove("hidden");
-  } finally {
+} catch (e) {
+  const msg = String(e?.message || "");
+
+  if (
+    msg.includes("already-exists") ||
+    msg.includes("al een account") ||
+    msg.includes("al een aanvraag")
+  ) {
+    errEl.textContent =
+      "Er bestaat al een account of aanvraag met dit e-mailadres.";
+  } else if (msg.includes("invalid-argument")) {
+    errEl.textContent =
+      "Niet alle verplichte gegevens zijn ingevuld.";
+  } else {
+    errEl.textContent =
+      "Er ging iets mis bij het versturen. Probeer het later opnieuw.";
+  }
+
+  errEl.classList.remove("hidden");
+}
+
+  
+  finally {
     btn.disabled = false;
     btn.textContent = "Aanvraag versturen";
   }

@@ -385,22 +385,26 @@ const fullName = `${firstName} ${lastName}`;
   btn.disabled = true;
   btn.textContent = "Bezig…";
 
-  const res = await fetch(
-    ACCOUNT_REQUEST_ENDPOINT,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        firstName,
-        lastName,
-        fullName,
-        email,
-        requestedRoles: roles,
-        speltakken,
-        message,
-      }),
-    }
-  );
+const app = window._firebase.getApps().length
+  ? window._firebase.getApp()
+  : window._firebase.initializeApp(window.firebaseConfig);
+
+const functions = window._firebase.getFunctions(app);
+const sendAccountRequest = window._firebase.httpsCallable(
+  functions,
+  "sendAccountRequest"
+);
+
+await sendAccountRequest({
+  firstName,
+  lastName,
+  fullName,
+  email,
+  requestedRoles: roles,
+  speltakken,
+  message,
+});
+
     
     const text = await res.text();
 

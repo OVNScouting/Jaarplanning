@@ -10,14 +10,23 @@ import {
   get
 } from "./firebase-imports.js";
 
+import { formatDateDisplay } from "./utils.js";
+
+
+function getFirebaseApp() {
+  return initializeApp(window.firebaseConfig);
+}
 
 
 function init() {
-  // Alleen doorgaan als gebruiker is ingelogd
-  if (!document.body.classList.contains("is-logged-in")) return;
+  // Alleen doorgaan als gebruiker is ingelogd (auth-consument, geen controller)
+  const mode = (localStorage.getItem("mode") || "").toLowerCase();
+  if (!["leiding", "bestuur", "admin"].includes(mode)) return;
 
-  const app = initializeApp(window.firebaseConfig);
-  const db = getDatabase(app);
+
+const app = getFirebaseApp();
+const db = getDatabase(app);
+
 
   const section = document.getElementById("bestuurHighlight");
   const list = document.getElementById("bestuurHighlightList");
@@ -62,9 +71,10 @@ async function loadHighlights(db, section, list) {
         <div class="meldingen-label">
           📌 ${i.titel}
         </div>
-        <div class="meldingen-sub">
-          ${i.type} · ${i.datum}
-        </div>
+<div class="meldingen-sub">
+  ${i.type} · ${formatDateDisplay(i.datum)}
+</div>
+
       `;
 
       row.onclick = () => {
@@ -81,6 +91,19 @@ async function loadHighlights(db, section, list) {
 
 // Re-run init zodra auth-status verandert
 document.addEventListener("auth-changed", () => {
+  const section = document.getElementById("bestuurHighlight");
+  const list = document.getElementById("bestuurHighlightList");
+
+  const mode = (localStorage.getItem("mode") || "").toLowerCase();
+  const hasAccess = ["leiding", "bestuur", "admin"].includes(mode);
+
+  if (!hasAccess) {
+    section?.classList.add("hidden");
+    if (list) list.innerHTML = "";
+    return;
+  }
+
   init();
 });
+
 

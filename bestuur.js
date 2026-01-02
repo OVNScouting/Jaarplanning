@@ -86,7 +86,8 @@ document.addEventListener("auth-changed", handleAuth);
 // ======================================================================
 // INIT — ALLE LOGICA ZIT HIERIN
 // ======================================================================
-function init() {
+function init(isBestuur) {
+  isBestuur = !!isBestuur;
 
   // ================= DOM =================
   const headerRow = document.getElementById("headerRow");
@@ -330,10 +331,7 @@ function init() {
 
   fab?.addEventListener("click", openNew);
 
-  // ================= AUTH CHANGE =================
-  document.addEventListener("auth-changed", () => {
-    location.reload();
-  });
+
 
   // ================= HELPERS =================
   function th(text) {

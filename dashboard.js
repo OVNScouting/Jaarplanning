@@ -17,11 +17,17 @@ import {
   get
 } from "./firebase-imports.js";
 
+function getFirebaseApp() {
+  return initializeApp(window.firebaseConfig);
+}
+
+
 // ======================================================================
 // FIREBASE INIT
 // ======================================================================
-const app = initializeApp(window.firebaseConfig);
+const app = getFirebaseApp();
 const db = getDatabase(app);
+
 
 // ======================================================================
 // CONFIG
@@ -62,9 +68,15 @@ async function loadDashboard() {
       loadBestuursItems()
     ]);
 
-    const combined = [...opkomsten, ...bestuurs]
-      .filter(o => isFutureOrToday(o.datum))
-      .sort((a, b) => new Date(`${a.datum}T${a.sortTime}`) - new Date(`${b.datum}T${b.sortTime}`));
+   const combined = [...opkomsten, ...bestuurs]
+  .filter(o => isFutureOrToday(o.datum))
+  .sort((a, b) => {
+    if (a.datum !== b.datum) {
+      return a.datum.localeCompare(b.datum);
+    }
+    return a.sortTime.localeCompare(b.sortTime);
+  });
+
 
     if (!combined.length) {
       container.innerHTML = "<p>Geen komende items.</p>";
@@ -318,20 +330,5 @@ loadDashboard();
   badge.textContent = "";
 })();
 
-document.addEventListener("auth-changed", async () => {
-  // Edit-modus altijd resetten
-  if (typeof editMode !== "undefined") {
-    editMode = false;
-  }
 
-  // Mode opnieuw bepalen
-  if (typeof setMode === "function") {
-    setMode(isLeiding() ? "leiding" : "ouder");
-  }
-
-  // Data + UI opnieuw renderen
-  if (typeof loadEverything === "function") {
-    await loadEverything();
-  }
-});
 

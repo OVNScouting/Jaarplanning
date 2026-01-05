@@ -5,16 +5,6 @@ function getFirebaseApp() {
     : window._firebase.initializeApp(window.firebaseConfig);
 }
 
-async function callSetAdminRole(targetUid, makeAdmin) {
-const app = getFirebaseApp();
-
-
-  const functions = window._firebase.getFunctions(app);
-  const fn = window._firebase.httpsCallable(functions, "setAdminRole");
-
-  return fn({ targetUid, makeAdmin });
-}
-
 
 async function approveRequestViaFunction(requestId, rowEl) {
   // visuele state

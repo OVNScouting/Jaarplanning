@@ -136,7 +136,7 @@ waitForFirebase(() => {
       }
 
       try {
-        const token = await user.getIdTokenResult();
+const token = await user.getIdTokenResult(true);
         if (!token.claims?.admin) {
           deny();
           return;

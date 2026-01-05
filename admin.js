@@ -27,10 +27,24 @@ async function approveRequestViaFunction(requestId, rowEl) {
     );
 
     const result = await approveFn({ requestId });
+    
+// 🔄 Force token refresh (nieuwe claims ophalen)
+const auth = window._firebase.getAuth();
+if (auth.currentUser) {
+  await auth.currentUser.getIdToken(true);
+}
+   
     const { uid } = result.data || {};
 
     // ===== Optimistische UI =====
-    rowEl.querySelector("[data-status]").textContent = "approved";
+const statusCell = rowEl.querySelector("[data-status]");
+if (statusCell) {
+  statusCell.innerHTML = `
+    <span class="status-badge status-approved">
+      Goedgekeurd
+    </span>
+  `;
+}
     actionCell.innerHTML = "✓ Goedgekeurd";
 
     // visuele afronding
@@ -40,9 +54,11 @@ async function approveRequestViaFunction(requestId, rowEl) {
       rowEl.style.transition = "opacity 0.4s ease";
       rowEl.style.opacity = "0";
       setTimeout(() => {
-        rowEl.remove();
-        // Userlijst verversen na visuele afronding
-        loadUsers();
+rowEl.remove();
+
+// kleine delay zodat backend writes klaar zijn
+setTimeout(() => loadUsers(), 300);
+
       }, 400);
     }, 900);
     
@@ -70,40 +86,42 @@ const app = getFirebaseApp();
   return window._firebase.getFunctions(app);
 }
 
-function callFunction(name, data) {
+window.callFunction = function (name, data) {
   const fn = window._firebase.httpsCallable(getFunctions(), name);
-  return fn(data).then(r => r.data);
-}
-
-
-
-function updateAccountRequestStatus(requestId, newStatus, rowEl) {
-  const app = getFirebaseApp();
-
-
-  const db = window._firebase.getDatabase(app);
-  const ref = window._firebase.ref(db, `accountRequests/${requestId}`);
-
-  window._firebase.update(ref, { status: newStatus }).then(() => {
-    // UI direct bijwerken
-
-const statusCell = rowEl.querySelector("[data-status]");
-if (statusCell) {
-  statusCell.innerHTML = `
-    <span class="status-badge status-${newStatus}">
-      ${
-        newStatus === "approved"
-          ? "Goedgekeurd"
-          : newStatus === "rejected"
-          ? "Afgewezen"
-          : "In behandeling"
-      }
-    </span>
-  `;
-}
-
+return fn(data)
+  .then(r => r.data)
+  .catch(err => {
+    throw new Error(
+      err?.message ||
+      err?.details ||
+      err?.code ||
+      "Onbekende fout"
+    );
   });
+};
+
+async function updateAccountRequestStatus(requestId, newStatus, rowEl) {
+  if (newStatus !== "rejected") return;
+
+  try {
+    await callFunction("rejectAccountRequest", { requestId });
+
+    const statusCell = rowEl.querySelector("[data-status]");
+    if (statusCell) {
+      statusCell.innerHTML = `
+        <span class="status-badge status-rejected">
+          Afgewezen
+        </span>
+      `;
+    }
+
+    const actionsCell = rowEl.querySelector("[data-actions]");
+    if (actionsCell) actionsCell.innerHTML = "—";
+  } catch (e) {
+    alert(e.message || "Afwijzen mislukt");
+  }
 }
+
 
 
 // ============================================================
@@ -285,10 +303,11 @@ function renderAccountRequests() {
         tr.innerHTML = `
           <td>${r.fullName || "—"}</td>
           <td>${r.email || "—"}</td>
+          
           <td>${rollen}</td>
           <td>${speltakken}</td>
          <td data-status>
-            <span class="status-badge status-${r.status || "pending"}">
+<span class="status-badge status-${["approved","rejected","pending"].includes(r.status) ? r.status : "pending"}">
               ${
                 r.status === "approved"
                   ? "Goedgekeurd"

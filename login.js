@@ -143,16 +143,15 @@ window.updateHeader = updateHeader;
 // ======================================================================
 // FIREBASE INIT + AUTH LISTENER
 // ======================================================================
-function initFirebaseAuth(retries = 10) {
-if (!window._firebase || !window.firebaseConfig) {
-  if (retries > 0) {
-    setTimeout(() => initFirebaseAuth(retries - 1), 50);
-  } else {
-    console.error("Firebase niet beschikbaar voor auth init");
+function initFirebaseAuth(retries = 200) {
+  if (!window._firebase || !window.firebaseConfig) {
+    if (retries > 0) {
+      setTimeout(() => initFirebaseAuth(retries - 1), 100);
+    } else {
+      console.error("Firebase niet beschikbaar voor auth init");
+    }
+    return;
   }
-  return;
-}
-
 
   const app = window._firebase.getApps().length
     ? window._firebase.getApp()
@@ -161,14 +160,11 @@ if (!window._firebase || !window.firebaseConfig) {
   auth = window._firebase.getAuth(app);
 
   window._firebase.onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      clearSession();
-      updateHeader();
-      applyAuthVisibility();
-document.dispatchEvent(new CustomEvent("auth-changed", {
-  detail: {
-    loggedIn: false
-  }
+    // ... (rest ongewijzigd)
+  });
+}
+
+  
 }));
       return;
     }

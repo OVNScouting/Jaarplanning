@@ -5,9 +5,6 @@
 const AUTH_KEY = "ovn_auth_session";
 // const USERS_STORAGE_KEY = "ovn_users"; // LEGACY — niet meer gebruiken
 
-const ACCOUNT_REQUEST_ENDPOINT =
-  "https://us-central1-ovn-jaarplanning.cloudfunctions.net/sendAccountRequest";
-
 
 let auth = null;
 

@@ -118,8 +118,27 @@ async function updateAccountRequestStatus(requestId, newStatus, rowEl) {
       `;
     }
 
-    const actionsCell = rowEl.querySelector("[data-actions]");
-    if (actionsCell) actionsCell.innerHTML = "—";
+const actionsCell = rowEl.querySelector("[data-actions]");
+if (actionsCell) {
+  actionsCell.innerHTML = `
+    <button class="pill-btn outline" data-undo>Undo</button>
+    <span style="margin-left:.5rem;font-size:.85rem;color:var(--text-muted);">
+      (auto-wissen na 5 min)
+    </span>
+  `;
+
+  actionsCell.querySelector("[data-undo]")?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await callFunction("undoRejectAccountRequest", { requestId });
+      renderAccountRequests();
+    } catch (err) {
+      alert(err?.message || "Undo mislukt");
+    }
+  });
+}
+
   } catch (e) {
     alert(e.message || "Afwijzen mislukt");
   }
@@ -211,7 +230,7 @@ function renderUsers(users) {
 
       // speltak filters
       const speltakFilters = filters.filter(f =>
-        ["bevers", "welpen", "scouts", "explorers", "rovers"].includes(f)
+        ["bevers", "welpen", "scouts", "explorers", "rovers", "stam"].includes(f)
       );
 
       if (speltakFilters.length > 0) {
@@ -259,8 +278,19 @@ function renderUsers(users) {
       </td>
     `;
 
-    tr.addEventListener("click", () => openUserPanel(uid));
-    tbody.appendChild(tr);
+tr.classList.add("user-row");
+tr.tabIndex = 0; // keyboard focus
+
+tr.addEventListener("click", () => openUserPanel(uid));
+tr.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    openUserPanel(uid);
+  }
+});
+
+tbody.appendChild(tr);
+
   });
 }
 
@@ -326,8 +356,14 @@ function renderAccountRequests() {
             ${r.status === "pending" ? `
               <button class="pill-btn success" data-approve>Goedkeuren</button>
               <button class="pill-btn danger" data-reject>Afwijzen</button>
+            ` : r.status === "rejected" ? `
+              <button class="pill-btn outline" data-undo>Undo</button>
+              <span style="margin-left:.5rem;font-size:.85rem;color:var(--text-muted);">
+                (auto-wissen na 5 min)
+              </span>
             ` : "—"}
           </td>
+
         `;
         if (r.status === "pending") {
           tr.querySelector("[data-approve]")?.addEventListener("click", () => {
@@ -340,7 +376,19 @@ function renderAccountRequests() {
           const actionsCell = tr.querySelector("[data-actions]");
           if (actionsCell) actionsCell.innerHTML = "—";
         });
-
+        }
+        
+        if (r.status === "rejected") {
+          tr.querySelector("[data-undo]")?.addEventListener("click", async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            try {
+              await callFunction("undoRejectAccountRequest", { requestId: id });
+              renderAccountRequests(); // simpel: volledig refreshen
+            } catch (err) {
+              alert(err?.message || "Undo mislukt");
+            }
+          });
         }
 
 

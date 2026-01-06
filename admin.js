@@ -29,10 +29,11 @@ async function approveRequestViaFunction(requestId, rowEl) {
     const result = await approveFn({ requestId });
     
 // 🔄 Force token refresh (nieuwe claims ophalen)
-const auth = window._firebase.getAuth();
+const auth = window._firebase.getAuth(app);
 if (auth.currentUser) {
   await auth.currentUser.getIdToken(true);
 }
+
    
     const { uid } = result.data || {};
 
@@ -86,19 +87,21 @@ const app = getFirebaseApp();
   return window._firebase.getFunctions(app);
 }
 
-window.callFunction = function (name, data) {
+function callFunction(name, data) {
   const fn = window._firebase.httpsCallable(getFunctions(), name);
-return fn(data)
-  .then(r => r.data)
-  .catch(err => {
-    throw new Error(
-      err?.message ||
-      err?.details ||
-      err?.code ||
-      "Onbekende fout"
-    );
-  });
-};
+  return fn(data)
+    .then(r => r.data)
+    .catch(err => {
+      throw new Error(
+        err?.message ||
+        err?.details ||
+        err?.code ||
+        "Onbekende fout"
+      );
+    });
+}
+window.callFunction = callFunction;
+
 
 async function updateAccountRequestStatus(requestId, newStatus, rowEl) {
   if (newStatus !== "rejected") return;
@@ -143,7 +146,8 @@ function waitForFirebase(callback, retries = 100) {
 waitForFirebase(() => {
 
   (async function guardAdmin() {
-    const auth = window._firebase.getAuth();
+const app = getFirebaseApp();
+const auth = window._firebase.getAuth(app);
 
     const unsubscribe = window._firebase.onAuthStateChanged(auth, async (user) => {
       unsubscribe();

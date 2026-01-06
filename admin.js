@@ -11,6 +11,12 @@ async function approveRequestViaFunction(requestId, rowEl) {
   rowEl.classList.add("loading");
 
   const actionCell = rowEl.querySelector("[data-actions]");
+ if (!actionCell) {
+  console.error("approveRequestViaFunction: geen [data-actions] gevonden");
+  rowEl.classList.remove("loading");
+  return;
+} 
+  
   const originalActions = actionCell.innerHTML;
 
   // voorkom dubbel klikken
@@ -91,14 +97,22 @@ function callFunction(name, data) {
   const fn = window._firebase.httpsCallable(getFunctions(), name);
   return fn(data)
     .then(r => r.data)
-    .catch(err => {
-      throw new Error(
-        err?.message ||
-        err?.details ||
-        err?.code ||
-        "Onbekende fout"
-      );
-    });
+.catch(err => {
+  const details =
+    typeof err?.details === "string"
+      ? err.details
+      : err?.details
+      ? JSON.stringify(err.details)
+      : "";
+
+  throw new Error(
+    err?.message ||
+    details ||
+    err?.code ||
+    "Onbekende fout"
+  );
+});
+
 }
 window.callFunction = callFunction;
 
@@ -372,9 +386,6 @@ function renderAccountRequests() {
         
         tr.querySelector("[data-reject]")?.addEventListener("click", () => {
           updateAccountRequestStatus(id, "rejected", tr);
-          // Acties weg na afwijzen
-          const actionsCell = tr.querySelector("[data-actions]");
-          if (actionsCell) actionsCell.innerHTML = "—";
         });
         }
         

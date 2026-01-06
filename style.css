@@ -581,6 +581,21 @@ overflow-y: hidden;
     scrollbar-color: var(--blue) #dae7ff;
 }
 
+/* ============================================================
+   ADMIN — klikbare user rows
+============================================================ */
+#userTable tr.user-row {
+  cursor: pointer;
+}
+
+#userTable tr.user-row:hover {
+  background: var(--blue-soft);
+}
+
+#userTable tr.user-row:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--blue);
+}
 
 /* ============================================================
    LEDENBEHEER

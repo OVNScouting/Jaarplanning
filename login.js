@@ -160,70 +160,65 @@ function initFirebaseAuth(retries = 200) {
   auth = window._firebase.getAuth(app);
 
   window._firebase.onAuthStateChanged(auth, async (user) => {
-    // ... (rest ongewijzigd)
-  });
-}
-
-  
-}));
+    if (!user) {
+      clearSession();
+      updateHeader();
+      applyAuthVisibility();
+      document.dispatchEvent(
+        new CustomEvent("auth-changed", { detail: { loggedIn: false } })
+      );
       return;
     }
 
-let roles = {};
-let status = "active";
+    let roles = {};
+    let status = "active";
 
-try {
-  const db = window._firebase.getDatabase();
+    try {
+      const db = window._firebase.getDatabase(app);
+      const userRef = window._firebase.ref(db, `users/${user.uid}`);
+      const snapshot = await window._firebase.get(userRef);
 
-  const userRef = window._firebase.ref(db, `users/${user.uid}`);
-  const snapshot = await window._firebase.get(userRef);
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        roles = data.roles || {};
+        status = data.status || "active";
+      }
+    } catch (err) {
+      console.warn("Kon gebruikersgegevens niet laden:", err);
+    }
 
-  if (snapshot.exists()) {
-    const data = snapshot.val();
-    roles = data.roles || {};
-    status = data.status || "active";
-  }
-} catch (err) {
-  console.warn("Kon gebruikersgegevens niet laden:", err);
-}
+    if (status === "inactive") {
+      alert(
+        "Je account is gedeactiveerd.\n\n" +
+          "Neem contact op met het bestuur als dit niet klopt."
+      );
 
-if (status === "inactive") {
-  alert(
-    "Je account is gedeactiveerd.\n\n" +
-    "Neem contact op met het bestuur als dit niet klopt."
-  );
+      clearSession();
+      await window._firebase.signOut(auth);
 
-  clearSession();
-  await window._firebase.signOut(auth);
+      updateHeader();
+      applyAuthVisibility();
+      document.dispatchEvent(
+        new CustomEvent("auth-changed", { detail: { loggedIn: false } })
+      );
+      return;
+    }
 
-  updateHeader();
-  applyAuthVisibility();
-document.dispatchEvent(new CustomEvent("auth-changed", {
-  detail: {
-    loggedIn: false
-  }
-}));
-  return;
-}
-
-setSession({
-  id: user.uid,
-  email: user.email,
-  roles,
-  status,
-  loginAt: Date.now(),
-});
+    setSession({
+      id: user.uid,
+      email: user.email,
+      roles,
+      status,
+      loginAt: Date.now(),
+    });
 
     updateHeader();
     applyAuthVisibility();
-document.dispatchEvent(new CustomEvent("auth-changed", {
-  detail: {
-    loggedIn: true
-  }
-}));
+    document.dispatchEvent(
+      new CustomEvent("auth-changed", { detail: { loggedIn: true } })
+    );
   });
 }
-
 // ======================================================================
 // LOGIN MODAL
 // ======================================================================

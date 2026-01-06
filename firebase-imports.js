@@ -1,71 +1,46 @@
-import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import {
-  getFunctions,
-  httpsCallable
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-functions.js";
+// firebase-imports.js
+// Laadt Firebase v9+ (modular) in een "classic script" omgeving (GitHub Pages),
+// en expose't alles onder window._firebase zodat de rest van je code kan blijven zoals hij is.
 
-import {
-  getDatabase,
-  ref,
-  get,
-  set,
-  update,
-  push,
-  remove
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+(() => {
+  const VERSION = "10.12.5"; // vaste versie = voorspelbaar
+  const base = `https://www.gstatic.com/firebasejs/${VERSION}`;
 
-import {
-  getAuth,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  async function load() {
+    try {
+      const [
+        appMod,
+        authMod,
+        dbMod,
+        fnMod,
+      ] = await Promise.all([
+        import(`${base}/firebase-app.js`),
+        import(`${base}/firebase-auth.js`),
+        import(`${base}/firebase-database.js`),
+        import(`${base}/firebase-functions.js`),
+      ]);
 
-export {
-  initializeApp,
-  getApp,
-  getApps,
-  getDatabase,
-  ref,
-  get,
-  set,
-  update,
-  push,
-  remove,
-  getAuth,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut,
-  getFunctions,
-  httpsCallable
-};
+      // Bundel alle exports die jullie in de code gebruiken in 1 namespace:
+      window._firebase = {
+        // app
+        ...appMod,
+        // auth
+        ...authMod,
+        // database
+        ...dbMod,
+        // functions
+        ...fnMod,
+      };
 
-// ============================================================
-// Expose Firebase helpers for non-module scripts (login.js)
-// ============================================================
-window._firebase = {
-  // app / auth
-  initializeApp,
-  getApp,
-  getApps,
-  getAuth,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut,
+      // Handig signaal (optioneel) voor debug/latere verbeteringen
+      window._firebaseReady = true;
+      document.dispatchEvent(new Event("firebase-ready"));
+      console.log("[firebase-imports] Firebase geladen:", VERSION);
+    } catch (err) {
+      console.error("[firebase-imports] Firebase laden mislukt:", err);
+      window._firebaseReady = false;
+    }
+  }
 
-  // database
-  getDatabase,
-  ref,
-  get,
-  set,
-  update,
-  push,
-  remove,
-
-  // functions ✅ NIEUW
-  getFunctions,
-  httpsCallable
-};
-
-
-
+  load();
+})();

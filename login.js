@@ -7,6 +7,7 @@ const AUTH_KEY = "ovn_auth_session";
 
 
 let auth = null;
+let AUTH_RESOLVED = false; // voorkomt UI "flash" op basis van oude localStorage session
 
 // ======================================================================
 // LEGACY USERS — UITGESCHAKELD
@@ -38,8 +39,12 @@ function clearSession() {
 }
 
 function isLoggedIn() {
-  return !!getSession();
+  // Gebruik Firebase Auth als waarheid.
+  // Voor Firebase "resolved" is: toon geen auth-only UI (voorkomt flash).
+  if (!AUTH_RESOLVED) return false;
+  return !!auth?.currentUser;
 }
+
 
 function hasRole(role) {
   const s = getSession();
@@ -82,8 +87,11 @@ function updateAccountRequestButton() {
 // UI
 // ======================================================================
 function applyAuthVisibility() {
+  if (!AUTH_RESOLVED) return;
+
   const loggedIn = isLoggedIn();
   const session = getSession();
+
 
   // NB: body-classes zijn UI-only.
  // Nooit gebruiken als autorisatiebron.
@@ -113,6 +121,8 @@ window.applyAuthVisibility = applyAuthVisibility;
 // HEADER UI
 // ======================================================================
 function updateHeader() {
+  if (!AUTH_RESOLVED) return;
+
   const badge = document.getElementById("loginStatus");
   const loginBtn = document.getElementById("loginButton");
   const logoutBtn = document.getElementById("logoutButton");
@@ -159,8 +169,11 @@ function initFirebaseAuth(retries = 200) {
 
   auth = window._firebase.getAuth(app);
 
-  window._firebase.onAuthStateChanged(auth, async (user) => {
+ window._firebase.onAuthStateChanged(auth, async (user) => {
+    AUTH_RESOLVED = true;
+
     if (!user) {
+
       clearSession();
       updateHeader();
       applyAuthVisibility();
@@ -441,11 +454,6 @@ return; // ⬅️ ESSENTIEEL
 // EVENTS
 // ======================================================================
 document.addEventListener("DOMContentLoaded", () => {
-  // Init UI direct (voor refresh / bestaande sessie)
-  updateHeader();
-  applyAuthVisibility();
-  updateAccountRequestButton();
-
   initFirebaseAuth();
 
   document
@@ -456,6 +464,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (auth) window._firebase.signOut(auth);
   });
 
-  // Knop wordt door ensureAccountRequestButton() aangemaakt; this ensures it exists now
   ensureAccountRequestButton();
 });
+

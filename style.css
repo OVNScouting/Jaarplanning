@@ -563,6 +563,7 @@ body.mode-bewerken .col-datum {
 
 
 /* Presence */
+/* Presence */
 .presence-cell {
   cursor: pointer;
   font-size: 1.05rem;
@@ -570,8 +571,25 @@ body.mode-bewerken .col-datum {
 }
 
 .presence-aanwezig { color: #15803d; }
-.presence-afwezig { color: #b91c1c; }
-.presence-reminder { color: #b45309; }
+.presence-afwezig  { color: #b91c1c; }
+.presence-onbekend { color: #64748b; } /* ? grijs */
+}
+
+/* Totals row onderaan */
+tr.row-totals {
+  background: #f8fafc;
+  font-weight: 700;
+}
+
+tr.row-totals td {
+  border-top: 2px solid var(--border);
+}
+
+tr.row-totals td.totals-label {
+  text-align: left;
+  white-space: nowrap;
+}
+
 
 /* Divider tussen jeugd en leiding */
 .col-divider {
@@ -589,12 +607,31 @@ body.mode-bewerken .col-datum {
 .row-bijzonder    { background: var(--opkomst-bijzonder-bg) !important; border-left: 4px solid var(--opkomst-bijzonder); }
 .row-kamp         { background: var(--opkomst-kamp-bg) !important; border-left: 4px solid var(--opkomst-kamp); }
 
+/* Als een opkomst zowel "geen" als "next" zou zijn: rood wint */
+tr.row-geenopkomst.row-next {
+  background: var(--opkomst-geen-bg) !important;
+  border-left: 4px solid var(--opkomst-geen) !important;
+}
+tr.row-geenopkomst.row-next > .col-datum {
+  background: var(--opkomst-geen-bg) !important;
+}
+
 /* Keep sticky datum readable */
 tr.row-bijzonder > .col-datum { background: var(--opkomst-bijzonder-bg) !important; }
 tr.row-kamp > .col-datum      { background: var(--opkomst-kamp-bg) !important; }
 tr.row-geenopkomst > .col-datum { background: var(--opkomst-geen-bg) !important; }
 tr.row-next > .col-datum      { background: var(--opkomst-volgende-bg) !important; }
 tr.row-grey > .col-datum      { background: var(--opkomst-verleden-bg) !important; }
+
+/* Verleden moet altijd volledig grijs zijn (override alles) */
+tr.row-grey {
+  background: var(--opkomst-verleden-bg) !important;
+  border-left: 4px solid var(--opkomst-verleden) !important;
+}
+tr.row-grey > .col-datum {
+  background: var(--opkomst-verleden-bg) !important;
+}
+
 
 /* Editable elements */
 .cell-input,
@@ -1573,6 +1610,27 @@ th[class^="ploeg-"]::after {
 .dashboard-table td:nth-child(8) {
     max-width: 280px;
     word-break: break-word;
+}
+/* Dashboard: type-opkomst kleurmarkering (zoals jaarplanning balk) */
+.dashboard-type-cell {
+  font-weight: 700;
+  border-left: 4px solid transparent;
+  padding-left: 0.55rem; /* iets meer “badge” gevoel */
+}
+
+.dashboard-type-cell.op-type-geen {
+  background: var(--opkomst-geen-bg);
+  border-left-color: var(--opkomst-geen);
+}
+
+.dashboard-type-cell.op-type-bijzonder {
+  background: var(--opkomst-bijzonder-bg);
+  border-left-color: var(--opkomst-bijzonder);
+}
+
+.dashboard-type-cell.op-type-kamp {
+  background: var(--opkomst-kamp-bg);
+  border-left-color: var(--opkomst-kamp);
 }
 
 /* ======================================================================

@@ -38,56 +38,89 @@ const db = getDatabase(app);
   loadHighlights(db, section, list);
 }
 
+function getUpdatedMs(i) {
+  const v =
+    i.updatedAt ??
+    i.lastUpdated ??
+    i.modifiedAt ??
+    i.changedAt ??
+    i.createdAt ??
+    0;
 
-// ======================================================================
-// LOAD HIGHLIGHTS
-// ======================================================================
+  if (typeof v === "number") return v;
+
+  if (typeof v === "string") {
+    const ms = Date.parse(v);
+    return Number.isNaN(ms) ? 0 : ms;
+  }
+
+  // als je ooit Firestore timestamps zou krijgen
+  if (v && typeof v === "object" && typeof v.seconds === "number") {
+    return v.seconds * 1000;
+  }
+
+  return 0;
+}
+
+function formatUpdatedNL(ms) {
+  if (!ms) return "onbekend";
+  return new Date(ms).toLocaleDateString("nl-NL", {
+    weekday: "short",
+    day: "2-digit",
+    month: "2-digit",
+  });
+}
+
 async function loadHighlights(db, section, list) {
   try {
     const snap = await get(ref(db, "bestuursItems"));
 
-    // Vak moet blijven staan, ook als er geen items zijn
+    // Vak moet altijd kunnen renderen (binnen .only-auth bepaalt login.js zichtbaarheid)
     section.classList.remove("hidden");
+    list.innerHTML = "";
 
+    if (!snap.exists()) {
+      list.innerHTML = `<div class="text-muted">Nog geen bestuursitems.</div>`;
+      return;
+    }
 
     const now = Date.now();
     const MAX_AGE = 14 * 24 * 60 * 60 * 1000; // 14 dagen
+    const MAX_ITEMS = 3;
 
-    const items = Object.entries(snap.val())
+    const all = Object.entries(snap.val())
       .map(([id, v]) => ({ id, ...v }))
-      .filter(i => i.toonOpDashboard)
-      .filter(i => {
-        const t = i.updatedAt || i.createdAt || 0;
-        return now - t <= MAX_AGE;
-      })
-      .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      .filter((i) => i.toonOpDashboard);
 
-     list.innerHTML = "";
-
-    if (!snap.exists()) {
-      list.innerHTML = `<div class="text-muted">Nog geen updates vanuit bestuur (laatste 14 dagen).</div>`;
+    if (!all.length) {
+      list.innerHTML = `<div class="text-muted">Nog geen bestuursitems.</div>`;
       return;
     }
 
-    if (!items.length) {
-      list.innerHTML = `<div class="text-muted">Nog geen updates vanuit bestuur (laatste 14 dagen).</div>`;
-      return;
-    }
+    // Sorteer op "laatst gewijzigd"
+    const sorted = all
+      .map((i) => ({ ...i, _updatedMs: getUpdatedMs(i) }))
+      .sort((a, b) => (b._updatedMs || 0) - (a._updatedMs || 0));
 
+    // 14-dagen venster als hoofdselectie
+    const recent = sorted.filter((i) => now - (i._updatedMs || 0) <= MAX_AGE);
 
-    items.forEach(i => {
+    // Altijd minimaal 1 item: als er niks recent is, pak de meest recente (ook als ouder)
+    const selected = (recent.length ? recent : sorted).slice(0, MAX_ITEMS);
+
+    selected.forEach((i) => {
       const row = document.createElement("div");
       row.className = "meldingen-row";
       row.style.cursor = "pointer";
 
-      row.innerHTML = `
-        <div class="meldingen-label">
-          📌 ${i.titel}
-        </div>
-<div class="meldingen-sub">
-  ${i.type} · ${formatDateDisplay(i.datum)}
-</div>
+      const changedLabel =
+        now - (i._updatedMs || 0) <= MAX_AGE ? "" : " (ouder)";
 
+      row.innerHTML = `
+        <div class="meldingen-label">📌 ${i.titel || "(zonder titel)"}</div>
+        <div class="meldingen-sub">
+          ${(i.type || "Bestuur")} · gewijzigd ${formatUpdatedNL(i._updatedMs)}${changedLabel}
+        </div>
       `;
 
       row.onclick = () => {
@@ -96,9 +129,13 @@ async function loadHighlights(db, section, list) {
 
       list.appendChild(row);
     });
-
   } catch (err) {
     console.error("Fout bij laden bestuurs-highlights:", err);
+    // Laat het vak staan met foutmelding ipv verdwijnen
+    try {
+      list.innerHTML = `<div class="text-muted">Kon bestuursitems niet laden.</div>`;
+      section.classList.remove("hidden");
+    } catch {}
   }
 }
 
@@ -117,5 +154,6 @@ document.addEventListener("auth-changed", (e) => {
 
   init();
 });
+
 
 

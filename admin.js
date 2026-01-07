@@ -480,13 +480,11 @@ document.getElementById("panelName").textContent =
 
   if (u.roles?.admin) roles.innerHTML += "<li>Admin</li>";
   if (u.roles?.bestuur) roles.innerHTML += "<li>Bestuur</li>";
-const spArr = speltakkenToArray(u.roles?.speltakken);
-if (spArr.length) {
-  spArr.forEach(s => {
-    roles.innerHTML += `<li>${s}</li>`;
-  });
-}
-
+  const spArr = speltakkenToArray(u.roles?.speltakken);
+  if (spArr.length) {
+    spArr.forEach(s => {
+      roles.innerHTML += `<li>${s}</li>`;
+    });
   }
 }
 

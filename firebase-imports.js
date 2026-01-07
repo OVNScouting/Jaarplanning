@@ -1,46 +1,32 @@
 // firebase-imports.js
-// Laadt Firebase v9+ (modular) in een "classic script" omgeving (GitHub Pages),
-// en expose't alles onder window._firebase zodat de rest van je code kan blijven zoals hij is.
+// ES module wrapper voor Firebase (modular SDK) + backward compat via window._firebase
 
-(() => {
-  const VERSION = "10.12.5"; // vaste versie = voorspelbaar
-  const base = `https://www.gstatic.com/firebasejs/${VERSION}`;
+const VERSION = "10.12.5";
 
-  async function load() {
-    try {
-      const [
-        appMod,
-        authMod,
-        dbMod,
-        fnMod,
-      ] = await Promise.all([
-        import(`${base}/firebase-app.js`),
-        import(`${base}/firebase-auth.js`),
-        import(`${base}/firebase-database.js`),
-        import(`${base}/firebase-functions.js`),
-      ]);
+import * as appMod from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import * as authMod from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import * as dbMod from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+import * as fnMod from "https://www.gstatic.com/firebasejs/10.12.5/firebase-functions.js";
 
-      // Bundel alle exports die jullie in de code gebruiken in 1 namespace:
-      window._firebase = {
-        // app
-        ...appMod,
-        // auth
-        ...authMod,
-        // database
-        ...dbMod,
-        // functions
-        ...fnMod,
-      };
+// Backward compat: bestaande code die window._firebase verwacht blijft werken
+try {
+  window._firebase = {
+    ...appMod,
+    ...authMod,
+    ...dbMod,
+    ...fnMod,
+  };
 
-      // Handig signaal (optioneel) voor debug/latere verbeteringen
-      window._firebaseReady = true;
-      document.dispatchEvent(new Event("firebase-ready"));
-      console.log("[firebase-imports] Firebase geladen:", VERSION);
-    } catch (err) {
-      console.error("[firebase-imports] Firebase laden mislukt:", err);
-      window._firebaseReady = false;
-    }
-  }
+  window._firebaseReady = true;
+  document.dispatchEvent(new Event("firebase-ready"));
+  console.log("[firebase-imports] Firebase geladen:", VERSION);
+} catch (err) {
+  console.error("[firebase-imports] Firebase init failed:", err);
+  window._firebaseReady = false;
+}
 
-  load();
-})();
+// Named exports voor je ES-module imports (zoals: import { get } from "./firebase-imports.js")
+export * from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+export * from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+export * from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+export * from "https://www.gstatic.com/firebasejs/10.12.5/firebase-functions.js";

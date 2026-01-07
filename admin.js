@@ -15,83 +15,63 @@ function speltakkenToArray(speltakken) {
 
 
 async function approveRequestViaFunction(requestId, rowEl) {
-  // visuele state
   rowEl.classList.add("loading");
 
   const actionCell = rowEl.querySelector("[data-actions]");
- if (!actionCell) {
-  console.error("approveRequestViaFunction: geen [data-actions] gevonden");
-  rowEl.classList.remove("loading");
-  return;
-} 
-  
+  if (!actionCell) {
+    console.error("approveRequestViaFunction: geen [data-actions] gevonden");
+    rowEl.classList.remove("loading");
+    return;
+  }
+
   const originalActions = actionCell.innerHTML;
 
-  // voorkom dubbel klikken
-  actionCell.innerHTML = "⏳ Goedkeuren…";
-
-  try {
-    const app = getFirebaseApp();
-
-
-    const functions = window._firebase.getFunctions(app);
-    const approveFn = window._firebase.httpsCallable(
-      functions,
-      "approveAccountRequest"
-    );
-
-    const result = await approveFn({ requestId });
-    
-// 🔄 Force token refresh (nieuwe claims ophalen)
-const auth = window._firebase.getAuth(app);
-if (auth.currentUser) {
-  await auth.currentUser.getIdToken(true);
-}
-
-   
-    const { uid } = result.data || {};
-
-    // ===== Optimistische UI =====
-const statusCell = rowEl.querySelector("[data-status]");
-if (statusCell) {
-  statusCell.innerHTML = `
-    <span class="status-badge status-approved">
-      Goedgekeurd
+  // voorkom dubbelklikken
+  actionCell.innerHTML = `
+    <span class="inline-loading">
+      <span class="btn-spinner" aria-hidden="true"></span>
+      Goedkeuren…
     </span>
   `;
-}
-    actionCell.innerHTML = "✓ Goedgekeurd";
 
-    // visuele afronding
+  try {
+    await callFunction("approveAccountRequest", { requestId });
+
+    const statusCell = rowEl.querySelector("[data-status]");
+    if (statusCell) {
+      statusCell.innerHTML = `<span class="status-badge status-approved">Goedgekeurd</span>`;
+    }
+
+    actionCell.innerHTML = "—";
+
+    // direct users verversen (geen extra delay)
+    loadUsers();
+
+    // snelle fade-out (geen 900ms wachttijd)
     rowEl.classList.add("approved");
-    
-    setTimeout(() => {
-      rowEl.style.transition = "opacity 0.4s ease";
+    requestAnimationFrame(() => {
+      rowEl.style.transition = "opacity 0.25s ease";
       rowEl.style.opacity = "0";
-      setTimeout(() => {
-rowEl.remove();
+    });
+    setTimeout(() => rowEl.remove(), 300);
 
-// kleine delay zodat backend writes klaar zijn
-setTimeout(() => loadUsers(), 300);
-
-      }, 400);
-    }, 900);
-    
-       
+    showToast("Aanvraag goedgekeurd", "success");
   } catch (err) {
     console.error("Goedkeuren mislukt:", err);
 
     // herstel UI
     actionCell.innerHTML = originalActions;
 
-    alert(
-      "Goedkeuren mislukt: " +
-      (err?.message || err?.details || "Onbekende fout")
+    showToast(
+      "Goedkeuren mislukt: " + (err?.message || err?.details || "Onbekende fout"),
+      "error",
+      4200
     );
   } finally {
     rowEl.classList.remove("loading");
   }
 }
+
 
 let USERS_CACHE = {};
 let selectedUserId = null;
@@ -124,47 +104,101 @@ function callFunction(name, data) {
 }
 window.callFunction = callFunction;
 
+function showToast(message, type = "info", ms = 2600) {
+  let el = document.getElementById("toast");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "toast";
+    el.className = "toast hidden";
+    el.setAttribute("role", "status");
+    el.setAttribute("aria-live", "polite");
+    document.body.appendChild(el);
+  }
+
+  el.textContent = String(message || "");
+  el.dataset.type = type;
+  el.classList.remove("hidden");
+
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.add("hidden"), ms);
+}
+
+function setButtonLoading(btn, loading, label) {
+  if (!btn) return;
+
+  if (loading) {
+    if (!btn.dataset.originalHtml) btn.dataset.originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `
+      <span class="btn-spinner" aria-hidden="true"></span>
+      ${label || "Bezig…"}
+    `;
+  } else {
+    if (btn.dataset.originalHtml) {
+      btn.innerHTML = btn.dataset.originalHtml;
+      delete btn.dataset.originalHtml;
+    }
+    btn.disabled = false;
+  }
+}
+
+
 
 async function updateAccountRequestStatus(requestId, newStatus, rowEl) {
   if (newStatus !== "rejected") return;
+
+  rowEl.classList.add("loading");
+
+  const actionsCell = rowEl.querySelector("[data-actions]");
+  const originalActions = actionsCell ? actionsCell.innerHTML : "";
+
+  if (actionsCell) {
+    actionsCell.innerHTML = `
+      <span class="inline-loading">
+        <span class="btn-spinner" aria-hidden="true"></span>
+        Afwijzen…
+      </span>
+    `;
+  }
 
   try {
     await callFunction("rejectAccountRequest", { requestId });
 
     const statusCell = rowEl.querySelector("[data-status]");
     if (statusCell) {
-      statusCell.innerHTML = `
-        <span class="status-badge status-rejected">
-          Afgewezen
+      statusCell.innerHTML = `<span class="status-badge status-rejected">Afgewezen</span>`;
+    }
+
+    if (actionsCell) {
+      actionsCell.innerHTML = `
+        <button class="pill-btn outline" data-undo>Undo</button>
+        <span style="margin-left:.5rem;font-size:.85rem;color:var(--text-muted);">
+          (auto-wissen na 5 min)
         </span>
       `;
+
+      actionsCell.querySelector("[data-undo]")?.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+          await callFunction("undoRejectAccountRequest", { requestId });
+          renderAccountRequests();
+          showToast("Undo uitgevoerd", "success");
+        } catch (err) {
+          showToast(err?.message || "Undo mislukt", "error", 4200);
+        }
+      });
     }
 
-const actionsCell = rowEl.querySelector("[data-actions]");
-if (actionsCell) {
-  actionsCell.innerHTML = `
-    <button class="pill-btn outline" data-undo>Undo</button>
-    <span style="margin-left:.5rem;font-size:.85rem;color:var(--text-muted);">
-      (auto-wissen na 5 min)
-    </span>
-  `;
-
-  actionsCell.querySelector("[data-undo]")?.addEventListener("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      await callFunction("undoRejectAccountRequest", { requestId });
-      renderAccountRequests();
-    } catch (err) {
-      alert(err?.message || "Undo mislukt");
-    }
-  });
-}
-
+    showToast("Aanvraag afgewezen", "success");
   } catch (e) {
-    alert(e.message || "Afwijzen mislukt");
+    if (actionsCell) actionsCell.innerHTML = originalActions;
+    showToast(e?.message || "Afwijzen mislukt", "error", 4200);
+  } finally {
+    rowEl.classList.remove("loading");
   }
 }
+
 
 
 
@@ -540,31 +574,40 @@ document.getElementById("cancelEditBtn").onclick = () => {
 };
 
 document.getElementById("saveUserBtn").onclick = async () => {
+  const saveBtn = document.getElementById("saveUserBtn");
+  const cancelBtn = document.getElementById("cancelEditBtn");
+  const panel = document.getElementById("userSidePanel");
+
+  setButtonLoading(saveBtn, true, "Opslaan…");
+  if (cancelBtn) cancelBtn.disabled = true;
+  panel?.classList.add("is-busy");
+
   try {
-    await callFunction("updateUserRoles", {
+    await callFunction("updateUser", {
       uid: selectedUserId,
       roles: {
         admin: editAdmin.checked,
         bestuur: editBestuur.checked,
         speltakken: Array.from(
           document.querySelectorAll(".edit-speltak:checked")
-        ).map(cb => cb.value)
-      }
+        ).map(cb => cb.value),
+      },
+      status: editInactive.checked ? "inactive" : "active",
     });
 
-    await callFunction("setUserStatus", {
-      uid: selectedUserId,
-      status: editInactive.checked ? "inactive" : "active"
-    });
-
-    alert("Account bijgewerkt");
     loadUsers();
     panelEdit.classList.add("hidden");
     panelView.classList.remove("hidden");
+    showToast("Account bijgewerkt", "success");
   } catch (e) {
-    alert(e.message || "Opslaan mislukt");
+    showToast(e?.message || "Opslaan mislukt", "error", 4200);
+  } finally {
+    panel?.classList.remove("is-busy");
+    if (cancelBtn) cancelBtn.disabled = false;
+    setButtonLoading(saveBtn, false);
   }
 };
+
 
 document.getElementById("deleteUserBtn").onclick = async () => {
   if (!confirm("Account volledig verwijderen? Dit kan niet ongedaan worden gemaakt.")) return;

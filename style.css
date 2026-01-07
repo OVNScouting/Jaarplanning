@@ -573,7 +573,7 @@ body.mode-bewerken .col-datum {
 .presence-aanwezig { color: #15803d; }
 .presence-afwezig  { color: #b91c1c; }
 .presence-onbekend { color: #64748b; } /* ? grijs */
-}
+
 
 /* Totals row onderaan */
 tr.row-totals {

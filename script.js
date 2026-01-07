@@ -822,9 +822,8 @@ function renderTable() {
     }
 
    
-
-    visible.forEach(o => addRow(o));
-    addTotalsRow();
+visible.forEach(o => addRow(o));
+if (isLeiding()) addTotalsRow();
 
     syncHorizontalScrollProxy();
 }

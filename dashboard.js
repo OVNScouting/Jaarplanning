@@ -266,7 +266,19 @@ function renderRowDesktop(o) {
 
   tr.appendChild(td(o.tijd));
   tr.appendChild(td(o.titel));
-  tr.appendChild(td(o.type));
+const tdType = document.createElement("td");
+tdType.textContent = o.type || "";
+
+// Alleen speltakken krijgen type-opkomst kleurmarkering
+if (o.kind === "speltak") {
+  const t = (o.type || "").toLowerCase().trim();
+  tdType.classList.add("dashboard-type-cell");
+  if (t === "geen" || t === "bijzonder" || t === "kamp") {
+    tdType.classList.add(`op-type-${t}`);
+  }
+}
+
+tr.appendChild(tdType);
   tr.appendChild(td(o.locatie || ""));
   tr.appendChild(td(o.materiaal || ""));
   tr.appendChild(td(o.bijzonderheden || ""));

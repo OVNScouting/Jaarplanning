@@ -4,6 +4,14 @@ function getFirebaseApp() {
     ? window._firebase.getApp()
     : window._firebase.initializeApp(window.firebaseConfig);
 }
+function speltakkenToArray(speltakken) {
+  if (!speltakken) return [];
+  if (Array.isArray(speltakken)) return speltakken;
+  if (typeof speltakken === "object") {
+    return Object.keys(speltakken).filter(k => speltakken[k] === true);
+  }
+  return [];
+}
 
 
 async function approveRequestViaFunction(requestId, rowEl) {
@@ -248,10 +256,9 @@ function renderUsers(users) {
       );
 
       if (speltakFilters.length > 0) {
-        const userSpeltakken = u.roles?.speltakken || [];
-        const heeftMatch = speltakFilters.some(s =>
-          userSpeltakken.includes(s)
-        );
+const userSpeltakken = speltakkenToArray(u.roles?.speltakken);
+const heeftMatch = speltakFilters.some(s => userSpeltakken.includes(s));
+
         if (!heeftMatch) return false;
       }
 
@@ -473,10 +480,13 @@ document.getElementById("panelName").textContent =
 
   if (u.roles?.admin) roles.innerHTML += "<li>Admin</li>";
   if (u.roles?.bestuur) roles.innerHTML += "<li>Bestuur</li>";
-  if (u.roles?.speltakken?.length) {
-    u.roles.speltakken.forEach(s => {
-      roles.innerHTML += `<li>${s}</li>`;
-    });
+const spArr = speltakkenToArray(u.roles?.speltakken);
+if (spArr.length) {
+  spArr.forEach(s => {
+    roles.innerHTML += `<li>${s}</li>`;
+  });
+}
+
   }
 }
 
@@ -513,11 +523,14 @@ document.getElementById("editUserBtn").onclick = () => {
   editBestuur.checked = !!u.roles?.bestuur;
   editInactive.checked = u.status === "inactive";
 
-  document
+const spArr = speltakkenToArray(u.roles?.speltakken);
+
+document
   .querySelectorAll(".edit-speltak")
   .forEach(cb => {
-    cb.checked = u.roles?.speltakken?.includes(cb.value) || false;
+    cb.checked = spArr.includes(cb.value);
   });
+
 
   panelView.classList.add("hidden");
   panelEdit.classList.remove("hidden");

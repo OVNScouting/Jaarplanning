@@ -824,6 +824,7 @@ function renderTable() {
    
 
     visible.forEach(o => addRow(o));
+    addTotalsRow();
 
     syncHorizontalScrollProxy();
 }
@@ -1098,12 +1099,23 @@ function addRow(o) {
     tr.dataset.id = o.id; // nodig voor scroll + highlight na opslaan
       tr.dataset.opkomstDatum = o.datum;
 
-    if (o.typeOpkomst === "geen") tr.classList.add("row-geenopkomst");
-    else if (o.typeOpkomst === "bijzonder") tr.classList.add("row-bijzonder");
-    else if (o.typeOpkomst === "kamp") tr.classList.add("row-kamp");
+const past = isPast(o.datum);
 
-    if (isPast(o.datum) && o.typeOpkomst !== "geen") tr.classList.add("row-grey");
-    if (o.id === nextUpcomingId) tr.classList.add("row-next");
+// Verleden: altijd volledig grijs, geen andere kleurmarkeringen
+if (past) {
+  tr.classList.add("row-grey");
+} else {
+  // Type-kleuren (alleen voor vandaag/toekomst)
+  if (o.typeOpkomst === "geen") tr.classList.add("row-geenopkomst");
+  else if (o.typeOpkomst === "bijzonder") tr.classList.add("row-bijzonder");
+  else if (o.typeOpkomst === "kamp") tr.classList.add("row-kamp");
+
+  // Next-highlight mag NIET over "geen" heen
+  if (o.id === nextUpcomingId && o.typeOpkomst !== "geen") {
+    tr.classList.add("row-next");
+  }
+}
+
 
    if (isEdit()) {
     const del = document.createElement("td");
@@ -1248,6 +1260,104 @@ if (config.showBert) {
     }
 
     tableBody.appendChild(tr);
+}
+function addTotalsRow() {
+  const zichtbareJeugd = jeugd.filter(j => !j.hidden);
+  const zichtbareLeiding = config.showLeiding ? leiding.filter(l => !l.hidden) : [];
+
+  // Als er geen ledenkolommen zijn, heeft een totals-row geen zin
+  if (zichtbareJeugd.length === 0 && zichtbareLeiding.length === 0) return;
+
+  // Totals tellen over ALLE opkomsten (ongeacht filter)
+  const totals = {};
+  zichtbareJeugd.forEach(j => (totals[j.id] = 0));
+  zichtbareLeiding.forEach(l => (totals[`leiding-${l.id}`] = 0));
+
+  (opkomsten || []).forEach(o => {
+    zichtbareJeugd.forEach(j => {
+      if (o.aanwezigheid?.[j.id] === "aanwezig") totals[j.id]++;
+    });
+    zichtbareLeiding.forEach(l => {
+      const key = `leiding-${l.id}`;
+      if (o.aanwezigheid?.[key] === "aanwezig") totals[key]++;
+    });
+  });
+
+  const tr = document.createElement("tr");
+  tr.classList.add("row-totals");
+
+  const emptyTd = (cls = "") => {
+    const td = document.createElement("td");
+    if (cls) td.classList.add(cls);
+    return td;
+  };
+
+  // Zelfde kolom-structuur als addRow(), maar dan leeg/label + totals in ledenkolommen
+  if (isEdit()) tr.appendChild(emptyTd()); // delete-kolom
+
+  const tdLabel = document.createElement("td");
+  tdLabel.classList.add("col-datum", "totals-label");
+  tdLabel.textContent = "Totaal aanwezig";
+  tr.appendChild(tdLabel);
+
+  tr.appendChild(emptyTd()); // start
+  tr.appendChild(emptyTd()); // eind
+
+  if (!isOuder()) tr.appendChild(emptyTd("col-procor"));
+
+  if (["explorers", "rovers"].includes(speltak)) {
+    tr.appendChild(emptyTd("col-buddy"));
+  }
+
+  if (!isOuder()) tr.appendChild(emptyTd("col-type"));
+
+  tr.appendChild(emptyTd("col-thema"));
+  tr.appendChild(emptyTd("col-bijzonderheden"));
+
+  if (config.showBert) tr.appendChild(emptyTd("col-bert"));
+
+  if (!isOuder()) tr.appendChild(emptyTd("col-locatie"));
+  if (!isOuder()) tr.appendChild(emptyTd("col-materiaal"));
+
+  // Jeugd totals
+  zichtbareJeugd.forEach(j => {
+    const td = document.createElement("td");
+    td.classList.add("col-jeugd");
+    td.textContent = String(totals[j.id] ?? 0);
+    tr.appendChild(td);
+  });
+
+  // Kijkers kolom (bestaat alleen voor leiding)
+  if (!isOuder()) tr.appendChild(emptyTd());
+
+  // Divider
+  if (zichtbareJeugd.length > 0 && zichtbareLeiding.length > 0) {
+    const tdDiv = document.createElement("td");
+    tdDiv.classList.add("col-divider");
+    tr.appendChild(tdDiv);
+  }
+
+  // Leiding totals
+  if (config.showLeiding) {
+    zichtbareLeiding.forEach(l => {
+      const key = `leiding-${l.id}`;
+      const td = document.createElement("td");
+      td.classList.add("col-leiding");
+      if (isOuder()) td.classList.add("hide-view");
+      td.textContent = String(totals[key] ?? 0);
+      tr.appendChild(td);
+    });
+  }
+
+  // Extra + aanw tellers kolommen (alleen leiding)
+  if (!isOuder()) {
+    if (isEdit()) tr.appendChild(emptyTd("col-extra-aantal"));
+    tr.appendChild(emptyTd("col-extra-namen"));
+    tr.appendChild(emptyTd()); // Aanw. jeugd
+    tr.appendChild(emptyTd()); // Aanw. leiding
+  }
+
+  tableBody.appendChild(tr);
 }
 
 /* ======================================================================

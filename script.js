@@ -432,6 +432,8 @@ function isEdit() {
   return editMode && isLeiding(); 
 }
 
+let currentFilter = "all";
+
 // Initiele mode + data
 setMode(isLeiding() ? "leiding" : "ouder");
 loadEverything();
@@ -621,55 +623,6 @@ async function loadEverything() {
   }
 }
 
-   
-  // ===============================
-// SCOUTS — SORTERING
-// ===============================
-if (speltak === "scouts") {
-
-    const PLOEG_ORDER = {
-        "meeuw": 1,
-        "reiger": 2,
-        "kievit": 3,
-        "sperwer": 4,
-        "": 5
-    };
-
-    jeugd.sort((a, b) => {
-        const pa = PLOEG_ORDER[a.Ploeg || ""] || 999;
-        const pb = PLOEG_ORDER[b.Ploeg || ""] || 999;
-
-        if (pa !== pb) return pa - pb;
-
-        // Binnen een ploeg: PL → APL → alfabetisch
-        if (a.PL !== b.PL) return a.PL ? -1 : 1;
-        if (a.APL !== b.APL) return a.APL ? -1 : 1;
-
-        return a.naam.localeCompare(b.naam);
-    });
-}
-
-
-          leiding = Object.entries(data.leiding || {}).map(([id, v]) => ({
-             id,
-             naam: v.naam || "",
-             WelpenNaam: v.WelpenNaam || "",
-             hidden: !!v.hidden,
-             volgorde: v.volgorde ?? 999
-         })).sort((a, b) => a.volgorde - b.volgorde);
-
-        renderEverything();
-
-        catch (err) {
-        console.error(err);
-        loadingIndicator.classList.add("hidden");
-        errorIndicator.classList.remove("hidden");
-        errorIndicator.textContent = "Kon geen verbinding maken met de database.";
-       opkomsten = [];
-renderTable();
-
-    }
-}
 
 function renderEverything() {
     loadInfo();
@@ -2302,158 +2255,85 @@ fab?.addEventListener("click", () => {
     opModal.classList.remove("hidden");
 });
 
-saveOpkomst?.addEventListener("click", () => {
-    if (!isLeiding()) return;
-    if (!opDatum.value) return alert("Datum verplicht");
+saveOpkomst?.addEventListener("click", async () => {
+  if (!isLeiding()) return;
+  if (!opDatum.value) return alert("Datum verplicht");
 
-    const newRef = push(ref(db, `${speltak}/opkomsten`));
+  const newRef = push(ref(db, `${speltak}/opkomsten`));
 
-    const newObj = {
-        id: newRef.key,
-        datum: isoFromInput(opDatum.value),
-        thema: opThema.value || "",
-        procor: opProcor.value || "",
-        bijzonderheden: opBijzonderheden.value || "",
-        typeOpkomst: opType.value || "normaal",
-        starttijd: opStart.value || "",
-        eindtijd: opEind.value || "",
-        locatie: opLocatie.value || "",
-        materiaal: opMateriaal.value || "",
-        kijkers: Number(opKijkers.value || 0),
-        extraAantal: Number(opExtraAantal.value || 0),
-        extraNamen: opExtraNamen.value || "",
-        aanwezigheid: {}
+  const newObj = {
+    id: newRef.key,
+    datum: isoFromInput(opDatum.value),
+    thema: opThema.value || "",
+    procor: opProcor.value || "",
+    bijzonderheden: opBijzonderheden.value || "",
+    typeOpkomst: opType.value || "normaal",
+    starttijd: opStart.value || "",
+    eindtijd: opEind.value || "",
+    locatie: opLocatie.value || "",
+    materiaal: opMateriaal.value || "",
+    buddy: (["explorers", "rovers"].includes(speltak) ? (opProcor?.value || "") : "") || "", // als je buddy apart hebt, zet hier jouw buddy input
+    kijkers: Number(opKijkers.value || 0),
+    extraAantal: Number(opExtraAantal.value || 0),
+    extraNamen: opExtraNamen.value || "",
+    aanwezigheid: {}
+  };
+
+  // BERT
+  if (config.showBert) newObj.bert_met = opBert?.value || "";
+
+  // Automatisch aanwezigheid init
+  if (opType.value === "geen") {
+    jeugd.forEach(j => (newObj.aanwezigheid[j.id] = "afwezig"));
+    leiding.forEach(l => (newObj.aanwezigheid[`leiding-${l.id}`] = "afwezig"));
+  } else {
+    jeugd.forEach(j => (newObj.aanwezigheid[j.id] = "onbekend"));
+    leiding.forEach(l => (newObj.aanwezigheid[`leiding-${l.id}`] = "onbekend"));
+  }
+
+  try {
+    // 1) private opslaan
+    await set(newRef, newObj);
+
+    // 2) public mirror opslaan (alleen public velden + jeugd-aanwezigheid)
+    const publicObj = {
+      datum: newObj.datum,
+      starttijd: newObj.starttijd,
+      eindtijd: newObj.eindtijd,
+      thema: newObj.thema,
+      bijzonderheden: newObj.bijzonderheden,
+      typeOpkomst: newObj.typeOpkomst || "normaal",
+      buddy: newObj.buddy || "",
+      bert_met: newObj.bert_met || "",
+      aanwezigheid: {}
     };
 
-    // BERT
-    if (config.showBert) newObj.bert_met = opBert.value || "";
+    jeugd.forEach(j => {
+      publicObj.aanwezigheid[j.id] = newObj.aanwezigheid?.[j.id] || "onbekend";
+    });
 
-    // Automatisch kruisjes bij "geen opkomst"
-    if (opType.value === "geen") {
-        jeugd.forEach(j => newObj.aanwezigheid[j.id] = "afwezig");
-        leiding.forEach(l => newObj.aanwezigheid[`leiding-${l.id}`] = "afwezig");
-    } else {
-        jeugd.forEach(j => newObj.aanwezigheid[j.id] = "onbekend");
-        leiding.forEach(l => newObj.aanwezigheid[`leiding-${l.id}`] = "onbekend");
+    await set(ref(db, `${PUBLIC_ROOT}/opkomsten/${newRef.key}`), publicObj);
+
+    opModal.classList.add("hidden");
+    await loadEverything();
+
+    const row = document.querySelector(`tr[data-id="${newRef.key}"]`);
+    if (row) {
+      row.scrollIntoView({ behavior: "smooth", block: "center" });
+      row.classList.add("row-highlight");
+      setTimeout(() => row.classList.remove("row-highlight"), 2000);
     }
-
-set(newRef, newObj).then(async () => {
-  // Public mirror maken
-  const publicObj = {
-    datum: newObj.datum,
-    starttijd: newObj.starttijd,
-    eindtijd: newObj.eindtijd,
-    thema: newObj.thema,
-    bijzonderheden: newObj.bijzonderheden,
-    typeOpkomst: newObj.typeOpkomst || "normaal",
-    buddy: newObj.buddy || "",
-    bert_met: newObj.bert_met || "",
-    aanwezigheid: {}
-  };
-
-  // Alleen jeugd-aanwezigheid (geen leiding-*)
-  jeugd.forEach(j => {
-    publicObj.aanwezigheid[j.id] = newObj.aanwezigheid?.[j.id] || "onbekend";
-  });
-
-  await set(ref(db, `${PUBLIC_ROOT}/opkomsten/${newRef.key}`), publicObj);
-
-  opModal.classList.add("hidden");
-
-  await loadEverything();
-
-set(newRef, newObj).then(async () => {
-  // Public mirror maken
-  const publicObj = {
-    datum: newObj.datum,
-    starttijd: newObj.starttijd,
-    eindtijd: newObj.eindtijd,
-    thema: newObj.thema,
-    bijzonderheden: newObj.bijzonderheden,
-    typeOpkomst: newObj.typeOpkomst || "normaal",
-    buddy: newObj.buddy || "",
-    bert_met: newObj.bert_met || "",
-    aanwezigheid: {}
-  };
-
-  // Alleen jeugd-aanwezigheid (geen leiding-*)
-  jeugd.forEach(j => {
-    publicObj.aanwezigheid[j.id] = newObj.aanwezigheid?.[j.id] || "onbekend";
-  });
-
-  await set(ref(db, `${PUBLIC_ROOT}/opkomsten/${newRef.key}`), publicObj);
-
-  opModal.classList.add("hidden");
-
-  await loadEverything();
-
-set(newRef, newObj).then(async () => {
-  // Public mirror maken
-  const publicObj = {
-    datum: newObj.datum,
-    starttijd: newObj.starttijd,
-    eindtijd: newObj.eindtijd,
-    thema: newObj.thema,
-    bijzonderheden: newObj.bijzonderheden,
-    typeOpkomst: newObj.typeOpkomst || "normaal",
-    buddy: newObj.buddy || "",
-    bert_met: newObj.bert_met || "",
-    aanwezigheid: {}
-  };
-
-  // Alleen jeugd-aanwezigheid (geen leiding-*)
-  jeugd.forEach(j => {
-    publicObj.aanwezigheid[j.id] = newObj.aanwezigheid?.[j.id] || "onbekend";
-  });
-
-  await set(ref(db, `${PUBLIC_ROOT}/opkomsten/${newRef.key}`), publicObj);
-
-  opModal.classList.add("hidden");
-
-  await loadEverything();
-
-set(newRef, newObj).then(async () => {
-  // Public mirror maken
-  const publicObj = {
-    datum: newObj.datum,
-    starttijd: newObj.starttijd,
-    eindtijd: newObj.eindtijd,
-    thema: newObj.thema,
-    bijzonderheden: newObj.bijzonderheden,
-    typeOpkomst: newObj.typeOpkomst || "normaal",
-    buddy: newObj.buddy || "",
-    bert_met: newObj.bert_met || "",
-    aanwezigheid: {}
-  };
-
-  // Alleen jeugd-aanwezigheid (geen leiding-*)
-  jeugd.forEach(j => {
-    publicObj.aanwezigheid[j.id] = newObj.aanwezigheid?.[j.id] || "onbekend";
-  });
-
-  await set(ref(db, `${PUBLIC_ROOT}/opkomsten/${newRef.key}`), publicObj);
-
-  opModal.classList.add("hidden");
-
-  await loadEverything();
-
-  const row = document.querySelector(`tr[data-id="${newRef.key}"]`);
-  if (row) {
-    row.scrollIntoView({ behavior: "smooth", block: "center" });
-    row.classList.add("row-highlight");
-    setTimeout(() => row.classList.remove("row-highlight"), 2000);
+  } catch (err) {
+    console.error(err);
+    alert("Opslaan mislukt, probeer het opnieuw.");
   }
-}).catch((err) => {
-  console.error(err);
-  alert("Opslaan mislukt, probeer het opnieuw.");
 });
 
-});
 
 /* ======================================================================
    PRINT / FILTERS
    ====================================================================== */
-let currentFilter = "all";
+
 
 filterAll?.addEventListener("click", () => {
     currentFilter = "all";

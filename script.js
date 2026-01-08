@@ -660,7 +660,7 @@ if (speltak === "scouts") {
 
         renderEverything();
 
-    } catch (err) {
+        catch (err) {
         console.error(err);
         loadingIndicator.classList.add("hidden");
         errorIndicator.classList.remove("hidden");

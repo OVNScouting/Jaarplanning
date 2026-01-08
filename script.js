@@ -1677,13 +1677,13 @@ function renderLedenbeheer() {
   const jeugdContainer = document.getElementById("jeugdLeden");
   const leidingContainer = ledenbeheerLeiding;
 
-  // Als je later bij leden-only speltakken #leidingLeden uit HTML haalt: niet stuk laten gaan
+  // jeugdContainer is verplicht; leidingContainer alleen als we leiding tonen
   if (!jeugdContainer) return;
   if (config.showLeiding && !leidingContainer) return;
 
   const ledenOnly = !config.showLeiding;
 
-  // UI-tweaks: kopjes + leidingkolom
+  // Kopjes / kolommen aanpassen in leden-only speltakken (rovers/stam)
   const jeugdCol = jeugdContainer.closest(".ledenbeheer-col");
   const jeugdH3 = jeugdCol?.querySelector("h3");
   if (jeugdH3) jeugdH3.textContent = ledenOnly ? "Leden" : "Jeugdleden";
@@ -1691,21 +1691,15 @@ function renderLedenbeheer() {
   const leidingCol = leidingContainer?.closest(".ledenbeheer-col");
   if (leidingCol) leidingCol.style.display = ledenOnly ? "none" : "";
 
-  // Meldingen: "te weinig leiding" is irrelevant bij leden-only
+  // Melding “te weinig leiding” is irrelevant bij leden-only
   const leidingMeldingRow =
     document.getElementById("meldingLeidingAan")?.closest(".meldingen-row");
   if (leidingMeldingRow) leidingMeldingRow.style.display = ledenOnly ? "none" : "";
 
-  // ============================
-  // SCOUTS → volledig eigen systeem
-  // ============================
-  if (speltak === "scouts") {
-    return renderLedenbeheerScouts();
-  }
+  // Scouts hebben eigen systeem
+  if (speltak === "scouts") return renderLedenbeheerScouts();
 
-  // ============================
-  // WELPEN → bestaande nestlogica
-  // ============================
+  // Welpen: bestaande nestlogica
   if (speltak === "welpen") {
     jeugdContainer.innerHTML = "";
     if (leidingContainer) leidingContainer.innerHTML = "";
@@ -1743,9 +1737,7 @@ function renderLedenbeheer() {
     return;
   }
 
-  // ============================
-  // ANDERE SPELTAKKEN → simpele lijst
-  // ============================
+  // Overige speltakken: simpele lijst
   jeugdContainer.innerHTML = "";
   if (leidingContainer) leidingContainer.innerHTML = "";
 
@@ -1755,6 +1747,7 @@ function renderLedenbeheer() {
     leiding.forEach(l => leidingContainer.appendChild(makeMemberRow(l, "leiding")));
   }
 }
+
 
 
 function makeMemberRow(obj, type) {

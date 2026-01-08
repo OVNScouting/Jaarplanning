@@ -117,6 +117,12 @@ function applyAuthVisibility() {
 // Expose voor andere pagina-scripts
 window.applyAuthVisibility = applyAuthVisibility;
 
+// Expose auth helpers voor module-scripts (zoals script.js)
+window.getAuthSession = getSession;
+window.isLoggedIn = isLoggedIn;
+window.hasRole = hasRole;
+
+
 // ======================================================================
 // HEADER UI
 // ======================================================================

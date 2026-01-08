@@ -1725,5 +1725,44 @@ tr.approved {
   .col-leiding {
     display: none !important;
   }
+     /* ============================================================
+     PRINT — altijd alleen: Datum, Start, Eind, Thema, Bijzonderheden
+     (ongeacht login/mode)
+  ============================================================ */
+
+  /* Geen zwevende scrollbar / scroll-wrapper gedrag in print */
+  .table-h-scroll { display: none !important; }
+  .table-wrapper { overflow: visible !important; }
+
+  /* Sticky datum moet normaal worden op papier */
+  .planning-table th.col-datum,
+  .planning-table td.col-datum,
+  .col-datum {
+    position: static !important;
+    left: auto !important;
+  }
+
+  /* Verberg ALLE niet-print kolommen */
+  .col-delete,
+  .col-procor,
+  .col-buddy,
+  .col-type,
+  .col-bert,
+  .col-locatie,
+  .col-materiaal,
+  .col-jeugd,
+  .col-leiding,
+  .col-divider,
+  .col-kijkers,
+  .col-extra-aantal,
+  .col-extra-namen,
+  .col-aanw-jeugd,
+  .col-aanw-leiding {
+    display: none !important;
+  }
+
+  /* Totals row nooit meeprinten */
+  tr.row-totals { display: none !important; }
+
  }
 

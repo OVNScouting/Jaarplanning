@@ -910,12 +910,14 @@ function addHeaders() {
         return th;
     }
 
-    // Extra kolom voor verwijderen in edit-modus
-    if (isEdit()) {
-        const th = document.createElement("th");
-        if (twoRows) th.rowSpan = 2;
-        trTop.appendChild(th);
-    }
+// Extra kolom voor verwijderen in edit-modus
+if (isEdit()) {
+    const th = document.createElement("th");
+    th.classList.add("col-delete");
+    if (twoRows) th.rowSpan = 2;
+    trTop.appendChild(th);
+}
+
 
     addMainHeader("Datum", "col-datum");
     addMainHeader("Start");
@@ -998,8 +1000,9 @@ function addHeaders() {
         });
     }
 
-    // Kijkers-kolom
-    if (!isOuder()) addMainHeader("Kijkers");
+    
+// Kijkers-kolom
+if (!isOuder()) addMainHeader("Kijkers", "col-kijkers");
 
     // Divider tussen jeugd en leiding
     const vJ = zichtbareJeugd.length;
@@ -1064,8 +1067,9 @@ function addHeaders() {
             addMainHeader("Extra", "col-extra-namen");
         }
 
-        addMainHeader("Aanw. jeugd");
-        addMainHeader("Aanw. leiding");
+addMainHeader("Aanw. jeugd", "col-aanw-jeugd");
+addMainHeader("Aanw. leiding", "col-aanw-leiding");
+
     }
 }
 
@@ -1180,10 +1184,10 @@ if (past) {
 }
 
 
-   if (isEdit()) {
-    const del = document.createElement("td");
-    del.classList.add("editable-cell");
-    del.textContent = "🗑️";
+if (isEdit()) {
+  const del = document.createElement("td");
+  del.classList.add("editable-cell", "col-delete");
+  del.textContent = "🗑️";
 
     del.addEventListener("click", () => {
         if (!isLeiding()) return;
@@ -1286,7 +1290,7 @@ if (config.showBert) {
     });
 
     if (!isOuder()) {
-        tr.appendChild(makeEditableCell(o, "kijkers", "", "number"));
+      tr.appendChild(makeEditableCell(o, "kijkers", "col-kijkers", "number"));
     }
 
     const vJ = jeugd.filter(j => !j.hidden).length;
@@ -1315,13 +1319,16 @@ if (config.showBert) {
 
         const [cntJ, cntL] = countPresence(o);
 
-        const tdJ = document.createElement("td");
-        tdJ.textContent = cntJ;
-        tr.appendChild(tdJ);
+const tdJ = document.createElement("td");
+tdJ.classList.add("col-aanw-jeugd");
+tdJ.textContent = cntJ;
+tr.appendChild(tdJ);
 
-        const tdL = document.createElement("td");
-        tdL.textContent = cntL;
-        tr.appendChild(tdL);
+const tdL = document.createElement("td");
+tdL.classList.add("col-aanw-leiding");
+tdL.textContent = cntL;
+tr.appendChild(tdL);
+
     }
 
     tableBody.appendChild(tr);

@@ -41,39 +41,68 @@ const speltak = window.location.pathname
    ====================================================================== */
 
 function getSession() {
-   // FASE 0:
-    // Sessie komt nu nog uit localStorage.
-    // In FASE 1 wordt deze gevuld vanuit Firebase Auth (zonder dat callers veranderen).
-    try {
-        return JSON.parse(localStorage.getItem("ovn_auth_session"));
-    } catch {
-        return null;
-    }
+  // Gebruik de centrale login.js sessie als die bestaat
+  if (typeof window.getAuthSession === "function") return window.getAuthSession();
+  try {
+    return JSON.parse(localStorage.getItem("ovn_auth_session"));
+  } catch {
+    return null;
+  }
 }
 
 function isLoggedIn() {
-    return !!getSession();
+  if (typeof window.isLoggedIn === "function") return window.isLoggedIn();
+  return !!getSession();
 }
 
 function isAdmin() {
-    return !!getSession()?.roles?.admin;
+  const s = getSession();
+  return !!s?.roles?.admin;
 }
 
 function isBestuur() {
-    return !!getSession()?.roles?.bestuur;
+  const s = getSession();
+  return !!s?.roles?.bestuur;
 }
 
 function hasSpeltakRechten() {
-    const s = getSession();
-    if (!s) return false;
-    if (s.roles?.admin) return true;
-    return s.roles?.speltakken?.includes(speltak);
+  const s = getSession();
+  if (!s) return false;
+  if (s.roles?.admin) return true;
+  if (s.roles?.bestuur) return true;
+
+  const sp = s.roles?.speltakken;
+
+  // Ondersteun BOTH:
+  // - array: ["bevers","welpen",...]
+  // - object: { bevers: true, welpen: false, ... }
+  if (Array.isArray(sp)) return sp.includes(speltak);
+  if (sp && typeof sp === "object") return sp[speltak] === true;
+
+  return false;
 }
+
 
 const config = window.speltakConfig || { showBert: false, showLeiding: true };
 
 const app = getApps().length ? getApp() : initializeApp(window.firebaseConfig);
 const db = getDatabase(app);
+const PUBLIC_ROOT = `${speltak}/public`;
+const PUBLIC_OPK_FIELDS = new Set([
+  "datum",
+  "starttijd",
+  "eindtijd",
+  "thema",
+  "bijzonderheden",
+  "typeOpkomst",
+  "buddy",
+  "bert_met"
+]);
+
+function isPublicOpkomstField(field) {
+  return PUBLIC_OPK_FIELDS.has(field);
+}
+
 
 // Standaard start/eindtijden per speltak
 const defaultTimes = {
@@ -472,56 +501,126 @@ function applyModeVisibility() {
    LOAD EVERYTHING
    ====================================================================== */
 async function loadEverything() {
-    loadingIndicator.classList.remove("hidden");
-    errorIndicator.classList.add("hidden");
+  loadingIndicator?.classList.remove("hidden");
+  errorIndicator?.classList.add("hidden");
 
-    try {
-        const snap = await get(ref(db, speltak));
-        if (!snap.exists()) throw new Error("Geen data gevonden");
+  try {
+    if (isOuder()) {
+      // Ouder: alleen public
+      const pubSnap = await get(ref(db, PUBLIC_ROOT));
+      if (!pubSnap.exists()) throw new Error("Geen publieke data gevonden");
+      data = pubSnap.val() || {};
+    } else {
+      // Leiding: private + public; merge jeugd-aanwezigheid uit public
+      const [privSnap, pubSnap] = await Promise.all([
+        get(ref(db, speltak)),
+        get(ref(db, PUBLIC_ROOT))
+      ]);
 
-        data = snap.val() || {};
-        loadingIndicator.classList.add("hidden");
+      if (!privSnap.exists()) throw new Error("Geen private data gevonden");
 
-         opkomsten = Object.entries(data.opkomsten || {}).map(([id, v]) => ({ id, ...v }));
-         
-         // Canonieke sortering (toekomst incl. vandaag eerst)
-         opkomsten = sortOpkomsten(opkomsten);
-         
-         // Exact één eerstvolgende opkomst (of null)
-         const nextUpcoming = getNextUpcoming(opkomsten);
-         nextUpcomingId = nextUpcoming ? nextUpcoming.id : null;
-         
+      data = privSnap.val() || {};
+      const pub = pubSnap.exists() ? (pubSnap.val() || {}) : {};
+      const pubOpkomsten = pub.opkomsten || {};
 
-jeugd = Object.entries(data.jeugdleden || {}).map(([id, v]) => ({
-    id,
-    naam: v.naam || "",
-    WelpenNaam: v.WelpenNaam || "",
-    Nest: (v.Nest || "").toLowerCase(),
-    NestLeider: !!v.NestLeider,
+      if (data.opkomsten && pubOpkomsten) {
+        Object.keys(data.opkomsten).forEach((opId) => {
+          const pubAanw = pubOpkomsten?.[opId]?.aanwezigheid;
+          if (!pubAanw) return;
 
-    // SCOUTS FIELDS
-    Ploeg: (v.Ploeg || "").toLowerCase(),
-    PL: !!v.PL,
-    APL: !!v.APL,
+          // Alleen jeugd keys mergen (geen leiding-*)
+          const jeugdAanw = {};
+          for (const [k, v] of Object.entries(pubAanw)) {
+            if (!String(k).startsWith("leiding-")) jeugdAanw[k] = v;
+          }
 
-    hidden: !!v.hidden,
-    volgorde: v.volgorde ?? 999
-})).sort((a, b) => a.volgorde - b.volgorde);
+          data.opkomsten[opId].aanwezigheid = {
+            ...(data.opkomsten[opId].aanwezigheid || {}),
+            ...jeugdAanw
+          };
+        });
+      }
+    }
 
-if (speltak === "welpen") {
-    const NestOrder = { zwart: 1, bruin: 2, wit: 3, grijs: 4, "": 5, none: 5 };
+    loadingIndicator?.classList.add("hidden");
 
-    jeugd.sort((a, b) => {
+    // Opkomsten
+    opkomsten = Object.entries(data.opkomsten || {}).map(([id, v]) => ({ id, ...v }));
+    opkomsten = sortOpkomsten(opkomsten);
+
+    const nextUpcoming = getNextUpcoming(opkomsten);
+    nextUpcomingId = nextUpcoming ? nextUpcoming.id : null;
+
+    // Jeugd
+    jeugd = Object.entries(data.jeugdleden || {})
+      .map(([id, v]) => ({
+        id,
+        naam: v.naam || "",
+        WelpenNaam: v.WelpenNaam || "",
+        Nest: (v.Nest || "").toLowerCase(),
+        NestLeider: !!v.NestLeider,
+        Ploeg: (v.Ploeg || "").toLowerCase(),
+        PL: !!v.PL,
+        APL: !!v.APL,
+        hidden: !!v.hidden,
+        volgorde: v.volgorde ?? 999
+      }))
+      .sort((a, b) => a.volgorde - b.volgorde);
+
+    if (speltak === "welpen") {
+      const NestOrder = { zwart: 1, bruin: 2, wit: 3, grijs: 4, "": 5, none: 5 };
+      jeugd.sort((a, b) => {
         const na = NestOrder[a.Nest || "none"];
         const nb = NestOrder[b.Nest || "none"];
         if (na !== nb) return na - nb;
-
-        // binnen een Nest eerst NestLeider
         if (a.NestLeider !== b.NestLeider) return a.NestLeider ? -1 : 1;
-
         return a.naam.localeCompare(b.naam);
-    });
+      });
+    }
+
+    if (speltak === "scouts") {
+      const PLOEG_ORDER = { meeuw: 1, reiger: 2, kievit: 3, sperwer: 4, "": 5 };
+      jeugd.sort((a, b) => {
+        const pa = PLOEG_ORDER[a.Ploeg || ""] || 999;
+        const pb = PLOEG_ORDER[b.Ploeg || ""] || 999;
+        if (pa !== pb) return pa - pb;
+        if (a.PL !== b.PL) return a.PL ? -1 : 1;
+        if (a.APL !== b.APL) return a.APL ? -1 : 1;
+        return a.naam.localeCompare(b.naam);
+      });
+    }
+
+    // Leiding
+    leiding = Object.entries(data.leiding || {})
+      .map(([id, v]) => ({
+        id,
+        naam: v.naam || "",
+        WelpenNaam: v.WelpenNaam || "",
+        hidden: !!v.hidden,
+        volgorde: v.volgorde ?? 999
+      }))
+      .sort((a, b) => a.volgorde - b.volgorde);
+
+    renderEverything();
+  } catch (err) {
+    console.error(err);
+    loadingIndicator?.classList.add("hidden");
+    errorIndicator?.classList.remove("hidden");
+
+    const msg = String(err?.message || err || "");
+    const isPerm =
+      err?.code === "PERMISSION_DENIED" ||
+      msg.toLowerCase().includes("permission denied");
+
+    errorIndicator.textContent = isPerm
+      ? "Geen toegang tot deze data."
+      : "Jaarplanning kon niet geladen worden.";
+
+    opkomsten = [];
+    renderTable();
+  }
 }
+
    
   // ===============================
 // SCOUTS — SORTERING
@@ -604,7 +703,10 @@ function toggleInfoEdit() {
         // Opslaan
         const sanitized = sanitizeText(infoEdit.innerHTML);
 
-        update(ref(db, speltak), { infotekst: sanitized }).then(() => {
+Promise.all([
+  update(ref(db, speltak), { infotekst: sanitized }),
+  update(ref(db, PUBLIC_ROOT), { infotekst: sanitized })
+]).then(() => {
             // Lokale state en weergave direct bijwerken
             data.infotekst = sanitized;
             infoTekst.innerHTML = sanitized;
@@ -753,14 +855,22 @@ function makeMemberRowScouts(obj) {
         );
         if (!ok) return;
 
-        await update(ref(db, `${speltak}/jeugdleden/${dragged.id}`), {
-            Ploeg: newPloeg,
-            PL: false,
-            APL: false,
-            volgorde: 999
-        });
+await update(ref(db, `${speltak}/jeugdleden/${dragged.id}`), {
+  Ploeg: newPloeg,
+  PL: false,
+  APL: false,
+  volgorde: 999
+});
 
-        return loadEverything();
+await update(ref(db, `${PUBLIC_ROOT}/jeugdleden/${dragged.id}`), {
+  Ploeg: newPloeg,
+  PL: false,
+  APL: false,
+  volgorde: 999
+});
+
+return loadEverything();
+
     }
 
     // ===============================
@@ -783,7 +893,8 @@ function makeMemberRowScouts(obj) {
     // Volgorde veilig herschrijven
     const updates = {};
     ledenZelfdePloeg.forEach((j, i) => {
-        updates[`${speltak}/jeugdleden/${j.id}/volgorde`] = i + 1;
+updates[`${speltak}/jeugdleden/${j.id}/volgorde`] = i + 1;
+updates[`${PUBLIC_ROOT}/jeugdleden/${j.id}/volgorde`] = i + 1;
     });
 
     await update(ref(db), updates);
@@ -1142,10 +1253,12 @@ if (past) {
 
         // Undo instellen
         const timeout = setTimeout(async () => {
-            await set(ref(db, `${speltak}/opkomsten/${o.id}`), null);
-            pendingDeleteOpkomst = null;
-            hideUndoBanner();
-            loadEverything();
+await set(ref(db, `${speltak}/opkomsten/${o.id}`), null);
+await set(ref(db, `${PUBLIC_ROOT}/opkomsten/${o.id}`), null);
+pendingDeleteOpkomst = null;
+hideUndoBanner();
+loadEverything();
+
         }, 5000); // 5 seconden undo-tijd
 
         pendingDeleteOpkomst = {
@@ -1411,11 +1524,19 @@ if (inputType === "textarea") {
         input.classList.add("cell-input");
     }
 
-    input.addEventListener("blur", () => {
-        update(ref(db, `${speltak}/opkomsten/${o.id}`), {
-            [field]: input.value
-        });
-    });
+input.addEventListener("blur", async () => {
+  let val = input.value;
+
+  // datum consistent opslaan
+  if (inputType === "date") val = isoFromInput(val);
+
+  await update(ref(db, `${speltak}/opkomsten/${o.id}`), { [field]: val });
+
+  if (isPublicOpkomstField(field)) {
+    await update(ref(db, `${PUBLIC_ROOT}/opkomsten/${o.id}`), { [field]: val });
+  }
+});
+
 
     td.appendChild(input);
     return td;
@@ -1448,32 +1569,39 @@ function makeRestrictedEditable(o, field, opties, extraClass = "") {
         select.appendChild(op);
     });
 
-  select.addEventListener("change", async () => {
+ select.addEventListener("change", async () => {
+  const newType = select.value;
 
-    const newType = select.value;
+  // 1) Private opslaan
+  await update(ref(db, `${speltak}/opkomsten/${o.id}`), { [field]: newType });
 
-    // 1. Eerst het type opslaan
-    await update(ref(db, `${speltak}/opkomsten/${o.id}`), {
-        [field]: newType
+  // 2) Public type ook bijhouden
+  if (field === "typeOpkomst") {
+    await update(ref(db, `${PUBLIC_ROOT}/opkomsten/${o.id}`), { typeOpkomst: newType });
+  }
+
+  // 3) Als type = "geen" → private alles afwezig + public jeugd afwezig
+  if (field === "typeOpkomst" && newType === "geen") {
+    const updates = {};
+
+    // private jeugd + leiding
+    jeugd.forEach(j => {
+      updates[`${speltak}/opkomsten/${o.id}/aanwezigheid/${j.id}`] = "afwezig";
+    });
+    leiding.forEach(l => {
+      updates[`${speltak}/opkomsten/${o.id}/aanwezigheid/leiding-${l.id}`] = "afwezig";
     });
 
-    // 2. Als type = "geen" → alle aanwezigheid op "afwezig"
-    if (field === "typeOpkomst" && newType === "geen") {
-        const updates = {};
+    // public: alleen jeugd
+    jeugd.forEach(j => {
+      updates[`${PUBLIC_ROOT}/opkomsten/${o.id}/aanwezigheid/${j.id}`] = "afwezig";
+    });
 
-        jeugd.forEach(j => {
-            updates[`${speltak}/opkomsten/${o.id}/aanwezigheid/${j.id}`] = "afwezig";
-        });
+    await update(ref(db), updates);
+  }
 
-        leiding.forEach(l => {
-            updates[`${speltak}/opkomsten/${o.id}/aanwezigheid/leiding-${l.id}`] = "afwezig";
-        });
-
-        await update(ref(db), updates);
-    }
-
-    // 3. Herladen voor correcte kleuren + tellingen
-    loadEverything();
+  // 4) Herladen
+  loadEverything();
 });
 
 
@@ -1538,17 +1666,26 @@ if (speltak === "scouts" && !isLeidingCell) {
     return td;
 }
 
-function togglePresence(o, key) {
-    const cur = o.aanwezigheid?.[key] || "onbekend";
-    const next =
-        cur === "aanwezig" ? "afwezig" :
-        cur === "afwezig" ? "onbekend" :
-        "aanwezig";
+async function togglePresence(o, key) {
+  const cur = o.aanwezigheid?.[key] || "onbekend";
+  const next =
+    cur === "aanwezig" ? "afwezig" :
+    cur === "afwezig" ? "onbekend" :
+    "aanwezig";
 
-    update(ref(db, `${speltak}/opkomsten/${o.id}/aanwezigheid`), {
-        [key]: next
-    }).then(loadEverything);
+  // Jeugd (ouders + leiding) → PUBLIC
+  if (!String(key).startsWith("leiding-")) {
+    await set(ref(db, `${PUBLIC_ROOT}/opkomsten/${o.id}/aanwezigheid/${key}`), next);
+    return loadEverything();
+  }
+
+  // Leiding → PRIVATE (alleen als je leiding bent)
+  if (!isLeiding()) return;
+
+  await set(ref(db, `${speltak}/opkomsten/${o.id}/aanwezigheid/${key}`), next);
+  return loadEverything();
 }
+
 
 function countPresence(o) {
     let j = 0, l = 0;
@@ -1747,11 +1884,16 @@ function onDrop(e) {
     // volgorde opslaan
     const updates = {};
     list.forEach((m, i) => {
-        updates[`${speltak}/${type === "jeugd" ? "jeugdleden" : "leiding"}/${m.id}/volgorde`] = i + 1;
+updates[`${speltak}/${type === "jeugd" ? "jeugdleden" : "leiding"}/${m.id}/volgorde`] = i + 1;
 
-        if (type === "jeugd") {
-            updates[`${speltak}/jeugdleden/${m.id}/Nest`] = m.Nest || "";
-        }
+if (type === "jeugd") {
+  updates[`${speltak}/jeugdleden/${m.id}/Nest`] = m.Nest || "";
+
+  // public mirror
+  updates[`${PUBLIC_ROOT}/jeugdleden/${m.id}/volgorde`] = i + 1;
+  updates[`${PUBLIC_ROOT}/jeugdleden/${m.id}/Nest`] = m.Nest || "";
+}
+
     });
 
     update(ref(db), updates).then(loadEverything);
@@ -1787,14 +1929,22 @@ if (act === "edit") {
   // Verwijderen
   if (act === "del") {
     if (confirm(`Verwijder ${obj.naam}?`)) {
-      set(baseRef, null).then(loadEverything);
+Promise.all([
+  set(baseRef, null),
+  type === "jeugd" ? set(ref(db, `${PUBLIC_ROOT}/jeugdleden/${obj.id}`), null) : Promise.resolve()
+]).then(loadEverything);
     }
     return;
   }
 
   // Verborgen / zichtbaar wisselen
   if (act === "toggle") {
-    update(baseRef, { hidden: !obj.hidden }).then(loadEverything);
+Promise.all([
+  update(baseRef, { hidden: !obj.hidden }),
+  type === "jeugd"
+    ? update(ref(db, `${PUBLIC_ROOT}/jeugdleden/${obj.id}`), { hidden: !obj.hidden })
+    : Promise.resolve()
+]).then(loadEverything);
     return;
   }
 
@@ -2079,18 +2229,26 @@ saveMember?.addEventListener("click", async () => {
             }
             
                           
-        if (editingMemberId) {
-            // Bestaand lid bijwerken
-            await update(ref(db, `${speltak}/${path}/${editingMemberId}`), updateObj);
-        } else {
-            // Nieuw lid
-            const newRef = push(ref(db, `${speltak}/${path}`));
-            await set(newRef, {
-                hidden: false,
-                volgorde: 999,
-                ...updateObj
-            });
-        }
+if (editingMemberId) {
+  // Bestaand lid bijwerken (private)
+  await update(ref(db, `${speltak}/${path}/${editingMemberId}`), updateObj);
+
+  // Jeugd ook naar public
+  if (type === "jeugd") {
+    await update(ref(db, `${PUBLIC_ROOT}/jeugdleden/${editingMemberId}`), updateObj);
+  }
+} else {
+  // Nieuw lid (private)
+  const newRef = push(ref(db, `${speltak}/${path}`));
+  const base = { hidden: false, volgorde: 999, ...updateObj };
+  await set(newRef, base);
+
+  // Jeugd ook naar public
+  if (type === "jeugd") {
+    await set(ref(db, `${PUBLIC_ROOT}/jeugdleden/${newRef.key}`), base);
+  }
+}
+
 
         memberModal.classList.add("hidden");
         editingMemberId = null;
@@ -2179,18 +2337,117 @@ saveOpkomst?.addEventListener("click", () => {
         leiding.forEach(l => newObj.aanwezigheid[`leiding-${l.id}`] = "onbekend");
     }
 
-    set(newRef, newObj).then(() => {
-        opModal.classList.add("hidden");
+set(newRef, newObj).then(async () => {
+  // Public mirror maken
+  const publicObj = {
+    datum: newObj.datum,
+    starttijd: newObj.starttijd,
+    eindtijd: newObj.eindtijd,
+    thema: newObj.thema,
+    bijzonderheden: newObj.bijzonderheden,
+    typeOpkomst: newObj.typeOpkomst || "normaal",
+    buddy: newObj.buddy || "",
+    bert_met: newObj.bert_met || "",
+    aanwezigheid: {}
+  };
 
-        loadEverything().then(() => {
-            const row = document.querySelector(`tr[data-id="${newRef.key}"]`);
-            if (row) {
-                row.scrollIntoView({ behavior: "smooth", block: "center" });
-                row.classList.add("row-highlight");
-                setTimeout(() => row.classList.remove("row-highlight"), 2000);
-            }
-        });
-    });
+  // Alleen jeugd-aanwezigheid (geen leiding-*)
+  jeugd.forEach(j => {
+    publicObj.aanwezigheid[j.id] = newObj.aanwezigheid?.[j.id] || "onbekend";
+  });
+
+  await set(ref(db, `${PUBLIC_ROOT}/opkomsten/${newRef.key}`), publicObj);
+
+  opModal.classList.add("hidden");
+
+  await loadEverything();
+
+set(newRef, newObj).then(async () => {
+  // Public mirror maken
+  const publicObj = {
+    datum: newObj.datum,
+    starttijd: newObj.starttijd,
+    eindtijd: newObj.eindtijd,
+    thema: newObj.thema,
+    bijzonderheden: newObj.bijzonderheden,
+    typeOpkomst: newObj.typeOpkomst || "normaal",
+    buddy: newObj.buddy || "",
+    bert_met: newObj.bert_met || "",
+    aanwezigheid: {}
+  };
+
+  // Alleen jeugd-aanwezigheid (geen leiding-*)
+  jeugd.forEach(j => {
+    publicObj.aanwezigheid[j.id] = newObj.aanwezigheid?.[j.id] || "onbekend";
+  });
+
+  await set(ref(db, `${PUBLIC_ROOT}/opkomsten/${newRef.key}`), publicObj);
+
+  opModal.classList.add("hidden");
+
+  await loadEverything();
+
+set(newRef, newObj).then(async () => {
+  // Public mirror maken
+  const publicObj = {
+    datum: newObj.datum,
+    starttijd: newObj.starttijd,
+    eindtijd: newObj.eindtijd,
+    thema: newObj.thema,
+    bijzonderheden: newObj.bijzonderheden,
+    typeOpkomst: newObj.typeOpkomst || "normaal",
+    buddy: newObj.buddy || "",
+    bert_met: newObj.bert_met || "",
+    aanwezigheid: {}
+  };
+
+  // Alleen jeugd-aanwezigheid (geen leiding-*)
+  jeugd.forEach(j => {
+    publicObj.aanwezigheid[j.id] = newObj.aanwezigheid?.[j.id] || "onbekend";
+  });
+
+  await set(ref(db, `${PUBLIC_ROOT}/opkomsten/${newRef.key}`), publicObj);
+
+  opModal.classList.add("hidden");
+
+  await loadEverything();
+
+set(newRef, newObj).then(async () => {
+  // Public mirror maken
+  const publicObj = {
+    datum: newObj.datum,
+    starttijd: newObj.starttijd,
+    eindtijd: newObj.eindtijd,
+    thema: newObj.thema,
+    bijzonderheden: newObj.bijzonderheden,
+    typeOpkomst: newObj.typeOpkomst || "normaal",
+    buddy: newObj.buddy || "",
+    bert_met: newObj.bert_met || "",
+    aanwezigheid: {}
+  };
+
+  // Alleen jeugd-aanwezigheid (geen leiding-*)
+  jeugd.forEach(j => {
+    publicObj.aanwezigheid[j.id] = newObj.aanwezigheid?.[j.id] || "onbekend";
+  });
+
+  await set(ref(db, `${PUBLIC_ROOT}/opkomsten/${newRef.key}`), publicObj);
+
+  opModal.classList.add("hidden");
+
+  await loadEverything();
+
+  const row = document.querySelector(`tr[data-id="${newRef.key}"]`);
+  if (row) {
+    row.scrollIntoView({ behavior: "smooth", block: "center" });
+    row.classList.add("row-highlight");
+    setTimeout(() => row.classList.remove("row-highlight"), 2000);
+  }
+}).catch((err) => {
+  console.error(err);
+  alert("Opslaan mislukt, probeer het opnieuw.");
+});
+
 });
 
 /* ======================================================================

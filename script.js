@@ -764,7 +764,7 @@ function makeMemberRowScouts(obj) {
     li.querySelectorAll("button").forEach(b =>
         b.addEventListener("click", (e) => {
             e.stopPropagation();
-            handleMemberAction(obj, "jeugd", b.dataset.act);
+            handleMemberAction(obj, type, b.dataset.act);
         })
     );
 
@@ -1067,8 +1067,9 @@ if (!isOuder()) addMainHeader("Kijkers", "col-kijkers");
             addMainHeader("Extra", "col-extra-namen");
         }
 
-addMainHeader("Aanw. jeugd", "col-aanw-jeugd");
-addMainHeader("Aanw. leiding", "col-aanw-leiding");
+addMainHeader(config.showLeiding ? "Aanw. jeugd" : "Aanw. leden", "col-aanw-jeugd");
+if (config.showLeiding) addMainHeader("Aanw. leiding", "col-aanw-leiding");
+
 
     }
 }
@@ -1324,10 +1325,13 @@ tdJ.classList.add("col-aanw-jeugd");
 tdJ.textContent = cntJ;
 tr.appendChild(tdJ);
 
-const tdL = document.createElement("td");
-tdL.classList.add("col-aanw-leiding");
-tdL.textContent = cntL;
-tr.appendChild(tdL);
+if (config.showLeiding) {
+  const tdL = document.createElement("td");
+  tdL.classList.add("col-aanw-leiding");
+  tdL.textContent = cntL;
+  tr.appendChild(tdL);
+}
+
 
     }
 
@@ -1670,78 +1674,88 @@ function countPresence(o) {
    LEDENBEHEER
    ====================================================================== */
 function renderLedenbeheer() {
-    const jeugdContainer = document.getElementById("jeugdLeden");
-    const leidingContainer = ledenbeheerLeiding;
+  const jeugdContainer = document.getElementById("jeugdLeden");
+  const leidingContainer = ledenbeheerLeiding;
 
-    if (!jeugdContainer || !leidingContainer) return;
+  // Als je later bij leden-only speltakken #leidingLeden uit HTML haalt: niet stuk laten gaan
+  if (!jeugdContainer) return;
+  if (config.showLeiding && !leidingContainer) return;
 
-    // ============================
-    // SCOUTS → volledig eigen systeem
-    // ============================
-    if (speltak === "scouts") {
-        return renderLedenbeheerScouts();
-    }
+  const ledenOnly = !config.showLeiding;
 
-    // ============================
-    // WELPEN → bestaande nestlogica
-    // ============================
-    if (speltak === "welpen") {
-        jeugdContainer.innerHTML = "";
-        leidingContainer.innerHTML = "";
+  // UI-tweaks: kopjes + leidingkolom
+  const jeugdCol = jeugdContainer.closest(".ledenbeheer-col");
+  const jeugdH3 = jeugdCol?.querySelector("h3");
+  if (jeugdH3) jeugdH3.textContent = ledenOnly ? "Leden" : "Jeugdleden";
 
-        // Groeperen per nest
-        const byNest = {};
-        jeugd.forEach(j => {
-            const key = j.Nest || "";
-            if (!byNest[key]) byNest[key] = [];
-            byNest[key].push(j);
-        });
+  const leidingCol = leidingContainer?.closest(".ledenbeheer-col");
+  if (leidingCol) leidingCol.style.display = ledenOnly ? "none" : "";
 
-        // Sorteren + renderen
-        Object.keys(byNest)
-            .sort((a, b) => getNestIndex(a) - getNestIndex(b))
-            .forEach(nest => {
-                const niceName =
-                    nest === "zwart" ? "Zwart" :
-                    nest === "bruin" ? "Bruin" :
-                    nest === "wit"   ? "Wit" :
-                    nest === "grijs" ? "Grijs" :
-                    "Nestloos";
+  // Meldingen: "te weinig leiding" is irrelevant bij leden-only
+  const leidingMeldingRow =
+    document.getElementById("meldingLeidingAan")?.closest(".meldingen-row");
+  if (leidingMeldingRow) leidingMeldingRow.style.display = ledenOnly ? "none" : "";
 
-                const header = document.createElement("div");
-                header.className = "nest-header";
-                header.textContent = niceName;
-                jeugdContainer.appendChild(header);
+  // ============================
+  // SCOUTS → volledig eigen systeem
+  // ============================
+  if (speltak === "scouts") {
+    return renderLedenbeheerScouts();
+  }
 
-                byNest[nest]
-                    .sort((a, b) => a.volgorde - b.volgorde)
-                    .forEach(j =>
-                        jeugdContainer.appendChild(makeMemberRow(j, "jeugd"))
-                    );
-            });
-
-        // Leiding tonen
-        leiding.forEach(l =>
-            leidingContainer.appendChild(makeMemberRow(l, "leiding"))
-        );
-
-        return;
-    }
-
-    // ============================
-    // ANDERE SPELTAKKEN → simpele lijst
-    // ============================
+  // ============================
+  // WELPEN → bestaande nestlogica
+  // ============================
+  if (speltak === "welpen") {
     jeugdContainer.innerHTML = "";
-    leidingContainer.innerHTML = "";
+    if (leidingContainer) leidingContainer.innerHTML = "";
 
-    jeugd.forEach(j =>
-        jeugdContainer.appendChild(makeMemberRow(j, "jeugd"))
-    );
+    const byNest = {};
+    jeugd.forEach(j => {
+      const key = j.Nest || "";
+      if (!byNest[key]) byNest[key] = [];
+      byNest[key].push(j);
+    });
 
-    leiding.forEach(l =>
-        leidingContainer.appendChild(makeMemberRow(l, "leiding"))
-    );
+    Object.keys(byNest)
+      .sort((a, b) => getNestIndex(a) - getNestIndex(b))
+      .forEach(nest => {
+        const niceName =
+          nest === "zwart" ? "Zwart" :
+          nest === "bruin" ? "Bruin" :
+          nest === "wit"   ? "Wit" :
+          nest === "grijs" ? "Grijs" :
+          "Nestloos";
+
+        const header = document.createElement("div");
+        header.className = "nest-header";
+        header.textContent = niceName;
+        jeugdContainer.appendChild(header);
+
+        byNest[nest]
+          .sort((a, b) => a.volgorde - b.volgorde)
+          .forEach(j => jeugdContainer.appendChild(makeMemberRow(j, "jeugd")));
+      });
+
+    if (!ledenOnly && leidingContainer) {
+      leiding.forEach(l => leidingContainer.appendChild(makeMemberRow(l, "leiding")));
+    }
+    return;
+  }
+
+  // ============================
+  // ANDERE SPELTAKKEN → simpele lijst
+  // ============================
+  jeugdContainer.innerHTML = "";
+  if (leidingContainer) leidingContainer.innerHTML = "";
+
+  jeugd.forEach(j => jeugdContainer.appendChild(makeMemberRow(j, "jeugd")));
+
+  if (!ledenOnly && leidingContainer) {
+    leiding.forEach(l => leidingContainer.appendChild(makeMemberRow(l, "leiding")));
+  }
 }
+
 
 function makeMemberRow(obj, type) {
     const li = document.createElement("li");

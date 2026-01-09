@@ -50,14 +50,17 @@ function getAuthState() {
   }
 
   const roles = session.roles || {};
-
   const isBestuur = !!roles.admin || !!roles.bestuur;
 
-  // Leiding = bestuur/admin OF iemand met minstens één speltak
-  const isLeiding =
-    isBestuur ||
-    (roles.speltakken &&
-      Object.values(roles.speltakken).some(Boolean));
+  const sp = roles.speltakken;
+  const heeftSpeltak =
+    Array.isArray(sp)
+      ? sp.length > 0
+      : sp && typeof sp === "object"
+        ? Object.values(sp).some(Boolean)
+        : false;
+
+  const isLeiding = isBestuur || heeftSpeltak;
 
   return { isBestuur, isLeiding };
 }
@@ -80,7 +83,9 @@ function handleAuth() {
 }
 
 // Wacht op auth (login.js is leidend)
+
 document.addEventListener("auth-changed", handleAuth);
+handleAuth();
 
 
 // ======================================================================
@@ -160,15 +165,14 @@ function init(isBestuur) {
   }
 
   // ================= RENDER =================
-  function getVisibleItems() {
-    return allItems
-      .filter(i => isBestuur || i.toonOpDashboard)
-      .filter(i => {
-        if (currentFilter === "future") return isFutureOrToday(i.datum);
-        if (currentFilter === "past") return isPast(i.datum);
-        return true;
-      });
-  }
+function getVisibleItems() {
+  return allItems.filter(i => {
+    if (currentFilter === "future") return isFutureOrToday(i.datum);
+    if (currentFilter === "past") return isPast(i.datum);
+    return true;
+  });
+}
+
 
   function render() {
     renderHeader();

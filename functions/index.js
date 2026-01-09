@@ -657,9 +657,9 @@ exports.rejectAccountRequest = onCall(
     from: `"OVN Scouting" <${process.env.GMAIL_EMAIL}>`,
     to: data.email,
     subject: "Je aanvraag is afgewezen",
-    text: mailText,
-    
+    text: mailText
   });
+
 
   // Pas verwijderen als mail is gelukt (anders kan admin opnieuw proberen)
   await ref.remove();
@@ -667,8 +667,7 @@ exports.rejectAccountRequest = onCall(
 
   logger.info("Account request rejected", { requestId });
   return { ok: true };
-}
-);
+});
 
 
 /* ============================================================

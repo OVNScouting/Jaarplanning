@@ -77,7 +77,7 @@ let USERS_CACHE = {};
 let selectedUserId = null;
 
 function getFunctions() {
-const app = getFirebaseApp();
+  const app = getFirebaseApp();
   return window._firebase.getFunctions(app);
 }
 
@@ -85,21 +85,21 @@ function callFunction(name, data) {
   const fn = window._firebase.httpsCallable(getFunctions(), name);
   return fn(data)
     .then(r => r.data)
-.catch(err => {
-  const details =
-    typeof err?.details === "string"
-      ? err.details
-      : err?.details
-      ? JSON.stringify(err.details)
-      : "";
+    .catch(err => {
+      const details =
+        typeof err?.details === "string"
+          ? err.details
+          : err?.details
+            ? JSON.stringify(err.details)
+            : "";
 
-  throw new Error(
-    err?.message ||
-    details ||
-    err?.code ||
-    "Onbekende fout"
-  );
-});
+      throw new Error(
+        err?.message ||
+        details ||
+        err?.code ||
+        "Onbekende fout"
+      );
+    });
 
 }
 window.callFunction = callFunction;
@@ -144,7 +144,7 @@ function setButtonLoading(btn, loading, label) {
 
 
 
-async function updateAccountRequestStatus(requestId, newStatus, rowEl) {
+async function updateAccountRequestStatus(requestId, newStatus, rowEl, reason = "") {
   if (newStatus !== "rejected") return;
 
   rowEl.classList.add("loading");
@@ -162,35 +162,12 @@ async function updateAccountRequestStatus(requestId, newStatus, rowEl) {
   }
 
   try {
-    await callFunction("rejectAccountRequest", { requestId });
+    await callFunction("rejectAccountRequest", { requestId, reason });
 
-    const statusCell = rowEl.querySelector("[data-status]");
-    if (statusCell) {
-      statusCell.innerHTML = `<span class="status-badge status-rejected">Afgewezen</span>`;
-    }
+        // Reject verwijdert aanvraag direct (server-side) → lijst opnieuw ophalen
+    renderAccountRequests();
+    showToast("Aanvraag afgewezen (mail verstuurd)", "success");
 
-    if (actionsCell) {
-      actionsCell.innerHTML = `
-        <button class="pill-btn outline" data-undo>Undo</button>
-        <span style="margin-left:.5rem;font-size:.85rem;color:var(--text-muted);">
-          (auto-wissen na 5 min)
-        </span>
-      `;
-
-      actionsCell.querySelector("[data-undo]")?.addEventListener("click", async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        try {
-          await callFunction("undoRejectAccountRequest", { requestId });
-          renderAccountRequests();
-          showToast("Undo uitgevoerd", "success");
-        } catch (err) {
-          showToast(err?.message || "Undo mislukt", "error", 4200);
-        }
-      });
-    }
-
-    showToast("Aanvraag afgewezen", "success");
   } catch (e) {
     if (actionsCell) actionsCell.innerHTML = originalActions;
     showToast(e?.message || "Afwijzen mislukt", "error", 4200);
@@ -221,8 +198,8 @@ function waitForFirebase(callback, retries = 100) {
 waitForFirebase(() => {
 
   (async function guardAdmin() {
-const app = getFirebaseApp();
-const auth = window._firebase.getAuth(app);
+    const app = getFirebaseApp();
+    const auth = window._firebase.getAuth(app);
 
     const unsubscribe = window._firebase.onAuthStateChanged(auth, async (user) => {
       unsubscribe();
@@ -254,7 +231,7 @@ const auth = window._firebase.getAuth(app);
 
         document.body.classList.remove("hidden");
 
-        
+
       } catch (e) {
         console.error("Kon admin-claim niet lezen:", e);
         deny();
@@ -305,17 +282,17 @@ function renderUsers(users) {
       );
 
       if (speltakFilters.length > 0) {
-const userSpeltakken = speltakkenToArray(u.roles?.speltakken);
-const heeftMatch = speltakFilters.some(s => userSpeltakken.includes(s));
+        const userSpeltakken = speltakkenToArray(u.roles?.speltakken);
+        const heeftMatch = speltakFilters.some(s => userSpeltakken.includes(s));
 
         if (!heeftMatch) return false;
       }
 
       return true;
     })
-.sort((a, b) =>
-  (a[1].fullName || "").localeCompare(
-    b[1].fullName || "",
+    .sort((a, b) =>
+      (a[1].fullName || "").localeCompare(
+        b[1].fullName || "",
         "nl",
         { sensitivity: "base" }
       )
@@ -338,8 +315,8 @@ const heeftMatch = speltakFilters.some(s => userSpeltakken.includes(s));
     tr.innerHTML = `
 <td>
   ${user.fullName ||
-    `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
-    user.email}
+      `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+      user.email}
 </td>
       <td>
         <span class="status-badge ${isInactive ? "status-inactive" : "status-active"}">
@@ -348,18 +325,18 @@ const heeftMatch = speltakFilters.some(s => userSpeltakken.includes(s));
       </td>
     `;
 
-tr.classList.add("user-row");
-tr.tabIndex = 0; // keyboard focus
+    tr.classList.add("user-row");
+    tr.tabIndex = 0; // keyboard focus
 
-tr.addEventListener("click", () => openUserPanel(uid));
-tr.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" || e.key === " ") {
-    e.preventDefault();
-    openUserPanel(uid);
-  }
-});
+    tr.addEventListener("click", () => openUserPanel(uid));
+    tr.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openUserPanel(uid);
+      }
+    });
 
-tbody.appendChild(tr);
+    tbody.appendChild(tr);
 
   });
 }
@@ -371,7 +348,7 @@ tbody.appendChild(tr);
 ============================================================ */
 
 function renderAccountRequests() {
- const app = getFirebaseApp();
+  const app = getFirebaseApp();
 
 
   const db = window._firebase.getDatabase(app);
@@ -411,52 +388,45 @@ function renderAccountRequests() {
           <td>${rollen}</td>
           <td>${speltakken}</td>
          <td data-status>
-<span class="status-badge status-${["approved","rejected","pending"].includes(r.status) ? r.status : "pending"}">
-              ${
-                r.status === "approved"
-                  ? "Goedgekeurd"
-                  : r.status === "rejected"
-                  ? "Afgewezen"
-                  : "In behandeling"
-              }
+<span class="status-badge status-${["approved", "rejected", "pending"].includes(r.status) ? r.status : "pending"}">
+              ${r.status === "approved"
+            ? "Goedgekeurd"
+            : r.status === "rejected"
+              ? "Afgewezen"
+              : "In behandeling"
+          }
             </span>
           </td>
           <td style="font-size:0.85rem">${created}</td>
-          <td data-actions>
-            ${r.status === "pending" ? `
-              <button class="pill-btn success" data-approve>Goedkeuren</button>
-              <button class="pill-btn danger" data-reject>Afwijzen</button>
-            ` : r.status === "rejected" ? `
-              <button class="pill-btn outline" data-undo>Undo</button>
-              <span style="margin-left:.5rem;font-size:.85rem;color:var(--text-muted);">
-                (auto-wissen na 5 min)
-              </span>
-            ` : "—"}
-          </td>
+        <td data-actions>
+  ${r.status === "pending" ? `
+    <button class="pill-btn success" data-approve>Goedkeuren</button>
+    <button class="pill-btn danger" data-reject>Afwijzen</button>
+  ` : "—"}
+</td>
+
 
         `;
         if (r.status === "pending") {
           tr.querySelector("[data-approve]")?.addEventListener("click", () => {
-          approveRequestViaFunction(id, tr);
+            approveRequestViaFunction(id, tr);
           });
-        
-        tr.querySelector("[data-reject]")?.addEventListener("click", () => {
-          updateAccountRequestStatus(id, "rejected", tr);
-        });
-        }
-        
-        if (r.status === "rejected") {
-          tr.querySelector("[data-undo]")?.addEventListener("click", async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            try {
-              await callFunction("undoRejectAccountRequest", { requestId: id });
-              renderAccountRequests(); // simpel: volledig refreshen
-            } catch (err) {
-              alert(err?.message || "Undo mislukt");
-            }
+
+          tr.querySelector("[data-reject]")?.addEventListener("click", () => {
+            const ok = confirm(
+              "Weet je zeker dat je deze aanvraag wilt afwijzen?\n\nDe aanvraag wordt direct verwijderd en er wordt direct een afwijsmail gestuurd."
+            );
+            if (!ok) return;
+
+            const reason = prompt(
+              "Optioneel: reden van afwijzing (komt in de mail). Laat leeg voor geen reden.",
+              ""
+            );
+
+            updateAccountRequestStatus(id, "rejected", tr, reason ?? "");
           });
         }
+
 
 
 
@@ -467,7 +437,7 @@ function renderAccountRequests() {
 waitForFirebase(renderAccountRequests);
 
 function loadUsers() {
- const app = getFirebaseApp();
+  const app = getFirebaseApp();
 
   const db = window._firebase.getDatabase(app);
   const ref = window._firebase.ref(db, "users");
@@ -517,8 +487,8 @@ function openUserPanel(uid) {
   document.getElementById("panelEdit").classList.add("hidden");
 
   // Data vullen
-document.getElementById("panelName").textContent =
-  u.fullName || "—";
+  document.getElementById("panelName").textContent =
+    u.fullName || "—";
   document.getElementById("panelEmail").textContent = u.email || "—";
   document.getElementById("panelStatus").textContent = u.status || "active";
   document.getElementById("panelCreated").textContent =
@@ -570,13 +540,13 @@ document.getElementById("editUserBtn").onclick = () => {
   editBestuur.checked = !!u.roles?.bestuur;
   editInactive.checked = u.status === "inactive";
 
-const spArr = speltakkenToArray(u.roles?.speltakken);
+  const spArr = speltakkenToArray(u.roles?.speltakken);
 
-document
-  .querySelectorAll(".edit-speltak")
-  .forEach(cb => {
-    cb.checked = spArr.includes(cb.value);
-  });
+  document
+    .querySelectorAll(".edit-speltak")
+    .forEach(cb => {
+      cb.checked = spArr.includes(cb.value);
+    });
 
 
   panelView.classList.add("hidden");

@@ -12,14 +12,18 @@ import {
 
 import {
   initializeApp,
+  getApps,
+  getApp,
   getDatabase,
   ref,
   get
 } from "./firebase-imports.js";
 
+
 function getFirebaseApp() {
-  return initializeApp(window.firebaseConfig);
+  return getApps().length ? getApp() : initializeApp(window.firebaseConfig);
 }
+
 
 
 // ======================================================================

@@ -102,6 +102,20 @@ function applyAuthVisibility() {
   document.querySelectorAll(".only-auth").forEach((el) =>
     el.classList.toggle("hidden", !loggedIn)
   );
+  // Leiding = admin/bestuur OF iemand met minimaal één speltak-rol
+  const sp = session?.roles?.speltakken;
+  const isLeiding =
+    !!session?.roles?.admin ||
+    !!session?.roles?.bestuur ||
+    (Array.isArray(sp)
+      ? sp.length > 0
+      : sp && typeof sp === "object"
+        ? Object.values(sp).some(Boolean)
+        : false);
+
+  document.querySelectorAll(".only-leiding").forEach((el) =>
+    el.classList.toggle("hidden", !loggedIn || !isLeiding)
+  );
 
   document.querySelectorAll(".only-bestuur").forEach((el) =>
     el.classList.toggle("hidden", !loggedIn || !hasRole("bestuur"))

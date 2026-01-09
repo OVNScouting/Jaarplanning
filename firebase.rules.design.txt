@@ -1,20 +1,176 @@
-FASE 0 — Firebase Rules Ontwerp (nog niet actief)
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
 
-- auth == null
-  - read: publieke data (index)
-  - write: nooit
+    "users": {
+      ".read": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true)",
+      ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true)",
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true)",
+        ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true)"
+      },
+      ".indexOn": ["email"]
+    },
 
-- role: ouder
-  - read: speltak planning (beperkt)
-  - write: nooit
+    "accountRequests": {
+      ".read": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true)",
+      ".write": false,
+      ".indexOn": ["email"]
+    },
 
-- role: leiding
-  - read: alle speltakken + dashboard
-  - write: eigen speltak
+    "bestuursItems": {
+      ".read": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true)",
+      ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true)"
+    },
 
-- role: bestuur
-  - read: alles
-  - write: bestuursItems
+    "bevers": {
+      ".read": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/bevers').val() === true)",
+      ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/bevers').val() === true)",
 
-- role: admin
-  - full access
+      "public": {
+        ".read": true,
+
+        "infotekst": {
+          ".read": true,
+          ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/bevers').val() === true)"
+        },
+
+        "jeugdleden": {
+          ".read": true,
+          ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/bevers').val() === true)"
+        },
+
+        "opkomsten": {
+          ".read": true,
+          "$opId": {
+            ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/bevers').val() === true)",
+
+            "aanwezigheid": {
+              "$lidId": {
+                ".read": true,
+                ".write": "(!$lidId.matches(/^leiding-/) && newData.isString() && (newData.val() === 'aanwezig' || newData.val() === 'afwezig' || newData.val() === 'onbekend'))",
+                ".validate": "newData.isString() && (newData.val() === 'aanwezig' || newData.val() === 'afwezig' || newData.val() === 'onbekend')"
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "welpen": {
+      ".read": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/welpen').val() === true)",
+      ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/welpen').val() === true)",
+      "public": {
+        ".read": true,
+        "infotekst": { ".read": true, ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/welpen').val() === true)" },
+        "jeugdleden": { ".read": true, ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/welpen').val() === true)" },
+        "opkomsten": {
+          ".read": true,
+          "$opId": {
+            ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/welpen').val() === true)",
+            "aanwezigheid": {
+              "$lidId": {
+                ".read": true,
+                ".write": "(!$lidId.matches(/^leiding-/) && newData.isString() && (newData.val() === 'aanwezig' || newData.val() === 'afwezig' || newData.val() === 'onbekend'))",
+                ".validate": "newData.isString() && (newData.val() === 'aanwezig' || newData.val() === 'afwezig' || newData.val() === 'onbekend')"
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "scouts": {
+      ".read": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/scouts').val() === true)",
+      ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/scouts').val() === true)",
+      "public": {
+        ".read": true,
+        "infotekst": { ".read": true, ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/scouts').val() === true)" },
+        "jeugdleden": { ".read": true, ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/scouts').val() === true)" },
+        "opkomsten": {
+          ".read": true,
+          "$opId": {
+            ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/scouts').val() === true)",
+            "aanwezigheid": {
+              "$lidId": {
+                ".read": true,
+                ".write": "(!$lidId.matches(/^leiding-/) && newData.isString() && (newData.val() === 'aanwezig' || newData.val() === 'afwezig' || newData.val() === 'onbekend'))",
+                ".validate": "newData.isString() && (newData.val() === 'aanwezig' || newData.val() === 'afwezig' || newData.val() === 'onbekend')"
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "explorers": {
+      ".read": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/explorers').val() === true)",
+      ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/explorers').val() === true)",
+      "public": {
+        ".read": true,
+        "infotekst": { ".read": true, ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/explorers').val() === true)" },
+        "jeugdleden": { ".read": true, ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/explorers').val() === true)" },
+        "opkomsten": {
+          ".read": true,
+          "$opId": {
+            ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/explorers').val() === true)",
+            "aanwezigheid": {
+              "$lidId": {
+                ".read": true,
+                ".write": "(!$lidId.matches(/^leiding-/) && newData.isString() && (newData.val() === 'aanwezig' || newData.val() === 'afwezig' || newData.val() === 'onbekend'))",
+                ".validate": "newData.isString() && (newData.val() === 'aanwezig' || newData.val() === 'afwezig' || newData.val() === 'onbekend')"
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "rovers": {
+      ".read": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/rovers').val() === true)",
+      ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/rovers').val() === true)",
+      "public": {
+        ".read": true,
+        "infotekst": { ".read": true, ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/rovers').val() === true)" },
+        "jeugdleden": { ".read": true, ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/rovers').val() === true)" },
+        "opkomsten": {
+          ".read": true,
+          "$opId": {
+            ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/rovers').val() === true)",
+            "aanwezigheid": {
+              "$lidId": {
+                ".read": true,
+                ".write": "(!$lidId.matches(/^leiding-/) && newData.isString() && (newData.val() === 'aanwezig' || newData.val() === 'afwezig' || newData.val() === 'onbekend'))",
+                ".validate": "newData.isString() && (newData.val() === 'aanwezig' || newData.val() === 'afwezig' || newData.val() === 'onbekend')"
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "stam": {
+      ".read": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/stam').val() === true)",
+      ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/stam').val() === true)",
+      "public": {
+        ".read": true,
+        "infotekst": { ".read": true, ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/stam').val() === true)" },
+        "jeugdleden": { ".read": true, ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/stam').val() === true)" },
+        "opkomsten": {
+          ".read": true,
+          "$opId": {
+            ".write": "auth != null && (root.child('users/' + auth.uid + '/roles/admin').val() === true || root.child('users/' + auth.uid + '/roles/bestuur').val() === true || root.child('users/' + auth.uid + '/roles/speltakken/stam').val() === true)",
+            "aanwezigheid": {
+              "$lidId": {
+                ".read": true,
+                ".write": "(!$lidId.matches(/^leiding-/) && newData.isString() && (newData.val() === 'aanwezig' || newData.val() === 'afwezig' || newData.val() === 'onbekend'))",
+                ".validate": "newData.isString() && (newData.val() === 'aanwezig' || newData.val() === 'afwezig' || newData.val() === 'onbekend')"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

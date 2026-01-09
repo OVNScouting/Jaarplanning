@@ -233,13 +233,28 @@ const auth = window._firebase.getAuth(app);
       }
 
       try {
-const token = await user.getIdTokenResult(true);
-        if (!token.claims?.admin) {
+        const token = await user.getIdTokenResult(true);
+        const claimAdmin = !!token.claims?.admin;
+
+        let dbAdmin = false;
+        try {
+          const db = window._firebase.getDatabase(app);
+          const snap = await window._firebase.get(
+            window._firebase.ref(db, `users/${user.uid}/roles/admin`)
+          );
+          dbAdmin = snap.exists() && snap.val() === true;
+        } catch (e) {
+          console.warn("Kon admin-rol niet lezen uit RTDB:", e);
+        }
+
+        if (!claimAdmin && !dbAdmin) {
           deny();
           return;
         }
 
         document.body.classList.remove("hidden");
+
+        
       } catch (e) {
         console.error("Kon admin-claim niet lezen:", e);
         deny();

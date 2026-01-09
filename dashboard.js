@@ -106,12 +106,10 @@ async function loadAllOpkomsten() {
   const results = [];
 
   for (const sp of SPELTAKKEN) {
-    const snap = await get(ref(db, sp));
+    const snap = await get(ref(db, `${sp}/opkomsten`));
     if (!snap.exists()) continue;
 
-    const data = snap.val();
-    const opkomstenObj = data.opkomsten ?? data;
-    if (!opkomstenObj) continue;
+    const opkomstenObj = snap.val() || {};
 
     for (const [id, o] of Object.entries(opkomstenObj)) {
       if (!o?.datum) continue;

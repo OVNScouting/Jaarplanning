@@ -1607,12 +1607,22 @@ function makePresenceCell(o, key, hidden, isLeidingCell) {
         else if (ploeg === "meeuw") td.classList.add("presence-scout-meeuw");
     }
 
-    // huidige status + icoontje
     const cur = o.aanwezigheid?.[key] || "onbekend";
-    const symbols = { aanwezig: "✔", afwezig: "✖", onbekend: "?" };
 
-    td.textContent = symbols[cur];
+    const symbols = {
+        aanwezig: "✅",
+        afwezig: "✖️",
+        onbekend: "❓",
+        urgent: "⚠️" // voor: 5 dagen voor opkomst nog onbekend
+    };
+
+    // Fallback: als er ooit een onbekende status in de DB staat
+    const icon = symbols[cur] || "❔";
+    td.textContent = icon;
+
+    // Class blijft handig (hover/filters) — en kan later voor urgent styling gebruikt worden
     td.classList.add("presence-cell", `presence-${cur}`);
+
 
     // JEUGD: altijd klikbaar (ook voor ouders)
     if (!isLeidingCell) {

@@ -243,6 +243,8 @@
     <label for="opBijzonderheden">Bijzonderheden:</label>
     <input type="text" id="opBijzonderheden" />
 
+    <div class="extra-kijkers-blok">
+
     <!-- Kijkers -->
     <label for="opKijkers">Kijkers (aantal):</label>
     <input type="number" id="opKijkers" class="input" min="0" value="0" />
@@ -253,6 +255,7 @@
 
     <label for="opExtraNamen">Extra leiding (namen):</label>
     <input type="text" id="opExtraNamen" class="input" placeholder="bijv. Sacha, Jan" />
+</div>
 
     <!-- Locatie reserveren -->
     <label>Locatie reserveren:</label>
@@ -285,13 +288,17 @@
   <!-- ============================================================
        SCRIPTS
   ============================================================ -->
-  <script>
-    // Configuratie specifiek voor BEVERS
-    window.speltakConfig = {
-      showBert: false,
-      showLeiding: false
-    };
-  </script>
+<script>
+  window.speltakConfig = {
+    showBert: false,
+    showLeiding: false,
+
+    // ❌ Niet van toepassing voor Rovers & Stam
+    showKijkers: false,
+    showExtraLeiding: false
+  };
+</script>
+
 
 <button id="fabAddOpkomst" class="pill-btn primary fab-add-opkomst hidden only-leiding">
   Nieuwe opkomst +
@@ -318,6 +325,11 @@
   });
 </script>
 
+<script>
+  if (window.speltakConfig?.showKijkers === false || window.speltakConfig?.showExtraLeiding === false) {
+    document.querySelectorAll(".extra-kijkers-blok").forEach(el => el.style.display = "none");
+  }
+</script>
 
 
 </body>

@@ -169,3 +169,18 @@ export function filterOpkomsten(opkomsten = [], filter = "all") {
   }
   return opkomsten;
 }
+
+/**
+ * Checkt of een datum binnen de komende 3 dagen valt (vanaf nu)
+ * @param {string} dateStr - YYYY-MM-DD
+ */
+export function isBinnen3Dagen(dateStr) {
+  if (!dateStr) return false;
+  const target = new Date(dateStr);
+  const now = new Date();
+  const diffTime = target - now;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  // Retourneert true als het vandaag, morgen, overmorgen of de dag erna is (0 t/m 3)
+  return diffDays >= 0 && diffDays <= 3;
+}

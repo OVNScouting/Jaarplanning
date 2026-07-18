@@ -528,11 +528,6 @@ function applyModeVisibility() {
 
         html += `</select>`;
         filterContainer.innerHTML = html;
-
-        document.getElementById('filterSeizoen').addEventListener('change', (e) => {
-            currentSeizoenFilter = e.target.value;
-            renderTable();
-        });
     }
 }
 
@@ -1685,27 +1680,38 @@ function makePresenceCell(o, key, hidden, isLeidingCell) {
 }
 
 async function togglePresence(o, key) {
-    const isLeiding = /* bepaal hier of user leiding is */
-    const aankomendeOpkomst = isBinnen3Dagen(o.datum); // Hulpfunctie nodig
-    const nieuweStatus = (o.aanwezigheid?.[key] === "aanwezig") ? "afwezig" : "aanwezig";
+    // 1. Rechten controleren
+    const isLeidingCheck = isLeiding();
 
-    // CHECK 1: Minder dan 3 leiding?
-    if (nieuweStatus === "afwezig" && isLeiding && countLeiding(o) <= 3) {
-        const akkoord = await toonWaarschuwing("Weinig leiding aanwezig", "Met jouw afmelding staan er minder dan 3 leiding op aanwezig.");
-        if (!akkoord) return; // Stop als ze niet bevestigen
+    // 2. Datum check (alleen voor ouders)
+    if (!isLeidingCheck && !isBinnen3Dagen(o.datum)) {
+        alert("Je kunt je aanwezigheid alleen wijzigen voor opkomsten in de komende 3 dagen.");
+        return;
     }
 
-    // CHECK 2: Binnen 3 dagen wijzigen?
-    if (isLeiding && aankomendeOpkomst) {
-        const akkoord = await toonWaarschuwing("Kort voor opkomst", "Je past je aanwezigheid aan binnen 3 dagen voor de opkomst.");
-        if (!akkoord) return;
-    }
+    // 3. Status bepalen (toggle)
+    const huidigeStatus = o.aanwezigheid?.[key] === "aanwezig" ? "afwezig" : "aanwezig";
 
-    // Als we hier komen, is het veilig om op te slaan
-    o.aanwezigheid[key] = nieuweStatus;
-    saveData();
+    try {
+        const updates = {};
+        // Pad naar de aanwezigheid van dit specifieke lid/leiding in deze opkomst
+        updates[`${speltak}/opkomsten/${o.id}/aanwezigheid/${key}`] = huidigeStatus;
+
+        // Als het een jeugdlid is, ook de publieke mirror updaten
+        if (!key.startsWith("leiding-")) {
+            updates[`${PUBLIC_ROOT}/opkomsten/${o.id}/aanwezigheid/${key}`] = huidigeStatus;
+        }
+
+        // 4. Firebase update uitvoeren
+        await update(ref(db), updates);
+
+        // 5. Tabel verversen
+        await loadEverything();
+    } catch (error) {
+        console.error("Fout bij opslaan:", error);
+        alert("Er ging iets mis bij het opslaan.");
+    }
 }
-
 async function toonWaarschuwing(titel, bericht) {
     const dialog = document.getElementById("waarschuwingPopup");
     document.getElementById("popupTitel").innerText = titel;
@@ -2057,6 +2063,8 @@ function openEditMember(obj, type) {
     }
     memberModal.classList.remove("hidden");
 }
+
+
 
 /* ======================================================================
    OPEN/CLOSE SECTIONS
@@ -2527,3 +2535,17 @@ colorPicker?.addEventListener("change", () => {
 
     document.execCommand("foreColor", false, colorPicker.value);
 });
+
+// Plaats dit eenmalig in je initialisatie-code
+document.addEventListener('change', (e) => {
+    if (e.target && e.target.id === 'filterSeizoen') {
+        currentSeizoenFilter = e.target.value;
+        renderTable(); // Nu wordt deze maar één keer getriggerd per wijziging
+    }
+});
+
+function renderMeldingen(meldingen) {
+    console.log("Meldingen:", meldingen);
+    // Voeg hier eventueel code toe om meldingen in een specifieke div te tonen
+    // Bijv: document.getElementById('meldingenContainer').innerText = meldingen;
+}

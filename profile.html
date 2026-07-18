@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mijn Profiel - OVN Jaarplanning</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- NAVIGATIEBALK (Zelfde als admin/index) -->
+    <header class="main-header"
+        style="background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 1rem 2rem; margin-bottom: 2rem;">
+        <div class="header-container"
+            style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+            <div class="logo-section" style="display: flex; align-items: center; gap: 0.5rem;">
+                <img src="assets/logo.png" alt="OVN Logo" class="logo-img" style="height: 40px;"
+                    onerror="this.style.display='none'">
+                <span class="logo-text" style="font-weight: bold; font-size: 1.2rem; color: #1e293b;">OVN
+                    Jaarplanning</span>
+            </div>
+            <nav class="main-nav" style="display: flex; align-items: center; gap: 1.5rem;">
+                <a href="index.html" class="nav-link"
+                    style="text-decoration: none; color: #64748b; font-weight: 500;">Dashboard</a>
+                <a href="profile.html" class="nav-link active"
+                    style="text-decoration: none; color: #ef4444; font-weight: 600;">Mijn Profiel</a>
+                <a href="admin.html" id="adminNavLink" class="nav-link hidden"
+                    style="text-decoration: none; color: #64748b; font-weight: 500;">Beheer</a>
+                <button id="btnLogout" class="pill-btn outline small"
+                    style="cursor: pointer; padding: 0.5rem 1rem; border: 1px solid #ef4444; color: #ef4444; background: transparent; border-radius: 20px; font-weight: 500;">Uitloggen</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- BEVEILIGINGSWAARSCHUWING -->
+    <div id="pwWarning" class="banner error hidden"
+        style="margin: 2rem auto 0 auto; max-width: 800px; padding: 1rem; border-radius: 8px;">
+        <strong>Beveiligingswaarschuwing 🔒</strong>
+        <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+            Je logt momenteel in met het tijdelijke wachtwoord. Kies hieronder direct een eigen, veilig wachtwoord om je
+            account te beschermen.
+        </p>
+    </div>
+
+    <!-- INHOUD (In de vertrouwde admin-stijl 'card') -->
+    <main class="container" style="max-width: 800px; margin-top: 2rem; margin-bottom: 3rem;">
+
+        <div class="card" style="margin-bottom: 2rem;">
+            <h2>Mijn Profiel</h2>
+            <p class="text-muted" style="margin-bottom: 1.5rem;">Je huidige accountgegevens in de jaarplanning.</p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div>
+                    <strong
+                        style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.25rem;">Volledige
+                        naam</strong>
+                    <span id="profName" style="font-size: 1.1rem; font-weight: 500;">Bezig met laden...</span>
+                </div>
+
+                <div>
+                    <strong
+                        style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.25rem;">E-mailadres</strong>
+                    <span id="profEmail" style="font-size: 1.1rem;">Bezig met laden...</span>
+                </div>
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+                <strong
+                    style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Actieve
+                    Speltakken & Rollen</strong>
+                <div id="profRoles" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    <!-- Speltak badges komen hier -->
+                </div>
+            </div>
+
+            <hr style="margin: 2rem 0 1.5rem 0; border: 0; border-top: 1px solid #eee;">
+
+            <p style="font-size: 0.9rem; text-align: center; margin: 0; color: var(--text-muted);">
+                Kloppen deze gegevens niet?
+                <a href="mailto:admin@ovnplanning.nl?subject=Wijziging profielgegevens jaarplanning"
+                    style="color: var(--primary-color); font-weight: bold; text-decoration: none;">Vraag een wijziging
+                    aan bij de admin</a>.
+            </p>
+        </div>
+
+        <!-- WACHTWOORD WIJZIGEN -->
+        <div class="card">
+            <h3>Wachtwoord Wijzigen</h3>
+            <p class="text-muted" style="margin-bottom: 1.5rem;">Kies een sterk wachtwoord van minimaal 6 tekens.</p>
+
+            <div style="max-width: 500px;">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="newPassword"
+                        style="display: block; font-weight: bold; margin-bottom: 0.5rem; font-size: 0.9rem;">Nieuw
+                        Wachtwoord</label>
+                    <input id="newPassword" type="password" placeholder="Minimaal 6 tekens"
+                        style="width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 6px;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="confirmPassword"
+                        style="display: block; font-weight: bold; margin-bottom: 0.5rem; font-size: 0.9rem;">Bevestig
+                        Nieuw Wachtwoord</label>
+                    <input id="confirmPassword" type="password" placeholder="Herhaal je nieuwe wachtwoord"
+                        style="width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 6px;">
+                </div>
+
+                <button id="btnUpdatePassword" class="pill-btn danger">Wachtwoord Bijwerken</button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Firebase & App scripts -->
+    <script type="module" src="firebase-imports.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="login.js"></script>
+    <script src="profile.js"></script>
+</body>
+
+</html>

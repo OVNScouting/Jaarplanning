@@ -151,7 +151,7 @@ function updateHeader() {
 
   if (isLoggedIn()) {
     if (badge) {
-      badge.textContent = "Ingelogd";
+      badge.textContent = "Mijn Profiel";
       badge.classList.remove("hidden");
     }
 

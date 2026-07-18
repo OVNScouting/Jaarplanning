@@ -1,6 +1,7 @@
 <!doctype html>
 
 <html lang="nl">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -10,144 +11,145 @@
   <link rel="icon" href="assets/OVN.logo.png" type="image/png">
   <link rel="stylesheet" href="./style.css" />
 </head>
+
 <body>
 
-<header class="topbar">
-  <div class="topbar-left">
-    <a href="index.html" class="backlink">← Terug</a>
-    <img src="assets/OVN.logo.png" class="topbar-logo" alt="OVN logo">
-    <div class="topbar-title">
-      <h1>Bestuursagenda</h1>
-      <span>Overzicht & planning</span>
-    </div>
-  </div>
-
-  <div class="topbar-right-icons">
-    <span id="loginStatus" class="leiding-badge hidden only-auth">
-      Je bent ingelogd.
-    </span>
-    <button id="loginButton" class="pill-btn outline">Inloggen</button>
-    <button id="logoutButton" class="pill-btn outline hidden only-auth">
-      Uitloggen
-    </button>
-    <img src="assets/OVN.logo.png" class="speltak-icon" alt="">
-  </div>
-</header>
-
-<div class="container">
-
-  <section class="planning-section">
-
-    <div class="planning-header-row">
-      <div class="planning-controls">
-        <span id="filterAll" class="chip active">Alles</span>
-        <span id="filterFuture" class="chip">Toekomst</span>
-        <span id="filterPast" class="chip">Verleden</span>
+  <header class="topbar">
+    <div class="topbar-left">
+      <a href="index.html" class="backlink">← Terug</a>
+      <img src="assets/OVN.logo.png" class="topbar-logo" alt="OVN logo">
+      <div class="topbar-title">
+        <h1>Bestuursagenda</h1>
+        <span>Overzicht & planning</span>
       </div>
+    </div>
 
-      <button id="editModeButton"
-        class="pill-btn hidden only-auth primary tabel-edit-btn">
-        ✏️ Items bewerken
+    <div class="topbar-right-icons">
+      <a href="profile.html" id="loginStatus" class="leiding-badge hidden only-auth"
+        style="text-decoration: none; cursor: pointer;">
+        Mijn Profiel
+      </a>
+      <button id="loginButton" class="pill-btn outline">Inloggen</button>
+      <button id="logoutButton" class="pill-btn outline hidden only-auth">
+        Uitloggen
       </button>
+      <img src="assets/OVN.logo.png" class="speltak-icon" alt="">
     </div>
+  </header>
 
-    <div class="planning-main">
-      <div class="table-wrapper">
-        <table class="planning-table">
-          <thead>
-            <tr id="headerRow"></tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
+  <div class="container">
+
+    <section class="planning-section">
+
+      <div class="planning-header-row">
+        <div class="planning-controls">
+          <span id="filterAll" class="chip active">Alles</span>
+          <span id="filterFuture" class="chip">Toekomst</span>
+          <span id="filterPast" class="chip">Verleden</span>
+        </div>
+
+        <button id="editModeButton" class="pill-btn hidden only-auth primary tabel-edit-btn">
+          ✏️ Items bewerken
+        </button>
       </div>
-    </div>
 
-  </section>
+      <div class="planning-main">
+        <div class="table-wrapper">
+          <table class="planning-table">
+            <thead>
+              <tr id="headerRow"></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
 
-</div>
+    </section>
 
-<button id="fabAddBestuursItem"
-  class="pill-btn primary fab-add-opkomst only-auth">
-  Nieuw bestuursitem +
-</button>
+  </div>
+
+  <button id="fabAddBestuursItem" class="pill-btn primary fab-add-opkomst only-auth">
+    Nieuw bestuursitem +
+  </button>
 
 
   <!-- ================= FAB ================= -->
 
-<button id="fabAddBestuursItem" class="fab" aria-label="Nieuw bestuursitem">＋</button>
+  <button id="fabAddBestuursItem" class="fab" aria-label="Nieuw bestuursitem">＋</button>
 
   <!-- ================= MODAL ================= -->
 
   <div id="bestuursItemModal" class="modal hidden" role="dialog" aria-modal="true">
     <div class="modal-content">
       <h2 id="modalTitle">Bestuursitem</h2>
-  <div class="form-group">
-    <label for="biType">Type</label>
-    <select id="biType">
-      <option value="bestuursvergadering">Bestuursvergadering</option>
-      <option value="groepsraad">Groepsraad</option>
-      <option value="activiteit">Activiteit</option>
-      <option value="overig">Overig</option>
-    </select>
-  </div>
+      <div class="form-group">
+        <label for="biType">Type</label>
+        <select id="biType">
+          <option value="bestuursvergadering">Bestuursvergadering</option>
+          <option value="groepsraad">Groepsraad</option>
+          <option value="activiteit">Activiteit</option>
+          <option value="overig">Overig</option>
+        </select>
+      </div>
 
-  <div class="form-group">
-    <label for="biTitel">Titel</label>
-    <input id="biTitel" type="text" />
-  </div>
+      <div class="form-group">
+        <label for="biTitel">Titel</label>
+        <input id="biTitel" type="text" />
+      </div>
 
-  <div class="form-group">
-    <label for="biDatum">Datum</label>
-    <input id="biDatum" type="date" />
-  </div>
+      <div class="form-group">
+        <label for="biDatum">Datum</label>
+        <input id="biDatum" type="date" />
+      </div>
 
-  <div class="form-group">
-    <label for="biTijdType">Tijd</label>
-    <select id="biTijdType">
-      <option value="none">Geen tijd</option>
-      <option value="allday">Hele dag</option>
-      <option value="range">Tijdstip</option>
-    </select>
-  </div>
+      <div class="form-group">
+        <label for="biTijdType">Tijd</label>
+        <select id="biTijdType">
+          <option value="none">Geen tijd</option>
+          <option value="allday">Hele dag</option>
+          <option value="range">Tijdstip</option>
+        </select>
+      </div>
 
-  <div id="biTimeRange" class="form-group hidden">
-    <label>Van / tot</label>
-    <div class="time-range">
-      <input id="biStart" type="time" />
-      <span>–</span>
-      <input id="biEind" type="time" />
+      <div id="biTimeRange" class="form-group hidden">
+        <label>Van / tot</label>
+        <div class="time-range">
+          <input id="biStart" type="time" />
+          <span>–</span>
+          <input id="biEind" type="time" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="biBeschrijving">Beschrijving</label>
+        <textarea id="biBeschrijving" rows="3"></textarea>
+      </div>
+
+      <div class="form-group checkbox">
+        <label>
+          <input id="biToonDashboard" type="checkbox" />
+          Toon op dashboard
+        </label>
+      </div>
+
+      <div class="modal-actions">
+        <button id="saveBestuursItem" class="btn primary">Opslaan</button>
+        <button id="cancelBestuursItem" class="btn">Annuleren</button>
+      </div>
     </div>
-  </div>
-
-  <div class="form-group">
-    <label for="biBeschrijving">Beschrijving</label>
-    <textarea id="biBeschrijving" rows="3"></textarea>
-  </div>
-
-  <div class="form-group checkbox">
-    <label>
-      <input id="biToonDashboard" type="checkbox" />
-      Toon op dashboard
-    </label>
-  </div>
-
-  <div class="modal-actions">
-    <button id="saveBestuursItem" class="btn primary">Opslaan</button>
-    <button id="cancelBestuursItem" class="btn">Annuleren</button>
-  </div>
-</div>
 
 
   </div>
 
   <!-- ================= SCRIPTS ================= -->
 
-<script src="./firebase-config.js"></script>
-<script type="module" src="./firebase-imports.js"></script>
+  <script src="./firebase-config.js"></script>
+  <script type="module" src="./firebase-imports.js"></script>
 
-<script src="./login.js" defer></script>
-<script type="module" src="./bestuur.js"></script>
+  <script src="./login.js" defer></script>
+  <script type="module" src="./bestuur.js"></script>
 
 
 </body>
+
 </html>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="nl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,130 +14,128 @@
 
 <body>
 
-<!-- ============================================================
+    <!-- ============================================================
      TOPBAR
 ============================================================ -->
-<header class="topbar">
+    <header class="topbar">
 
-    <div class="topbar-left">
-        <img src="assets/OVN.logo.png"
-             class="topbar-logo"
-             alt="Scouting OVN logo">
+        <div class="topbar-left">
+            <img src="assets/OVN.logo.png" class="topbar-logo" alt="Scouting OVN logo">
 
-        <div class="topbar-title">
-            <h1>Scouting Olivier van Noort</h1>
-            <span>Jaarplanningen per speltak</span>
+            <div class="topbar-title">
+                <h1>Scouting Olivier van Noort</h1>
+                <span>Jaarplanningen per speltak</span>
+            </div>
         </div>
-    </div>
 
-    <div class="topbar-right-icons">
+        <div class="topbar-right-icons">
+            <!-- Leiding badge / Link naar profiel -->
+            <a href="profile.html" id="loginStatus" class="leiding-badge hidden"
+                style="text-decoration: none; cursor: pointer;">
+                Mijn Profiel
+            </a>
 
-             <!-- Leiding badge -->
-        <span id="loginStatus" class="leiding-badge hidden">
-            Je bent ingelogd als leiding
-        </span>
+            <!-- Login / logout knoppen -->
+            <button id="loginButton" class="pill-btn outline">Inloggen</button>
+            <button id="logoutButton" class="pill-btn outline hidden">Uitloggen</button>
+            <img src="assets/Scouting.logo.png" class="speltak-icon" alt="">
 
-        <!-- Login / logout knoppen -->
-        <button id="loginButton" class="pill-btn outline">Inloggen</button>
-        <button id="logoutButton" class="pill-btn outline hidden">Uitloggen</button>
-        <img src="assets/Scouting.logo.png" class="speltak-icon" alt="">
-
-    </div>
-</header>
-
+        </div>
+    </header>
 
 
-<div class="container">
 
-    <!-- ============================================================
+    <div class="container">
+
+        <!-- ============================================================
          SPELTAKKAARTEN
     ============================================================ -->
-    <section>
-        <div class="speltak-grid">
-            <a href="bevers.html" class="speltak-card bevers">
-                <div class="card-topbar"></div>
-                <img src="assets/Bevers-speltakteken.png" class="card-icon-bg" alt="">
-                <h2>Bevers</h2>
-            </a>
-            
-            <a href="welpen.html" class="speltak-card welpen">
-                <div class="card-topbar"></div>
-                <img src="assets/Welpen-speltakteken.png" class="card-icon-bg" alt="">
-                <h2>Welpen</h2>
-            </a>
-            
-            <a href="scouts.html" class="speltak-card scouts">
-                <div class="card-topbar"></div>
-                <img src="assets/Scouts-speltakteken.png" class="card-icon-bg" alt="">
-                <h2>Scouts</h2>
-            </a>
-            
-            <a href="explorers.html" class="speltak-card explorers">
-                <div class="card-topbar"></div>
-                <img src="assets/Explorers-speltakteken.png" class="card-icon-bg" alt="">
-                <h2>Explorers</h2>
-            </a>
-            
-            <a href="rovers.html" class="speltak-card rovers">
-                <div class="card-topbar"></div>
-                <img src="assets/Rovers-speltakteken.png" class="card-icon-bg" alt="">
-                <h2>Roverscouts</h2>
-            </a>
-            
-            <a href="stam.html" class="speltak-card stam">
-                <div class="card-topbar"></div>
-                <img src="assets/Stam-speltakteken.png" class="card-icon-bg" alt="">
-                <h2>Stam</h2>
-            </a>
-            
+        <section>
+            <div class="speltak-grid">
+                <a href="bevers.html" class="speltak-card bevers">
+                    <div class="card-topbar"></div>
+                    <img src="assets/Bevers-speltakteken.png" class="card-icon-bg" alt="">
+                    <h2>Bevers</h2>
+                </a>
+
+                <a href="welpen.html" class="speltak-card welpen">
+                    <div class="card-topbar"></div>
+                    <img src="assets/Welpen-speltakteken.png" class="card-icon-bg" alt="">
+                    <h2>Welpen</h2>
+                </a>
+
+                <a href="scouts.html" class="speltak-card scouts">
+                    <div class="card-topbar"></div>
+                    <img src="assets/Scouts-speltakteken.png" class="card-icon-bg" alt="">
+                    <h2>Scouts</h2>
+                </a>
+
+                <a href="explorers.html" class="speltak-card explorers">
+                    <div class="card-topbar"></div>
+                    <img src="assets/Explorers-speltakteken.png" class="card-icon-bg" alt="">
+                    <h2>Explorers</h2>
+                </a>
+
+                <a href="rovers.html" class="speltak-card rovers">
+                    <div class="card-topbar"></div>
+                    <img src="assets/Rovers-speltakteken.png" class="card-icon-bg" alt="">
+                    <h2>Roverscouts</h2>
+                </a>
+
+                <a href="stam.html" class="speltak-card stam">
+                    <div class="card-topbar"></div>
+                    <img src="assets/Stam-speltakteken.png" class="card-icon-bg" alt="">
+                    <h2>Stam</h2>
+                </a>
+
                 <a href="dashboard.html" class="speltak-card dashboard hidden only-leiding">
-                <div class="card-topbar"></div>
-                <img src="assets/OVN.logo.png" class="card-icon-bg" alt="">
-                <h2>Dashboard</h2>
-            </a>
-            
+                    <div class="card-topbar"></div>
+                    <img src="assets/OVN.logo.png" class="card-icon-bg" alt="">
+                    <h2>Dashboard</h2>
+                </a>
+
                 <a href="bestuur.html" class="speltak-card dashboard hidden only-leiding">
-                <div class="card-topbar"></div>
-                <img src="assets/Vrijwilliger-speltakteken.png" class="card-icon-bg" alt="">
-                <h2>Bestuursagenda</h2>
-            </a>
+                    <div class="card-topbar"></div>
+                    <img src="assets/Vrijwilliger-speltakteken.png" class="card-icon-bg" alt="">
+                    <h2>Bestuursagenda</h2>
+                </a>
 
                 <a href="admin.html" class="speltak-card dashboard hidden only-admin">
-                <div class="card-topbar"></div>
+                    <div class="card-topbar"></div>
                     <img src="assets/Admin-dashboard.png" class="card-icon-bg" alt="">
-                <h2>Admin</h2>
+                    <h2>Admin</h2>
                 </a>
-        </div>
-    </section>
+            </div>
+        </section>
 
-    <!-- ============================================================
+        <!-- ============================================================
      NIEUW VANUIT BESTUUR (alleen leiding)
 ============================================================ -->
-<section id="bestuurHighlight"
-         class="planning-section hidden only-leiding">
+        <section id="bestuurHighlight" class="planning-section hidden only-leiding">
 
-    <div class="section-header">
-        <h2>Nieuw vanuit bestuur</h2>
-        <span class="text-muted">Laatste updates (14 dagen)</span>
-    </div>
+            <div class="section-header">
+                <h2>Nieuw vanuit bestuur</h2>
+                <span class="text-muted">Laatste updates (14 dagen)</span>
+            </div>
 
-    <div id="bestuurHighlightList">
-        <!-- Wordt gevuld door JS -->
-    </div>
+            <div id="bestuurHighlightList">
+                <!-- Wordt gevuld door JS -->
+            </div>
 
-</section>
-
-
-</div> <!-- /container -->
+        </section>
 
 
-<!-- ============================================================
+    </div> <!-- /container -->
+
+
+    <!-- ============================================================
      SCRIPTS
 ============================================================ -->
-<script src="firebase-config.js"></script>
-<script type="module" src="firebase-imports.js"></script>
-<script src="login.js" defer></script>
-<script type="module" src="index-bestuur.js"></script>
+    <script src="firebase-config.js"></script>
+    <script type="module" src="firebase-imports.js"></script>
+    <script src="login.js" defer></script>
+    <script type="module" src="index-bestuur.js"></script>
 
 </body>
+
 </html>

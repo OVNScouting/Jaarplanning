@@ -10,27 +10,22 @@
 
 <body>
 
-    <!-- NAVIGATIEBALK (Zelfde als admin/index) -->
-    <header class="main-header"
-        style="background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 1rem 2rem; margin-bottom: 2rem;">
-        <div class="header-container"
-            style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
-            <div class="logo-section" style="display: flex; align-items: center; gap: 0.5rem;">
-                <img src="assets/logo.png" alt="OVN Logo" class="logo-img" style="height: 40px;"
-                    onerror="this.style.display='none'">
-                <span class="logo-text" style="font-weight: bold; font-size: 1.2rem; color: #1e293b;">OVN
-                    Jaarplanning</span>
+    <!-- ============================================================
+       TOPBAR
+  ============================================================ -->
+    <header class="topbar">
+        <div class="topbar-left">
+            <a href="index.html" class="backlink">← Dashboard</a>
+            <img src="assets/OVN.logo.png" class="topbar-logo" alt="OVN logo">
+            <div class="topbar-title">
+                <h1>Mijn Profiel</h1>
+                <span>Jaarplanning & Accountinstellingen</span>
             </div>
-            <nav class="main-nav" style="display: flex; align-items: center; gap: 1.5rem;">
-                <a href="index.html" class="nav-link"
-                    style="text-decoration: none; color: #64748b; font-weight: 500;">Dashboard</a>
-                <a href="profile.html" class="nav-link active"
-                    style="text-decoration: none; color: #ef4444; font-weight: 600;">Mijn Profiel</a>
-                <a href="admin.html" id="adminNavLink" class="nav-link hidden"
-                    style="text-decoration: none; color: #64748b; font-weight: 500;">Beheer</a>
-                <button id="btnLogout" class="pill-btn outline small"
-                    style="cursor: pointer; padding: 0.5rem 1rem; border: 1px solid #ef4444; color: #ef4444; background: transparent; border-radius: 20px; font-weight: 500;">Uitloggen</button>
-            </nav>
+        </div>
+
+        <div class="topbar-right-icons">
+            <a href="profile.html" class="pill-btn outline active" style="text-decoration: none;">Mijn Profiel</a>
+            <button id="btnLogout" class="pill-btn outline">Uitloggen</button>
         </div>
     </header>
 
@@ -71,7 +66,6 @@
                     style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Actieve
                     Speltakken & Rollen</strong>
                 <div id="profRoles" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                    <!-- Speltak badges komen hier -->
                 </div>
             </div>
 
@@ -79,35 +73,58 @@
 
             <p style="font-size: 0.9rem; text-align: center; margin: 0; color: var(--text-muted);">
                 Kloppen deze gegevens niet?
-                <a href="mailto:admin@ovnplanning.nl?subject=Wijziging profielgegevens jaarplanning"
-                    style="color: var(--primary-color); font-weight: bold; text-decoration: none;">Vraag een wijziging
-                    aan bij de admin</a>.
+                <a href="mailto:ovnscouting@gmail.com?subject=Wijziging profielgegevens jaarplanning"
+                    style="color: #ef4444; font-weight: bold; text-decoration: none;">Vraag een wijziging aan bij de
+                    admin</a>.
             </p>
         </div>
 
-        <!-- WACHTWOORD WIJZIGEN -->
-        <div class="card">
-            <h3>Wachtwoord Wijzigen</h3>
-            <p class="text-muted" style="margin-bottom: 1.5rem;">Kies een sterk wachtwoord van minimaal 6 tekens.</p>
+        <div id="pwUpdateModal" class="modal hidden">
+            <div class="modal-content" style="max-width: 450px; padding: 2rem; border-radius: 12px; background: #fff;">
+                <h3 style="margin-top: 0; font-size: 1.4rem; color: #1e293b;">Beveiligingsupdate 🔒</h3>
+                <p class="text-muted" style="margin-bottom: 1.5rem; font-size: 0.9rem; line-height: 1.4;">
+                    Je maakt momenteel gebruik van een tijdelijk wachtwoord. Kies direct een eigen, veilig wachtwoord om
+                    je account te beschermen.
+                </p>
 
-            <div style="max-width: 500px;">
-                <div class="form-group" style="margin-bottom: 1rem;">
+                <div class="form-group" style="margin-bottom: 1.25rem;">
                     <label for="newPassword"
-                        style="display: block; font-weight: bold; margin-bottom: 0.5rem; font-size: 0.9rem;">Nieuw
+                        style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.85rem; color: #475569;">Nieuw
                         Wachtwoord</label>
                     <input id="newPassword" type="password" placeholder="Minimaal 6 tekens"
-                        style="width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 6px;">
+                        style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 0.95rem;">
                 </div>
 
-                <div class="form-group" style="margin-bottom: 1.5rem;">
+                <div class="form-group" style="margin-bottom: 1.75rem;">
                     <label for="confirmPassword"
-                        style="display: block; font-weight: bold; margin-bottom: 0.5rem; font-size: 0.9rem;">Bevestig
+                        style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.85rem; color: #475569;">Bevestig
                         Nieuw Wachtwoord</label>
                     <input id="confirmPassword" type="password" placeholder="Herhaal je nieuwe wachtwoord"
-                        style="width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 6px;">
+                        style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 0.95rem;">
                 </div>
 
-                <button id="btnUpdatePassword" class="pill-btn danger">Wachtwoord Bijwerken</button>
+                <div style="display: flex; justify-content: flex-end;">
+                    <button id="btnUpdatePassword" class="pill-btn danger"
+                        style="width: 100%; padding: 0.85rem; font-size: 1rem; font-weight: bold; border-radius: 8px; cursor: pointer;">
+                        Wachtwoord Opslaan & Activeren
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- GESTILEERDE RE-AUTH FOUT POPUP -->
+        <div id="reauthErrorModal" class="modal hidden">
+            <div class="modal-content"
+                style="max-width: 400px; padding: 2rem; border-radius: 12px; background: #fff; text-align: center; margin: auto;">
+                <h3 style="margin-top: 0; font-size: 1.3rem; color: #ef4444;">Sessie verlopen ⚠️</h3>
+                <p class="text-muted"
+                    style="margin-bottom: 1.5rem; font-size: 0.9rem; line-height: 1.4; color: #64748b;">
+                    Vanwege beveiligingsredenen moet je opnieuw inloggen voordat je je wachtwoord kunt wijzigen.
+                </p>
+                <button id="btnReauthLogin" class="pill-btn danger"
+                    style="width: 100%; padding: 0.75rem; font-weight: bold; border-radius: 8px; cursor: pointer; border: none; color: #fff;">
+                    Opnieuw Inloggen
+                </button>
             </div>
         </div>
 

@@ -25,10 +25,16 @@
             : window._firebase.initializeApp(window.firebaseConfig);
         database = window._firebase.getDatabase(app);
 
-        // Toon waarschuwing als geforceerde wachtwoordwijziging actief is
+        // Activeer dwingende popup als het standaardwachtwoord gewijzigd moet worden
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get("force_pw_change") === "true") {
-            document.getElementById("pwWarning")?.classList.remove("hidden");
+            const modal = document.getElementById("pwUpdateModal");
+            if (modal) {
+                modal.classList.remove("hidden");
+                // Extra CSS-injectie om te voorkomen dat ze per ongeluk de achtergrond kunnen misbruiken
+                modal.style.display = "flex";
+                modal.style.backdropFilter = "blur(5px)";
+            }
         }
 
         // Laad de gegevens van de gebruiker in de pagina
@@ -43,9 +49,10 @@
 
             if (!snapshot.exists()) {
                 console.error("Gebruiker niet gevonden in database.");
-                // Val terug op sessiegegevens als er geen database-entry is
-                document.getElementById("profName").textContent = session.name || "Nieuwe Gebruiker";
-                document.getElementById("profEmail").textContent = session.email || "Geen e-mailadres bekend";
+                const sessionFallback = window.getAuthSession() || {};
+                // Val direct terug op sessiegegevens
+                document.getElementById("profName").textContent = sessionFallback.name || "Nieuwe Gebruiker";
+                document.getElementById("profEmail").textContent = sessionFallback.email || "Geen e-mailadres bekend";
 
                 const rolesContainer = document.getElementById("profRoles");
                 rolesContainer.innerHTML = `<span style="color: var(--text-muted); font-style: italic;">Profiel wordt aangemaakt door admin.</span>`;
@@ -161,8 +168,29 @@
 
         } catch (err) {
             console.error("Wachtwoord wijzigen mislukt:", err);
+
             if (err.code === "auth/requires-recent-login") {
-                alert("Vanwege beveiligingsredenen moet je opnieuw inloggen voordat je je wachtwoord kunt wijzigen.");
+                // Verberg de wachtwoord-modal
+                document.getElementById("pwUpdateModal").classList.add("hidden");
+
+                // Toon de gestileerde fout-modal
+                const errorModal = document.getElementById("reauthErrorModal");
+                if (errorModal) {
+                    errorModal.classList.remove("hidden");
+                    errorModal.style.display = "flex";
+                    errorModal.style.backdropFilter = "blur(5px)";
+                }
+
+                // Logica voor de "Opnieuw Inloggen" knop
+                document.getElementById("btnReauthLogin").onclick = async () => {
+                    try {
+                        const auth = window._firebase.getAuth(app);
+                        await window._firebase.signOut(auth);
+                        window.location.href = "index.html?trigger_login=true";
+                    } catch (signoutErr) {
+                        window.location.href = "index.html";
+                    }
+                };
             } else {
                 alert("Fout bij wijzigen: " + err.message);
             }

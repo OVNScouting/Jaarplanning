@@ -152,19 +152,41 @@
                 return;
             }
 
-            await window._firebase.updatePassword(user, newPw);
+            try {
+                await window._firebase.updatePassword(user, newPw);
 
-            alert("Je wachtwoord is succesvol gewijzigd! 🎉");
+                const successModal = document.getElementById("passwordChangedModal");
+                if (successModal) {
+                    // Toon de mooie pop-up in stijl
+                    successModal.classList.remove("hidden");
 
-            // Verwijder de query parameter uit de URL en verberg de waarschuwing
-            document.getElementById("pwWarning").classList.add("hidden");
+                    // Wacht tot de gebruiker op OK klikt om alles op te ruimen en door te sturen
+                    document.getElementById("passwordChangedOkBtn").onclick = () => {
+                        successModal.classList.add("hidden");
 
-            // Reset de invoervelden
-            document.getElementById("newPassword").value = "";
-            document.getElementById("confirmPassword").value = "";
+                        // Verwijder de query parameter uit de URL en verberg de waarschuwing
+                        document.getElementById("pwWarning")?.classList.add("hidden");
 
-            // Stuur de gebruiker terug naar de homepage
-            window.location.href = "index.html";
+                        // Reset de invoervelden
+                        document.getElementById("newPassword").value = "";
+                        document.getElementById("confirmPassword").value = "";
+
+                        // Stuur de gebruiker terug naar de homepage
+                        window.location.href = "index.html";
+                    };
+                } else {
+                    // Veilige terugvaloptie voor het geval de HTML er nog niet in staat
+                    alert("Je wachtwoord is succesvol gewijzigd! 🎉");
+                    document.getElementById("pwWarning")?.classList.add("hidden");
+                    document.getElementById("newPassword").value = "";
+                    document.getElementById("confirmPassword").value = "";
+                    window.location.href = "index.html";
+                }
+            } catch (err) {
+                // Zorg ervoor dat eventuele fouten bij het wijzigen (bijv. te zwak wachtwoord) 
+                // hieronder netjes worden opgevangen door je bestaande catch-blok.
+                throw err;
+            }
 
         } catch (err) {
             console.error("Wachtwoord wijzigen mislukt:", err);

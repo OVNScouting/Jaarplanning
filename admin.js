@@ -39,11 +39,17 @@ async function approveRequestViaFunction(requestId, rowEl) {
     let userCredential;
     try {
       userCredential = await window._firebase.createUserWithEmailAndPassword(secondaryAuth, email, tempPassword);
-      // Ruim de secundaire app direct weer op
-      await secondaryApp.delete();
+      // Ruim de secundaire app direct weer op via de juiste SDK methode
+      if (window._firebase.deleteApp) {
+        await window._firebase.deleteApp(secondaryApp);
+      }
     } catch (authErr) {
-      // Als de secundaire app al bestaat of er gaat iets mis, proberen we hem netjes te verwijderen
-      try { await secondaryApp.delete(); } catch (e) { }
+      // Als er iets misgaat, proberen we de app alsnog netjes te verwijderen
+      try {
+        if (window._firebase.deleteApp) {
+          await window._firebase.deleteApp(secondaryApp);
+        }
+      } catch (e) { }
 
       // Als de gebruiker al bestaat in Auth, gaan we gewoon door naar de database-stap
       if (authErr.code === "auth/email-already-in-use") {
@@ -473,17 +479,10 @@ function renderAccountRequests() {
           });
 
           tr.querySelector("[data-reject]")?.addEventListener("click", () => {
-            const ok = confirm(
-              "Weet je zeker dat je deze aanvraag wilt afwijzen?\n\nDe aanvraag wordt direct verwijderd en er wordt direct een afwijsmail gestuurd."
-            );
+            const ok = confirm("Weet je zeker dat je deze aanvraag wilt afwijzen?");
             if (!ok) return;
 
-            const reason = prompt(
-              "Optioneel: reden van afwijzing (komt in de mail). Laat leeg voor geen reden.",
-              ""
-            );
-
-            updateAccountRequestStatus(id, "rejected", tr, reason ?? "");
+            updateAccountRequestStatus(id, "rejected", tr, "");
           });
         }
 
@@ -654,15 +653,41 @@ document.getElementById("saveUserBtn").onclick = async () => {
 };
 
 
-document.getElementById("deleteUserBtn").onclick = async () => {
-  if (!confirm("Account volledig verwijderen? Dit kan niet ongedaan worden gemaakt.")) return;
-  try {
-    await callFunction("deleteUser", { uid: selectedUserId });
-    closeSidePanel();
-    loadUsers();
-  } catch (e) {
-    alert(e.message || "Verwijderen mislukt");
-  }
+document.getElementById("deleteUserBtn").onclick = () => {
+  const deleteModal = document.getElementById("confirmDeleteModal");
+  if (!deleteModal) return;
+
+  // Toon de mooie modal
+  deleteModal.classList.remove("hidden");
+
+  // Als er op annuleren wordt geklikt
+  deleteModal.querySelector("#confirmDeleteCancel").onclick = () => {
+    deleteModal.classList.add("hidden");
+  };
+
+  // Als er op de rode verwijderknop wordt geklikt
+  deleteModal.querySelector("#confirmDeleteSubmit").onclick = async () => {
+    deleteModal.classList.add("hidden"); // Sluit modal direct
+
+    try {
+      const app = getFirebaseApp();
+      const db = window._firebase.getDatabase(app);
+      const userRef = window._firebase.ref(db, `users/${selectedUserId}`);
+
+      await window._firebase.remove(userRef);
+
+      showToast("Gebruiker succesvol verwijderd", "success");
+      closeSidePanel();
+      loadUsers();
+    } catch (e) {
+      alert(e.message || "Verwijderen mislukt");
+    }
+  };
+
+  // Sluiten als je buiten de modal klikt
+  deleteModal.onclick = (e) => {
+    if (e.target === deleteModal) deleteModal.classList.add("hidden");
+  };
 };
 
 // ===============================

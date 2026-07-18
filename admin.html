@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="nl">
+
 <head>
   <meta charset="UTF-8" />
   <title>Admin – OVN Scouting</title>
@@ -9,216 +10,214 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="mobile.css" />
 </head>
+
 <body class="only-admin hidden">
 
-<!-- ============================================================
+  <!-- ============================================================
      TOPBAR
 ============================================================ -->
-<header class="topbar">
-  <div class="topbar-left">
-    <img src="assets/OVN.logo.png" class="topbar-logo" alt="OVN">
-    <div class="topbar-title">
-      <h1>Admin</h1>
-      <span>Account- & rechtenbeheer</span>
+  <header class="topbar">
+    <div class="topbar-left">
+      <img src="assets/OVN.logo.png" class="topbar-logo" alt="OVN">
+      <div class="topbar-title">
+        <h1>Admin</h1>
+        <span>Account- & rechtenbeheer</span>
+      </div>
     </div>
-  </div>
 
-  <div class="topbar-right-icons">
-    <a href="index.html" class="pill-btn outline">Home</a>
-    <span id="loginStatus" class="leiding-badge hidden">Ingelogd</span>
-    <button id="logoutButton" class="pill-btn outline hidden">Uitloggen</button>
-  </div>
-</header>
+    <div class="topbar-right-icons">
+      <a href="index.html" class="pill-btn outline">Home</a>
+      <span id="loginStatus" class="leiding-badge hidden">Ingelogd</span>
+      <button id="logoutButton" class="pill-btn outline hidden">Uitloggen</button>
+    </div>
+  </header>
 
-<main class="container">
+  <main class="container">
 
-  <!-- ============================================================
+    <!-- ============================================================
        INFO
   ============================================================ -->
-  <section class="info-block">
-    <h2>Beheeromgeving</h2>
-    <p class="text-muted">
-      Dit is de admin-omgeving. Alleen admins hebben toegang tot deze pagina.
-      Hier beheren we straks gebruikers, rechten en aanvragen.
-    </p>
-  </section>
+    <section class="info-block">
+      <h2>Beheeromgeving</h2>
+      <p class="text-muted">
+        Dit is de admin-omgeving. Alleen admins hebben toegang tot deze pagina.
+        Hier beheren we straks gebruikers, rechten en aanvragen.
+      </p>
+    </section>
 
-  <!-- ============================================================
+    <!-- ============================================================
        GEBRUIKERS 
   ============================================================ -->
-<section class="planning-section">
-  <div class="section-header">
-    <h2>Gebruikers</h2>
-    <span class="text-muted">Beheer</span>
-  </div>
+    <section class="planning-section">
+      <div class="section-header">
+        <h2>Gebruikers</h2>
+        <span class="text-muted">Beheer</span>
+      </div>
 
- <button
-  id="toggleUserFilters"
-  class="pill-btn outline"
-  style="margin-bottom:0.75rem;"
->
-  Toon filters
-</button>
-
-<div
-  id="userFilters"
-  class="hidden"
-  style="display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;"
->
-  <label>
-    <input type="checkbox" data-filter="admin" />
-    Admin
-  </label>
-  <label>
-    <input type="checkbox" data-filter="bestuur" />
-    Bestuur
-  </label>
-  <label>
-    <input type="checkbox" data-filter="inactive" />
-    Inactief
-  </label>
-  <label><input type="checkbox" data-filter="bevers"> Bevers</label>
-  <label><input type="checkbox" data-filter="welpen"> Welpen</label>
-  <label><input type="checkbox" data-filter="scouts"> Scouts</label>
-  <label><input type="checkbox" data-filter="explorers" /> Explorers</label>
-  <label><input type="checkbox" data-filter="rovers"> Rovers</label>
-  <label><input type="checkbox" data-filter="stam"> Stam</label>
-</div>
-
-
-  <div style="display:flex;gap:1.5rem;align-items:flex-start;">
-    <!-- USERS TABLE -->
-    <div style="flex:2;min-width:0;">
-  <table class="planning-table">
-  <thead>
-    <tr>
-      <th>Naam</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody id="userTable">
-    <!-- Wordt gevuld via JS -->
-  </tbody>
-</table>
-
-<!-- Lege staat -->
-<p id="noUsersMessage" class="text-muted hidden" style="margin-top:0.75rem;">
-  Geen gebruikers gevonden met deze filters.
-</p>
-
-    </div>
-
-    <!-- USER SIDE PANEL -->
-    <aside
-      id="userSidePanel"
-      class="hidden"
-      style="flex:1;border-left:1px solid #ddd;padding-left:1rem;"
-    >
-      <button
-        id="closeUserPanelBtn"
-        class="pill-btn outline"
-        style="margin-bottom:1rem;width:100%;"
-      >
-        Sluiten
+      <button id="toggleUserFilters" class="pill-btn outline" style="margin-bottom:0.75rem;">
+        Toon filters
       </button>
 
-      <h3 id="panelName">Gebruiker</h3>
-
-      <!-- VIEW MODE -->
-      <div id="panelView">
-        <p><strong>Email:</strong> <span id="panelEmail"></span></p>
-        <p><strong>Status:</strong> <span id="panelStatus"></span></p>
-        <p><strong>Aangemaakt:</strong> <span id="panelCreated"></span></p>
-
-        <p><strong>Rollen:</strong></p>
-        <ul id="panelRoles"></ul>
-
-        <button id="editUserBtn" class="pill-btn">Bewerken</button>
-        <button id="deleteUserBtn" class="pill-btn danger">
-          Account verwijderen
-        </button>
-      </div>
-
-      <!-- EDIT MODE -->
-      <div id="panelEdit" class="hidden">
-        <h4>Rollen</h4>
-<h4>Speltakken</h4>
-
-<label><input type="checkbox" class="edit-speltak" value="bevers"> Bevers</label><br>
-<label><input type="checkbox" class="edit-speltak" value="welpen"> Welpen</label><br>
-<label><input type="checkbox" class="edit-speltak" value="scouts"> Scouts</label><br>
-<label><input type="checkbox" class="edit-speltak" value="explorers">Explorers</label><br>
-<label><input type="checkbox" class="edit-speltak" value="rovers"> Rovers</label><br>
-<label><input type="checkbox" class="edit-speltak" value="stam"> Stam</label>
-
-
+      <div id="userFilters" class="hidden" style="display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;">
         <label>
-          <input type="checkbox" id="editAdmin" />
+          <input type="checkbox" data-filter="admin" />
           Admin
-        </label><br />
-
+        </label>
         <label>
-          <input type="checkbox" id="editBestuur" />
+          <input type="checkbox" data-filter="bestuur" />
           Bestuur
         </label>
-
-        <h4 style="margin-top:1rem;">Status</h4>
-
         <label>
-          <input type="checkbox" id="editInactive" />
+          <input type="checkbox" data-filter="inactive" />
           Inactief
         </label>
-
-        <div style="margin-top:1.25rem;display:flex;gap:0.5rem;">
-          <button id="saveUserBtn" class="pill-btn primary">
-            Opslaan
-          </button>
-          <button id="cancelEditBtn" class="pill-btn outline">
-            Annuleren
-          </button>
-        </div>
+        <label><input type="checkbox" data-filter="bevers"> Bevers</label>
+        <label><input type="checkbox" data-filter="welpen"> Welpen</label>
+        <label><input type="checkbox" data-filter="scouts"> Scouts</label>
+        <label><input type="checkbox" data-filter="explorers" /> Explorers</label>
+        <label><input type="checkbox" data-filter="rovers"> Rovers</label>
+        <label><input type="checkbox" data-filter="stam"> Stam</label>
       </div>
-    </aside>
-  </div>
-</section>
 
-<!-- ============================================================
+
+      <div style="display:flex;gap:1.5rem;align-items:flex-start;">
+        <!-- USERS TABLE -->
+        <div style="flex:2;min-width:0;">
+          <table class="planning-table">
+            <thead>
+              <tr>
+                <th>Naam</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="userTable">
+              <!-- Wordt gevuld via JS -->
+            </tbody>
+          </table>
+
+          <!-- Lege staat -->
+          <p id="noUsersMessage" class="text-muted hidden" style="margin-top:0.75rem;">
+            Geen gebruikers gevonden met deze filters.
+          </p>
+
+        </div>
+
+        <!-- USER SIDE PANEL -->
+        <aside id="userSidePanel" class="hidden" style="flex:1;border-left:1px solid #ddd;padding-left:1rem;">
+          <button id="closeUserPanelBtn" class="pill-btn outline" style="margin-bottom:1rem;width:100%;">
+            Sluiten
+          </button>
+
+          <h3 id="panelName">Gebruiker</h3>
+
+          <!-- VIEW MODE -->
+          <div id="panelView">
+            <p><strong>Email:</strong> <span id="panelEmail"></span></p>
+            <p><strong>Status:</strong> <span id="panelStatus"></span></p>
+            <p><strong>Aangemaakt:</strong> <span id="panelCreated"></span></p>
+
+            <p><strong>Rollen:</strong></p>
+            <ul id="panelRoles"></ul>
+
+            <button id="editUserBtn" class="pill-btn">Bewerken</button>
+            <button id="deleteUserBtn" class="pill-btn danger">
+              Account verwijderen
+            </button>
+          </div>
+
+          <!-- EDIT MODE -->
+          <div id="panelEdit" class="hidden">
+            <h4>Rollen</h4>
+            <h4>Speltakken</h4>
+
+            <label><input type="checkbox" class="edit-speltak" value="bevers"> Bevers</label><br>
+            <label><input type="checkbox" class="edit-speltak" value="welpen"> Welpen</label><br>
+            <label><input type="checkbox" class="edit-speltak" value="scouts"> Scouts</label><br>
+            <label><input type="checkbox" class="edit-speltak" value="explorers">Explorers</label><br>
+            <label><input type="checkbox" class="edit-speltak" value="rovers"> Rovers</label><br>
+            <label><input type="checkbox" class="edit-speltak" value="stam"> Stam</label>
+
+
+            <label>
+              <input type="checkbox" id="editAdmin" />
+              Admin
+            </label><br />
+
+            <label>
+              <input type="checkbox" id="editBestuur" />
+              Bestuur
+            </label>
+
+            <h4 style="margin-top:1rem;">Status</h4>
+
+            <label>
+              <input type="checkbox" id="editInactive" />
+              Inactief
+            </label>
+
+            <div style="margin-top:1.25rem;display:flex;gap:0.5rem;">
+              <button id="saveUserBtn" class="pill-btn primary">
+                Opslaan
+              </button>
+              <button id="cancelEditBtn" class="pill-btn outline">
+                Annuleren
+              </button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============================================================
      ACCOUNT AANVRAGEN (FASE C.1 – read-only)
 ============================================================ -->
-<section class="planning-section">
-  <div class="section-header">
-    <h2>Accountaanvragen</h2>
-    <span class="text-muted">Nieuw</span>
+    <section class="planning-section">
+      <div class="section-header">
+        <h2>Accountaanvragen</h2>
+        <span class="text-muted">Nieuw</span>
+      </div>
+
+      <table class="planning-table">
+        <thead>
+          <tr>
+            <th>Naam</th>
+            <th>Email</th>
+            <th>Rollen</th>
+            <th>Speltakken</th>
+            <th>Status</th>
+            <th>Aangemaakt</th>
+            <th>Acties</th>
+          </tr>
+        </thead>
+
+        <tbody id="accountRequestTable">
+          <!-- Wordt gevuld via admin.js -->
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+
+  <script src="firebase-config.js"></script>
+  <script type="module" src="firebase-imports.js"></script>
+
+  <script src="login.js"></script>
+  <script src="admin.js"></script>
+
+  <div id="sidepanelBackdrop" class="sidepanel-backdrop hidden"></div>
+
+  <!-- CUSTON CONFIRM MODAL VOOR VERWIJDEREN -->
+  <div id="confirmDeleteModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Account verwijderen</h3>
+      <p>Weet je zeker dat je dit account volledig wilt verwijderen? Dit kan niet ongedaan worden gemaakt.</p>
+      <div class="modal-actions">
+        <button id="confirmDeleteCancel" class="pill-btn outline">Annuleren</button>
+        <button id="confirmDeleteSubmit" class="pill-btn danger">Verwijderen</button>
+      </div>
+    </div>
   </div>
 
-  <table class="planning-table">
-    <thead>
-      <tr>
-        <th>Naam</th>
-        <th>Email</th>
-        <th>Rollen</th>
-        <th>Speltakken</th>
-        <th>Status</th>
-        <th>Aangemaakt</th>
-        <th>Acties</th>
-      </tr>
-    </thead>
-
-    <tbody id="accountRequestTable">
-      <!-- Wordt gevuld via admin.js -->
-    </tbody>
-  </table>
-</section>
-
-</main>
-
-<script src="firebase-config.js"></script>
-<script type="module" src="firebase-imports.js"></script>
-
-<script src="login.js"></script>
-<script src="admin.js"></script>
-
-<div id="sidepanelBackdrop" class="sidepanel-backdrop hidden"></div>
 </body>
-</html>
 
+</html>

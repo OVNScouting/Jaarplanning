@@ -318,8 +318,21 @@ function openLoginModal() {
 
       // Check of de gebruiker heeft ingelogd met het tijdelijke wachtwoord
       if (password === "Welkom48!") {
-        alert("Je logt in met het standaardwachtwoord. Je wordt nu direct doorgestuurd om een eigen wachtwoord in te stellen.");
-        window.location.href = "profile.html?force_pw_change=true";
+        const tempModal = document.getElementById("tempPasswordModal");
+        if (tempModal) {
+          // Toon de mooie pop-up
+          tempModal.classList.remove("hidden");
+
+          // Pas doorsturen als de gebruiker op OK klikt
+          document.getElementById("tempPasswordOkBtn").onclick = () => {
+            tempModal.classList.add("hidden");
+            window.location.href = "profile.html?force_pw_change=true";
+          };
+        } else {
+          // Terugvaloptie als de modal niet in de HTML staat
+          alert("Je logt in met het standaardwachtwoord. Je wordt nu direct doorgestuurd om een eigen wachtwoord in te stellen.");
+          window.location.href = "profile.html?force_pw_change=true";
+        }
       } else {
         window.location.reload();
       }
@@ -415,8 +428,27 @@ async function submitAccountRequest() {
   errEl.classList.add("hidden");
   errEl.textContent = "Versturen mislukt";
 
+  // Uitgebreide validatie
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   if (!firstName || !lastName || !email) {
-    errEl.textContent = "Naam en email zijn verplicht.";
+    errEl.textContent = "Naam en e-mailadres zijn verplicht.";
+    errEl.classList.remove("hidden");
+    return;
+  }
+
+  if (!emailRegex.test(email)) {
+    errEl.textContent = "Voer a.u.b. een geldig e-mailadres in.";
+    errEl.classList.remove("hidden");
+    return;
+  }
+
+  const speltakken = Array.from(
+    document.querySelectorAll("#reqSpeltakken input:checked")
+  ).map((i) => i.value);
+
+  if (speltakken.length === 0) {
+    errEl.textContent = "Selecteer a.u.b. ten minste één speltak.";
     errEl.classList.remove("hidden");
     return;
   }
@@ -427,9 +459,6 @@ async function submitAccountRequest() {
     admin: document.getElementById("reqAdmin").checked,
   };
 
-  const speltakken = Array.from(
-    document.querySelectorAll("#reqSpeltakken input:checked")
-  ).map((i) => i.value);
 
   const message = document.getElementById("reqMessage").value || "";
 

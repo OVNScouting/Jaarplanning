@@ -94,7 +94,7 @@ function applyAuthVisibility() {
 
 
   // NB: body-classes zijn UI-only.
- // Nooit gebruiken als autorisatiebron.
+  // Nooit gebruiken als autorisatiebron.
 
   document.body.classList.toggle("is-logged-in", loggedIn);
   document.body.classList.toggle("only-admin", !!session?.roles?.admin);
@@ -189,7 +189,7 @@ function initFirebaseAuth(retries = 200) {
 
   auth = window._firebase.getAuth(app);
 
- window._firebase.onAuthStateChanged(auth, async (user) => {
+  window._firebase.onAuthStateChanged(auth, async (user) => {
     AUTH_RESOLVED = true;
 
     if (!user) {
@@ -223,7 +223,7 @@ function initFirebaseAuth(retries = 200) {
     if (status === "inactive") {
       alert(
         "Je account is gedeactiveerd.\n\n" +
-          "Neem contact op met het bestuur als dit niet klopt."
+        "Neem contact op met het bestuur als dit niet klopt."
       );
 
       clearSession();
@@ -269,6 +269,12 @@ function openLoginModal() {
       <input id="loginUser" type="email">
       <label>Wachtwoord</label>
       <input id="loginPass" type="password">
+      
+      <!-- Wachtwoord vergeten link -->
+      <div style="text-align: right; margin-top: -0.5rem; margin-bottom: 1rem;">
+        <a href="#" id="forgotPasswordLink" style="font-size: 0.85rem; color: #777; text-decoration: none;">Wachtwoord vergeten?</a>
+      </div>
+
       <div id="loginError" class="hidden">Onjuiste gegevens</div>
       <div class="modal-actions">
         <button id="loginCancel">Annuleren</button>
@@ -281,6 +287,27 @@ function openLoginModal() {
 
   modal.querySelector("#loginCancel").onclick = closeLoginModal;
 
+  // Wachtwoord vergeten logica
+  modal.querySelector("#forgotPasswordLink").onclick = async (e) => {
+    e.preventDefault();
+    const email = modal.querySelector("#loginUser").value.trim();
+
+    if (!email) {
+      alert("Vul eerst je e-mailadres in bij het inlogveld, en klik daarna op 'Wachtwoord vergeten?'.");
+      return;
+    }
+
+    if (confirm(`We sturen een e-mail naar ${email} om je wachtwoord te resetten. Weet je dit zeker?`)) {
+      try {
+        await window._firebase.sendPasswordResetEmail(auth, email);
+        alert("De herstelmail is verzonden! Check ook je spam-map.");
+      } catch (err) {
+        console.error("Fout bij wachtwoord reset:", err);
+        alert("Fout bij versturen: " + err.message);
+      }
+    }
+  };
+
   modal.querySelector("#loginSubmit").onclick = async () => {
     const email = modal.querySelector("#loginUser").value.trim();
     const password = modal.querySelector("#loginPass").value;
@@ -288,6 +315,14 @@ function openLoginModal() {
     try {
       await window._firebase.signInWithEmailAndPassword(auth, email, password);
       closeLoginModal();
+
+      // Check of de gebruiker heeft ingelogd met het tijdelijke wachtwoord
+      if (password === "Welkom48!") {
+        alert("Je logt in met het standaardwachtwoord. Je wordt nu direct doorgestuurd om een eigen wachtwoord in te stellen.");
+        window.location.href = "profile.html?force_pw_change=true";
+      } else {
+        window.location.reload();
+      }
     } catch {
       modal.querySelector("#loginError").classList.remove("hidden");
     }
@@ -338,7 +373,7 @@ function openAccountRequestModal() {
 <div class="account-section">
   <div class="account-section-title">Speltakken</div>
   <div id="reqSpeltakken" class="account-checkbox-grid">
-    ${["bevers","welpen","scouts","explorers","rovers","stam"]
+    ${["bevers", "welpen", "scouts", "explorers", "rovers", "stam"]
       .map(s => `<label><input type="checkbox" value="${s}"> ${s}</label>`)
       .join("")}
   </div>
@@ -373,23 +408,19 @@ async function submitAccountRequest() {
   const errEl = document.getElementById("reqError");
   const btn = document.getElementById("reqSubmit");
 
-const firstName =
-  document.getElementById("reqFirstName")?.value?.trim() || "";
-const lastName =
-  document.getElementById("reqLastName")?.value?.trim() || "";
-const email =
-  document.getElementById("reqEmail")?.value?.trim() || "";
-
+  const firstName = document.getElementById("reqFirstName")?.value?.trim() || "";
+  const lastName = document.getElementById("reqLastName")?.value?.trim() || "";
+  const email = document.getElementById("reqEmail")?.value?.trim() || "";
 
   errEl.classList.add("hidden");
   errEl.textContent = "Versturen mislukt";
 
-if (!firstName || !lastName || !email) {
+  if (!firstName || !lastName || !email) {
     errEl.textContent = "Naam en email zijn verplicht.";
     errEl.classList.remove("hidden");
     return;
   }
-const fullName = `${firstName} ${lastName}`;
+  const fullName = `${firstName} ${lastName}`.trim();
 
   const roles = {
     bestuur: document.getElementById("reqBestuur").checked,
@@ -403,31 +434,33 @@ const fullName = `${firstName} ${lastName}`;
   const message = document.getElementById("reqMessage").value || "";
 
   try {
-  btn.disabled = true;
-  btn.textContent = "Bezig…";
+    btn.disabled = true;
+    btn.textContent = "Bezig…";
 
-const app = window._firebase.getApps().length
-  ? window._firebase.getApp()
-  : window._firebase.initializeApp(window.firebaseConfig);
+    const app = window._firebase.getApps().length
+      ? window._firebase.getApp()
+      : window._firebase.initializeApp(window.firebaseConfig);
 
-const functions = window._firebase.getFunctions(app);
-const sendAccountRequest = window._firebase.httpsCallable(
-  functions,
-  "sendAccountRequest"
-);
+    const db = window._firebase.getDatabase(app);
 
-await sendAccountRequest({
-  firstName,
-  lastName,
-  fullName,
-  email,
-  requestedRoles: roles,
-  speltakken,
-  message,
-});
+    // 1. Maak een unieke sleutel aan onder 'accountRequests'
+    const requestsRef = window._firebase.ref(db, "accountRequests");
+    const newRequestRef = window._firebase.push(requestsRef);
 
+    // 2. Schrijf de data rechtstreeks naar de database
+    await window._firebase.set(newRequestRef, {
+      firstName,
+      lastName,
+      fullName,
+      email,
+      requestedRoles: roles,
+      speltakken,
+      message,
+      status: "pending",
+      createdAt: Date.now()
+    });
 
-
+    // Toon succes-scherm in de modal
     document.getElementById("accountRequestModal").innerHTML = `
       <div class="modal-content">
         <h3>Aanvraag ontvangen</h3>
@@ -440,31 +473,13 @@ await sendAccountRequest({
         </div>
       </div>
     `;
-return; // ⬅️ ESSENTIEEL
-    
-} catch (e) {
-  const msg = String(e?.message || "");
+    return;
 
-  if (
-    msg.includes("already-exists") ||
-    msg.includes("al een account") ||
-    msg.includes("al een aanvraag")
-  ) {
-    errEl.textContent =
-      "Er bestaat al een account of aanvraag met dit e-mailadres.";
-  } else if (msg.includes("invalid-argument")) {
-    errEl.textContent =
-      "Niet alle verplichte gegevens zijn ingevuld.";
-  } else {
-    errEl.textContent =
-      "Er ging iets mis bij het versturen. Probeer het later opnieuw.";
-  }
-
-  errEl.classList.remove("hidden");
-}
-
-  
-  finally {
+  } catch (e) {
+    console.error("Direct wegschrijven mislukt:", e);
+    errEl.textContent = "Er ging iets mis bij het opslaan van je aanvraag. Probeer het later opnieuw.";
+    errEl.classList.remove("hidden");
+  } finally {
     btn.disabled = false;
     btn.textContent = "Aanvraag versturen";
   }
@@ -486,4 +501,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
   ensureAccountRequestButton();
 });
-

@@ -16,60 +16,120 @@ function speltakkenToArray(speltakken) {
 
 async function approveRequestViaFunction(requestId, rowEl) {
   rowEl.classList.add("loading");
-
   const actionCell = rowEl.querySelector("[data-actions]");
-  if (!actionCell) {
-    console.error("approveRequestViaFunction: geen [data-actions] gevonden");
-    rowEl.classList.remove("loading");
-    return;
-  }
-
-  const originalActions = actionCell.innerHTML;
-
-  // voorkom dubbelklikken
-  actionCell.innerHTML = `
-    <span class="inline-loading">
-      <span class="btn-spinner" aria-hidden="true"></span>
-      Goedkeuren…
-    </span>
-  `;
+  if (!actionCell) return;
 
   try {
-    await callFunction("approveAccountRequest", { requestId });
+    const app = getFirebaseApp();
+    const db = window._firebase.getDatabase(app);
 
-    const statusCell = rowEl.querySelector("[data-status]");
-    if (statusCell) {
-      statusCell.innerHTML = `<span class="status-badge status-approved">Goedgekeurd</span>`;
+    // 1. Haal de gegevens van de aanvraag op
+    const requestSnap = await window._firebase.get(window._firebase.ref(db, `accountRequests/${requestId}`));
+    if (!requestSnap.exists()) throw new Error("Aanvraag niet gevonden");
+    const requestData = requestSnap.val();
+
+    const email = requestData.email.trim();
+    const tempPassword = "Welkom48!"; // Het standaard wachtwoord
+
+    // 2. Maak de gebruiker aan in Firebase Authentication (via een secundaire app-instantie om uitloggen admin te voorkomen)
+    // We maken een tijdelijke app aan met een unieke naam om de gebruiker te registreren
+    const secondaryApp = window._firebase.initializeApp(window.firebaseConfig, "SecondaryAuthApp");
+    const secondaryAuth = window._firebase.getAuth(secondaryApp);
+
+    let userCredential;
+    try {
+      userCredential = await window._firebase.createUserWithEmailAndPassword(secondaryAuth, email, tempPassword);
+      // Ruim de secundaire app direct weer op
+      await secondaryApp.delete();
+    } catch (authErr) {
+      // Als de secundaire app al bestaat of er gaat iets mis, proberen we hem netjes te verwijderen
+      try { await secondaryApp.delete(); } catch (e) { }
+
+      // Als de gebruiker al bestaat in Auth, gaan we gewoon door naar de database-stap
+      if (authErr.code === "auth/email-already-in-use") {
+        console.warn("Gebruiker bestaat al in Firebase Auth, we updaten alleen de database.");
+      } else {
+        throw new Error("Auth registratie mislukt: " + authErr.message);
+      }
     }
 
-    actionCell.innerHTML = "—";
+    const newUid = userCredential ? userCredential.user.uid : requestId;
 
-    // direct users verversen (geen extra delay)
+    // 3. Maak de gebruiker direct aan in de 'users' tabel in de Database
+    await window._firebase.set(window._firebase.ref(db, `users/${newUid}`), {
+      fullName: requestData.fullName || "",
+      email: email,
+      status: "active",
+      createdAt: Date.now(),
+      roles: {
+        admin: !!requestData.requestedRoles?.admin,
+        bestuur: !!requestData.requestedRoles?.bestuur,
+        speltakken: requestData.speltakken || []
+      }
+    });
+
+    // 4. Verwijder de aanvraag uit de lijst
+    await window._firebase.set(window._firebase.ref(db, `accountRequests/${requestId}`), null);
+
+    rowEl.remove();
     loadUsers();
 
-    // snelle fade-out (geen 900ms wachttijd)
-    rowEl.classList.add("approved");
-    requestAnimationFrame(() => {
-      rowEl.style.transition = "opacity 0.25s ease";
-      rowEl.style.opacity = "0";
-    });
-    setTimeout(() => rowEl.remove(), 300);
+    // 5. Toon een pop-up met de kant-en-klare mailtekst om te kopiëren!
+    const mailSubject = "Je account voor de OVN Jaarplanning is actief!";
+    const mailBody = `Hoi ${requestData.fullName || 'Scout'},\n\n` +
+      `Je account voor de Jaarplanning-website is zojuist goedgekeurd!\n\n` +
+      `Je kunt nu inloggen met de volgende gegevens:\n` +
+      `- Website: https://ovnscouting.github.io/Jaarplanning/\n` +
+      `- Gebruikersnaam: ${email}\n` +
+      `- Tijdelijk wachtwoord: ${tempPassword}\n\n` +
+      `Pas direct je wachtwoord aan na je eerste keer inloggen.\n\n` +
+      `Met vriendelijke groet,\n` +
+      `De OVN Admin`;
 
-    showToast("Aanvraag goedgekeurd", "success");
+    // We maken een mooie modal met de tekst die je zo kunt kopiëren
+    showCopyModal(email, mailSubject, mailBody);
+
   } catch (err) {
     console.error("Goedkeuren mislukt:", err);
-
-    // herstel UI
-    actionCell.innerHTML = originalActions;
-
-    showToast(
-      "Goedkeuren mislukt: " + (err?.message || err?.details || "Onbekende fout"),
-      "error",
-      4200
-    );
+    showToast("Fout bij goedkeuren: " + err.message, "error", 4200);
   } finally {
     rowEl.classList.remove("loading");
   }
+}
+
+// Hulpelement om de kopieer-modal te tonen
+function showCopyModal(toEmail, subject, body) {
+  const modal = document.createElement("div");
+  modal.className = "modal";
+  modal.style.zIndex = "9999";
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width: 600px; text-align: left;">
+      <h3>Account goedgekeurd! 🎉</h3>
+      <p>Het account is nu actief in de database. Stuur handmatig een mailtje naar <strong>${toEmail}</strong> met de onderstaande gegevens:</p>
+      
+      <label><strong>Onderwerp:</strong></label>
+      <input type="text" value="${subject}" readonly style="width:100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
+      
+      <label><strong>Inhoud:</strong></label>
+      <textarea readonly rows="10" style="width:100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: sans-serif;">${body}</textarea>
+      
+      <div class="modal-actions" style="margin-top: 15px;">
+        <button id="btnOpenMail" class="pill-btn outline">Open Mail Programma</button>
+        <button id="btnCloseCopyModal" class="pill-btn">Sluiten</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  // Knop om direct een mail te openen met de velden al ingevuld in een nieuw tabblad
+  modal.querySelector("#btnOpenMail").onclick = () => {
+    const mailtoUrl = `mailto:${toEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(mailtoUrl, "_blank");
+  };
+
+  modal.querySelector("#btnCloseCopyModal").onclick = () => {
+    modal.remove();
+  };
 }
 
 
@@ -164,7 +224,7 @@ async function updateAccountRequestStatus(requestId, newStatus, rowEl, reason = 
   try {
     await callFunction("rejectAccountRequest", { requestId, reason });
 
-        // Reject verwijdert aanvraag direct (server-side) → lijst opnieuw ophalen
+    // Reject verwijdert aanvraag direct (server-side) → lijst opnieuw ophalen
     renderAccountRequests();
     showToast("Aanvraag afgewezen (mail verstuurd)", "success");
 

@@ -29,7 +29,17 @@ const db = admin.database();
 /* ============================================================
    Helpers
 ============================================================ */
-async function assertAdmin(request) {
+
+/* ============================================================
+   Mail routing (OVN mailboxen)
+============================================================ */
+const OVN_MAIL = {
+  primaryInbox: "ovnscouting@gmail.com",
+};
+
+function mailToPrimaryInbox() {
+  return OVN_MAIL.primaryInbox;
+}
   const uid = request.auth?.uid;
   if (!uid) {
     throw new HttpsError("unauthenticated", "Niet ingelogd");
@@ -51,8 +61,6 @@ async function assertAdmin(request) {
     "permission-denied",
     "Geen toegang (admin vereist)"
   );
-}
-
 
 async function setAdminClaim(uid, isAdmin) {
   // Lees bestaande claims om niks anders kapot te maken
@@ -190,44 +198,44 @@ exports.sendAccountRequest = onCall(
 
 
     try {
-const {
-  firstName,
-  lastName,
-  email,
-  requestedRoles = {},
-  speltakken = [],
-  message = "",
-} = request.data || {};
+      const {
+        firstName,
+        lastName,
+        email,
+        requestedRoles = {},
+        speltakken = [],
+        message = "",
+      } = request.data || {};
 
-const fullName = `${firstName || ""} ${lastName || ""}`.trim();
-
-
-
-if (!firstName || !lastName || !email) {
-  throw new HttpsError(
-    "invalid-argument",
-    "Voornaam, achternaam en email zijn verplicht"
-  );
-}
-
-// Duplicate check: email
-const emailLower = String(email).trim().toLowerCase();
+      const fullName = `${firstName || ""} ${lastName || ""}`.trim();
 
 
-// check bestaande aanvragen
-const reqSnap = await db
-  .ref("accountRequests")
-  .orderByChild("email")
-  .equalTo(emailLower)
-  .get();
 
-if (reqSnap.exists()) {
-  throw new HttpsError(
-    "already-exists",
-    "Er bestaat al een aanvraag met dit e-mailadres"
-  );
-}
-      
+      if (!firstName || !lastName || !email) {
+        throw new HttpsError(
+          "invalid-argument",
+          "Voornaam, achternaam en email zijn verplicht"
+        );
+      }
+
+      // Duplicate check: email
+      const emailLower = String(email).trim().toLowerCase();
+
+
+      // check bestaande aanvragen
+      const reqSnap = await db
+        .ref("accountRequests")
+        .orderByChild("email")
+        .equalTo(emailLower)
+        .get();
+
+      if (reqSnap.exists()) {
+        throw new HttpsError(
+          "already-exists",
+          "Er bestaat al een aanvraag met dit e-mailadres"
+        );
+      }
+
 
       const ref = db.ref("accountRequests").push();
       const requestData = {
@@ -251,8 +259,8 @@ if (reqSnap.exists()) {
       const transporter = getTransporter();
       await transporter.sendMail({
         from: `"OVN Scouting" <${process.env.GMAIL_EMAIL}>`,
-        to: "ovnscouting+it@gmail.com",
-      subject: `Nieuwe accountaanvraag: ${requestData.fullName}`,
+to: mailToPrimaryInbox(),
+        subject: `Nieuwe accountaanvraag: ${requestData.fullName}`,
         text:
           `Nieuwe accountaanvraag\n\n` +
           `Naam: ${requestData.fullName}\n` +
@@ -261,19 +269,19 @@ if (reqSnap.exists()) {
       });
 
       logger.info("Account request ontvangen", { id: ref.key });
-return { ok: true };
-} catch (err) {
-  logger.error("Account request fout", err);
+      return { ok: true };
+    } catch (err) {
+      logger.error("Account request fout", err);
 
-  if (err instanceof HttpsError) {
-    throw err;
-  }
+      if (err instanceof HttpsError) {
+        throw err;
+      }
 
-  throw new HttpsError(
-    "internal",
-    "Interne fout bij verwerken accountaanvraag"
-  );
-}
+      throw new HttpsError(
+        "internal",
+        "Interne fout bij verwerken accountaanvraag"
+      );
+    }
 
   }
 );
@@ -286,13 +294,13 @@ exports.approveAccountRequest = onCall(
   async (request) => {
     await assertAdmin(request);
 
- const requestId = request.data?.requestId;
-if (!requestId || typeof requestId !== "string") {
-  throw new HttpsError(
-    "invalid-argument",
-    "requestId ontbreekt of is ongeldig"
-  );
-}
+    const requestId = request.data?.requestId;
+    if (!requestId || typeof requestId !== "string") {
+      throw new HttpsError(
+        "invalid-argument",
+        "requestId ontbreekt of is ongeldig"
+      );
+    }
 
 
     const snap = await db.ref(`accountRequests/${requestId}`).get();
@@ -313,46 +321,46 @@ if (!requestId || typeof requestId !== "string") {
       );
     }
 
-let user;
-try {
-  user = await admin.auth().createUser({
-    email: reqData.email,
-    displayName: reqData.fullName,
-  });
-} catch (err) {
-  if (err.code === "auth/email-already-exists") {
-    user = await admin.auth().getUserByEmail(reqData.email);
-  } else {
-logger.error("Interne fout", err);
-throw new HttpsError("internal", "Interne serverfout");
-  }
-}
+    let user;
+    try {
+      user = await admin.auth().createUser({
+        email: reqData.email,
+        displayName: reqData.fullName,
+      });
+    } catch (err) {
+      if (err.code === "auth/email-already-exists") {
+        user = await admin.auth().getUserByEmail(reqData.email);
+      } else {
+        logger.error("Interne fout", err);
+        throw new HttpsError("internal", "Interne serverfout");
+      }
+    }
 
 
     const uid = user.uid;
 
     // ============================================================
-// Zet admin custom claim indien aangevraagd
-// ============================================================
-if (reqData?.requestedRoles?.admin === true) {
-  await setAdminClaim(uid, true);
-}
+    // Zet admin custom claim indien aangevraagd
+    // ============================================================
+    if (reqData?.requestedRoles?.admin === true) {
+      await setAdminClaim(uid, true);
+    }
 
 
-await db.ref(`users/${uid}`).update({
-    email: reqData.email,
-  firstName: reqData.firstName,
-  lastName: reqData.lastName,
-  fullName: reqData.fullName,
+    await db.ref(`users/${uid}`).update({
+      email: reqData.email,
+      firstName: reqData.firstName,
+      lastName: reqData.lastName,
+      fullName: reqData.fullName,
 
-roles: {
-  admin: !!reqData.requestedRoles?.admin,
-  bestuur: !!reqData.requestedRoles?.bestuur,
-  speltakken: speltakkenToMap(reqData.speltakken),
-},
+      roles: {
+        admin: !!reqData.requestedRoles?.admin,
+        bestuur: !!reqData.requestedRoles?.bestuur,
+        speltakken: speltakkenToMap(reqData.speltakken),
+      },
 
 
-createdAt: admin.database.ServerValue.TIMESTAMP,
+      createdAt: admin.database.ServerValue.TIMESTAMP,
       createdFromRequest: requestId,
     });
 
@@ -370,10 +378,10 @@ createdAt: admin.database.ServerValue.TIMESTAMP,
         from: `"OVN Scouting" <${process.env.GMAIL_EMAIL}>`,
         to: reqData.email,
         subject: "Stel je wachtwoord in (OVN Jaarplanning)",
-text:
-  `Hoi ${reqData.firstName},\n\n` +
-  `Je account voor de OVN Jaarplanning is goedgekeurd.\n\n` +
-  `Stel hier je wachtwoord in:\n${resetLink}`,
+        text:
+          `Hoi ${reqData.firstName},\n\n` +
+          `Je account voor de OVN Jaarplanning is goedgekeurd.\n\n` +
+          `Stel hier je wachtwoord in:\n${resetLink}`,
       });
     } catch (mailErr) {
       logger.error("Resetmail mislukt", mailErr);
@@ -405,27 +413,27 @@ exports.updateUserRoles = onCall(async (request) => {
     }
   }
 
-// ============================================================
-// Admin custom claim synchroon zetten met rol
-// ============================================================
+  // ============================================================
+  // Admin custom claim synchroon zetten met rol
+  // ============================================================
 
 
 
   const snap = await db.ref(`users/${uid}/roles`).get();
   const current = snap.val() || {};
 
-await db.ref(`users/${uid}/roles`).set({
-  admin: roles.admin ?? current.admin ?? false,
-  bestuur: roles.bestuur ?? current.bestuur ?? false,
-  speltakken: speltakkenToMap(
-    roles.speltakken != null ? roles.speltakken : current.speltakken
-  ),
-});
+  await db.ref(`users/${uid}/roles`).set({
+    admin: roles.admin ?? current.admin ?? false,
+    bestuur: roles.bestuur ?? current.bestuur ?? false,
+    speltakken: speltakkenToMap(
+      roles.speltakken != null ? roles.speltakken : current.speltakken
+    ),
+  });
 
 
   if (typeof roles.admin === "boolean") {
-  await setAdminClaim(uid, roles.admin);
-}
+    await setAdminClaim(uid, roles.admin);
+  }
   return { ok: true };
 });
 
@@ -615,59 +623,60 @@ exports.syncAdminClaimsFromDb = onCall(async (request) => {
 exports.rejectAccountRequest = onCall(
   { secrets: ["GMAIL_EMAIL", "GMAIL_PASSWORD"] },
   async (request) => {
-  await assertAdmin(request);
+    await assertAdmin(request);
 
-  const { requestId } = request.data || {};
-  if (!requestId || typeof requestId !== "string") {
-    throw new HttpsError(
-      "invalid-argument",
-      "requestId ontbreekt of is ongeldig"
-    );
-  }
+    const { requestId } = request.data || {};
+    if (!requestId || typeof requestId !== "string") {
+      throw new HttpsError(
+        "invalid-argument",
+        "requestId ontbreekt of is ongeldig"
+      );
+    }
 
-  const ref = db.ref(`accountRequests/${requestId}`);
-  const snap = await ref.get();
+    const ref = db.ref(`accountRequests/${requestId}`);
+    const snap = await ref.get();
 
-  if (!snap.exists()) {
-    throw new HttpsError("not-found", "Aanvraag niet gevonden");
-  }
+    if (!snap.exists()) {
+      throw new HttpsError("not-found", "Aanvraag niet gevonden");
+    }
 
-  const data = snap.val();
-  if (data.status !== "pending") {
-    throw new HttpsError(
-      "failed-precondition",
-      "Aanvraag is al verwerkt"
-    );
-  }
+    const data = snap.val();
+    if (data.status !== "pending") {
+      throw new HttpsError(
+        "failed-precondition",
+        "Aanvraag is al verwerkt"
+      );
+    }
 
-  const { reason } = request.data || {};
-  const reasonText =
-    typeof reason === "string" ? reason.trim().slice(0, 500) : "";
+    const { reason } = request.data || {};
+    const reasonText =
+      typeof reason === "string" ? reason.trim().slice(0, 500) : "";
 
-  const transporter = getTransporter();
+    const transporter = getTransporter();
 
-  const mailText =
-    `Hoi ${data.fullName || ""},\n\n` +
-    `Je accountaanvraag voor OVN Jaarplanning is afgewezen.\n` +
-    (reasonText ? `\nReden: ${reasonText}\n` : "\n") +
-    `Voor vragen of opmerkingen kun je mailen naar: ovnscouting+it@gmail.com\n\n` +
-    `Groet,\nOVN Scouting`;
+    const mailText =
+      `Hoi ${data.fullName || ""},\n\n` +
+      `Je accountaanvraag voor OVN Jaarplanning is afgewezen.\n` +
+      (reasonText ? `\nReden: ${reasonText}\n` : "\n") +
+      `Voor vragen of opmerkingen kun je mailen naar: ${mailToPrimaryInbox()}\n\n` +
+      `Groet,\nOVN Scouting`;
 
-  await transporter.sendMail({
-    from: `"OVN Scouting" <${process.env.GMAIL_EMAIL}>`,
-    to: data.email,
-    subject: "Je aanvraag is afgewezen",
-    text: mailText
+
+    await transporter.sendMail({
+      from: `"OVN Scouting" <${process.env.GMAIL_EMAIL}>`,
+      to: data.email,
+      subject: "Je aanvraag is afgewezen",
+      text: mailText
+    });
+
+
+    // Pas verwijderen als mail is gelukt (anders kan admin opnieuw proberen)
+    await ref.remove();
+
+
+    logger.info("Account request rejected", { requestId });
+    return { ok: true };
   });
-
-
-  // Pas verwijderen als mail is gelukt (anders kan admin opnieuw proberen)
-  await ref.remove();
-
-
-  logger.info("Account request rejected", { requestId });
-  return { ok: true };
-});
 
 
 /* ============================================================

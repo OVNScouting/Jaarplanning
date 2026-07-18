@@ -64,6 +64,36 @@ export function isoFromInput(v) {
   return v;
 }
 
+//
+// Berekent het seizoen (bijv. 2025-2026) op basis van een datum string.
+export function getSeizoenVanDatum(dateString) {
+  if (!dateString) return "";
+  const datum = new Date(dateString);
+  const jaar = datum.getFullYear();
+  const maand = datum.getMonth(); // 0-indexed (jan = 0)
+
+  // Scoutingseizoen loopt van augustus (maand 7) t/m juli
+  if (maand < 7) {
+    return `${jaar - 1}-${jaar}`;
+  } else {
+    return `${jaar}-${jaar + 1}`;
+  }
+}
+
+/**
+ * Bepaalt of een seizoen toegankelijk is voor ouders (huidige seizoen + vorig seizoen).
+ * @param {string} seizoen - Bijv. "2025-2026"
+ * @returns {boolean}
+ */
+export function isSeizoenToegestaan(seizoen) {
+  const nu = new Date();
+  const huidigJaar = nu.getMonth() < 7 ? nu.getFullYear() - 1 : nu.getFullYear();
+  const huidigSeizoen = `${huidigJaar}-${huidigJaar + 1}`;
+  const vorigSeizoen = `${huidigJaar - 1}-${huidigJaar}`;
+
+  return seizoen === huidigSeizoen || seizoen === vorigSeizoen;
+}
+
 /* ========================================================
    SORTERING — BESTAAND (BACKWARDS COMPATIBLE)
    ======================================================== */

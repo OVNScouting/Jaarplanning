@@ -10,7 +10,9 @@ import {
     formatDateDisplay,
     isoFromInput,
     sortOpkomsten,
-    getNextUpcoming
+    getNextUpcoming,
+    getSeizoenVanDatum,
+    isSeizoenToegestaan
 } from "./utils.js";
 
 
@@ -406,6 +408,16 @@ let editingMemberType = null;
 
 let editMode = false;
 
+// --- NIEUW: SEIZOEN FILTER ---
+const vandaag = new Date();
+const currentYear = vandaag.getFullYear();
+const currentMonth = vandaag.getMonth() + 1; // 1-12
+// Bepaal het huidige seizoen (bijv. 2026-2027)
+let currentSeizoenFilter = (currentMonth >= 9)
+    ? `${currentYear}-${currentYear + 1}`
+    : `${currentYear - 1}-${currentYear}`;
+// -----------------------------
+
 // ===============================
 // UNDO BUFFER — OPKOMSTEN
 // ===============================
@@ -480,22 +492,55 @@ function setMode(newMode) {
 }
 
 function applyModeVisibility() {
+    // Bepaal of de huidige gebruiker een 'ouder' is (geen leiding)
+    const isOuderCheck = isOuder();
+
     // Leiding-only elementen verbergen voor ouders
     document.querySelectorAll(".only-leiding").forEach(el => {
-        el.classList.toggle("hide-view", isOuder());
+        el.classList.toggle("hide-view", isOuderCheck);
     });
 
     // Kolommen die ouders niet mogen zien
     document.querySelectorAll(".col-locatie, .col-materiaal, .col-type, .col-leiding").forEach(el => {
-        el.classList.toggle("hide-view", isOuder());
+        el.classList.toggle("hide-view", isOuderCheck);
     });
 
     // FAB (opkomst toevoegen) alleen zichtbaar voor leiding
-    if (fab) fab.classList.toggle("hide-view", isOuder());
+    if (fab) fab.classList.toggle("hide-view", isOuderCheck);
 
     // Sidebar alleen voor leiding
     const sidebar = document.getElementById("leidingSidebar");
-    if (sidebar) sidebar.classList.toggle("hidden", isOuder());
+    if (sidebar) sidebar.classList.toggle("hidden", isOuderCheck);
+
+    // --- SEIZOEN DROPDOWN INJECTIE (Iedereen) ---
+    const filterContainer = document.getElementById("seizoenFilterContainer");
+    if (filterContainer) {
+        const isLeidingCheck = !isOuder();
+
+        // Logica voor welke opties we tonen
+        const opties = [
+            { val: "2025-2026", label: "25/26" },
+            { val: "2026-2027", label: "26/27" }
+            // Voeg hier eventueel dynamisch meer jaren toe
+        ];
+
+        let html = `<label>Seizoen:</label><select id="filterSeizoen" class="cell-select">`;
+
+        opties.forEach(opt => {
+            // Als het ouder is, check of het seizoen toegestaan is
+            if (isLeidingCheck || isSeizoenToegestaan(opt.val)) {
+                html += `<option value="${opt.val}" ${currentSeizoenFilter === opt.val ? 'selected' : ''}>${opt.label}</option>`;
+            }
+        });
+
+        html += `</select>`;
+        filterContainer.innerHTML = html;
+
+        document.getElementById('filterSeizoen').addEventListener('change', (e) => {
+            currentSeizoenFilter = e.target.value;
+            renderTable();
+        });
+    }
 }
 
 
@@ -867,9 +912,17 @@ function renderTable() {
     addHeaders();
 
     const visible = opkomsten.filter(o => {
-        if (currentFilter === "future") return isFutureOrToday(o.datum);
-        if (currentFilter === "past") return isPast(o.datum);
-        return true;
+        // 1. Tijd-filter
+        let timeMatch = true;
+        if (currentFilter === "future") timeMatch = isFutureOrToday(o.datum);
+        if (currentFilter === "past") timeMatch = isPast(o.datum);
+
+        // 2. Seizoen-filter (Helperfunctie uit utils.js)
+        // Importeer getSeizoenVanDatum in je bestand indien nog niet gedaan
+        const opkomstSeizoen = getSeizoenVanDatum(o.datum);
+        const seizoenMatch = (currentSeizoenFilter === "all" || opkomstSeizoen === currentSeizoenFilter);
+
+        return timeMatch && seizoenMatch;
     });
 
     // Lege staten

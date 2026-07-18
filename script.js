@@ -143,25 +143,18 @@ let tableHScroll = null;
 let tableHInner = null;
 
 const editModeButton = document.getElementById("editModeButton");
-const printButton = document.getElementById("printButton");
 
 const filterAll = document.getElementById("filterAll");
 const filterFuture = document.getElementById("filterFuture");
 const filterPast = document.getElementById("filterPast");
 
 const openLedenbeheerButton = document.getElementById("openLedenbeheerButton");
-const openMeldingenButton = document.getElementById("openMeldingenButton");
 
 const ledenbeheerSection = document.getElementById("ledenbeheerSection");
-const meldingenSection = document.getElementById("meldingenSection");
 
 const jeugdContainer = document.getElementById("jeugdLeden");
 const ledenbeheerLeiding = document.getElementById("leidingLeden");
 const addMemberButton = document.getElementById("addMemberButton");
-
-const meldingLeidingAan = document.getElementById("meldingLeidingAan");
-const meldingOnbekendAan = document.getElementById("meldingOnbekendAan");
-const leidingDrempel = document.getElementById("leidingDrempel");
 
 const memberModal = document.getElementById("addMemberModal");
 const memberType = document.getElementById("memberType");
@@ -1692,25 +1685,40 @@ function makePresenceCell(o, key, hidden, isLeidingCell) {
 }
 
 async function togglePresence(o, key) {
-    const cur = o.aanwezigheid?.[key] || "onbekend";
-    const next =
-        cur === "aanwezig" ? "afwezig" :
-            cur === "afwezig" ? "onbekend" :
-                "aanwezig";
+    const isLeiding = /* bepaal hier of user leiding is */
+    const aankomendeOpkomst = isBinnen3Dagen(o.datum); // Hulpfunctie nodig
+    const nieuweStatus = (o.aanwezigheid?.[key] === "aanwezig") ? "afwezig" : "aanwezig";
 
-    // Jeugd (ouders + leiding) → PUBLIC
-    if (!String(key).startsWith("leiding-")) {
-        await set(ref(db, `${PUBLIC_ROOT}/opkomsten/${o.id}/aanwezigheid/${key}`), next);
-        return loadEverything();
+    // CHECK 1: Minder dan 3 leiding?
+    if (nieuweStatus === "afwezig" && isLeiding && countLeiding(o) <= 3) {
+        const akkoord = await toonWaarschuwing("Weinig leiding aanwezig", "Met jouw afmelding staan er minder dan 3 leiding op aanwezig.");
+        if (!akkoord) return; // Stop als ze niet bevestigen
     }
 
-    // Leiding → PRIVATE (alleen als je leiding bent)
-    if (!isLeiding()) return;
+    // CHECK 2: Binnen 3 dagen wijzigen?
+    if (isLeiding && aankomendeOpkomst) {
+        const akkoord = await toonWaarschuwing("Kort voor opkomst", "Je past je aanwezigheid aan binnen 3 dagen voor de opkomst.");
+        if (!akkoord) return;
+    }
 
-    await set(ref(db, `${speltak}/opkomsten/${o.id}/aanwezigheid/${key}`), next);
-    return loadEverything();
+    // Als we hier komen, is het veilig om op te slaan
+    o.aanwezigheid[key] = nieuweStatus;
+    saveData();
 }
 
+async function toonWaarschuwing(titel, bericht) {
+    const dialog = document.getElementById("waarschuwingPopup");
+    document.getElementById("popupTitel").innerText = titel;
+    document.getElementById("popupTekst").innerText = bericht;
+
+    dialog.showModal();
+
+    const returnValue = await new Promise(resolve => {
+        dialog.addEventListener("close", () => resolve(dialog.returnValue), { once: true });
+    });
+
+    return returnValue === "confirm";
+}
 
 function countPresence(o) {
     let j = 0, l = 0;
@@ -2049,29 +2057,6 @@ function openEditMember(obj, type) {
     }
     memberModal.classList.remove("hidden");
 }
-/* ======================================================================
-   MELDINGEN
-   ====================================================================== */
-function renderMeldingen() {
-    if (!meldingLeidingAan || !meldingOnbekendAan || !leidingDrempel) return;
-    meldingLeidingAan.checked = !!data.meldingLeidingAan;
-    meldingOnbekendAan.checked = !!data.meldingOnbekendAan;
-    leidingDrempel.value = typeof data.leidingDrempel === "number" ? data.leidingDrempel : 2;
-}
-
-function saveMeldingen() {
-    if (!isLeiding()) return;
-
-    update(ref(db, speltak), {
-        meldingLeidingAan: !!meldingLeidingAan.checked,
-        meldingOnbekendAan: !!meldingOnbekendAan.checked,
-        leidingDrempel: Number(leidingDrempel.value || 2)
-    });
-}
-
-meldingLeidingAan?.addEventListener("change", saveMeldingen);
-meldingOnbekendAan?.addEventListener("change", saveMeldingen);
-leidingDrempel?.addEventListener("input", saveMeldingen);
 
 /* ======================================================================
    OPEN/CLOSE SECTIONS
@@ -2085,7 +2070,6 @@ function openSection(section) {
 }
 
 openLedenbeheerButton?.addEventListener("click", () => openSection(ledenbeheerSection));
-openMeldingenButton?.addEventListener("click", () => openSection(meldingenSection));
 
 closeButtons.forEach(btn => {
     btn.addEventListener("click", () => {
@@ -2437,48 +2421,6 @@ filterPast?.addEventListener("click", () => {
     renderTable();
 });
 
-printButton?.addEventListener("click", () => {
-    const prevMode = mode;
-    const prevFilter = currentFilter;
-
-    // Print altijd als ouder
-    setMode("ouder");
-
-    // Alleen komende opkomsten tonen tijdens print
-    currentFilter = "future";
-
-    // Chips visueel updaten
-    if (filterAll && filterFuture && filterPast) {
-        filterAll.classList.remove("active");
-        filterPast.classList.remove("active");
-        filterFuture.classList.add("active");
-    }
-
-    // Tabel opnieuw renderen met alleen toekomstige opkomsten
-    renderTable();
-
-    scrollToOpkomstFromHash();
-
-
-    setTimeout(() => {
-        window.print();
-
-        // Filter herstellen
-        currentFilter = prevFilter;
-        if (filterAll && filterFuture && filterPast) {
-            filterAll.classList.remove("active");
-            filterFuture.classList.remove("active");
-            filterPast.classList.remove("active");
-
-            if (prevFilter === "all") filterAll.classList.add("active");
-            if (prevFilter === "future") filterFuture.classList.add("active");
-            if (prevFilter === "past") filterPast.classList.add("active");
-        }
-
-        // Mode herstellen en tabel opnieuw tekenen
-        setMode(prevMode);
-    }, 150);
-});
 
 editModeButton?.addEventListener("click", async () => {
     if (!isLeiding()) {

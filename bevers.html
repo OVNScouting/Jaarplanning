@@ -86,7 +86,6 @@
           <span id="filterPast" class="chip">Verleden</span>
         </div>
 
-        <button id="printButton" class="pill-btn outline print-btn">Printen</button>
 
         <button id="editModeButton" class="pill-btn hidden only-leiding primary tabel-edit-btn">
           ✏️ Opkomsten bewerken
@@ -110,17 +109,13 @@
           <div id="leidingSidebar" class="leiding-sidebar only-leiding hidden">
             <button class="pill-btn outline" onclick="window.location='dashboard.html'">Dashboard</button>
 
-            <a class="pill-btn outline" href="assets/scouting_mail_handleiding_styled.pdf" target="_blank" download>
-              Handleiding Mailbox
-            </a>
+
 
             <button id="openLedenbeheerButton" class="pill-btn outline">
               Ledenbeheer
             </button>
 
-            <button id="openMeldingenButton" class="pill-btn outline">
-              Meldingen
-            </button>
+           
           </div>
         </div>
 
@@ -347,7 +342,17 @@
     </div>
   </div>
 
-
+<dialog id="waarschuwingPopup">
+    <form method="dialog">
+        <h3 id="popupTitel">Let op!</h3>
+        <p id="popupTekst"></p>
+        <p><strong>Bevestig dat je dit persoonlijk hebt doorgegeven aan je team.</strong></p>
+        <div class="button-group">
+            <button value="cancel">Annuleren</button>
+            <button value="confirm" id="confirmBtn">Ja, ik heb dit doorgegeven</button>
+        </div>
+    </form>
+</dialog>
 
 </body>
 

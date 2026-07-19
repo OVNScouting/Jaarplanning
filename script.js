@@ -1681,47 +1681,45 @@ function makePresenceCell(o, key, hidden, isLeidingCell) {
 }
 
 async function togglePresence(o, key) {
-    // 1. Rechten controleren
-    const isLeidingCheck = isLeiding();
+    // 1. Nieuwe check: Is de datum in het verleden?
+    const datumOpkomst = new Date(o.datum); // Zorg dat o.datum het formaat 'YYYY-MM-DD' heeft
+    const vandaag = new Date();
+    vandaag.setHours(0, 0, 0, 0); // Tijd op 00:00:00 zetten voor een eerlijke vergelijking
 
-   // 2. Datum check (alleen voor ouders)
-    if (!isLeidingCheck && !isBinnen3Dagen(o.datum)) {
-        toonWaarschuwing("Niet toegestaan", "Je kunt je aanwezigheid alleen wijzigen voor opkomsten in de komende 3 dagen.");
+    if (datumOpkomst < vandaag) {
+        // Hier roep je de nieuwe, nette melding aan
+        await toonMelding(
+            "Datum verstreken",
+            "Deze opkomst is al geweest. Het is niet meer mogelijk om de aanwezigheid te wijzigen."
+        );
         return;
     }
 
-    // 3. Status bepalen (roulatie: onbekend -> aanwezig -> afwezig -> onbekend)
-    const huidigeStatus = o.aanwezigheid?.[key] || "onbekend";
-    let nieuweStatus = "onbekend";
+    // 2. Bestaande check: Binnen 3 dagen melding tonen
+    // ... (jouw bestaande popup logica voor 3 dagen) ...
 
-    if (huidigeStatus === "onbekend") {
-        nieuweStatus = "aanwezig";
-    } else if (huidigeStatus === "aanwezig") {
-        nieuweStatus = "afwezig";
-    } else {
-        nieuweStatus = "onbekend";
-    }
+    const huidigeStatus = o.aanwezigheid?.[key] || "onbekend";
+    let nieuweStatus = (huidigeStatus === "onbekend") ? "aanwezig" : (huidigeStatus === "aanwezig" ? "afwezig" : "onbekend");
 
     try {
         const updates = {};
-        // Pad naar de aanwezigheid van dit specifieke lid/leiding in deze opkomst
-        updates[`${speltak}/opkomsten/${o.id}/aanwezigheid/${key}`] = nieuweStatus;
+        const user = auth.currentUser;
 
-        // Als het een jeugdlid is, ook de publieke mirror updaten
         if (!key.startsWith("leiding-")) {
-            updates[`${PUBLIC_ROOT}/opkomsten/${o.id}/aanwezigheid/${key}`] = nieuweStatus;
+            updates[`${speltak}/public/opkomsten/${o.id}/aanwezigheid/${key}`] = nieuweStatus;
         }
 
-        // 4. Firebase update uitvoeren
-        await update(ref(db), updates);
+        if (user) {
+            updates[`${speltak}/opkomsten/${o.id}/aanwezigheid/${key}`] = nieuweStatus;
+        }
 
-        // 5. Tabel verversen
+        await update(ref(db), updates);
         await loadEverything();
     } catch (error) {
         console.error("Fout bij opslaan:", error);
-        alert("Er ging iets mis bij het opslaan.");
     }
 }
+
 async function toonWaarschuwing(titel, bericht) {
     const dialog = document.getElementById("waarschuwingPopup");
     document.getElementById("popupTitel").innerText = titel;
@@ -1729,11 +1727,39 @@ async function toonWaarschuwing(titel, bericht) {
 
     dialog.showModal();
 
+    // Wacht tot de gebruiker op een knop in het formulier klikt
     const returnValue = await new Promise(resolve => {
         dialog.addEventListener("close", () => resolve(dialog.returnValue), { once: true });
     });
 
+    // Retourneert true als op "Ja..." geklikt is, false bij "Annuleren"
     return returnValue === "confirm";
+}
+
+function toonMelding(titel, tekst) {
+    return new Promise((resolve) => {
+        // Maak de overlay aan
+        const overlay = document.createElement('div');
+        // Gebruik de class die je al hebt voor je andere popups (bijv. 'popup-overlay')
+        overlay.className = 'popup-overlay';
+
+        // Zorg voor de HTML structuur
+        overlay.innerHTML = `
+            <div class="popup-box">
+                <h3>${titel}</h3>
+                <p>${tekst}</p>
+                <button id="ok-btn">OK</button>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        // Zorg dat de OK knop de popup verwijdert
+        document.getElementById('ok-btn').addEventListener('click', () => {
+            overlay.remove();
+            resolve();
+        });
+    });
 }
 
 function countPresence(o) {

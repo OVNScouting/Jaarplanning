@@ -127,6 +127,7 @@ body {
   font-size: 0.85rem;
   font-weight: 500;
 }
+
 /* ============================================================
    LOGIN BADGE (nieuw auth-systeem)
 ============================================================ */
@@ -248,6 +249,7 @@ body {
 .pill-btn.outline:hover {
   background: var(--blue-soft);
 }
+
 /* ============================================================
    BUTTONS — varianten + loading
 ============================================================ */
@@ -264,13 +266,19 @@ body {
   background: #16a34a;
   color: #fff;
 }
-.pill-btn.success:hover { background: #15803d; }
+
+.pill-btn.success:hover {
+  background: #15803d;
+}
 
 .pill-btn.danger {
   background: #dc2626;
   color: #fff;
 }
-.pill-btn.danger:hover { background: #b91c1c; }
+
+.pill-btn.danger:hover {
+  background: #b91c1c;
+}
 
 .pill-btn[disabled],
 .primary-btn[disabled] {
@@ -301,12 +309,17 @@ body {
   border-color: rgba(0, 111, 255, 0.35);
   border-top-color: var(--blue);
 }
+
 .pill-btn:not(.primary):not(.outline):not(.success):not(.danger) .btn-spinner {
   border-color: rgba(17, 24, 39, 0.25);
   border-top-color: rgba(17, 24, 39, 0.65);
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 /* rij "busy" state bij account requests */
 #accountRequestTable tr.loading {
@@ -317,14 +330,16 @@ body {
 #userSidePanel.is-busy {
   position: relative;
 }
+
 #userSidePanel.is-busy::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(255,255,255,0.6);
+  background: rgba(255, 255, 255, 0.6);
   border-radius: inherit;
   z-index: 2;
 }
+
 #userSidePanel.is-busy::before {
   content: "";
   position: absolute;
@@ -349,15 +364,24 @@ body {
   color: #fff;
   padding: 10px 14px;
   border-radius: 999px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.18);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
   z-index: 2500;
   font-size: 0.9rem;
   max-width: min(520px, calc(100vw - 24px));
   text-align: center;
 }
-.toast.hidden { display: none; }
-.toast[data-type="success"] { background: #166534; }
-.toast[data-type="error"] { background: #b91c1c; }
+
+.toast.hidden {
+  display: none;
+}
+
+.toast[data-type="success"] {
+  background: #166534;
+}
+
+.toast[data-type="error"] {
+  background: #b91c1c;
+}
 
 
 .print-btn {
@@ -410,6 +434,7 @@ body {
   color: #4b5563;
   border: 1px solid #d1d5db;
 }
+
 /* ============================================================
    STATUS BADGES — Accountaanvragen
 ============================================================ */
@@ -486,16 +511,21 @@ body {
   overflow-x: auto;
   border-radius: var(--radius-small);
 }
+
 /* Native horizontale scrollbar van de tabel verbergen –
    we gebruiken nu alleen de zwevende proxy-balk */
 .table-wrapper {
-  -ms-overflow-style: none;  /* IE/Edge legacy */
-  scrollbar-width: none;     /* Firefox */
+  -ms-overflow-style: none;
+  /* IE/Edge legacy */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 .table-wrapper::-webkit-scrollbar {
-  display: none;             /* Chrome/Safari/Edge */
+  display: none;
+  /* Chrome/Safari/Edge */
 }
+
 .planning-table {
   width: 100%;
   border-collapse: collapse;
@@ -520,7 +550,8 @@ body {
 
 .col-datum {
   position: sticky;
-  left: 40px; /* default voor leidingsmodus */
+  left: 40px;
+  /* default voor leidingsmodus */
   background: var(--card);
   z-index: 5;
 }
@@ -538,27 +569,34 @@ body.mode-bewerken .col-datum {
 #accountRequestTable td:nth-child(5) {
   font-weight: 600;
 }
+
 /* ============================================
    VERTICALE NAMEN – BETER LEESBAAR
 ============================================ */
 .name-vertical {
-    writing-mode: vertical-rl;
-    text-orientation: sideways;     /* beter leesbaar dan mixed */
-    font-size: 0.82rem;             /* iets groter */
-    font-weight: 600;               /* meer body */
-    letter-spacing: 0.5px;          /* luchtiger */
-    padding: 4px 3px;               /* meer ruimte rond letters */
-    color: #111;                    /* maximale leesbaarheid */
+  writing-mode: vertical-rl;
+  text-orientation: sideways;
+  /* beter leesbaar dan mixed */
+  font-size: 0.82rem;
+  /* iets groter */
+  font-weight: 600;
+  /* meer body */
+  letter-spacing: 0.5px;
+  /* luchtiger */
+  padding: 4px 3px;
+  /* meer ruimte rond letters */
+  color: #111;
+  /* maximale leesbaarheid */
 }
 
 .welpen-naam {
-    font-size: 0.9rem;
-    letter-spacing: 0.6px;
+  font-size: 0.9rem;
+  letter-spacing: 0.6px;
 }
 
 .welpen-naam-reallife {
-    font-size: 0.75rem;
-    letter-spacing: 0.4px;
+  font-size: 0.75rem;
+  letter-spacing: 0.4px;
 }
 
 
@@ -570,9 +608,19 @@ body.mode-bewerken .col-datum {
   font-weight: 600;
 }
 
-.presence-aanwezig { color: #15803d; }
-.presence-afwezig  { color: #b91c1c; }
-.presence-onbekend { color: #64748b; } /* ? grijs */
+.presence-aanwezig {
+  color: #15803d;
+}
+
+.presence-afwezig {
+  color: #b91c1c;
+}
+
+.presence-onbekend {
+  color: #64748b;
+}
+
+/* ? grijs */
 
 
 /* Totals row onderaan */
@@ -601,34 +649,68 @@ tr.row-totals td.totals-label {
 }
 
 /* Status kleuren */
-.row-geenopkomst  { background: var(--opkomst-geen-bg) !important; border-left: 4px solid var(--opkomst-geen); }
-.row-next         { background: var(--opkomst-volgende-bg) !important; border-left: 4px solid var(--opkomst-volgende); }
-.row-grey         { background: var(--opkomst-verleden-bg) !important; }
-.row-bijzonder    { background: var(--opkomst-bijzonder-bg) !important; border-left: 4px solid var(--opkomst-bijzonder); }
-.row-kamp         { background: var(--opkomst-kamp-bg) !important; border-left: 4px solid var(--opkomst-kamp); }
+.row-geenopkomst {
+  background: var(--opkomst-geen-bg) !important;
+  border-left: 4px solid var(--opkomst-geen);
+}
+
+.row-next {
+  background: var(--opkomst-volgende-bg) !important;
+  border-left: 4px solid var(--opkomst-volgende);
+}
+
+.row-grey {
+  background: var(--opkomst-verleden-bg) !important;
+}
+
+.row-bijzonder {
+  background: var(--opkomst-bijzonder-bg) !important;
+  border-left: 4px solid var(--opkomst-bijzonder);
+}
+
+.row-kamp {
+  background: var(--opkomst-kamp-bg) !important;
+  border-left: 4px solid var(--opkomst-kamp);
+}
 
 /* Als een opkomst zowel "geen" als "next" zou zijn: rood wint */
 tr.row-geenopkomst.row-next {
   background: var(--opkomst-geen-bg) !important;
   border-left: 4px solid var(--opkomst-geen) !important;
 }
-tr.row-geenopkomst.row-next > .col-datum {
+
+tr.row-geenopkomst.row-next>.col-datum {
   background: var(--opkomst-geen-bg) !important;
 }
 
 /* Keep sticky datum readable */
-tr.row-bijzonder > .col-datum { background: var(--opkomst-bijzonder-bg) !important; }
-tr.row-kamp > .col-datum      { background: var(--opkomst-kamp-bg) !important; }
-tr.row-geenopkomst > .col-datum { background: var(--opkomst-geen-bg) !important; }
-tr.row-next > .col-datum      { background: var(--opkomst-volgende-bg) !important; }
-tr.row-grey > .col-datum      { background: var(--opkomst-verleden-bg) !important; }
+tr.row-bijzonder>.col-datum {
+  background: var(--opkomst-bijzonder-bg) !important;
+}
+
+tr.row-kamp>.col-datum {
+  background: var(--opkomst-kamp-bg) !important;
+}
+
+tr.row-geenopkomst>.col-datum {
+  background: var(--opkomst-geen-bg) !important;
+}
+
+tr.row-next>.col-datum {
+  background: var(--opkomst-volgende-bg) !important;
+}
+
+tr.row-grey>.col-datum {
+  background: var(--opkomst-verleden-bg) !important;
+}
 
 /* Verleden moet altijd volledig grijs zijn (override alles) */
 tr.row-grey {
   background: var(--opkomst-verleden-bg) !important;
   border-left: 4px solid var(--opkomst-verleden) !important;
 }
-tr.row-grey > .col-datum {
+
+tr.row-grey>.col-datum {
   background: var(--opkomst-verleden-bg) !important;
 }
 
@@ -650,7 +732,7 @@ tr.row-grey > .col-datum {
 
 
 .cell-textarea {
-overflow-y: hidden;
+  overflow-y: hidden;
   resize: vertical;
   min-height: 55px;
 }
@@ -662,30 +744,39 @@ overflow-y: hidden;
   border-color: var(--blue);
   box-shadow: 0 0 0 2px var(--blue-soft);
 }
+
 .cell-textarea {
-    width: 100%;
-    min-height: 3rem;     /* start-hoogte */
-    max-height: 10rem;    /* voorkomt mega-rijen */
-    padding: 4px 6px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font-size: .85rem;
-    background: #fff;
-    resize: vertical;     /* eventueel nog zelf iets groter kunnen trekken */
+  width: 100%;
+  min-height: 3rem;
+  /* start-hoogte */
+  max-height: 10rem;
+  /* voorkomt mega-rijen */
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: .85rem;
+  background: #fff;
+  resize: vertical;
+  /* eventueel nog zelf iets groter kunnen trekken */
 }
 
 .cell-textarea:focus {
-    outline: none;
-    border-color: var(--blue);
-    box-shadow: 0 0 0 2px var(--blue-soft);
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px var(--blue-soft);
 }
 
 /* Hide elements for parents */
-.hide-view { display: none !important; }
+.hide-view {
+  display: none !important;
+}
+
 /* Zwevende horizontale scrollbar – gekoppeld aan de tabel */
 .table-h-scroll {
-  position: fixed;                 /* hangt los boven de inhoud */
-  z-index: 1000;                   /* boven de tabel maar onder modals */
+  position: fixed;
+  /* hangt los boven de inhoud */
+  z-index: 1000;
+  /* boven de tabel maar onder modals */
   background: rgba(255, 255, 255, 0.95);
   padding: 4px 0;
   border-radius: 999px;
@@ -694,39 +785,46 @@ overflow-y: hidden;
   /* breedte en positie (left/top) worden via JS gezet */
   overflow-x: auto;
   overflow-y: hidden;
-  display: none;                   /* JS zet hem aan/uit */
+  display: none;
+  /* JS zet hem aan/uit */
 }
 
 .table-h-inner {
-  height: 1px;                     /* onzichtbare “spoor”-div, alleen scrollbar telt */
+  height: 1px;
+  /* onzichtbare “spoor”-div, alleen scrollbar telt */
 }
 
 /* ============================================
    ZWEVENDE SCROLLBAR – DIKKER + BLAUW
 ============================================ */
 .table-h-scroll::-webkit-scrollbar {
-    height: 14px;                       /* duidelijk dikker */
+  height: 14px;
+  /* duidelijk dikker */
 }
 
 .table-h-scroll::-webkit-scrollbar-track {
-    background: #dae7ff;                /* zacht blauw */
-    border-radius: 999px;
+  background: #dae7ff;
+  /* zacht blauw */
+  border-radius: 999px;
 }
 
 .table-h-scroll::-webkit-scrollbar-thumb {
-    background: var(--blue);            /* jouw blauwe kleur */
-    border-radius: 999px;
-    border: 3px solid #dae7ff;          /* witte rand voor premium-look */
+  background: var(--blue);
+  /* jouw blauwe kleur */
+  border-radius: 999px;
+  border: 3px solid #dae7ff;
+  /* witte rand voor premium-look */
 }
 
 .table-h-scroll::-webkit-scrollbar-thumb:hover {
-    background: #0059d4;                /* donkerblauw hover */
+  background: #0059d4;
+  /* donkerblauw hover */
 }
 
 /* Firefox */
 .table-h-scroll {
-    scrollbar-width: thick;
-    scrollbar-color: var(--blue) #dae7ff;
+  scrollbar-width: thick;
+  scrollbar-color: var(--blue) #dae7ff;
 }
 
 /* ============================================================
@@ -783,13 +881,11 @@ overflow-y: hidden;
 .lid-verborgen {
   opacity: 0.45;
   font-style: italic;
-  background: repeating-linear-gradient(
-    45deg,
-    #f9fafb,
-    #f9fafb 6px,
-    #eef1f5 6px,
-    #eef1f5 12px
-  );
+  background: repeating-linear-gradient(45deg,
+      #f9fafb,
+      #f9fafb 6px,
+      #eef1f5 6px,
+      #eef1f5 12px);
 }
 
 
@@ -808,7 +904,7 @@ overflow-y: hidden;
   box-shadow: var(--shadow);
   padding: 1.2rem 1.4rem 1.4rem;
   position: relative;
- 
+
 }
 
 .meldingen-row {
@@ -847,6 +943,7 @@ overflow-y: hidden;
   font-size: 0.9rem;
   line-height: 1;
 }
+
 .close-section:hover {
   background: #ddd;
 }
@@ -858,7 +955,7 @@ overflow-y: hidden;
 .modal {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.4);
+  background: rgba(0, 0, 0, .4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -872,7 +969,7 @@ overflow-y: hidden;
   width: 420px;
   max-height: 85vh;
   overflow-y: auto;
-  box-shadow: 0 6px 20px rgba(0,0,0,.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .15);
 }
 
 .modal-content input,
@@ -892,6 +989,7 @@ overflow-y: hidden;
   gap: .5rem;
   justify-content: flex-end;
 }
+
 /* ============================================================
    ACCOUNT REQUEST MODAL — professionele layout
 ============================================================ */
@@ -966,10 +1064,12 @@ overflow-y: hidden;
   padding: 6px 10px;
   font-size: 0.9rem;
 }
+
 /* Kolombreedtes planning – zorgen dat edit niet smaller wordt dan view */
 .col-procor {
   min-width: 90px;
 }
+
 /* Explorers — Buddy kolom */
 .col-buddy {
   min-width: 120px;
@@ -1000,10 +1100,11 @@ overflow-y: hidden;
 }
 
 .draggable.drag-over {
-    border: 2px dashed var(--accent, #888);
-    border-radius: 6px;
-    background: rgba(255,255,255,0.15);
+  border: 2px dashed var(--accent, #888);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.15);
 }
+
 /* ============================================================
    RESPONSIVE
 ============================================================ */
@@ -1022,7 +1123,7 @@ overflow-y: hidden;
 
 body.mode-ouder .col-extra-aantal,
 body.mode-leiding:not(.mode-bewerken) .col-extra-aantal {
-    display: none !important;
+  display: none !important;
 }
 
 /* Force verbergen leiding-cellen voor ouders */
@@ -1037,12 +1138,17 @@ body.mode-ouder .col-divider {
 }
 
 .row-highlight {
-    animation: flashRow 2s ease-out;
+  animation: flashRow 2s ease-out;
 }
 
 @keyframes flashRow {
-    0%   { background: #fff3cd; }
-    100% { background: transparent; }
+  0% {
+    background: #fff3cd;
+  }
+
+  100% {
+    background: transparent;
+  }
 }
 
 /* ============================================
@@ -1050,80 +1156,103 @@ body.mode-ouder .col-divider {
    ============================================ */
 
 .speltak-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1.1rem;
-    margin-top: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.1rem;
+  margin-top: 1.5rem;
 }
 
 .speltak-card {
-    position: relative;
-    background: var(--card);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 1.2rem 1rem 1.6rem;
-    text-decoration: none;
-    color: var(--text-main);
-    overflow: hidden;
-    transition: transform .18s ease, box-shadow .18s ease;
-    cursor: pointer;
+  position: relative;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.2rem 1rem 1.6rem;
+  text-decoration: none;
+  color: var(--text-main);
+  overflow: hidden;
+  transition: transform .18s ease, box-shadow .18s ease;
+  cursor: pointer;
 }
 
 .speltak-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
 }
 
 .speltak-card h2 {
-    margin: 0;
-    padding-top: 0.4rem;
-    font-size: 1.25rem;
-    font-weight: 600;
-    position: relative;
-    z-index: 5;
+  margin: 0;
+  padding-top: 0.4rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  position: relative;
+  z-index: 5;
 }
 
 /* bovenbalk */
 .card-topbar {
-    height: 46px;
-    border-radius: var(--radius) var(--radius) 0 0;
-    margin: -1.2rem -1rem 1rem -1rem;
-    position: relative;
-    z-index: 3;
+  height: 46px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  margin: -1.2rem -1rem 1rem -1rem;
+  position: relative;
+  z-index: 3;
 }
 
 /* achtergrond-icon */
 .card-icon-bg {
-    position: absolute;
-    right: -22px;
-    top: 18px;
-    width: 95px;
-    height: 95px;
-    opacity: 0.12;
-    z-index: 2;
-    pointer-events: none;
-    user-select: none;
+  position: absolute;
+  right: -22px;
+  top: 18px;
+  width: 95px;
+  height: 95px;
+  opacity: 0.12;
+  z-index: 2;
+  pointer-events: none;
+  user-select: none;
 }
 
 /* KLEUREN per speltak */
-.speltak-card.bevers      .card-topbar { background: #e61700; }
-.speltak-card.welpen      .card-topbar { background: #19b30b; }
-.speltak-card.scouts      .card-topbar { background: #c4b584; }
-.speltak-card.explorers   .card-topbar { background: #8a0a03; }
-.speltak-card.rovers      .card-topbar { background: #590501; }
-.speltak-card.stam        .card-topbar { background: #f0d800; }
-.speltak-card.dashboard   .card-topbar { background: #687a96; }
-.speltak-card.bestuur     .card-topbar { background: #1822b5; }
+.speltak-card.bevers .card-topbar {
+  background: #e61700;
+}
+
+.speltak-card.welpen .card-topbar {
+  background: #19b30b;
+}
+
+.speltak-card.scouts .card-topbar {
+  background: #c4b584;
+}
+
+.speltak-card.explorers .card-topbar {
+  background: #8a0a03;
+}
+
+.speltak-card.rovers .card-topbar {
+  background: #590501;
+}
+
+.speltak-card.stam .card-topbar {
+  background: #f0d800;
+}
+
+.speltak-card.dashboard .card-topbar {
+  background: #687a96;
+}
+
+.speltak-card.bestuur .card-topbar {
+  background: #1822b5;
+}
 
 
 /* responsive */
 @media (max-width: 600px) {
-    .card-icon-bg {
-        width: 70px;
-        height: 70px;
-        right: -15px;
-        top: 20px;
-    }
+  .card-icon-bg {
+    width: 70px;
+    height: 70px;
+    right: -15px;
+    top: 20px;
+  }
 }
 
 /* Nieuwe modal structuur – meer ruimte en grouping */
@@ -1142,50 +1271,51 @@ body.mode-ouder .col-divider {
   margin-top: 0;
   margin-bottom: 0.8rem;
 }
+
 /* Inputs moeten exact de celbreedte volgen */
 .cell-input,
 .cell-select,
 .cell-textarea {
-    width: 100%;
-    box-sizing: border-box;
+  width: 100%;
+  box-sizing: border-box;
 
-    /* prettige klikbare hoogte */
-    min-height: 38px;
+  /* prettige klikbare hoogte */
+  min-height: 38px;
 
-    padding: 6px 8px;
-    font-size: 0.92rem;
+  padding: 6px 8px;
+  font-size: 0.92rem;
 
-    border-radius: 6px;
-    border: 1px solid var(--border);
+  border-radius: 6px;
+  border: 1px solid var(--border);
 }
 
 /* textarea mag wat hoger */
 .cell-textarea {
-    min-height: 60px;
+  min-height: 60px;
 }
 
 /* Welpennaam bovenaan */
 .welpen-naam {
-    font-weight: 600;
-    font-size: 0.78rem;
-    margin-bottom: 2px;
+  font-weight: 600;
+  font-size: 0.78rem;
+  margin-bottom: 2px;
 }
 
 /* Rode ❗ als er geen welpennaam is */
 .welpen-missing {
-    color: #b91c1c;
+  color: #b91c1c;
 }
 
 /* Echte naam kleiner eronder */
 .welpen-naam-reallife {
-    font-size: 0.68rem;
-    opacity: 0.75;
+  font-size: 0.68rem;
+  opacity: 0.75;
 }
 
 /* Nestleider bold + iets donkerder achtergrond */
 .welpen-leider {
-    font-weight: 700 !important;
-    text-decoration: underline;
+  font-weight: 700 !important;
+  text-decoration: underline;
 }
 
 /* ============================================
@@ -1194,28 +1324,28 @@ body.mode-ouder .col-divider {
 
 /* Zwart */
 .nest-zwart {
-    background: #28292b;
+  background: #28292b;
 }
 
 /* Bruin */
 .nest-bruin {
-    background: #69574b;
+  background: #69574b;
 }
 
 /* Wit */
 .nest-wit {
-    background: #faf7e8;
+  background: #faf7e8;
 }
 
 /* Grijs */
 .nest-grijs {
-    background: #404652;
+  background: #404652;
 }
 
 /* Nestloze leden → geen extra styling */
 .nest-none,
 .nest- {
-    background: transparent;
+  background: transparent;
 }
 
 
@@ -1226,41 +1356,41 @@ body.mode-ouder .col-divider {
 
 /* Extra velden in ledenbeheer voor welpennaam/nest */
 .welpen-extra-field {
-    margin-top: 0.35rem;
+  margin-top: 0.35rem;
 }
 
 .welpen-extra-field label {
-    font-weight: 500;
-    display: block;
-    margin-bottom: 0.2rem;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 0.2rem;
 }
 
 .welpen-extra-field input,
 .welpen-extra-field select {
-    width: 100%;
-    padding: 0.45rem 0.55rem;
-    border-radius: var(--radius-small);
-    border: 1px solid var(--border);
+  width: 100%;
+  padding: 0.45rem 0.55rem;
+  border-radius: var(--radius-small);
+  border: 1px solid var(--border);
 }
 
 /* Drag & drop styling */
 .draggable {
-    cursor: grab;
+  cursor: grab;
 }
 
 .draggable:active {
-    cursor: grabbing;
+  cursor: grabbing;
 }
 
 .drag-over {
-    border: 2px dashed var(--blue);
-    background: #eef6ff;
+  border: 2px dashed var(--blue);
+  background: #eef6ff;
 }
 
 /* Scrollbar mag niet dominant boven content liggen */
 .table-h-scroll {
-    pointer-events: auto;
-    backdrop-filter: blur(2px);
+  pointer-events: auto;
+  backdrop-filter: blur(2px);
 }
 
 /* ============================================
@@ -1268,22 +1398,34 @@ body.mode-ouder .col-divider {
 ============================================ */
 
 .nest-header {
-    font-weight: 700;
-    font-size: 0.9rem;
-    margin: 0.8rem 0 0.3rem;
-    padding-bottom: 2px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    opacity: 0.85;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin: 0.8rem 0 0.3rem;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.85;
 }
 
 /* Icoontjes per nest */
-.nest-icon-zwart::before  { content: "⚫"; }
-.nest-icon-bruin::before  { content: "🟤"; }
-.nest-icon-wit::before    { content: "⚪"; }
-.nest-icon-grijs::before  { content: "⚫"; opacity: 0.5; }
+.nest-icon-zwart::before {
+  content: "⚫";
+}
+
+.nest-icon-bruin::before {
+  content: "🟤";
+}
+
+.nest-icon-wit::before {
+  content: "⚪";
+}
+
+.nest-icon-grijs::before {
+  content: "⚫";
+  opacity: 0.5;
+}
 
 /* ============================================
    WELPEN – WITTE HIGHLIGHT IN NESTCELLEN
@@ -1294,8 +1436,10 @@ body.mode-ouder .col-divider {
 .nest-wit,
 .nest-grijs,
 .nest-bruin {
-    position: relative;   /* noodzakelijk voor overlay */
-    overflow: hidden;     /* voorkomt dat highlight uitsteekt */
+  position: relative;
+  /* noodzakelijk voor overlay */
+  overflow: hidden;
+  /* voorkomt dat highlight uitsteekt */
 }
 
 /* De highlight zelf */
@@ -1303,25 +1447,30 @@ body.mode-ouder .col-divider {
 .nest-wit::before,
 .nest-grijs::before,
 .nest-bruin::before {
-    content: "";
-    position: absolute;
-    top: 4px;               /* kleine margin: ziet er premium uit */
-    bottom: 4px;
-    left: 4px;
-    right: 4px;
-    background: rgba(255, 255, 255, 0.28);  /* subtiele, zachte highlight */
-    border-radius: 6px;     /* mooi afgerond */
-    z-index: 1;             /* onder de tekst maar boven de achtergrond */
-    pointer-events: none;   /* highlight blokkeert niets */
+  content: "";
+  position: absolute;
+  top: 4px;
+  /* kleine margin: ziet er premium uit */
+  bottom: 4px;
+  left: 4px;
+  right: 4px;
+  background: rgba(255, 255, 255, 0.28);
+  /* subtiele, zachte highlight */
+  border-radius: 6px;
+  /* mooi afgerond */
+  z-index: 1;
+  /* onder de tekst maar boven de achtergrond */
+  pointer-events: none;
+  /* highlight blokkeert niets */
 }
 
 /* Tekst moet boven de highlight liggen */
-.nest-zwart > *,
-.nest-wit > *,
-.nest-grijs > *,
-.nest-bruin > * {
-    position: relative;
-    z-index: 2;
+.nest-zwart>*,
+.nest-wit>*,
+.nest-grijs>*,
+.nest-bruin>* {
+  position: relative;
+  z-index: 2;
 }
 
 /* ======================================================================
@@ -1332,8 +1481,8 @@ body.mode-ouder .col-divider {
 .ploeg-kievit,
 .ploeg-reiger,
 .ploeg-meeuw {
-    position: relative;
-    overflow: hidden;
+  position: relative;
+  overflow: hidden;
 }
 
 /* Highlight overlay */
@@ -1341,28 +1490,28 @@ body.mode-ouder .col-divider {
 .ploeg-kievit::before,
 .ploeg-reiger::before,
 .ploeg-meeuw::before {
-    content: "";
-    position: absolute;
-    top: 4px;
-    bottom: 4px;
-    left: 4px;
-    right: 4px;
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  right: 4px;
 
-    /* Zelfde subtiele premium overlay als welpen */
-    background: rgba(255, 255, 255, 0.28);
-    border-radius: 6px;
+  /* Zelfde subtiele premium overlay als welpen */
+  background: rgba(255, 255, 255, 0.28);
+  border-radius: 6px;
 
-    z-index: 1;
-    pointer-events: none;
+  z-index: 1;
+  pointer-events: none;
 }
 
 /* Tekst boven overlay */
-.ploeg-sperwer > *,
-.ploeg-kievit > *,
-.ploeg-reiger > *,
-.ploeg-meeuw > * {
-    position: relative;
-    z-index: 2;
+.ploeg-sperwer>*,
+.ploeg-kievit>*,
+.ploeg-reiger>*,
+.ploeg-meeuw>* {
+  position: relative;
+  z-index: 2;
 }
 
 
@@ -1370,58 +1519,77 @@ body.mode-ouder .col-divider {
    SCOUTS – PLOEGKLEUREN (header only)
 ============================================ */
 th.ploeg-sperwer {
-    background-color: #f0da6c;
-    color: white;
-    position: relative;
+  background-color: #f0da6c;
+  color: white;
+  position: relative;
 }
+
 th.ploeg-kievit {
-    background-color: #659c37;
-    color: white;
+  background-color: #659c37;
+  color: white;
 }
+
 th.ploeg-reiger {
-    background-color: #37659c;
-    color: white;
+  background-color: #37659c;
+  color: white;
 }
+
 th.ploeg-meeuw {
-    background-color: #9c3c37;
-    color: white;
+  background-color: #9c3c37;
+  color: white;
 }
+
 th.ploeg- {
-    background-color: #BBBBBB;
-    color: black;
+  background-color: #BBBBBB;
+  color: black;
 }
 
 /* Subtiele white overlay zoals bij Welpen */
 th[class^="ploeg-"]::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: rgba(255,255,255,0.12);
-    pointer-events: none;
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.12);
+  pointer-events: none;
 }
 
 /* Ledenbeheer ploeg-headers */
 .ploeg-header {
-    font-weight: 600;
-    padding: 8px 10px;
-    margin-top: 10px;
-    margin-bottom: 4px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    text-transform: capitalize;
+  font-weight: 600;
+  padding: 8px 10px;
+  margin-top: 10px;
+  margin-bottom: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: capitalize;
 }
 
-.ploeg-header.ploeg-sperwer { background: #f0da6c; color: white; }
-.ploeg-header.ploeg-kievit  { background: #659c37; color: white; }
-.ploeg-header.ploeg-reiger  { background: #37659c; color: white; }
-.ploeg-header.ploeg-meeuw   { background: #9c3c37; color: white; }
+.ploeg-header.ploeg-sperwer {
+  background: #f0da6c;
+  color: white;
+}
+
+.ploeg-header.ploeg-kievit {
+  background: #659c37;
+  color: white;
+}
+
+.ploeg-header.ploeg-reiger {
+  background: #37659c;
+  color: white;
+}
+
+.ploeg-header.ploeg-meeuw {
+  background: #9c3c37;
+  color: white;
+}
 
 .ploeg-header .ploeg-icoon {
-    height: 22px;
-    width: auto;
-    filter: drop-shadow(0 0 2px rgba(0,0,0,0.3));
+  height: 22px;
+  width: auto;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.3));
 }
 
 /* ===============================
@@ -1429,32 +1597,35 @@ th[class^="ploeg-"]::after {
    =============================== */
 
 #scoutsExtraFields .form-row label {
-    margin: 0;
-    font-weight: 500;
+  margin: 0;
+  font-weight: 500;
 }
 
 #scoutsExtraFields .form-row input[type="checkbox"] {
-    margin: 0;
-    width: 18px;
-    height: 18px;
+  margin: 0;
+  width: 18px;
+  height: 18px;
 }
 
 .checkbox-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-left: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 4px;
 }
+
 .checkbox-row input[type="checkbox"] {
-    transform: scale(1.2);
+  transform: scale(1.2);
 }
+
 #welpenExtraFields label {
-    font-weight: 500;
+  font-weight: 500;
 }
+
 .modal-extra-group {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 /* ===============================
@@ -1462,26 +1633,26 @@ th[class^="ploeg-"]::after {
    =============================== */
 
 #scoutsExtraFields .scouts-roles {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 #scoutsExtraFields .scouts-roles label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 
-    margin: 0;
-    font-weight: 500;
-    cursor: pointer;
+  margin: 0;
+  font-weight: 500;
+  cursor: pointer;
 }
 
 #scoutsExtraFields .scouts-roles input[type="checkbox"] {
-    margin: 0;
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
+  margin: 0;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 /* ======================================================================
@@ -1489,66 +1660,75 @@ th[class^="ploeg-"]::after {
    ====================================================================== */
 
 .dashboard-overview {
-    margin-top: 1.5rem;
+  margin-top: 1.5rem;
 }
 
 /* Datumkop */
 .dashboard-date {
-    margin: 2rem 0 0.75rem;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-primary, #222);
+  margin: 2rem 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary, #222);
 }
 
 /* Tabel */
 .dashboard-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: #fff;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    margin-bottom: 1.5rem;
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
 }
+
 /* ===============================
    DASHBOARD – vaste kolombreedtes
    =============================== */
 
 .dashboard-table th:nth-child(1),
 .dashboard-table td:nth-child(1) {
-  width: 120px;   /* Speltak */
+  width: 120px;
+  /* Speltak */
 }
 
 .dashboard-table th:nth-child(2),
 .dashboard-table td:nth-child(2) {
-  width: 110px;   /* Tijd */
+  width: 110px;
+  /* Tijd */
   white-space: nowrap;
 }
 
 .dashboard-table th:nth-child(3),
 .dashboard-table td:nth-child(3) {
-  min-width: 180px; /* Titel */
+  min-width: 180px;
+  /* Titel */
 }
 
 .dashboard-table th:nth-child(4),
 .dashboard-table td:nth-child(4) {
-  width: 110px;   /* Type */
+  width: 110px;
+  /* Type */
 }
 
 .dashboard-table th:nth-child(5),
 .dashboard-table td:nth-child(5) {
-  min-width: 140px; /* Locatie */
+  min-width: 140px;
+  /* Locatie */
 }
 
 .dashboard-table th:nth-child(6),
 .dashboard-table td:nth-child(6) {
-  min-width: 160px; /* Materiaal */
+  min-width: 160px;
+  /* Materiaal */
 }
 
 .dashboard-table th:nth-child(7),
 .dashboard-table td:nth-child(7) {
-  min-width: 200px; /* Bijzonderheden */
+  min-width: 200px;
+  /* Bijzonderheden */
 }
+
 /* Lege dashboard-cellen subtiel maken */
 .dashboard-table td:empty::after {
   content: "—";
@@ -1559,63 +1739,65 @@ th[class^="ploeg-"]::after {
 
 /* Header */
 .dashboard-table thead th {
-    background: #f4f6f8;
-    color: #444;
-    font-weight: 600;
-    font-size: 0.85rem;
-    text-align: left;
-    padding: 0.6rem 0.7rem;
-    border-bottom: 1px solid #e0e0e0;
-    white-space: nowrap;
+  background: #f4f6f8;
+  color: #444;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-align: left;
+  padding: 0.6rem 0.7rem;
+  border-bottom: 1px solid #e0e0e0;
+  white-space: nowrap;
 }
 
 /* Cell */
 .dashboard-table td {
-    padding: 0.55rem 0.7rem;
-    font-size: 0.85rem;
-    border-bottom: 1px solid #eee;
-    vertical-align: top;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #eee;
+  vertical-align: top;
 }
 
 /* Zebra striping */
 .dashboard-table tbody tr:nth-child(even) {
-    background: #fafafa;
+  background: #fafafa;
 }
 
 /* Hover (subtiel, read-only) */
 .dashboard-table tbody tr:hover {
-    background: #f1f5f9;
+  background: #f1f5f9;
 }
 
 /* Speltak-kolom */
 .dashboard-table td:first-child {
-    width: 120px;
-    min-width: 120px;
-    font-weight: 700;
-    color: #fff;
-    text-align: center;
-    white-space: nowrap;
+  width: 120px;
+  min-width: 120px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
 }
 
 /* Tijd-kolom iets compacter */
 .dashboard-table td:nth-child(2),
 .dashboard-table th:nth-child(2) {
-    width: 110px;
-    white-space: nowrap;
+  width: 110px;
+  white-space: nowrap;
 }
 
 /* Lange tekstvelden netjes laten wrappen */
 .dashboard-table td:nth-child(3),
 .dashboard-table td:nth-child(7),
 .dashboard-table td:nth-child(8) {
-    max-width: 280px;
-    word-break: break-word;
+  max-width: 280px;
+  word-break: break-word;
 }
+
 /* Dashboard: type-opkomst kleurmarkering (zoals jaarplanning balk) */
 .dashboard-type-cell {
   font-weight: 700;
   border-left: 4px solid transparent;
-  padding-left: 0.55rem; /* iets meer “badge” gevoel */
+  padding-left: 0.55rem;
+  /* iets meer “badge” gevoel */
 }
 
 .dashboard-type-cell.op-type-geen {
@@ -1663,6 +1845,7 @@ th[class^="ploeg-"]::after {
 .floating-account:hover {
   opacity: 1;
 }
+
 /* Modal checklist (checkbox + tekst netjes op één lijn) */
 .modal .checklist label {
   display: flex;
@@ -1672,7 +1855,8 @@ th[class^="ploeg-"]::after {
 }
 
 .modal .checklist input[type="checkbox"] {
-  margin: 0;           /* voorkom rare verticale offsets */
+  margin: 0;
+  /* voorkom rare verticale offsets */
   transform: translateY(-1px);
 }
 
@@ -1713,26 +1897,38 @@ tr.approved {
     display: none !important;
   }
 
-  thead { display: table-header-group; }
+  thead {
+    display: table-header-group;
+  }
 
-  .planning-table { font-size: 11pt; }
+  .planning-table {
+    font-size: 11pt;
+  }
 
-    /* Locatie verbergen (print wordt ouder-modus) */
-  .col-locatie { display: none !important; }
-   
+  /* Locatie verbergen (print wordt ouder-modus) */
+  .col-locatie {
+    display: none !important;
+  }
+
   /* Aanwezigheid (jeugd + leiding) niet meeprinten */
   .col-jeugd,
   .col-leiding {
     display: none !important;
   }
-     /* ============================================================
+
+  /* ============================================================
      PRINT — altijd alleen: Datum, Start, Eind, Thema, Bijzonderheden
      (ongeacht login/mode)
   ============================================================ */
 
   /* Geen zwevende scrollbar / scroll-wrapper gedrag in print */
-  .table-h-scroll { display: none !important; }
-  .table-wrapper { overflow: visible !important; }
+  .table-h-scroll {
+    display: none !important;
+  }
+
+  .table-wrapper {
+    overflow: visible !important;
+  }
 
   /* Sticky datum moet normaal worden op papier */
   .planning-table th.col-datum,
@@ -1762,7 +1958,34 @@ tr.approved {
   }
 
   /* Totals row nooit meeprinten */
-  tr.row-totals { display: none !important; }
+  tr.row-totals {
+    display: none !important;
+  }
 
- }
+}
 
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  /* Donkere achtergrond */
+  display: flex;
+  justify-content: center;
+  /* Centreert horizontaal */
+  align-items: center;
+  /* Centreert verticaal */
+  z-index: 1000;
+  /* Zorgt dat hij boven alles staat */
+}
+
+.popup-box {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  text-align: center;
+}

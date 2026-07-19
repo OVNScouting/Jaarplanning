@@ -107,7 +107,7 @@
         <div id="leidingSidebar" class="leiding-sidebar hidden only-leiding">
           <button class="pill-btn outline" onclick="window.location='dashboard.html'">Dashboard</button>
 
-      
+
 
           <button id="openLedenbeheerButton" class="pill-btn outline">
             Ledenbeheer
@@ -323,6 +323,17 @@
     }
   </script>
 
+  <dialog id="waarschuwingPopup">
+    <form method="dialog">
+      <h3 id="popupTitel">Let op!</h3>
+      <p id="popupTekst"></p>
+      <p><strong>Bevestig dat je dit persoonlijk hebt doorgegeven aan je team.</strong></p>
+      <div class="button-group">
+        <button value="cancel">Annuleren</button>
+        <button value="confirm" id="confirmBtn">Ja, ik heb dit doorgegeven</button>
+      </div>
+    </form>
+  </dialog>
 
 </body>
 

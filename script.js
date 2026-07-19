@@ -12,7 +12,8 @@ import {
     sortOpkomsten,
     getNextUpcoming,
     getSeizoenVanDatum,
-    isSeizoenToegestaan
+    isSeizoenToegestaan,
+    isBinnen3Dagen
 } from "./utils.js";
 
 
@@ -1683,23 +1684,32 @@ async function togglePresence(o, key) {
     // 1. Rechten controleren
     const isLeidingCheck = isLeiding();
 
-    // 2. Datum check (alleen voor ouders)
+   // 2. Datum check (alleen voor ouders)
     if (!isLeidingCheck && !isBinnen3Dagen(o.datum)) {
-        alert("Je kunt je aanwezigheid alleen wijzigen voor opkomsten in de komende 3 dagen.");
+        toonWaarschuwing("Niet toegestaan", "Je kunt je aanwezigheid alleen wijzigen voor opkomsten in de komende 3 dagen.");
         return;
     }
 
-    // 3. Status bepalen (toggle)
-    const huidigeStatus = o.aanwezigheid?.[key] === "aanwezig" ? "afwezig" : "aanwezig";
+    // 3. Status bepalen (roulatie: onbekend -> aanwezig -> afwezig -> onbekend)
+    const huidigeStatus = o.aanwezigheid?.[key] || "onbekend";
+    let nieuweStatus = "onbekend";
+
+    if (huidigeStatus === "onbekend") {
+        nieuweStatus = "aanwezig";
+    } else if (huidigeStatus === "aanwezig") {
+        nieuweStatus = "afwezig";
+    } else {
+        nieuweStatus = "onbekend";
+    }
 
     try {
         const updates = {};
         // Pad naar de aanwezigheid van dit specifieke lid/leiding in deze opkomst
-        updates[`${speltak}/opkomsten/${o.id}/aanwezigheid/${key}`] = huidigeStatus;
+        updates[`${speltak}/opkomsten/${o.id}/aanwezigheid/${key}`] = nieuweStatus;
 
         // Als het een jeugdlid is, ook de publieke mirror updaten
         if (!key.startsWith("leiding-")) {
-            updates[`${PUBLIC_ROOT}/opkomsten/${o.id}/aanwezigheid/${key}`] = huidigeStatus;
+            updates[`${PUBLIC_ROOT}/opkomsten/${o.id}/aanwezigheid/${key}`] = nieuweStatus;
         }
 
         // 4. Firebase update uitvoeren

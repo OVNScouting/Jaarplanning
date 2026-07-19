@@ -439,8 +439,9 @@ function renderAccountRequests() {
           r.requestedRoles?.bestuur ? "Bestuur" : null
         ].filter(Boolean).join(", ") || "—";
 
-        const speltakken = Array.isArray(r.speltakken) && r.speltakken.length
-          ? r.speltakken.join(", ")
+        const speltakkenArr = speltakkenToArray(r.speltakken);
+        const speltakken = speltakkenArr.length > 0
+          ? speltakkenArr.join(", ")
           : "—";
 
         const created = r.createdAt

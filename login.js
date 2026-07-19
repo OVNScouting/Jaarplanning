@@ -442,10 +442,11 @@ async function submitAccountRequest() {
     errEl.classList.remove("hidden");
     return;
   }
-
-  const speltakken = Array.from(
-    document.querySelectorAll("#reqSpeltakken input:checked")
-  ).map((i) => i.value);
+  
+  const speltakken = {};
+  document.querySelectorAll("#reqSpeltakken input").forEach((input) => {
+    speltakken[input.value] = input.checked;
+  });
 
   if (speltakken.length === 0) {
     errEl.textContent = "Selecteer a.u.b. ten minste één speltak.";

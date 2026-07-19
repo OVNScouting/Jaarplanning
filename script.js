@@ -1680,24 +1680,38 @@ function makePresenceCell(o, key, hidden, isLeidingCell) {
     return td;
 }
 
-async function togglePresence(o, key) {
-    // 1. Nieuwe check: Is de datum in het verleden?
-    const datumOpkomst = new Date(o.datum); // Zorg dat o.datum het formaat 'YYYY-MM-DD' heeft
-    const vandaag = new Date();
-    vandaag.setHours(0, 0, 0, 0); // Tijd op 00:00:00 zetten voor een eerlijke vergelijking
+let heeftBevestigd3Dagen = sessionStorage.getItem("heeftBevestigd3Dagen");
 
+async function togglePresence(o, key) {
+    const datumOpkomst = new Date(o.datum);
+    const vandaag = new Date();
+    vandaag.setHours(0, 0, 0, 0);
+
+    // 1. Check op verleden
     if (datumOpkomst < vandaag) {
-        // Hier roep je de nieuwe, nette melding aan
-        await toonMelding(
-            "Datum verstreken",
-            "Deze opkomst is al geweest. Het is niet meer mogelijk om de aanwezigheid te wijzigen."
-        );
+        await toonMelding("Datum verstreken", "Deze opkomst is al geweest.");
         return;
     }
 
-    // 2. Bestaande check: Binnen 3 dagen melding tonen
-    // ... (jouw bestaande popup logica voor 3 dagen) ...
+    // 2. Check of we binnen 3 dagen zitten EN of de gebruiker nog niet heeft bevestigd in deze sessie
+    // We lezen de waarde direct uit de sessionStorage bij elke klik
+    const alBevestigd = sessionStorage.getItem("heeftBevestigd3Dagen") === "true";
 
+    if (isBinnen3Dagen(o.datum) && !alBevestigd) {
+        const bevestigd = await toonWaarschuwing(
+            "Bevestigen",
+            "Let op: deze opkomst is binnen 3 dagen. Heb je dit doorgegeven aan je leiding?"
+        );
+
+        if (!bevestigd) {
+            return; // Stop actie als gebruiker op "Annuleren" klikt
+        } else {
+            // Gebruiker is akkoord: sla vlag op in sessie
+            sessionStorage.setItem("heeftBevestigd3Dagen", "true");
+        }
+    }
+
+    // 3. Update logica
     const huidigeStatus = o.aanwezigheid?.[key] || "onbekend";
     let nieuweStatus = (huidigeStatus === "onbekend") ? "aanwezig" : (huidigeStatus === "aanwezig" ? "afwezig" : "onbekend");
 
@@ -1719,7 +1733,6 @@ async function togglePresence(o, key) {
         console.error("Fout bij opslaan:", error);
     }
 }
-
 async function toonWaarschuwing(titel, bericht) {
     const dialog = document.getElementById("waarschuwingPopup");
     document.getElementById("popupTitel").innerText = titel;
@@ -2584,4 +2597,20 @@ function renderMeldingen(meldingen) {
     console.log("Meldingen:", meldingen);
     // Voeg hier eventueel code toe om meldingen in een specifieke div te tonen
     // Bijv: document.getElementById('meldingenContainer').innerText = meldingen;
+}
+
+async function vraagBevestiging(titel, bericht) {
+    const dialog = document.getElementById("waarschuwingPopup");
+    document.getElementById("popupTitel").innerText = titel;
+    document.getElementById("popupTekst").innerText = bericht;
+
+    dialog.showModal();
+
+    // Wacht tot de gebruiker op een knop klikt die een 'value' teruggeeft
+    const returnValue = await new Promise(resolve => {
+        // Zorg dat je knoppen in je HTML dit gedrag triggeren
+        dialog.addEventListener("close", () => resolve(dialog.returnValue), { once: true });
+    });
+
+    return returnValue === "confirm";
 }

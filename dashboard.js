@@ -60,27 +60,49 @@ const SPELTAK_COLOR = {
 const container = document.getElementById("dashboardOverview");
 
 // ======================================================================
-// LOAD DASHBOARD
+// LOAD DASHBOARD (Via Cloud Function)
 // ======================================================================
 async function loadDashboard() {
   if (!container) return;
   container.innerHTML = "<p>Dashboard laden…</p>";
 
   try {
-    const [opkomsten, bestuurs] = await Promise.all([
-      loadAllOpkomsten(),
-      loadBestuursItems()
-    ]);
+    // Importeer functions dynamisch uit jouw firebase-imports of SDK
+    const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js");
+    const functions = getFunctions(app);
+    const getGlobalDashboard = httpsCallable(functions, "getGlobalDashboard");
 
-   const combined = [...opkomsten, ...bestuurs]
-  .filter(o => isFutureOrToday(o.datum))
-  .sort((a, b) => {
-    if (a.datum !== b.datum) {
-      return a.datum.localeCompare(b.datum);
-    }
-    return a.sortTime.localeCompare(b.sortTime);
-  });
+    // Haal data op via de beveiligde Cloud Function
+    const response = await getGlobalDashboard();
+    const rawOpkomsten = response.data.data;
 
+    // Converteer de binnengekomen data naar het formaat dat jouw tabel verwacht
+    const opkomsten = rawOpkomsten.map(o => ({
+      kind: "speltak",
+      speltak: o.speltak,
+      label: SPELTAK_LABEL[o.speltak],
+      kleur: SPELTAK_COLOR[o.speltak],
+      id: o.id,
+      datum: o.datum,
+      sortTime: o.starttijd || "99:99",
+      tijd: `${o.starttijd || "??:??"}–${o.eindtijd || "??:??"}`,
+      titel: o.thema || "",
+      type: o.typeOpkomst || "",
+      locatie: o.locatie || "",
+      materiaal: o.materiaal || "",
+      bijzonderheden: o.bijzonderheden || ""
+    }));
+
+    const bestuurs = await loadBestuursItems();
+
+    const combined = [...opkomsten, ...bestuurs]
+      .filter(o => isFutureOrToday(o.datum))
+      .sort((a, b) => {
+        if (a.datum !== b.datum) {
+          return a.datum.localeCompare(b.datum);
+        }
+        return a.sortTime.localeCompare(b.sortTime);
+      });
 
     if (!combined.length) {
       container.innerHTML = "<p>Geen komende items.</p>";
@@ -88,13 +110,11 @@ async function loadDashboard() {
     }
 
     const grouped = groupByDate(combined);
-
-    // ✅ Altijd dezelfde tabelrender (desktop-style), ook op mobiel
     renderDesktop(grouped);
 
   } catch (err) {
     console.error("Fout bij laden dashboard:", err);
-    container.innerHTML = "<p>Er ging iets mis bij het laden.</p>";
+    container.innerHTML = "<p>Je moet ingelogd zijn om het dashboard te bekijken.</p>";
   }
 }
 
@@ -210,33 +230,33 @@ function renderDesktop(grouped) {
     wrapper.className = "dashboard-table-wrapper";
 
     // Swipe-hint (alleen mobiel)
-let swipeHint = null;
-if (window.matchMedia("(max-width: 900px)").matches) {
-  swipeHint = document.createElement("div");
-  swipeHint.className = "table-swipe-hint";
-  swipeHint.innerHTML = "<span>← swipe →</span>";
-  wrapper.appendChild(swipeHint);
-}
+    let swipeHint = null;
+    if (window.matchMedia("(max-width: 900px)").matches) {
+      swipeHint = document.createElement("div");
+      swipeHint.className = "table-swipe-hint";
+      swipeHint.innerHTML = "<span>← swipe →</span>";
+      wrapper.appendChild(swipeHint);
+    }
 
-const table = document.createElement("table");
-table.className = "dashboard-table";
-table.appendChild(renderTheadDesktop());
+    const table = document.createElement("table");
+    table.className = "dashboard-table";
+    table.appendChild(renderTheadDesktop());
 
-wrapper.appendChild(table);
+    wrapper.appendChild(table);
 
     // Swipe-hint verbergen na eerste horizontale scroll
-if (swipeHint) {
-  wrapper.addEventListener("scroll", () => {
-    swipeHint.classList.add("hidden");
-  }, { once: true });
-}
+    if (swipeHint) {
+      wrapper.addEventListener("scroll", () => {
+        swipeHint.classList.add("hidden");
+      }, { once: true });
+    }
 
 
     const tbody = document.createElement("tbody");
     grouped[date].forEach(o => tbody.appendChild(renderRowDesktop(o)));
 
-   table.appendChild(tbody);
-   container.appendChild(wrapper);
+    table.appendChild(tbody);
+    container.appendChild(wrapper);
 
   }
 }
@@ -268,19 +288,19 @@ function renderRowDesktop(o) {
 
   tr.appendChild(td(o.tijd));
   tr.appendChild(td(o.titel));
-const tdType = document.createElement("td");
-tdType.textContent = o.type || "";
+  const tdType = document.createElement("td");
+  tdType.textContent = o.type || "";
 
-// Alleen speltakken krijgen type-opkomst kleurmarkering
-if (o.kind === "speltak") {
-  const t = (o.type || "").toLowerCase().trim();
-  tdType.classList.add("dashboard-type-cell");
-  if (t === "geen" || t === "bijzonder" || t === "kamp") {
-    tdType.classList.add(`op-type-${t}`);
+  // Alleen speltakken krijgen type-opkomst kleurmarkering
+  if (o.kind === "speltak") {
+    const t = (o.type || "").toLowerCase().trim();
+    tdType.classList.add("dashboard-type-cell");
+    if (t === "geen" || t === "bijzonder" || t === "kamp") {
+      tdType.classList.add(`op-type-${t}`);
+    }
   }
-}
 
-tr.appendChild(tdType);
+  tr.appendChild(tdType);
   tr.appendChild(td(o.locatie || ""));
   tr.appendChild(td(o.materiaal || ""));
   tr.appendChild(td(o.bijzonderheden || ""));

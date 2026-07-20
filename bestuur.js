@@ -88,11 +88,9 @@ document.addEventListener("auth-changed", handleAuth);
 handleAuth();
 
 
-// ======================================================================
-// INIT — ALLE LOGICA ZIT HIERIN
-// ======================================================================
 function init(isBestuur) {
   isBestuur = !!isBestuur;
+  console.log("Is deze gebruiker bestuur?", isBestuur); // Check de console in je browser (F12)
 
   // ================= DOM =================
   const headerRow = document.getElementById("headerRow");
@@ -165,13 +163,13 @@ function init(isBestuur) {
   }
 
   // ================= RENDER =================
-function getVisibleItems() {
-  return allItems.filter(i => {
-    if (currentFilter === "future") return isFutureOrToday(i.datum);
-    if (currentFilter === "past") return isPast(i.datum);
-    return true;
-  });
-}
+  function getVisibleItems() {
+    return allItems.filter(i => {
+      if (currentFilter === "future") return isFutureOrToday(i.datum);
+      if (currentFilter === "past") return isPast(i.datum);
+      return true;
+    });
+  }
 
 
   function render() {

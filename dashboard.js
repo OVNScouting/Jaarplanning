@@ -1,8 +1,5 @@
 // ======================================================================
 // dashboard.js — toont komende opkomsten + bestuursitems
-// Bestuursitems:
-// - altijd bovenaan per datum
-// - klikbaar → bestuur.html#item=<id>
 // ======================================================================
 
 import {
@@ -19,23 +16,13 @@ import {
   get
 } from "./firebase-imports.js";
 
-
 function getFirebaseApp() {
   return getApps().length ? getApp() : initializeApp(window.firebaseConfig);
 }
 
-
-
-// ======================================================================
-// FIREBASE INIT
-// ======================================================================
 const app = getFirebaseApp();
 const db = getDatabase(app);
 
-
-// ======================================================================
-// CONFIG
-// ======================================================================
 const SPELTAKKEN = ["bevers", "welpen", "scouts", "explorers", "rovers", "stam"];
 
 const SPELTAK_LABEL = {
@@ -67,16 +54,13 @@ async function loadDashboard() {
   container.innerHTML = "<p>Dashboard laden…</p>";
 
   try {
-    // Importeer functions dynamisch uit jouw firebase-imports of SDK
     const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js");
     const functions = getFunctions(app);
     const getGlobalDashboard = httpsCallable(functions, "getGlobalDashboard");
 
-    // Haal data op via de beveiligde Cloud Function
     const response = await getGlobalDashboard();
     const rawOpkomsten = response.data.data;
 
-    // Converteer de binnengekomen data naar het formaat dat jouw tabel verwacht
     const opkomsten = rawOpkomsten.map(o => ({
       kind: "speltak",
       speltak: o.speltak,
@@ -118,43 +102,9 @@ async function loadDashboard() {
   }
 }
 
-
 // ======================================================================
-// DATA LADEN
+// DATA LADEN (Alleen bestuursitems direct, opkomsten gaan via Cloud Function)
 // ======================================================================
-async function loadAllOpkomsten() {
-  const results = [];
-
-  for (const sp of SPELTAKKEN) {
-    const snap = await get(ref(db, `${sp}/opkomsten`));
-    if (!snap.exists()) continue;
-
-    const opkomstenObj = snap.val() || {};
-
-    for (const [id, o] of Object.entries(opkomstenObj)) {
-      if (!o?.datum) continue;
-
-      results.push({
-        kind: "speltak",
-        speltak: sp,
-        label: SPELTAK_LABEL[sp],
-        kleur: SPELTAK_COLOR[sp],
-        id,
-        datum: o.datum,
-        sortTime: o.starttijd || "99:99",
-        tijd: `${o.starttijd || "??:??"}–${o.eindtijd || "??:??"}`,
-        titel: o.thema || "",
-        type: o.typeOpkomst || "",
-        locatie: o.locatie || "",
-        materiaal: o.materiaal || "",
-        bijzonderheden: o.bijzonderheden || ""
-      });
-    }
-  }
-
-  return results;
-}
-
 async function loadBestuursItems() {
   const snap = await get(ref(db, "bestuursItems"));
   if (!snap.exists()) return [];
@@ -183,8 +133,8 @@ async function loadBestuursItems() {
       tijd,
       titel: b.titel,
       type: b.type,
-      locatie: "",        // voor uniformiteit
-      materiaal: "",      // voor uniformiteit
+      locatie: "",
+      materiaal: "",
       bijzonderheden: "",
       link: `bestuur.html#item=${id}`
     });
@@ -213,9 +163,6 @@ function groupByDate(items) {
   return grouped;
 }
 
-// =========================
-// DESKTOP RENDER (tabel)
-// =========================
 function renderDesktop(grouped) {
   container.innerHTML = "";
   const dates = Object.keys(grouped).sort((a, b) => new Date(a) - new Date(b));
@@ -229,7 +176,6 @@ function renderDesktop(grouped) {
     const wrapper = document.createElement("div");
     wrapper.className = "dashboard-table-wrapper";
 
-    // Swipe-hint (alleen mobiel)
     let swipeHint = null;
     if (window.matchMedia("(max-width: 900px)").matches) {
       swipeHint = document.createElement("div");
@@ -244,20 +190,17 @@ function renderDesktop(grouped) {
 
     wrapper.appendChild(table);
 
-    // Swipe-hint verbergen na eerste horizontale scroll
     if (swipeHint) {
       wrapper.addEventListener("scroll", () => {
         swipeHint.classList.add("hidden");
       }, { once: true });
     }
 
-
     const tbody = document.createElement("tbody");
     grouped[date].forEach(o => tbody.appendChild(renderRowDesktop(o)));
 
     table.appendChild(tbody);
     container.appendChild(wrapper);
-
   }
 }
 
@@ -265,7 +208,6 @@ function renderTheadDesktop() {
   const thead = document.createElement("thead");
   const tr = document.createElement("tr");
 
-  // Materiaal toegevoegd op desktop
   ["Speltak", "Tijd", "Titel", "Type", "Locatie", "Materiaal", "Bijzonderheden"].forEach(label => {
     const th = document.createElement("th");
     th.textContent = label;
@@ -291,7 +233,6 @@ function renderRowDesktop(o) {
   const tdType = document.createElement("td");
   tdType.textContent = o.type || "";
 
-  // Alleen speltakken krijgen type-opkomst kleurmarkering
   if (o.kind === "speltak") {
     const t = (o.type || "").toLowerCase().trim();
     tdType.classList.add("dashboard-type-cell");
@@ -305,36 +246,28 @@ function renderRowDesktop(o) {
   tr.appendChild(td(o.materiaal || ""));
   tr.appendChild(td(o.bijzonderheden || ""));
 
-  // ✅ Alles klikbaar
   tr.style.cursor = "pointer";
 
   if (o.kind === "bestuur" && o.link) {
     tr.onclick = () => window.location.href = o.link;
   } else if (o.kind === "speltak") {
     tr.onclick = () => {
-      // ✅ Dit matcht jouw script.js: scrollToOpkomstFromHash()
       window.location.href = `${o.speltak}.html#opkomst=${encodeURIComponent(o.datum)}`;
     };
   }
 
   return tr;
 }
-// ======================================================================
-// HELPER — eenvoudige td
-// ======================================================================
+
 function td(value) {
   const cell = document.createElement("td");
   cell.textContent = value || "";
   return cell;
 }
 
-
-// ======================================================================
 loadDashboard();
 
-// ======================================================================
-// MOBILE — login badge korter (Admin of speltaknaam)
-// ======================================================================
+// Mobile login badge helper
 (function simplifyLoginBadgeOnMobile() {
   const isMobileNow = window.matchMedia("(max-width: 900px)").matches;
   if (!isMobileNow) return;
@@ -342,7 +275,7 @@ loadDashboard();
   const badge = document.getElementById("loginStatus");
   if (!badge) return;
 
-  const mode = (localStorage.getItem("mode") || "").toLowerCase();         // "admin" / "leiding" / "ouder"
+  const mode = (localStorage.getItem("mode") || "").toLowerCase();
   const authSpeltak = (localStorage.getItem("authSpeltak") || "").toLowerCase();
 
   if (mode === "admin") {
@@ -350,7 +283,6 @@ loadDashboard();
     return;
   }
 
-  // Leiding: toon speltaknaam (netjes geformat)
   if (mode === "leiding" && authSpeltak) {
     const nice =
       SPELTAK_LABEL[authSpeltak] ||
@@ -360,9 +292,5 @@ loadDashboard();
     return;
   }
 
-  // Anders leeg houden (ouder / niet ingelogd)
   badge.textContent = "";
 })();
-
-
-

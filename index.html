@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="assets/OVN.logo.png" type="image/png">
 
-    <!-- Firebase niet nodig op index -->
+ 
 </head>
 
 <body>
@@ -29,7 +29,7 @@
         </div>
 
         <div class="topbar-right-icons">
-            <!-- Leiding badge / Link naar profiel -->
+
             <a href="profile.html" id="loginStatus" class="leiding-badge hidden"
                 style="text-decoration: none; cursor: pointer;">
                 Mijn Profiel
@@ -142,6 +142,12 @@
 
     <div id="seizoenFilterContainer" class="planning-controls"></div>
 
+    <button data-feedback-fish data-feedback-fish-userid="" id="bugReportBtn" class="primary-btn bug-fab">
+        Meld een probleem
+    </button>
+
+
+
     <!-- ============================================================
      SCRIPTS
 ============================================================ -->
@@ -150,7 +156,10 @@
     <script src="login.js" defer></script>
     <script type="module" src="index-bestuur.js"></script>
 
+    <script defer src="https://feedback.fish/ff.js?pid=1333a637941372"></script>
 
 </body>
+
+
 
 </html>

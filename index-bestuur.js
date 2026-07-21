@@ -13,8 +13,7 @@ import {
 } from "./firebase-imports.js";
 
 
-import { formatDateDisplay } from "./utils.js";
-
+import { formatDateDisplay, isFutureOrToday } from "./utils.js";
 
 function getFirebaseApp() {
   return getApps().length ? getApp() : initializeApp(window.firebaseConfig);
@@ -26,8 +25,8 @@ function init() {
 
 
 
-const app = getFirebaseApp();
-const db = getDatabase(app);
+  const app = getFirebaseApp();
+  const db = getDatabase(app);
 
 
   const section = document.getElementById("bestuurHighlight");
@@ -80,7 +79,7 @@ async function loadHighlights(db, section, list) {
     list.innerHTML = "";
 
     if (!snap.exists()) {
-      list.innerHTML = `<div class="text-muted">Nog geen bestuursitems.</div>`;
+      list.innerHTML = `<div class="text-muted">De agenda is leeg.</div>`;
       return;
     }
 
@@ -90,10 +89,10 @@ async function loadHighlights(db, section, list) {
 
     const all = Object.entries(snap.val())
       .map(([id, v]) => ({ id, ...v }))
-      .filter((i) => i.toonOpDashboard);
+      .filter((i) => i.toonOpDashboard && isFutureOrToday(i.datum));
 
     if (!all.length) {
-      list.innerHTML = `<div class="text-muted">Nog geen bestuursitems.</div>`;
+      list.innerHTML = `<div class="text-muted">De agenda is leeg.</div>`;
       return;
     }
 
@@ -135,7 +134,7 @@ async function loadHighlights(db, section, list) {
     try {
       list.innerHTML = `<div class="text-muted">Kon bestuursitems niet laden.</div>`;
       section.classList.remove("hidden");
-    } catch {}
+    } catch { }
   }
 }
 

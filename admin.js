@@ -53,7 +53,7 @@ async function approveRequestViaFunction(requestId, rowEl) {
 
       // Als de gebruiker al bestaat in Auth, gaan we gewoon door naar de database-stap
       if (authErr.code === "auth/email-already-in-use") {
-        console.warn("Gebruiker bestaat al in Firebase Auth, we updaten alleen de database.");
+        console.warn("Email bestaat al in de database, we updaten alleen de gegevens.");
       } else {
         throw new Error("Auth registratie mislukt: " + authErr.message);
       }
@@ -407,11 +407,6 @@ function renderUsers(users) {
   });
 }
 
-
-
-/* ============================================================
-   ACCOUNT REQUESTS — READ ONLY (FASE C.1)
-============================================================ */
 
 function renderAccountRequests() {
   const app = getFirebaseApp();

@@ -393,9 +393,6 @@ function openAccountRequestModal() {
 </div>
 
 
-      <label>Toelichting (optioneel)</label>
-      <textarea id="reqMessage" rows="3"></textarea>
-
       <div id="reqError" class="hidden" style="color:red;margin-top:0.5rem">
         Versturen mislukt
       </div>
@@ -442,7 +439,7 @@ async function submitAccountRequest() {
     errEl.classList.remove("hidden");
     return;
   }
-  
+
   const speltakken = {};
   document.querySelectorAll("#reqSpeltakken input").forEach((input) => {
     speltakken[input.value] = input.checked;

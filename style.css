@@ -1989,3 +1989,15 @@ tr.approved {
   max-width: 400px;
   text-align: center;
 }
+
+/* ============================================================
+   FEEDBACK FISH BUG KNOP (Linksonder)
+============================================================ */
+.bug-fab {
+  position: fixed;
+  left: 20px;
+  bottom: 80px;
+  z-index: 1400;
+  /* Zorgt dat hij netjes boven de inhoud en gelijk aan andere FABs staat */
+  box-shadow: var(--shadow);
+}

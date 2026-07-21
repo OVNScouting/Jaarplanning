@@ -2001,3 +2001,13 @@ tr.approved {
   /* Zorgt dat hij netjes boven de inhoud en gelijk aan andere FABs staat */
   box-shadow: var(--shadow);
 }
+
+.table-wrapper {
+  cursor: grab;
+  user-select: none;
+  /* Voorkomt tekstselectie tijdens het slepen */
+}
+
+.table-wrapper.is-dragging {
+  cursor: grabbing;
+}

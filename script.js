@@ -2615,3 +2615,44 @@ async function vraagBevestiging(titel, bericht) {
     return returnValue === "confirm";
 }
 
+/* ======================================================================
+   DRAG TO SCROLL — Functionaliteit voor table-wrapper
+   ====================================================================== */
+function initDragToScroll() {
+    if (!tableWrapper) return;
+
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+
+    tableWrapper.addEventListener("mousedown", (e) => {
+        // Zorg dat je nog wel op knoppen, inputs of select-velden kunt klikken zonder direct te slepen
+        if (e.target.closest("input, select, button, textarea, label")) return;
+
+        isDown = true;
+        tableWrapper.classList.add("is-dragging");
+        startX = e.pageX - tableWrapper.offsetLeft;
+        scrollLeft = tableWrapper.scrollLeft;
+    });
+
+    tableWrapper.addEventListener("mouseleave", () => {
+        isDown = false;
+        tableWrapper.classList.remove("is-dragging");
+    });
+
+    tableWrapper.addEventListener("mouseup", () => {
+        isDown = false;
+        tableWrapper.classList.remove("is-dragging");
+    });
+
+    tableWrapper.addEventListener("mousemove", (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - tableWrapper.offsetLeft;
+        const walk = (x - startX); // Snelheid van het scrollen (eventueel te vermenigvuldigen met een factor, bijv. * 1.5)
+        tableWrapper.scrollLeft = scrollLeft - walk;
+    });
+}
+
+// Direct aanroepen bij het laden van het script
+initDragToScroll();

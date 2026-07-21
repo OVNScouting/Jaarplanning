@@ -64,7 +64,6 @@ export function isoFromInput(v) {
   return v;
 }
 
-//
 // Berekent het seizoen (bijv. 2025-2026) op basis van een datum string.
 export function getSeizoenVanDatum(dateString) {
   if (!dateString) return "";
@@ -81,17 +80,35 @@ export function getSeizoenVanDatum(dateString) {
 }
 
 /**
- * Bepaalt of een seizoen toegankelijk is voor ouders (huidige seizoen + vorig seizoen).
+ * Bepaalt of een seizoen toegankelijk is voor ouders 
+ * (vorig seizoen, huidig seizoen, en het volgende seizoen vanaf mei t/m juli).
  * @param {string} seizoen - Bijv. "2025-2026"
  * @returns {boolean}
  */
 export function isSeizoenToegestaan(seizoen) {
   const nu = new Date();
-  const huidigJaar = nu.getMonth() < 7 ? nu.getFullYear() - 1 : nu.getFullYear();
-  const huidigSeizoen = `${huidigJaar}-${huidigJaar + 1}`;
-  const vorigSeizoen = `${huidigJaar - 1}-${huidigJaar}`;
+  const maand = nu.getMonth(); // 0-indexed (0 = jan, ..., 6 = jul, 7 = aug)
+  const jaar = nu.getFullYear();
 
-  return seizoen === huidigSeizoen || seizoen === vorigSeizoen;
+  // Scoutingseizoen loopt van augustus (maand 7) t/m juli
+  const huidigJaar = maand < 7 ? jaar - 1 : jaar;
+
+  const vorigSeizoen = `${huidigJaar - 1}-${huidigJaar}`;
+  const huidigSeizoen = `${huidigJaar}-${huidigJaar + 1}`;
+  const volgendSeizoen = `${huidigJaar + 1}-${huidigJaar + 2}`;
+
+  // 1. Vorig en huidig seizoen zijn altijd toegestaan
+  if (seizoen === huidigSeizoen || seizoen === vorigSeizoen) {
+    return true;
+  }
+
+  // 2. Het aankomende seizoen al 3 maanden van tevoren openzetten 
+  // Dit geldt in mei (4), juni (5) en juli (6) van het lopende seizoen
+  if (seizoen === volgendSeizoen && maand >= 4 && maand <= 6) {
+    return true;
+  }
+
+  return false;
 }
 
 /* ========================================================
@@ -99,7 +116,6 @@ export function isSeizoenToegestaan(seizoen) {
    ======================================================== */
 
 // Vergelijk op datum + starttijd
-// (wordt al gebruikt in script.js / dashboard.js)
 export function compareDateTime(a, b) {
   if (a.datum < b.datum) return -1;
   if (a.datum > b.datum) return 1;
@@ -115,15 +131,6 @@ export function compareDateTime(a, b) {
    NIEUW — CANONIEKE OPKOMST-LOGICA (STAP 5)
    ======================================================== */
 
-/**
- * Sorteer opkomsten volgens projectregels:
- * 1. Toekomst (incl. vandaag) eerst
- * 2. Daarna verleden
- * 3. Binnen groepen: datum → starttijd
- *
- * @param {Array} opkomsten
- * @returns {Array} nieuwe gesorteerde array
- */
 export function sortOpkomsten(opkomsten = []) {
   return [...opkomsten].sort((a, b) => {
     const aPast = isPast(a.datum);
@@ -137,15 +144,6 @@ export function sortOpkomsten(opkomsten = []) {
   });
 }
 
-/**
- * Bepaal de eerstvolgende opkomst.
- * - Altijd exact één of null
- * - Nooit een verleden opkomst
- * - Onafhankelijk van filters
- *
- * @param {Array} opkomsten
- * @returns {Object|null}
- */
 export function getNextUpcoming(opkomsten = []) {
   if (!Array.isArray(opkomsten) || !opkomsten.length) return null;
 
@@ -153,13 +151,6 @@ export function getNextUpcoming(opkomsten = []) {
   return sorted.find(o => isFutureOrToday(o.datum)) || null;
 }
 
-/**
- * Helper voor filtergedrag zonder bijwerkingen
- *
- * @param {Array} opkomsten
- * @param {"all"|"future"|"past"} filter
- * @returns {Array}
- */
 export function filterOpkomsten(opkomsten = [], filter = "all") {
   if (filter === "future") {
     return opkomsten.filter(o => isFutureOrToday(o.datum));
@@ -170,10 +161,6 @@ export function filterOpkomsten(opkomsten = [], filter = "all") {
   return opkomsten;
 }
 
-/**
- * Checkt of een datum binnen de komende 3 dagen valt (vanaf nu)
- * @param {string} dateStr - YYYY-MM-DD
- */
 export function isBinnen3Dagen(dateStr) {
   if (!dateStr) return false;
   const target = new Date(dateStr);
@@ -181,42 +168,56 @@ export function isBinnen3Dagen(dateStr) {
   const diffTime = target - now;
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  // Retourneert true als het vandaag, morgen, overmorgen of de dag erna is (0 t/m 3)
   return diffDays >= 0 && diffDays <= 3;
 }
+
+/* ========================================================
+   BUG MODAL & FIREBASE INTEGRATIE
+   ======================================================== */
 import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 export function initBugModal() {
   const modal = document.getElementById("bugModal");
-  const openBtn = document.getElementById("openBugModalBtn");
+  let openBtn = document.getElementById("openBugModalBtn");
   const closeBtn = document.getElementById("closeBugModalBtn");
   const cancelBtn = document.getElementById("cancelBugModalBtn");
   const form = document.getElementById("modalBugForm");
 
-  // Als de knop of modal niet op deze pagina staat, stop dan direct
-  if (!openBtn || !modal) return;
+  // Optioneel: Dynamisch aanmaken van de knop als deze mist in de HTML
+  if (!openBtn) {
+    openBtn = document.createElement("button");
+    openBtn.id = "openBugModalBtn";
+    openBtn.type = "button";
+    openBtn.className = "primary-btn bug-fab hidden";
+    openBtn.style.cssText = "display: flex; align-items: center; justify-content: center; text-decoration: none;";
+    openBtn.textContent = "Meld een probleem";
+    document.body.appendChild(openBtn);
+  }
 
   const db = getDatabase();
   const auth = getAuth();
   let currentUserEmail = "Anoniem";
 
+  // Luister naar inlogstatus om de knop te tonen/verbergen en e-mail op te slaan
   onAuthStateChanged(auth, (user) => {
-    if (user && user.email) {
-      currentUserEmail = user.email;
+    if (user) {
+      currentUserEmail = user.email || "Ingelogd (Geen e-mail)";
+      openBtn.classList.remove("hidden");
     } else {
       currentUserEmail = "Niet ingelogd (Anoniem)";
+      openBtn.classList.add("hidden");
     }
   });
 
   openBtn.addEventListener("click", () => {
     const emailField = document.getElementById("modalBugEmail");
     if (emailField) emailField.value = currentUserEmail;
-    modal.classList.remove("hidden");
+    modal?.classList.remove("hidden");
   });
 
   function closeModal() {
-    modal.classList.add("hidden");
+    modal?.classList.add("hidden");
     form?.reset();
     const successMsg = document.getElementById("modalSuccessMsg");
     if (successMsg) successMsg.style.display = "none";
@@ -232,8 +233,8 @@ export function initBugModal() {
     e.preventDefault();
 
     const bugData = {
-      titel: document.getElementById("modalBugTitle").value,
-      beschrijving: document.getElementById("modalBugDesc").value,
+      titel: document.getElementById("modalBugTitle")?.value || "",
+      beschrijving: document.getElementById("modalBugDesc")?.value || "",
       pagina: window.location.href,
       melder: currentUserEmail,
       datum: new Date().toISOString(),
@@ -256,46 +257,7 @@ export function initBugModal() {
   });
 }
 
-// Start de bug-modal automatisch zodra de pagina geladen is
+// Start de bug-modal automatisch zodra de DOM geladen is
 document.addEventListener("DOMContentLoaded", () => {
   initBugModal();
-});
-
-function ensureBugModalButton() {
-  let btn = document.getElementById("openBugModalBtn");
-
-  // Mocht de knop om de een of andere reden niet hardcoded in de HTML staan, 
-  // dan kunnen we hem optioneel hier ook dynamisch aanmaken:
-  if (!btn) {
-    btn = document.createElement("button");
-    btn.id = "openBugModalBtn";
-    btn.type = "button";
-    btn.className = "primary-btn bug-fab hidden";
-    btn.style.cssText = "display: flex; align-items: center; justify-content: center; text-decoration: none;";
-    btn.textContent = "Meld een probleem";
-
-    btn.addEventListener("click", () => {
-      // Functie om jouw bug-modal te openen
-      if (typeof openBugModal === "function") {
-        openBugModal();
-      }
-    });
-
-    document.body.appendChild(btn);
-  }
-
-  return btn;
-}
-
-// Binnen je onAuthStateChanged luister je naar de inlogstatus:
-onAuthStateChanged(auth, (user) => {
-  const bugBtn = ensureBugModalButton();
-
-  if (user) {
-    // Wel ingelogd: haal 'hidden' weg zodat de knop zichtbaar wordt
-    bugBtn.classList.remove("hidden");
-  } else {
-    // Niet ingelogd: voeg 'hidden' toe om hem te verbergen
-    bugBtn.classList.add("hidden");
-  }
 });

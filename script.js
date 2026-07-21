@@ -2614,3 +2614,4 @@ async function vraagBevestiging(titel, bericht) {
 
     return returnValue === "confirm";
 }
+

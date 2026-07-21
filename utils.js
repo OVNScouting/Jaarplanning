@@ -184,3 +184,118 @@ export function isBinnen3Dagen(dateStr) {
   // Retourneert true als het vandaag, morgen, overmorgen of de dag erna is (0 t/m 3)
   return diffDays >= 0 && diffDays <= 3;
 }
+import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+export function initBugModal() {
+  const modal = document.getElementById("bugModal");
+  const openBtn = document.getElementById("openBugModalBtn");
+  const closeBtn = document.getElementById("closeBugModalBtn");
+  const cancelBtn = document.getElementById("cancelBugModalBtn");
+  const form = document.getElementById("modalBugForm");
+
+  // Als de knop of modal niet op deze pagina staat, stop dan direct
+  if (!openBtn || !modal) return;
+
+  const db = getDatabase();
+  const auth = getAuth();
+  let currentUserEmail = "Anoniem";
+
+  onAuthStateChanged(auth, (user) => {
+    if (user && user.email) {
+      currentUserEmail = user.email;
+    } else {
+      currentUserEmail = "Niet ingelogd (Anoniem)";
+    }
+  });
+
+  openBtn.addEventListener("click", () => {
+    const emailField = document.getElementById("modalBugEmail");
+    if (emailField) emailField.value = currentUserEmail;
+    modal.classList.remove("hidden");
+  });
+
+  function closeModal() {
+    modal.classList.add("hidden");
+    form?.reset();
+    const successMsg = document.getElementById("modalSuccessMsg");
+    if (successMsg) successMsg.style.display = "none";
+  }
+
+  closeBtn?.addEventListener("click", closeModal);
+  cancelBtn?.addEventListener("click", closeModal);
+  window.addEventListener("click", (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const bugData = {
+      titel: document.getElementById("modalBugTitle").value,
+      beschrijving: document.getElementById("modalBugDesc").value,
+      pagina: window.location.href,
+      melder: currentUserEmail,
+      datum: new Date().toISOString(),
+      status: "Nieuw"
+    };
+
+    try {
+      await push(ref(db, "bugs"), bugData);
+
+      const successMsg = document.getElementById("modalSuccessMsg");
+      if (successMsg) successMsg.style.display = "block";
+
+      setTimeout(() => {
+        closeModal();
+      }, 2000);
+    } catch (error) {
+      console.error("Fout bij opslaan bug:", error);
+      alert("Kon de melding niet verzenden. Probeer het later opnieuw.");
+    }
+  });
+}
+
+// Start de bug-modal automatisch zodra de pagina geladen is
+document.addEventListener("DOMContentLoaded", () => {
+  initBugModal();
+});
+
+function ensureBugModalButton() {
+  let btn = document.getElementById("openBugModalBtn");
+
+  // Mocht de knop om de een of andere reden niet hardcoded in de HTML staan, 
+  // dan kunnen we hem optioneel hier ook dynamisch aanmaken:
+  if (!btn) {
+    btn = document.createElement("button");
+    btn.id = "openBugModalBtn";
+    btn.type = "button";
+    btn.className = "primary-btn bug-fab hidden";
+    btn.style.cssText = "display: flex; align-items: center; justify-content: center; text-decoration: none;";
+    btn.textContent = "Meld een probleem";
+
+    btn.addEventListener("click", () => {
+      // Functie om jouw bug-modal te openen
+      if (typeof openBugModal === "function") {
+        openBugModal();
+      }
+    });
+
+    document.body.appendChild(btn);
+  }
+
+  return btn;
+}
+
+// Binnen je onAuthStateChanged luister je naar de inlogstatus:
+onAuthStateChanged(auth, (user) => {
+  const bugBtn = ensureBugModalButton();
+
+  if (user) {
+    // Wel ingelogd: haal 'hidden' weg zodat de knop zichtbaar wordt
+    bugBtn.classList.remove("hidden");
+  } else {
+    // Niet ingelogd: voeg 'hidden' toe om hem te verbergen
+    bugBtn.classList.add("hidden");
+  }
+});

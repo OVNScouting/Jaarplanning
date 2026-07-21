@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scouting OVN – Bug Beheer </title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="assets/OVN.logo.png" type="image/png">
+</head>
+
+<body>
+
+    <header class="topbar">
+        <div class="topbar-left">
+            <img src="assets/OVN.logo.png" class="topbar-logo" alt="Scouting OVN logo">
+            <div class="topbar-title">
+                <h1>Scouting Olivier van Noort</h1>
+            </div>
+        </div>
+        <div class="topbar-right-icons">
+            <a href="index.html" class="pill-btn outline" style="text-decoration: none;">Home</a>
+        </div>
+    </header>
+
+    <div class="container" style="margin-top: 40px; max-width: 1000px;">
+
+        <!-- Geen toegang melding (indien niet ingelogd als admin) -->
+        <div id="accessDeniedCard" class="card hidden"
+            style="background: var(--card); padding: 40px; text-align: center; border-radius: var(--radius); box-shadow: var(--shadow);">
+            <h2 style="color: #f43e3e; margin-top: 0;">Geen toegang</h2>
+            <p class="text-muted">Je moet ingelogd zijn als beheerder om deze pagina te bekijken.</p>
+            <a href="index.html" class="primary-btn"
+                style="display: inline-block; margin-top: 15px; text-decoration: none;">Terug naar home</a>
+        </div>
+
+        <!-- Admin Overzicht Sectie -->
+        <section id="adminBugSection" class="card hidden"
+            style="background: var(--card); padding: 30px; border-radius: var(--radius); box-shadow: var(--shadow);">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                <h2 style="margin: 0; color: var(--text-main);">Binnengekomen meldingen</h2>
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <!-- Filter op status -->
+                    <select id="statusFilter"
+                        style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; background: var(--card); color: var(--text-main); cursor: pointer;">
+                        <option value="alle">Alle statussen</option>
+                        <option value="Nieuw">Nieuw</option>
+                        <option value="In behandeling">In behandeling</option>
+                        <option value="Opgelost">Opgelost</option>
+                    </select>
+
+                    <span id="bugCountBadge"
+                        style="background: var(--blue-soft); color: var(--blue); padding: 4px 10px; border-radius: 12px; font-weight: 600; font-size: 12px;">0
+                        meldingen</span>
+                </div>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border); color: var(--text-muted);">
+                            <th style="padding: 10px;">Datum</th>
+                            <th style="padding: 10px;">Melder</th>
+                            <th style="padding: 10px;">Titel & Beschrijving</th>
+                            <th style="padding: 10px;">Status</th>
+                            <th style="padding: 10px; text-align: right;">Actie</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bugTableBody">
+                        <!-- Wordt dynamisch gevuld -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script type="module" src="firebase-imports.js"></script>
+    <script type="module" src="bug.js"></script>
+</body>
+
+</html>

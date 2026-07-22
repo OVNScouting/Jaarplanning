@@ -38,18 +38,24 @@ export function isFutureOrToday(dateStr) {
    DATUM — FORMAT
    ======================================================== */
 
-// "2024-05-04" → "04-05-2024"
-export function formatDisplayDate(dateStr) {
+// "2026-03-08" → "8 maart"
+export function formatDateDisplay(dateStr) {
   if (!dateStr) return "";
-  const [y, m, d] = dateStr.split("-");
-  return `${d}-${m}-${y}`;
-}
+  const delen = dateStr.split("-");
+  if (delen.length !== 3) return dateStr;
 
-// "2024-05-04" → "04/05/2024"
-export function formatDateDisplay(iso) {
-  if (!iso) return "";
-  const [y, m, d] = iso.split("-");
-  return `${d}/${m}/${y}`;
+  const dag = parseInt(delen[2], 10);
+  const maandIndex = parseInt(delen[1], 10) - 1;
+
+  const maanden = [
+    "januari", "februari", "maart", "april", "mei", "juni",
+    "juli", "augustus", "september", "oktober", "november", "december"
+  ];
+
+  if (maanden[maandIndex]) {
+    return `${dag} ${maanden[maandIndex]}`;
+  }
+  return dateStr;
 }
 
 // Omzetten naar numerieke waarde (voor eenvoudige sort)

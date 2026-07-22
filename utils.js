@@ -117,6 +117,17 @@ export function isSeizoenToegestaan(seizoen) {
   return false;
 }
 
+// Formatteert een datumberijk ("2026-03-08" en "2026-03-12" → "8 maart t/m 12 maart")
+export function formatDateRange(startIso, endIso) {
+  if (!startIso) return "";
+  const startStr = formatDateDisplay(startIso);
+  if (!endIso || endIso === startIso) {
+    return startStr;
+  }
+  const endStr = formatDateDisplay(endIso);
+  return `${startStr} t/m ${endStr}`;
+}
+
 /* ========================================================
    SORTERING — BESTAAND (BACKWARDS COMPATIBLE)
    ======================================================== */

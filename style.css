@@ -709,27 +709,37 @@ tr.row-grey>.col-datum {
   background: var(--opkomst-verleden-bg) !important;
 }
 
-
-/* Editable elements */
+/* ============================================================
+   EDITABLE ELEMENTS (Bewerkmodus)
+============================================================ */
 .cell-input,
 .cell-select,
 .cell-textarea {
+  display: block;
+  /* Voorkomt dat elementen als inline-block buiten de cel treden */
   width: 100%;
-  min-height: 34px;
-  max-height: 300px;
-  resize: vertical;
-  padding: 6px;
+  /* Vult de cel volledig */
+  max-width: 100%;
+  /* Voorkomt dat het element breder wordt dan de cel */
+  min-width: 0;
+  /* Hfijft de intrinsieke browser-minimumbreedte op */
+  box-sizing: border-box;
+  /* Zorgt dat padding binnen de breedte valt */
+  min-height: 38px;
+  padding: 6px 8px;
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 0.85rem;
   line-height: 1.4;
+  background: #ffffff;
 }
 
-
 .cell-textarea {
-  overflow-y: hidden;
-  resize: vertical;
   min-height: 55px;
+  max-height: 160px;
+  resize: vertical;
+  /* Staat alleen verticaal schalen toe (geen horizontale overspill) */
+  overflow-y: auto;
 }
 
 .cell-input:focus,
@@ -740,25 +750,14 @@ tr.row-grey>.col-datum {
   box-shadow: 0 0 0 2px var(--blue-soft);
 }
 
-.cell-textarea {
-  width: 100%;
-  min-height: 3rem;
-  /* start-hoogte */
-  max-height: 10rem;
-  /* voorkomt mega-rijen */
-  padding: 4px 6px;
+.planning-table th,
+.planning-table td {
   border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: .85rem;
-  background: #fff;
-  resize: vertical;
-  /* eventueel nog zelf iets groter kunnen trekken */
-}
-
-.cell-textarea:focus {
-  outline: none;
-  border-color: var(--blue);
-  box-shadow: 0 0 0 2px var(--blue-soft);
+  padding: 0.35rem 0.45rem;
+  text-align: center;
+  vertical-align: middle;
+  overflow: hidden;
+  /* <-- VOEG DIT TOE */
 }
 
 /* Hide elements for parents */
@@ -2005,4 +2004,23 @@ tr.approved {
 
 .table-wrapper.is-dragging {
   cursor: grabbing;
+}
+
+/* Kamp datum bereik styling in bewerkmodus */
+.date-range-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.date-range-container input[type="date"] {
+  padding: 4px 6px;
+  font-size: 0.85rem;
+}
+
+.date-separator {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
 }

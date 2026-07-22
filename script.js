@@ -8,6 +8,7 @@ import {
     isFutureOrToday,
     compareDateTime,
     formatDateDisplay,
+    formatDateRange,
     isoFromInput,
     sortOpkomsten,
     getNextUpcoming,
@@ -1301,15 +1302,36 @@ function addRow(o) {
         );
     }
 
-
+    // --- AANPASSING STAP C: TYPE OPKOMST + EVENT LISTENER ---
     if (!isOuder()) {
-        tr.appendChild(makeRestrictedEditable(
+        const typeTd = makeRestrictedEditable(
             o,
             "typeOpkomst",
             ["normaal", "bijzonder", "kamp", "geen"],
             "col-type"
-        ));
+        );
+
+        const select = typeTd.querySelector("select");
+        if (select) {
+            select.addEventListener("change", (e) => {
+                const isKamp = e.target.value === "kamp";
+                const eindInput = tr.querySelector(".input-date-end");
+                const separator = tr.querySelector(".date-separator");
+
+                if (eindInput && separator) {
+                    eindInput.style.display = isKamp ? "inline-block" : "none";
+                    separator.style.display = isKamp ? "inline" : "none";
+
+                    if (!isKamp) {
+                        eindInput.value = "";
+                    }
+                }
+            });
+        }
+
+        tr.appendChild(typeTd);
     }
+    // --------------------------------------------------------
 
     tr.appendChild(makeEditableCell(o, "thema", "col-thema"));
     tr.appendChild(makeEditableCell(o, "bijzonderheden", "col-bijzonderheden", "textarea"));
@@ -1389,6 +1411,7 @@ function addRow(o) {
 
     tableBody.appendChild(tr);
 }
+
 function addTotalsRow() {
     const zichtbareJeugd = jeugd.filter(j => !j.hidden);
     const zichtbareLeiding = config.showLeiding ? leiding.filter(l => !l.hidden) : [];
@@ -1501,59 +1524,79 @@ function addTotalsRow() {
 /* ======================================================================
    CELFUNCTIES — EDITABLE
    ====================================================================== */
-// NIEUWE GECORRIGEERDE CODE:
+
 function makeEditableCell(o, field, extraClass = "", type = "text") {
     const td = document.createElement("td");
     if (extraClass) td.classList.add(extraClass);
 
     const value = o[field];
 
-    // view mode: gewoon tekst
+    // LEESMODUS (View mode)
     if (!isEdit()) {
-        if (type === "date" && value) {
-            td.textContent = formatDateDisplay(value); // Maakt er bijv. 15/10/2026 van
-            // Of gebruik formatDisplayDate(value) als je streepjes wilt: 15-10-2026
+        if (field === "datum" && value) {
+            // Als het een kamp is en er is een einddatum, toon het bereik
+            if (o.label === "kamp" && o.einddatum) {
+                td.textContent = formatDateRange(value, o.einddatum);
+            } else {
+                td.textContent = formatDateDisplay(value);
+            }
         } else {
             td.textContent = value ?? "";
         }
         return td;
     }
 
-    td.classList.add("editable-cell");
+    // BEWERKMODUS (Edit mode)
+    if (field === "datum") {
+        const container = document.createElement("div");
+        container.className = "date-range-container";
 
-    let input;
+        // Begindatum input
+        const inputStart = document.createElement("input");
+        inputStart.type = "date";
+        inputStart.value = value ?? "";
+        inputStart.dataset.field = "datum";
+        inputStart.className = "input-date-start";
 
-    if (type === "textarea") {
-        input = document.createElement("textarea");
-        input.value = value ?? "";
-        input.rows = 2;
-        input.classList.add("cell-textarea");
-    } else {
-        input = document.createElement("input");
-        input.type = type;
-        input.value = value ?? "";
-        input.classList.add("cell-input");
+        // Scheidingstext ("t/m")
+        const separator = document.createElement("span");
+        separator.className = "date-separator";
+        separator.textContent = " t/m ";
+
+        // Einddatum input
+        const inputEind = document.createElement("input");
+        inputEind.type = "date";
+        inputEind.value = o.einddatum ?? "";
+        inputEind.dataset.field = "einddatum";
+        inputEind.className = "input-date-end";
+
+        // Toon/verberg einddatum afhankelijk van label
+        const isKamp = o.label === "kamp";
+        separator.style.display = isKamp ? "inline" : "none";
+        inputEind.style.display = isKamp ? "inline-block" : "none";
+
+        container.appendChild(inputStart);
+        container.appendChild(separator);
+        container.appendChild(inputEind);
+        td.appendChild(container);
+        return td;
     }
 
-    input.addEventListener("change", async () => {
-        const newVal =
-            type === "number" ? Number(input.value || 0) :
-                type === "date" ? isoFromInput(input.value) :
-                    input.value;
+    if (type === "date") {
+        const input = document.createElement("input");
+        input.type = "date";
+        input.value = value ?? "";
+        input.dataset.field = field;
+        td.appendChild(input);
+        return td;
+    }
 
-        // 1) private opslaan
-        await update(ref(db, `${speltak}/opkomsten/${o.id}`), { [field]: newVal });
-
-        // 2) public mirror (alleen voor public velden)
-        if (isPublicOpkomstField(field)) {
-            await update(ref(db, `${PUBLIC_ROOT}/opkomsten/${o.id}`), { [field]: newVal });
-        }
-
-        // 3) herladen
-        loadEverything();
-    });
-
+    const input = document.createElement("input");
+    input.type = type;
+    input.value = value ?? "";
+    input.dataset.field = field;
     td.appendChild(input);
+
     return td;
 }
 
@@ -2459,6 +2502,40 @@ saveOpkomst?.addEventListener("click", async () => {
         alert("Opslaan mislukt, probeer het opnieuw.");
     }
 });
+
+async function saveRow(tr) {
+    // 1. Verneem alle gegevens uit de rij
+    const updatedData = {};
+    const inputs = tr.querySelectorAll("[data-field]");
+
+    inputs.forEach(input => {
+        const fieldName = input.dataset.field;
+        updatedData[fieldName] = input.value.trim();
+    });
+
+    // 2. STAP D: Controleer of het een kamp is. Zo niet -> opschonen!
+    if (updatedData.label !== "kamp") {
+        updatedData.einddatum = null; // Of "" afhankelijk van je databasestructuur
+    }
+
+    // 3. Schrijf de opgeschoonde data weg naar Firebase
+    try {
+        const opkomstId = tr.dataset.id;
+
+        // Voorbeeld van schrijven naar de database:
+        await update(ref(db, `${speltak}/opkomsten/${opkomstId}`), updatedData);
+
+        // Eventueel ook in het publieke pad updaten als het een publieke opkomst betreft
+        if (PUBLIC_ROOT) {
+            await update(ref(db, `${PUBLIC_ROOT}/opkomsten/${opkomstId}`), updatedData);
+        }
+
+        // Vernieuw het overzicht
+        await loadEverything();
+    } catch (error) {
+        console.error("Fout bij het opslaan van de rij:", error);
+    }
+}
 
 
 /* ======================================================================

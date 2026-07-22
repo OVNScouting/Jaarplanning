@@ -2518,7 +2518,10 @@ saveOpkomst?.addEventListener("click", async () => {
 });
 
 async function saveRow(tr) {
-    // 1. Verneem alle gegevens uit de rij
+    const opkomstId = tr.dataset.id;
+    if (!opkomstId) return;
+
+    // 1. Verzamel alle ingevulde velden uit de rij
     const updatedData = {};
     const inputs = tr.querySelectorAll("[data-field]");
 
@@ -2527,26 +2530,30 @@ async function saveRow(tr) {
         updatedData[fieldName] = input.value.trim();
     });
 
+    // Einddatum alleen bewaren als type opkomst 'kamp' is
     if (updatedData.typeOpkomst !== "kamp") {
         updatedData.einddatum = null;
     }
 
-    // 3. Schrijf de opgeschoonde data weg naar Firebase
+    // 2. Schrijf de data weg naar Firebase
     try {
-        const opkomstId = tr.dataset.id;
-
-        // Voorbeeld van schrijven naar de database:
+        // Private data updaten
         await update(ref(db, `${speltak}/opkomsten/${opkomstId}`), updatedData);
 
-        // Eventueel ook in het publieke pad updaten als het een publieke opkomst betreft
+        // Publieke data updaten (alleen velden die publiek mogen zijn)
         if (PUBLIC_ROOT) {
-            await update(ref(db, `${PUBLIC_ROOT}/opkomsten/${opkomstId}`), updatedData);
+            const publicData = {};
+            for (const [key, value] of Object.entries(updatedData)) {
+                if (isPublicOpkomstField(key)) {
+                    publicData[key] = value;
+                }
+            }
+            if (Object.keys(publicData).length > 0) {
+                await update(ref(db, `${PUBLIC_ROOT}/opkomsten/${opkomstId}`), publicData);
+            }
         }
-
-        // Vernieuw het overzicht
-        await loadEverything();
     } catch (error) {
-        console.error("Fout bij het opslaan van de rij:", error);
+        console.error(`Fout bij opslaan van opkomst ${opkomstId}:`, error);
     }
 }
 
@@ -2587,13 +2594,29 @@ editModeButton?.addEventListener("click", async () => {
         return;
     }
 
-    // --- UIT bewerken: opslaan ---
+    // --- UIT bewerken: OPSLAAN ---
     if (editMode) {
+        // Direct visuele feedback geven
+        editModeButton.textContent = "⏳ Bezig met opslaan...";
+        editModeButton.disabled = true;
+
+        try {
+            const rows = Array.from(tableBody.querySelectorAll("tr[data-id]"));
+
+            // Sla ALLE rijen TEGELIJK (parallel) op in plaats van achter elkaar
+            await Promise.all(rows.map(tr => saveRow(tr)));
+        } catch (error) {
+            console.error("Fout bij opslaan van wijzigingen:", error);
+            alert("Er is iets misgegaan bij het opslaan.");
+        } finally {
+            editModeButton.disabled = false;
+        }
+
         editMode = false;
-        setMode("leiding"); // hertekent tabel
+        setMode("leiding"); // hertekent tabel naar weergavemodus
         editModeButton.textContent = "✏️ Opkomsten bewerken";
 
-        // Alleen opnieuw laden uit DB, NIET opnieuw renderen
+        // Data opnieuw ophalen en weergave verversen
         await loadEverything();
         return;
     }

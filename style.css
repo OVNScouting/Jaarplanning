@@ -574,19 +574,14 @@ body.mode-bewerken .col-datum {
    VERTICALE NAMEN – BETER LEESBAAR
 ============================================ */
 .name-vertical {
-  writing-mode: vertical-rl;
-  text-orientation: sideways;
-  /* beter leesbaar dan mixed */
+  writing-mode: vertical-lr;
+  transform: rotate(180deg);
+  text-align: left;
   font-size: 0.82rem;
-  /* iets groter */
   font-weight: 600;
-  /* meer body */
   letter-spacing: 0.5px;
-  /* luchtiger */
   padding: 4px 3px;
-  /* meer ruimte rond letters */
   color: #111;
-  /* maximale leesbaarheid */
 }
 
 .welpen-naam {

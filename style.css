@@ -27,8 +27,8 @@
   --text-main: #111827;
   --text-muted: #6b7280;
 
-  --border: #dde3ef;
-  --border-strong: #cbd5e1;
+  --border: #ababad;
+  --border-strong: #021328;
 
   --shadow: 0 6px 18px rgba(15, 23, 42, .08);
 
@@ -61,7 +61,7 @@ body {
    CONTAINER
 ============================================================ */
 .container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 1.5rem 1rem 3rem;
 }
@@ -1049,7 +1049,7 @@ tr.row-grey>.col-datum {
 ============================================================ */
 .leiding-sidebar {
   position: fixed;
-  top: 375px;
+  top: 743px;
   right: 15px;
   width: 150px;
   display: flex;

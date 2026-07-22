@@ -1393,15 +1393,20 @@ function addTotalsRow() {
     const zichtbareJeugd = jeugd.filter(j => !j.hidden);
     const zichtbareLeiding = config.showLeiding ? leiding.filter(l => !l.hidden) : [];
 
-    // Als er geen ledenkolommen zijn, heeft een totals-row geen zin
     if (zichtbareJeugd.length === 0 && zichtbareLeiding.length === 0) return;
 
-    // Totals tellen over ALLE opkomsten (ongeacht filter)
     const totals = {};
     zichtbareJeugd.forEach(j => (totals[j.id] = 0));
     zichtbareLeiding.forEach(l => (totals[`leiding-${l.id}`] = 0));
 
-    (opkomsten || []).forEach(o => {
+    // Filter de opkomsten uitsluitend op basis van het actieve seizoen
+    const gefilterdeOpkomsten = (opkomsten || []).filter(o => {
+        const opkomstSeizoen = getSeizoenVanDatum(o.datum);
+        return (currentSeizoenFilter === "all" || opkomstSeizoen === currentSeizoenFilter);
+    });
+
+    // Bereken de totalen op basis van de seizoensgefilterde opkomsten
+    gefilterdeOpkomsten.forEach(o => {
         zichtbareJeugd.forEach(j => {
             if (o.aanwezigheid?.[j.id] === "aanwezig") totals[j.id]++;
         });
@@ -1411,86 +1416,87 @@ function addTotalsRow() {
         });
     });
 
-    const tr = document.createElement("tr");
-    tr.classList.add("row-totals");
 
-    const emptyTd = (cls = "") => {
+const tr = document.createElement("tr");
+tr.classList.add("row-totals");
+
+const emptyTd = (cls = "") => {
+    const td = document.createElement("td");
+    if (cls) td.classList.add(cls);
+    return td;
+};
+
+// Zelfde kolom-structuur als addRow(), maar dan leeg/label + totals in ledenkolommen
+if (isEdit()) tr.appendChild(emptyTd()); // delete-kolom
+
+const tdLabel = document.createElement("td");
+tdLabel.classList.add("col-datum", "totals-label");
+tdLabel.textContent = "Totaal aanwezig";
+tr.appendChild(tdLabel);
+
+tr.appendChild(emptyTd()); // start
+tr.appendChild(emptyTd()); // eind
+
+if (!isOuder()) tr.appendChild(emptyTd("col-procor"));
+
+if (["explorers", "rovers"].includes(speltak)) {
+    tr.appendChild(emptyTd("col-buddy"));
+}
+
+if (!isOuder()) tr.appendChild(emptyTd("col-type"));
+
+tr.appendChild(emptyTd("col-thema"));
+tr.appendChild(emptyTd("col-bijzonderheden"));
+
+if (config.showBert) tr.appendChild(emptyTd("col-bert"));
+
+if (!isOuder()) tr.appendChild(emptyTd("col-locatie"));
+if (!isOuder()) tr.appendChild(emptyTd("col-materiaal"));
+
+// Jeugd totals
+zichtbareJeugd.forEach(j => {
+    const td = document.createElement("td");
+    td.classList.add("col-jeugd");
+    td.textContent = String(totals[j.id] ?? 0);
+    tr.appendChild(td);
+});
+
+// Kijkers kolom (alleen als zichtbaar)
+if (!isOuder() && config.showKijkers !== false) tr.appendChild(emptyTd());
+
+// Divider
+if (zichtbareJeugd.length > 0 && zichtbareLeiding.length > 0) {
+    const tdDiv = document.createElement("td");
+    tdDiv.classList.add("col-divider");
+    tr.appendChild(tdDiv);
+}
+
+// Leiding totals
+if (config.showLeiding) {
+    zichtbareLeiding.forEach(l => {
+        const key = `leiding-${l.id}`;
         const td = document.createElement("td");
-        if (cls) td.classList.add(cls);
-        return td;
-    };
-
-    // Zelfde kolom-structuur als addRow(), maar dan leeg/label + totals in ledenkolommen
-    if (isEdit()) tr.appendChild(emptyTd()); // delete-kolom
-
-    const tdLabel = document.createElement("td");
-    tdLabel.classList.add("col-datum", "totals-label");
-    tdLabel.textContent = "Totaal aanwezig";
-    tr.appendChild(tdLabel);
-
-    tr.appendChild(emptyTd()); // start
-    tr.appendChild(emptyTd()); // eind
-
-    if (!isOuder()) tr.appendChild(emptyTd("col-procor"));
-
-    if (["explorers", "rovers"].includes(speltak)) {
-        tr.appendChild(emptyTd("col-buddy"));
-    }
-
-    if (!isOuder()) tr.appendChild(emptyTd("col-type"));
-
-    tr.appendChild(emptyTd("col-thema"));
-    tr.appendChild(emptyTd("col-bijzonderheden"));
-
-    if (config.showBert) tr.appendChild(emptyTd("col-bert"));
-
-    if (!isOuder()) tr.appendChild(emptyTd("col-locatie"));
-    if (!isOuder()) tr.appendChild(emptyTd("col-materiaal"));
-
-    // Jeugd totals
-    zichtbareJeugd.forEach(j => {
-        const td = document.createElement("td");
-        td.classList.add("col-jeugd");
-        td.textContent = String(totals[j.id] ?? 0);
+        td.classList.add("col-leiding");
+        if (isOuder()) td.classList.add("hide-view");
+        td.textContent = String(totals[key] ?? 0);
         tr.appendChild(td);
     });
+}
 
-    // Kijkers kolom (alleen als zichtbaar)
-    if (!isOuder() && config.showKijkers !== false) tr.appendChild(emptyTd());
-
-    // Divider
-    if (zichtbareJeugd.length > 0 && zichtbareLeiding.length > 0) {
-        const tdDiv = document.createElement("td");
-        tdDiv.classList.add("col-divider");
-        tr.appendChild(tdDiv);
+// Extra + aanw tellers kolommen (alleen leiding)
+if (!isOuder()) {
+    // Extra kolommen (alleen als zichtbaar)
+    if (config.showExtraLeiding !== false) {
+        if (isEdit()) tr.appendChild(emptyTd("col-extra-aantal"));
+        tr.appendChild(emptyTd("col-extra-namen"));
     }
 
-    // Leiding totals
-    if (config.showLeiding) {
-        zichtbareLeiding.forEach(l => {
-            const key = `leiding-${l.id}`;
-            const td = document.createElement("td");
-            td.classList.add("col-leiding");
-            if (isOuder()) td.classList.add("hide-view");
-            td.textContent = String(totals[key] ?? 0);
-            tr.appendChild(td);
-        });
-    }
+    // Aanwezigheidstellers: altijd 1 kolom (jeugd/leden) + optioneel leiding
+    tr.appendChild(emptyTd()); // Aanw. jeugd / Aanw. leden
+    if (config.showLeiding) tr.appendChild(emptyTd()); // Aanw. leiding
+}
 
-    // Extra + aanw tellers kolommen (alleen leiding)
-    if (!isOuder()) {
-        // Extra kolommen (alleen als zichtbaar)
-        if (config.showExtraLeiding !== false) {
-            if (isEdit()) tr.appendChild(emptyTd("col-extra-aantal"));
-            tr.appendChild(emptyTd("col-extra-namen"));
-        }
-
-        // Aanwezigheidstellers: altijd 1 kolom (jeugd/leden) + optioneel leiding
-        tr.appendChild(emptyTd()); // Aanw. jeugd / Aanw. leden
-        if (config.showLeiding) tr.appendChild(emptyTd()); // Aanw. leiding
-    }
-
-    tableBody.appendChild(tr);
+tableBody.appendChild(tr);
 }
 /* ======================================================================
    CELFUNCTIES — EDITABLE

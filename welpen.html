@@ -78,7 +78,7 @@
     <section class="planning-section">
 
       <div class="planning-header-row">
-        <!-- Filters -->
+        <!-- Filters (Links) -->
         <div class="planning-controls">
           <div id="seizoenFilterContainer" style="display: inline-block; margin-right: 15px;"></div>
           <span id="filterAll" class="chip active">Alles</span>
@@ -86,9 +86,31 @@
           <span id="filterPast" class="chip">Verleden</span>
         </div>
 
-        <button id="editModeButton" class="pill-btn hidden only-leiding primary tabel-edit-btn">
-          ✏️ Opkomsten bewerken
-        </button>
+        <!-- Rechterkant: Legenda & Bewerkknop -->
+        <div class="planning-header-right">
+          <!-- Legenda voor ouders -->
+          <div class="legend-container">
+            <span class="legend-item">
+              <span class="legend-box dot-eerstvolgende"></span> Eerstvolgende
+            </span>
+            <span class="legend-item">
+              <span class="legend-box dot-bijzonder"></span> Bijzonder
+            </span>
+            <span class="legend-item">
+              <span class="legend-box dot-kamp"></span> Kamp
+            </span>
+            <span class="legend-item">
+              <span class="legend-box dot-geen"></span> Geen opkomst
+            </span>
+            <span class="legend-item">
+              <span class="legend-box dot-verleden"></span> Verleden
+            </span>
+          </div>
+
+          <button id="editModeButton" class="pill-btn hidden only-leiding primary tabel-edit-btn">
+            ✏️ Opkomsten bewerken
+          </button>
+        </div>
       </div>
 
       <!-- Tabel + sidebar naast elkaar -->

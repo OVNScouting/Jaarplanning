@@ -94,6 +94,7 @@ const db = getDatabase(app);
 const PUBLIC_ROOT = `${speltak}/public`;
 const PUBLIC_OPK_FIELDS = new Set([
     "datum",
+    "einddatum", // NIEUW
     "starttijd",
     "eindtijd",
     "thema",
@@ -292,6 +293,23 @@ memberType?.addEventListener("change", () => {
     toggleScoutsExtraFields();
 });
 
+function resetOpkomstFields() {
+    opDatum.value = "";
+    if (opEindDatum) opEindDatum.value = ""; // NIEUW
+    if (opEindDatumWrapper) opEindDatumWrapper.classList.add("hidden"); // NIEUW
+    opStart.value = defaultTime.start;
+    opEind.value = defaultTime.eind;
+    opThema.value = "";
+    opProcor.value = "";
+    opLocatie.value = "";
+    opType.value = "normaal";
+    opMateriaal.value = "";
+    opBijzonderheden.value = "";
+    opKijkers.value = "0";
+    opExtraAantal.value = "0";
+    opExtraNamen.value = "";
+    if (opBert) opBert.value = "";
+}
 
 
 const saveMember = document.getElementById("saveMember");
@@ -299,6 +317,8 @@ const cancelMember = document.getElementById("cancelMember");
 
 const opModal = document.getElementById("opkomstModal");
 const opDatum = document.getElementById("opDatum");
+const opEindDatum = document.getElementById("opEindDatum"); // NIEUW
+const opEindDatumWrapper = document.getElementById("opEindDatumWrapper"); // NIEUW
 const opStart = document.getElementById("opStart");
 const opEind = document.getElementById("opEind");
 const opProcor = document.getElementById("opProcor");
@@ -318,6 +338,15 @@ const cancelOpkomst = document.getElementById("cancelOpkomst");
 const closeButtons = document.querySelectorAll(".close-section");
 const fab = document.getElementById("fabAddOpkomst");
 const logoutButton = document.getElementById("logoutButton");
+
+opType?.addEventListener("change", () => {
+    if (opType.value === "kamp") {
+        opEindDatumWrapper?.classList.remove("hidden");
+    } else {
+        opEindDatumWrapper?.classList.add("hidden");
+        if (opEindDatum) opEindDatum.value = "";
+    }
+});
 
 /* ======================================================================
    HORIZONTALE SCROLLBALK – zwevend
@@ -1535,7 +1564,7 @@ function makeEditableCell(o, field, extraClass = "", type = "text") {
     if (!isEdit()) {
         if (field === "datum" && value) {
             // Als het een kamp is en er is een einddatum, toon het bereik
-            if (o.label === "kamp" && o.einddatum) {
+            if (o.typeOpkomst === "kamp" && o.einddatum) {
                 td.textContent = formatDateRange(value, o.einddatum);
             } else {
                 td.textContent = formatDateDisplay(value);
@@ -1571,7 +1600,7 @@ function makeEditableCell(o, field, extraClass = "", type = "text") {
         inputEind.className = "input-date-end";
 
         // Toon/verberg einddatum afhankelijk van label
-        const isKamp = o.label === "kamp";
+        const isKamp = o.typeOpkomst === "kamp";
         separator.style.display = isKamp ? "inline" : "none";
         inputEind.style.display = isKamp ? "inline-block" : "none";
 
@@ -2397,21 +2426,6 @@ cancelOpkomst?.addEventListener("click", () =>
     opModal.classList.add("hidden")
 );
 
-function resetOpkomstFields() {
-    opDatum.value = "";
-    opStart.value = defaultTime.start;
-    opEind.value = defaultTime.eind;
-    opThema.value = "";
-    opProcor.value = "";
-    opLocatie.value = "";
-    opType.value = "";
-    opMateriaal.value = "";
-    opBijzonderheden.value = "";
-    opKijkers.value = "0";
-    opExtraAantal.value = "0";
-    opExtraNamen.value = "";
-    if (opBert) opBert.value = "";
-}
 
 fab?.addEventListener("click", () => {
     if (!isLeiding()) return;
@@ -2513,9 +2527,8 @@ async function saveRow(tr) {
         updatedData[fieldName] = input.value.trim();
     });
 
-    // 2. STAP D: Controleer of het een kamp is. Zo niet -> opschonen!
-    if (updatedData.label !== "kamp") {
-        updatedData.einddatum = null; // Of "" afhankelijk van je databasestructuur
+    if (updatedData.typeOpkomst !== "kamp") {
+        updatedData.einddatum = null;
     }
 
     // 3. Schrijf de opgeschoonde data weg naar Firebase

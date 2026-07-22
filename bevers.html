@@ -78,7 +78,7 @@
     <section class="planning-section">
 
       <div class="planning-header-row">
-        <!-- Filters -->
+        <!-- Filters (Links) -->
         <div class="planning-controls">
           <div id="seizoenFilterContainer" style="display: inline-block; margin-right: 15px;"></div>
           <span id="filterAll" class="chip active">Alles</span>
@@ -86,10 +86,31 @@
           <span id="filterPast" class="chip">Verleden</span>
         </div>
 
+        <!-- Rechterkant: Legenda & Bewerkknop -->
+        <div class="planning-header-right">
+          <!-- Legenda voor ouders -->
+          <div class="legend-container">
+            <span class="legend-item">
+              <span class="legend-box dot-eerstvolgende"></span> Eerstvolgende
+            </span>
+            <span class="legend-item">
+              <span class="legend-box dot-bijzonder"></span> Bijzonder
+            </span>
+            <span class="legend-item">
+              <span class="legend-box dot-kamp"></span> Kamp
+            </span>
+            <span class="legend-item">
+              <span class="legend-box dot-geen"></span> Geen opkomst
+            </span>
+            <span class="legend-item">
+        <span class="legend-box dot-verleden"></span> Verleden
+      </span>
+          </div>
 
-        <button id="editModeButton" class="pill-btn hidden only-leiding primary tabel-edit-btn">
-          ✏️ Opkomsten bewerken
-        </button>
+          <button id="editModeButton" class="pill-btn hidden only-leiding primary tabel-edit-btn">
+            ✏️ Opkomsten bewerken
+          </button>
+        </div>
       </div>
 
       <!-- Tabel + sidebar naast elkaar -->
@@ -115,7 +136,7 @@
               Ledenbeheer
             </button>
 
-           
+
           </div>
         </div>
 
@@ -211,20 +232,21 @@
     </div>
 
     <!-- ============================================================
-         MODAL — Opkomst toevoegen
-    ============================================================ -->
+     MODAL — Opkomst toevoegen
+============================================================ -->
     <div id="opkomstModal" class="modal hidden">
       <div class="modal-content">
         <h3>Nieuwe Opkomst</h3>
 
         <!-- Datum & tijd -->
-        <label>Datum:</label>
+        <label for="opDatum">Begindatum:</label>
         <input type="date" id="opDatum" />
 
-        <label>Starttijd:</label>
+
+        <label for="opStart">Starttijd:</label>
         <input type="time" id="opStart" value="10:30" />
 
-        <label>Eindtijd:</label>
+        <label for="opEind">Eindtijd:</label>
         <input type="time" id="opEind" value="12:30" />
 
         <!-- Type -->
@@ -237,10 +259,10 @@
         </select>
 
         <!-- Thema + Procor -->
-        <label>Thema:</label>
+        <label for="opThema">Thema:</label>
         <input type="text" id="opThema" />
 
-        <label>Procor:</label>
+        <label for="opProcor">Procor:</label>
         <input type="text" id="opProcor" />
 
         <!-- Bijzonderheden -->
@@ -259,7 +281,7 @@
         <input type="text" id="opExtraNamen" class="input" placeholder="bijv. Sacha, Jan" />
 
         <!-- Locatie reserveren -->
-        <label>Locatie reserveren:</label>
+        <label for="opLocatie">Locatie reserveren:</label>
         <select id="opLocatie">
           <option value="">Selecteer…</option>
           <option value="Kampvuurkuil">Kampvuurkuil</option>
@@ -273,7 +295,7 @@
         </select>
 
         <!-- Materiaal -->
-        <label>Materiaal reserveren:</label>
+        <label for="opMateriaal">Materiaal reserveren:</label>
         <input type="text" id="opMateriaal" />
 
         <!-- Alleen voor Bevers -->
@@ -342,17 +364,17 @@
     </div>
   </div>
 
-<dialog id="waarschuwingPopup">
+  <dialog id="waarschuwingPopup">
     <form method="dialog">
-        <h3 id="popupTitel">Let op!</h3>
-        <p id="popupTekst"></p>
-        <p><strong>Bevestig dat je dit persoonlijk hebt doorgegeven aan je team.</strong></p>
-        <div class="button-group">
-            <button value="cancel">Annuleren</button>
-            <button value="confirm" id="confirmBtn">Ja, ik heb dit doorgegeven</button>
-        </div>
+      <h3 id="popupTitel">Let op!</h3>
+      <p id="popupTekst"></p>
+      <p><strong>Bevestig dat je dit persoonlijk hebt doorgegeven aan je team.</strong></p>
+      <div class="button-group">
+        <button value="cancel">Annuleren</button>
+        <button value="confirm" id="confirmBtn">Ja, ik heb dit doorgegeven</button>
+      </div>
     </form>
-</dialog>
+  </dialog>
 
 </body>
 

@@ -2103,3 +2103,52 @@ tr.approved {
   background-color: #f3f4f6;
   border-left: 3px solid #9ca3af;
 }
+
+/* Kleuren van de bestuurs-blokjes */
+
+.legend-box.dot-groepsraad {
+  background-color: #f3e8ff;
+  border-left: 3px solid #1c5cc2;
+}
+
+.legend-box.dot-bestuursvergadering {
+  background-color: #fce7f3;
+  border-left: 3px solid #b00756;
+}
+
+.legend-box.dot-activiteit {
+  background-color: #ffe4e6;
+  border-left: 3px solid #c9c609;
+}
+
+/* --- Tabelrijen kleurenschema Bestuur --- */
+
+/* Verleden */
+tr.row-verleden {
+  opacity: 0.6;
+  background-color: #f9fafb;
+}
+
+/* Eerstvolgende opkomst */
+tr.row-eerstvolgende {
+  background-color: #f0fdf4;
+  border-left: 4px solid #22c55e;
+}
+
+/* Groepsraad */
+tr.row-groepsraad {
+  background-color: #f3e8ff;
+  border-left: 4px solid #1c5cc2;
+}
+
+/* Bestuursvergadering */
+tr.row-bestuursvergadering {
+  background-color: #fce7f3;
+  border-left: 4px solid #b00756;
+}
+
+/* Activiteit */
+tr.row-activiteit {
+  background-color: #ffe4e6;
+  border-left: 4px solid #c9c609;
+}

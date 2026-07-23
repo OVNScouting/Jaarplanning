@@ -348,6 +348,108 @@ opType?.addEventListener("change", () => {
     }
 });
 
+// Globale variabelen voor status
+let bestuurData = [];
+let actiefFilter = 'all'; // 'all', 'future', 'past'
+
+/**
+ * Initialiseer de knoppen/chips voor het filteren
+ */
+function initBestuurControls() {
+    const filterAll = document.getElementById('filterAll');
+    const filterFuture = document.getElementById('filterFuture');
+    const filterPast = document.getElementById('filterPast');
+
+    if (filterAll && filterFuture && filterPast) {
+        filterAll.addEventListener('click', () => setFilter('all', filterAll));
+        filterFuture.addEventListener('click', () => setFilter('future', filterFuture));
+        filterPast.addEventListener('click', () => setFilter('past', filterPast));
+    }
+}
+
+/**
+ * Wissel van actief filter (Alles / Komend / Verleden)
+ */
+function setFilter(filterType, clickedChip) {
+    actiefFilter = filterType;
+
+    // Update actieve status op de filter-chips
+    document.querySelectorAll('.planning-controls .chip').forEach(chip => {
+        chip.classList.remove('active');
+    });
+    clickedChip.classList.add('active');
+
+    // Herteken de tabel met het actieve filter
+    renderBestuurTabel(bestuurData);
+}
+
+/**
+ * Render de bestuursagenda in de tabel
+ * @param {Array} data - Array met bestuursobjecten uit Firebase/databron
+ */
+function renderBestuurTabel(data) {
+    bestuurData = data || [];
+    const tbody = document.getElementById('bestuurTabelBody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    // 1. Sortering: Chronologisch op datum en tijd (m.b.v. compareDateTime uit utils.js)
+    const gesorteerd = [...bestuurData].sort((a, b) =>
+        compareDateTime(a.datum, a.tijd, b.datum, b.tijd)
+    );
+
+    // 2. Filteren op basis van gekozen chip
+    const gefilterd = gesorteerd.filter(item => {
+        const past = isPast(item.datum);
+        if (actiefFilter === 'future') return !past;
+        if (actiefFilter === 'past') return past;
+        return true; // 'all'
+    });
+
+    if (gefilterd.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #666; padding: 20px;">Geen bestuursitems gevonden.</td></tr>`;
+        return;
+    }
+
+    // 3. Eerstvolgende item detecteren (het eerste item dat géén verleden is)
+    let eerstvolgendeGevonden = false;
+
+    gefilterd.forEach(item => {
+        const tr = document.createElement('tr');
+        const past = isPast(item.datum);
+        const rawType = (item.type || 'overig').toLowerCase().trim();
+
+        // Bepaal de rij-kleurklasse
+        if (past) {
+            tr.classList.add('row-verleden');
+        } else if (!eerstvolgendeGevonden) {
+            tr.classList.add('row-eerstvolgende');
+            eerstvolgendeGevonden = true;
+        } else {
+            // Koppelt direct aan rijklassen zoals .row-groepsraad, .row-bestuursvergadering, .row-activiteit
+            tr.classList.add(`row-${rawType.replace(/\s+/g, '')}`);
+        }
+
+        // HTML voor de 6 gespecificeerde kolommen
+        tr.innerHTML = `
+      <td>${formatDateDisplay(item.datum)}</td>
+      <td>${sanitizeText(item.tijd || '—')}</td>
+      <td><strong>${sanitizeText(item.titel || '—')}</strong></td>
+      <td>${sanitizeText(item.type || 'Overig')}</td>
+      <td>${sanitizeText(item.locatie || '—')}</td>
+      <td>${sanitizeText(item.beschrijving || item.bijzonderheden || '—')}</td>
+    `;
+
+        tbody.appendChild(tr);
+    });
+}
+
+// Initialiseer de controls zodra de pagina geladen is
+document.addEventListener('DOMContentLoaded', () => {
+    initBestuurControls();
+});
+
 /* ======================================================================
    HORIZONTALE SCROLLBALK – zwevend
    ====================================================================== */

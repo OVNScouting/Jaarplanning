@@ -2137,18 +2137,18 @@ tr.row-eerstvolgende {
 
 /* Groepsraad */
 tr.row-groepsraad {
-  background-color: #f3e8ff;
+  background-color: #e8e8ff;
   border-left: 4px solid #1c5cc2;
 }
 
 /* Bestuursvergadering */
 tr.row-bestuursvergadering {
-  background-color: #fce7f3;
-  border-left: 4px solid #b00756;
+  background-color: hsl(296, 100%, 97%);
+  border-left: 4px solid #e4096f;
 }
 
 /* Activiteit */
 tr.row-activiteit {
-  background-color: #ffe4e6;
-  border-left: 4px solid #c9c609;
+  background-color: #fff6ee;
+  border-left: 4px solid #fcec07;
 }

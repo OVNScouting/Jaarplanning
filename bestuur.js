@@ -112,6 +112,7 @@ function init(isBestuur) {
   const biTijdType = document.getElementById("biTijdType");
   const biStart = document.getElementById("biStart");
   const biEind = document.getElementById("biEind");
+  const biLocatie = document.getElementById("biLocatie");
   const biBeschrijving = document.getElementById("biBeschrijving");
   const biToonDashboard = document.getElementById("biToonDashboard");
   const biTimeRange = document.getElementById("biTimeRange");
@@ -149,11 +150,15 @@ function init(isBestuur) {
       const aPast = isPast(a.datum);
       const bPast = isPast(b.datum);
 
-      // verleden → nieuwste bovenaan
+      // 1. Toekomst komt áltijd boven verleden (verleden zakt naar onder)
+      if (!aPast && bPast) return -1;
+      if (aPast && !bPast) return 1;
+
+      // 2. Als BEIDE items in het verleden liggen: meest recente verleden bovenaan
       if (aPast && bPast) {
         if (a.datum !== b.datum) return b.datum.localeCompare(a.datum);
       }
-      // toekomst / heden → eerstvolgende bovenaan
+      // 3. Als BEIDE items in de toekomst liggen: eerstvolgende datum bovenaan
       else {
         if (a.datum !== b.datum) return a.datum.localeCompare(b.datum);
       }
@@ -172,7 +177,11 @@ function init(isBestuur) {
   }
 
 
+  // Houdt bij of de eerstvolgende al is gemarkeerd
+  let eerstvolgendeGevonden = false;
+
   function render() {
+    eerstvolgendeGevonden = false; // Reset de vlag bij elke render
     renderHeader();
     tableBody.innerHTML = "";
     getVisibleItems().forEach(addRow);
@@ -189,12 +198,29 @@ function init(isBestuur) {
     headerRow.appendChild(th("Tijd"));
     headerRow.appendChild(th("Titel"));
     headerRow.appendChild(th("Type"));
+    headerRow.appendChild(th("Locatie"));       // <-- Toegevoegd
+    headerRow.appendChild(th("Beschrijving"));  // <-- Toegevoegd
   }
 
   function addRow(item) {
     const tr = document.createElement("tr");
     tr.dataset.id = item.id;
 
+    // --- 🎨 KLEUR HIGHLIGHTS LOGICA ---
+    const past = isPast(item.datum);
+    const rawType = (item.type || "overig").toLowerCase().trim().replace(/\s+/g, "");
+
+    if (past) {
+      tr.classList.add("row-verleden");
+    } else if (!eerstvolgendeGevonden) {
+      tr.classList.add("row-eerstvolgende");
+      eerstvolgendeGevonden = true; // Alleen de állereerste toekomstige opkomst krijgt groen
+    } else {
+      // Koppelt aan bijv. .row-groepsraad, .row-bestuursvergadering, .row-activiteit
+      tr.classList.add(`row-${rawType}`);
+    }
+
+    // --- BEWERK MODUS (Prullenbak) ---
     if (editMode && isBestuur) {
       const del = td("🗑️");
       del.style.cursor = "pointer";
@@ -202,6 +228,7 @@ function init(isBestuur) {
       tr.appendChild(del);
     }
 
+    // --- DATACELLEN ---
     tr.appendChild(td(formatDateDisplay(item.datum)));
     tr.appendChild(td(renderTime(item)));
 
@@ -213,6 +240,9 @@ function init(isBestuur) {
     tr.appendChild(titleCell);
 
     tr.appendChild(td(item.type));
+    tr.appendChild(td(item.locatie || "—"));       // <-- Toegevoegd
+    tr.appendChild(td(item.beschrijving || "—"));  // <-- Toegevoegd
+
     tableBody.appendChild(tr);
   }
 
@@ -236,13 +266,14 @@ function init(isBestuur) {
     editingId = item.id;
     modalTitle.textContent = "Bestuursitem bewerken";
 
-    biType.value = item.type;
-    biTitel.value = item.titel;
-    biDatum.value = item.datum;
-    biTijdType.value = item.tijdType;
+    biType.value = item.type || "bestuursvergadering";
+    biTitel.value = item.titel || "";
+    biDatum.value = item.datum || "";
+    biTijdType.value = item.tijdType || "none";
     biStart.value = item.starttijd || "";
     biEind.value = item.eindtijd || "";
-    biBeschrijving.value = item.beschrijving || "";
+    biLocatie.value = item.locatie || "";          // <-- Toegevoegd
+    biBeschrijving.value = item.beschrijving || ""; // <-- Toegevoegd
     biToonDashboard.checked = !!item.toonOpDashboard;
 
     updateTimeFields();
@@ -256,7 +287,8 @@ function init(isBestuur) {
     biTijdType.value = "none";
     biStart.value = "";
     biEind.value = "";
-    biBeschrijving.value = "";
+    biLocatie.value = "";       // <-- Toegevoegd
+    biBeschrijving.value = "";  // <-- Werkt nu wel!
     biToonDashboard.checked = false;
     updateTimeFields();
   }
@@ -273,7 +305,6 @@ function init(isBestuur) {
       alert("Titel en datum zijn verplicht");
       return;
     }
-
     const obj = {
       type: biType.value,
       titel: biTitel.value,
@@ -281,7 +312,8 @@ function init(isBestuur) {
       tijdType: biTijdType.value,
       starttijd: biStart.value || "",
       eindtijd: biEind.value || "",
-      beschrijving: biBeschrijving.value || "",
+      locatie: biLocatie.value || "",             // <-- Toegevoegd
+      beschrijving: biBeschrijving.value || "",   // <-- Toegevoegd
       toonOpDashboard: !!biToonDashboard.checked,
       updatedAt: Date.now()
     };

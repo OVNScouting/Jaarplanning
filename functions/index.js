@@ -4,7 +4,7 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 
 /**
- * Helper validatie functie om te controleren of de gebruiker admin is[cite: 21]
+ * Helper validatie functie om te controleren of de gebruiker admin is
  */
 async function assertAdmin(auth) {
   if (!auth) {
@@ -18,6 +18,44 @@ async function assertAdmin(auth) {
     throw new HttpsError("permission-denied", "Alleen admins hebben toegang tot deze actie.");
   }
 }
+
+exports.updateUser = onCall(async (request) => {
+  await assertAdmin(request.auth);
+
+  const { uid, roles, status } = request.data;
+  if (!uid) {
+    throw new HttpsError("invalid-argument", "Gebruikers-ID (uid) ontbreekt.");
+  }
+
+  try {
+    const db = admin.database();
+
+    const isAdmin = !!roles?.admin;
+    const isBestuur = !!roles?.bestuur;
+    const speltakkenList = Array.isArray(roles?.speltakken) ? roles.speltakken : [];
+
+    // 1. Claims bijwerken in Firebase Auth
+    await admin.auth().setCustomUserClaims(uid, {
+      admin: isAdmin,
+      bestuur: isBestuur
+    });
+
+    // 2. Data in Realtime Database opslaan
+    const updates = {
+      "roles/admin": isAdmin,
+      "roles/bestuur": isBestuur,
+      "roles/speltakken": speltakkenList,
+      "status": status || "active"
+    };
+
+    await db.ref(`users/${uid}`).update(updates);
+
+    return { success: true };
+  } catch (err) {
+    console.error("Fout bij updateUser:", err);
+    throw new HttpsError("internal", err.message || "Bewerken van gebruiker mislukt.");
+  }
+});
 
 /**
  * Function: approveAccountRequest (Zonder e-mail)
@@ -64,14 +102,14 @@ exports.approveAccountRequest = onCall(async (request) => {
 
     const uid = userRecord.uid;
 
-    // Claims instellen[cite: 21]
+    // Claims instellen
     const claims = {
       admin: !!requestedRoles?.admin,
       bestuur: !!requestedRoles?.bestuur
     };
     await admin.auth().setCustomUserClaims(uid, claims);
 
-    // Profiel opslaan in database[cite: 21]
+    // Profiel opslaan in database
     const userPayload = {
       fullName,
       email,
@@ -85,7 +123,7 @@ exports.approveAccountRequest = onCall(async (request) => {
     };
     await db.ref(`users/${uid}`).set(userPayload);
 
-    // Verwijder uit de wachtrij[cite: 21]
+    // Verwijder uit de wachtrij
     await requestRef.remove();
 
     // Geef het wachtwoord terug aan de frontend zodat de admin dit kan delen
@@ -103,7 +141,7 @@ exports.approveAccountRequest = onCall(async (request) => {
 
 /**
  * Function: rejectAccountRequest (Zonder e-mail)
- * Verwijdert simpelweg de aanvraag.[cite: 21]
+ * Verwijdert simpelweg de aanvraag.
  */
 exports.rejectAccountRequest = onCall(async (request) => {
   await assertAdmin(request.auth);
@@ -121,7 +159,7 @@ exports.rejectAccountRequest = onCall(async (request) => {
   }
 
   try {
-    await requestRef.remove(); // Verwijdert de aanvraag direct[cite: 21]
+    await requestRef.remove(); // Verwijdert de aanvraag direct
     return { success: true };
   } catch (err) {
     console.error("Error running rejectAccountRequest:", err);

@@ -4,10 +4,17 @@ function getFirebaseApp() {
     ? window._firebase.getApp()
     : window._firebase.initializeApp(window.firebaseConfig);
 }
+
 function speltakkenToArray(speltakken) {
   if (!speltakken) return [];
   if (Array.isArray(speltakken)) return speltakken;
   if (typeof speltakken === "object") {
+    const values = Object.values(speltakken);
+    // Als Firebase het opslaat als {0: "bevers", 1: "scouts"}
+    if (values.every(v => typeof v === "string")) {
+      return values;
+    }
+    // Als Firebase het opslaat als {bevers: true, scouts: true}
     return Object.keys(speltakken).filter(k => speltakken[k] === true);
   }
   return [];
@@ -493,11 +500,10 @@ waitForFirebase(renderAccountRequests);
 
 function loadUsers() {
   const app = getFirebaseApp();
-
   const db = window._firebase.getDatabase(app);
   const ref = window._firebase.ref(db, "users");
 
-  window._firebase.get(ref).then(snap => {
+  return window._firebase.get(ref).then(snap => {
     if (snap.exists()) renderUsers(snap.val());
   });
 }
@@ -623,19 +629,23 @@ document.getElementById("saveUserBtn").onclick = async () => {
   panel?.classList.add("is-busy");
 
   try {
+    const selectedSpeltakken = Array.from(
+      document.querySelectorAll(".edit-speltak:checked")
+    ).map(cb => cb.value);
+
     await callFunction("updateUser", {
       uid: selectedUserId,
       roles: {
         admin: editAdmin.checked,
         bestuur: editBestuur.checked,
-        speltakken: Array.from(
-          document.querySelectorAll(".edit-speltak:checked")
-        ).map(cb => cb.value),
+        speltakken: selectedSpeltakken
       },
       status: editInactive.checked ? "inactive" : "active",
     });
 
-    loadUsers();
+    await loadUsers();
+    openUserPanel(selectedUserId);
+
     panelEdit.classList.add("hidden");
     panelView.classList.remove("hidden");
     showToast("Account bijgewerkt", "success");
@@ -647,7 +657,6 @@ document.getElementById("saveUserBtn").onclick = async () => {
     setButtonLoading(saveBtn, false);
   }
 };
-
 
 document.getElementById("deleteUserBtn").onclick = () => {
   const deleteModal = document.getElementById("confirmDeleteModal");

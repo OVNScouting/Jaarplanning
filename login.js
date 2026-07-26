@@ -445,20 +445,23 @@ async function submitAccountRequest() {
     speltakken[input.value] = input.checked;
   });
 
-  if (speltakken.length === 0) {
+  // Check of er ten minste één speltak is aangevinkt
+  const heeftSpeltakGeselecteerd = Object.values(speltakken).some(Boolean);
+  if (!heeftSpeltakGeselecteerd) {
     errEl.textContent = "Selecteer a.u.b. ten minste één speltak.";
     errEl.classList.remove("hidden");
     return;
   }
+
   const fullName = `${firstName} ${lastName}`.trim();
 
   const roles = {
-    bestuur: document.getElementById("reqBestuur").checked,
-    admin: document.getElementById("reqAdmin").checked,
+    bestuur: document.getElementById("reqBestuur")?.checked || false,
+    admin: document.getElementById("reqAdmin")?.checked || false,
   };
 
-
-  const message = document.getElementById("reqMessage").value || "";
+  // ✅ Met ?.value crasht de code niet meer als het veld ontbreekt in de modal
+  const message = document.getElementById("reqMessage")?.value || "";
 
   try {
     btn.disabled = true;

@@ -19,6 +19,10 @@ async function assertAdmin(auth) {
   }
 }
 
+/**
+ * Function: updateUser
+ * Past de rollen, speltakken en status van een gebruiker aan.
+ */
 exports.updateUser = onCall(async (request) => {
   await assertAdmin(request.auth);
 
@@ -32,7 +36,22 @@ exports.updateUser = onCall(async (request) => {
 
     const isAdmin = !!roles?.admin;
     const isBestuur = !!roles?.bestuur;
-    const speltakkenList = Array.isArray(roles?.speltakken) ? roles.speltakken : [];
+
+    // Omzetten van aangevinkte lijst naar boolean-object:
+    // Resultaat: { bevers: true, welpen: false, scouts: false, explorers: false, rovers: false, stam: true }
+    const knownSpeltakken = ["bevers", "welpen", "scouts", "explorers", "rovers", "stam"];
+    const rawSpeltakken = roles?.speltakken;
+
+    const speltakkenObj = {};
+    knownSpeltakken.forEach((sp) => {
+      if (Array.isArray(rawSpeltakken)) {
+        speltakkenObj[sp] = rawSpeltakken.includes(sp);
+      } else if (rawSpeltakken && typeof rawSpeltakken === "object") {
+        speltakkenObj[sp] = !!rawSpeltakken[sp];
+      } else {
+        speltakkenObj[sp] = false;
+      }
+    });
 
     // 1. Claims bijwerken in Firebase Auth
     await admin.auth().setCustomUserClaims(uid, {
@@ -40,11 +59,11 @@ exports.updateUser = onCall(async (request) => {
       bestuur: isBestuur
     });
 
-    // 2. Data in Realtime Database opslaan
+    // 2. Data in Realtime Database opslaan in de juiste true/false-structuur
     const updates = {
       "roles/admin": isAdmin,
       "roles/bestuur": isBestuur,
-      "roles/speltakken": speltakkenList,
+      "roles/speltakken": speltakkenObj,
       "status": status || "active"
     };
 

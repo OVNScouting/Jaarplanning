@@ -87,17 +87,18 @@ async function approveRequestViaFunction(requestId, rowEl) {
     rowEl.remove();
     loadUsers();
 
-    // 5. Toon een pop-up met de kant-en-klare mailtekst om te kopiëren!
+const firstName = requestData.fullName ? requestData.fullName.trim().split(" ")[0] : 'Scout';
+
     const mailSubject = "Je account voor de OVN Jaarplanning is actief!";
-    const mailBody = `Hoi ${requestData.fullName || 'Scout'},\n\n` +
-      `Je account voor de Jaarplanning-website is zojuist goedgekeurd!\n\n` +
+    const mailBody = `Heyhoi ${firstName},\n\n` +
+      `Je account voor de Jaarplanning van OVN is zojuist goedgekeurd!\n\n` +
       `Je kunt nu inloggen met de volgende gegevens:\n` +
-      `- Website: https://ovnscouting.github.io/Jaarplanning/\n` +
+      `- Website: https://ovnjaarplanning.nl\n` +
       `- Gebruikersnaam: ${email}\n` +
       `- Tijdelijk wachtwoord: ${tempPassword}\n\n` +
       `Pas direct je wachtwoord aan na je eerste keer inloggen.\n\n` +
       `Met vriendelijke groet,\n` +
-      `De OVN Admin`;
+      `De Admin`;
 
     // We maken een mooie modal met de tekst die je zo kunt kopiëren
     showCopyModal(email, mailSubject, mailBody);

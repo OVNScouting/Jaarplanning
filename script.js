@@ -295,13 +295,22 @@ memberType?.addEventListener("change", () => {
 });
 
 function resetOpkomstFields() {
-    opDatum.value = "";
+    // 1. Haal de datum van vandaag op in lokaal formaat (YYYY-MM-DD)
+    const vandaag = new Date();
+    const jaar = vandaag.getFullYear();
+    const maand = String(vandaag.getMonth() + 1).padStart(2, '0');
+    const dag = String(vandaag.getDate()).padStart(2, '0');
+
+    // 2. Stel de standaardwaarde van het datumveld in op vandaag
+    opDatum.value = `${jaar}-${maand}-${dag}`;
+    
     if (opEindDatum) opEindDatum.value = ""; // NIEUW
     if (opEindDatumWrapper) opEindDatumWrapper.classList.add("hidden"); // NIEUW
     opStart.value = defaultTime.start;
     opEind.value = defaultTime.eind;
     opThema.value = "";
     opProcor.value = "";
+    if (opBuddy) opBuddy.value = "";
     opLocatie.value = "";
     opType.value = "normaal";
     opMateriaal.value = "";
@@ -323,6 +332,7 @@ const opEindDatumWrapper = document.getElementById("opEindDatumWrapper"); // NIE
 const opStart = document.getElementById("opStart");
 const opEind = document.getElementById("opEind");
 const opProcor = document.getElementById("opProcor");
+const opBuddy = document.getElementById("opBuddy");
 const opThema = document.getElementById("opThema");
 const opLocatie = document.getElementById("opLocatie");
 const opType = document.getElementById("opType");
@@ -2557,7 +2567,7 @@ saveOpkomst?.addEventListener("click", async () => {
         eindtijd: opEind.value || "",
         locatie: opLocatie.value || "",
         materiaal: opMateriaal.value || "",
-        buddy: (["explorers", "rovers"].includes(speltak) ? (opProcor?.value || "") : "") || "", // als je buddy apart hebt, zet hier jouw buddy input
+        buddy: opBuddy?.value || "",
         kijkers: Number(opKijkers.value || 0),
         extraAantal: Number(opExtraAantal.value || 0),
         extraNamen: opExtraNamen.value || "",

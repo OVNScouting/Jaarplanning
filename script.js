@@ -535,15 +535,9 @@ let editingMemberType = null;
 let editMode = false;
 
 // --- NIEUW: SEIZOEN FILTER ---
-const vandaag = new Date();
-const currentYear = vandaag.getFullYear();
-const currentMonth = vandaag.getMonth() + 1; // 1-12
-// Bepaal het huidige seizoen (bijv. 2026-2027)
-let currentSeizoenFilter = (currentMonth >= 9)
-    ? `${currentYear}-${currentYear + 1}`
-    : `${currentYear - 1}-${currentYear}`;
-// -----------------------------
+let currentSeizoenFilter = getSeizoenVanDatum(todayISO());
 
+// -----------------------------
 // ===============================
 // UNDO BUFFER — OPKOMSTEN
 // ===============================

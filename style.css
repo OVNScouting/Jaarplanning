@@ -1,41 +1,4 @@
-/* ============================================================
-   ROOT VARIABELEN
-============================================================ */
-:root {
-  --bg: #f5f7fb;
-  --card: #ffffff;
 
-  --blue: #006fff;
-  --blue-soft: #e4f0ff;
-  --accent: #ffcd59;
-
-  --opkomst-geen: #f43e3e;
-  --opkomst-geen-bg: #fde1e1;
-
-  --opkomst-volgende: #7cc46a;
-  --opkomst-volgende-bg: #e4f7de;
-
-  --opkomst-verleden: #5d5d5d;
-  --opkomst-verleden-bg: #e5e5e5;
-
-  --opkomst-bijzonder: #be70ff;
-  --opkomst-bijzonder-bg: #f3e7ff;
-
-  --opkomst-kamp: #ff66cc;
-  --opkomst-kamp-bg: #ffe3f4;
-
-  --text-main: #111827;
-  --text-muted: #6b7280;
-
-  --border: #ababad;
-  --border-strong: #021328;
-
-  --shadow: 0 6px 18px rgba(15, 23, 42, .08);
-
-  --radius: 14px;
-  --radius-small: 8px;
-  --radius-large: 25px;
-}
 
 /* ============================================================
    GLOBAL
@@ -2051,7 +2014,44 @@ tr.approved {
   margin-left: auto;
   /* Drukt het hele blok naar rechts */
 }
+/* ============================================================
+   ROOT VARIABELEN
+============================================================ */
+:root {
+  --bg: #f5f7fb;
+  --card: #ffffff;
 
+  --blue: #006fff;
+  --blue-soft: #e4f0ff;
+  --accent: #ffcd59;
+
+  --opkomst-geen: #f43e3e;
+  --opkomst-geen-bg: #f7d4d4;
+
+  --opkomst-volgende: #7cc46a;
+  --opkomst-volgende-bg: #e4f7de;
+
+  --opkomst-verleden: #5d5d5d;
+  --opkomst-verleden-bg: #e5e5e5;
+
+  --opkomst-bijzonder: #4cd3d7;
+  --opkomst-bijzonder-bg: #d2eef5;
+
+  --opkomst-kamp: #ffe066;
+  --opkomst-kamp-bg: #fbfcd5;
+
+  --text-main: #111827;
+  --text-muted: #6b7280;
+
+  --border: #ababad;
+  --border-strong: #021328;
+
+  --shadow: 0 6px 18px rgba(15, 23, 42, .08);
+
+  --radius: 14px;
+  --radius-small: 8px;
+  --radius-large: 25px;
+}
 /* Legenda styling */
 .legend-container {
   display: flex;
@@ -2085,70 +2085,67 @@ tr.approved {
 }
 
 .legend-box.dot-bijzonder {
-  background-color: #f3e8ff;
-  border-left: 3px solid #a855f7;
+  background-color: #d2eef5;
+  border-left: 3px solid #4cd3d7;
 }
 
 .legend-box.dot-kamp {
-  background-color: #fce7f3;
-  border-left: 3px solid #ec4899;
+  background-color: #fbfcd5;
+  border-left: 3px solid #ffe066;
 }
 
 .legend-box.dot-geen {
-  background-color: #ffe4e6;
+  background-color: #f7d4d4;
   border-left: 3px solid #f43f5e;
 }
 
-.legend-box.dot-verleden {
-  background-color: #f3f4f6;
-  border-left: 3px solid #9ca3af;
-}
 
-/* Kleuren van de bestuurs-blokjes */
 
-.legend-box.dot-groepsraad {
-  background-color: #f3e8ff;
-  border-left: 3px solid #1c5cc2;
-}
 
-.legend-box.dot-bestuursvergadering {
-  background-color: #fce7f3;
-  border-left: 3px solid #b00756;
-}
-
-.legend-box.dot-activiteit {
-  background-color: #ffe4e6;
-  border-left: 3px solid #c9c609;
-}
 
 /* --- Tabelrijen kleurenschema Bestuur --- */
 
 /* Verleden */
 tr.row-verleden {
-  opacity: 0.6;
-  background-color: #f9fafb;
+ background-color:#e5e5e5;
+  border-left: 4px solid #5d5d5d;
 }
-
+.legend-box.dot-verleden {
+  background-color: #e5e5e5;
+  border-left: 3px solid #5d5d5d;
+}
 /* Eerstvolgende opkomst */
 tr.row-eerstvolgende {
-  background-color: #f0fdf4;
+  background-color: #dcf5e3;
   border-left: 4px solid #22c55e;
 }
 
 /* Groepsraad */
 tr.row-groepsraad {
-  background-color: #e8e8ff;
-  border-left: 4px solid #1c5cc2;
+  background-color: #0522fb26;
+  border-left: 4px solid #0521fb;
+}
+.legend-box.dot-groepsraad {
+  background-color: #0522fb26;
+  border-left: 3px solid #0521fb;
 }
 
 /* Bestuursvergadering */
 tr.row-bestuursvergadering {
-  background-color: hsl(296, 100%, 97%);
-  border-left: 4px solid #e4096f;
+  background-color: #fb730314;
+  border-left: 4px solid #fb7303;
+}
+.legend-box.dot-bestuursvergadering {
+  background-color: #fb730314;
+  border-left: 3px solid #fb7303;
 }
 
 /* Activiteit */
 tr.row-activiteit {
-  background-color: #fff6ee;
-  border-left: 4px solid #fcec07;
+  background-color: #f800b629;
+  border-left: 4px solid #f800b6;
+}
+.legend-box.dot-activiteit {
+  background-color: #f800b629;
+  border-left: 3px solid #f800b6;
 }

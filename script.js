@@ -303,9 +303,10 @@ function resetOpkomstFields() {
 
     // 2. Stel de standaardwaarde van het datumveld in op vandaag
     opDatum.value = `${jaar}-${maand}-${dag}`;
-    
+
     if (opEindDatum) opEindDatum.value = ""; // NIEUW
     if (opEindDatumWrapper) opEindDatumWrapper.classList.add("hidden"); // NIEUW
+
     opStart.value = defaultTime.start;
     opEind.value = defaultTime.eind;
     opThema.value = "";
@@ -1670,7 +1671,7 @@ function makeEditableCell(o, field, extraClass = "", type = "text") {
     // LEESMODUS (View mode)
     if (!isEdit()) {
         if (field === "datum" && value) {
-            // Als het een kamp is en er is een einddatum, toon het bereik
+            // Als het een kamp is en er is een einddatum, toon het bereik (bijv. "8 maart t/m 12 maart")
             if (o.typeOpkomst === "kamp" && o.einddatum) {
                 td.textContent = formatDateRange(value, o.einddatum);
             } else {
@@ -1706,7 +1707,7 @@ function makeEditableCell(o, field, extraClass = "", type = "text") {
         inputEind.dataset.field = "einddatum";
         inputEind.className = "input-date-end";
 
-        // Toon/verberg einddatum afhankelijk van label
+        // Toon/verberg einddatum afhankelijk van typeOpkomst
         const isKamp = o.typeOpkomst === "kamp";
         separator.style.display = isKamp ? "inline" : "none";
         inputEind.style.display = isKamp ? "inline-block" : "none";
@@ -2537,16 +2538,10 @@ cancelOpkomst?.addEventListener("click", () =>
 fab?.addEventListener("click", () => {
     if (!isLeiding()) return;
 
+    // Vul alle velden met standaardwaarden (en opDatum op vandaag)
     resetOpkomstFields();
 
-    // Automatisch datum +7 dagen
-    if (opkomsten.length > 0) {
-        const last = opkomsten[opkomsten.length - 1];
-        const nextDate = new Date(last.datum);
-        nextDate.setDate(nextDate.getDate() + 7);
-        opDatum.value = nextDate.toISOString().substring(0, 10);
-    }
-
+    // Open de modal
     opModal.classList.remove("hidden");
 });
 
@@ -2559,6 +2554,7 @@ saveOpkomst?.addEventListener("click", async () => {
     const newObj = {
         id: newRef.key,
         datum: isoFromInput(opDatum.value),
+        einddatum: opType.value === "kamp" ? opEindDatum.value : "",
         thema: opThema.value || "",
         procor: opProcor.value || "",
         bijzonderheden: opBijzonderheden.value || "",
@@ -2573,6 +2569,8 @@ saveOpkomst?.addEventListener("click", async () => {
         extraNamen: opExtraNamen.value || "",
         aanwezigheid: {}
     };
+
+
 
     // BERT
     if (config.showBert) newObj.bert_met = opBert?.value || "";

@@ -46,6 +46,27 @@ const SPELTAK_COLOR = {
 
 const container = document.getElementById("dashboardOverview");
 
+// Hulpfunctie: genereert alle datums (YYYY-MM-DD) van start t/m eind
+function getDatesInRange(startStr, endStr) {
+  const dates = [];
+  if (!startStr) return dates;
+  if (!endStr || endStr < startStr) {
+    return [startStr];
+  }
+
+  let curr = new Date(startStr);
+  const end = new Date(endStr);
+
+  while (curr <= end) {
+    const yyyy = curr.getFullYear();
+    const mm = String(curr.getMonth() + 1).padStart(2, "0");
+    const dd = String(curr.getDate()).padStart(2, "0");
+    dates.push(`${yyyy}-${mm}-${dd}`);
+    curr.setDate(curr.getDate() + 1);
+  }
+  return dates;
+}
+
 // ======================================================================
 // LOAD DASHBOARD (Via Cloud Function)
 // ======================================================================
@@ -61,31 +82,82 @@ async function loadDashboard() {
     const response = await getGlobalDashboard();
     const rawOpkomsten = response.data.data;
 
-    const opkomsten = rawOpkomsten.map(o => ({
-      kind: "speltak",
-      speltak: o.speltak,
-      label: SPELTAK_LABEL[o.speltak],
-      kleur: SPELTAK_COLOR[o.speltak],
-      id: o.id,
-      datum: o.datum,
-      sortTime: o.starttijd || "99:99",
-      tijd: `${o.starttijd || "??:??"}–${o.eindtijd || "??:??"}`,
-      titel: o.thema || "",
-      type: o.typeOpkomst || "",
-      locatie: o.locatie || "",
-      materiaal: o.materiaal || "",
-      bijzonderheden: o.bijzonderheden || ""
-    }));
-
-    const bestuurs = await loadBestuursItems();
-
     // Bepaal de datum van precies 2 maanden vanaf vandaag
     const maxDatum = new Date();
     maxDatum.setMonth(maxDatum.getMonth() + 2);
     const maxDatumStr = maxDatum.toISOString().split("T")[0];
 
+    const opkomsten = [];
+
+    // Vouw meerdagse opkomsten uit naar losse items per dag
+    for (const o of rawOpkomsten) {
+      const isKamp = o.typeOpkomst === "kamp";
+
+      if (isKamp && o.einddatum && o.einddatum > o.datum) {
+        const dats = getDatesInRange(o.datum, o.einddatum);
+        const totaalDagen = dats.length;
+
+        dats.forEach((d, idx) => {
+          if (isFutureOrToday(d) && d <= maxDatumStr) {
+            let aangepasteTijd = "";
+            let sortTime = o.starttijd || "00:00";
+
+            if (idx === 0) {
+              // Eerste dag: alleen starttijd
+              aangepasteTijd = `${o.starttijd || "??:??"}–`;
+              sortTime = o.starttijd || "00:00";
+            } else if (idx === totaalDagen - 1) {
+              // Laatste dag: alleen eindtijd
+              aangepasteTijd = `–${o.eindtijd || "??:??"}`;
+              sortTime = "00:00"; // Zorg dat het op de einddag netjes geordend staat
+            } else {
+              // Tussendagen: Hele dag
+              aangepasteTijd = "Hele dag";
+              sortTime = "00:00";
+            }
+
+            opkomsten.push({
+              kind: "speltak",
+              speltak: o.speltak,
+              label: SPELTAK_LABEL[o.speltak],
+              kleur: SPELTAK_COLOR[o.speltak],
+              id: o.id,
+              datum: d,
+              sortTime: sortTime,
+              tijd: aangepasteTijd,
+              titel: o.thema || "",
+              type: o.typeOpkomst || "",
+              locatie: o.locatie || "",
+              materiaal: o.materiaal || "",
+              bijzonderheden: o.bijzonderheden || ""
+            });
+          }
+        });
+      } else {
+        // Reguliere opkomsten of eendaags kamp
+        if (isFutureOrToday(o.datum) && o.datum <= maxDatumStr) {
+          opkomsten.push({
+            kind: "speltak",
+            speltak: o.speltak,
+            label: SPELTAK_LABEL[o.speltak],
+            kleur: SPELTAK_COLOR[o.speltak],
+            id: o.id,
+            datum: o.datum,
+            sortTime: o.starttijd || "99:99",
+            tijd: `${o.starttijd || "??:??"}–${o.eindtijd || "??:??"}`,
+            titel: o.thema || "",
+            type: o.typeOpkomst || "",
+            locatie: o.locatie || "",
+            materiaal: o.materiaal || "",
+            bijzonderheden: o.bijzonderheden || ""
+          });
+        }
+      }
+    }
+
+    const bestuurs = await loadBestuursItems();
+
     const combined = [...opkomsten, ...bestuurs]
-      .filter(o => isFutureOrToday(o.datum) && o.datum <= maxDatumStr)
       .sort((a, b) => {
         if (a.datum !== b.datum) {
           return a.datum.localeCompare(b.datum);
@@ -108,7 +180,7 @@ async function loadDashboard() {
 }
 
 // ======================================================================
-// DATA LADEN (Alleen bestuursitems direct, opkomsten gaan via Cloud Function)
+// DATA LADEN (Alleen bestuursitems direct)
 // ======================================================================
 async function loadBestuursItems() {
   const snap = await get(ref(db, "bestuursItems"));

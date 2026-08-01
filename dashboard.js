@@ -79,8 +79,13 @@ async function loadDashboard() {
 
     const bestuurs = await loadBestuursItems();
 
+    // Bepaal de datum van precies 2 maanden vanaf vandaag
+    const maxDatum = new Date();
+    maxDatum.setMonth(maxDatum.getMonth() + 2);
+    const maxDatumStr = maxDatum.toISOString().split("T")[0];
+
     const combined = [...opkomsten, ...bestuurs]
-      .filter(o => isFutureOrToday(o.datum))
+      .filter(o => isFutureOrToday(o.datum) && o.datum <= maxDatumStr)
       .sort((a, b) => {
         if (a.datum !== b.datum) {
           return a.datum.localeCompare(b.datum);

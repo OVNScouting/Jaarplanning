@@ -23,6 +23,7 @@ import {
     getApp,
     getApps,
     getDatabase,
+    getAuth,
     ref,
     get,
     set,
@@ -1286,7 +1287,7 @@ function renderEmptyTableState(kind) {
             : "Er zijn nog geen opkomsten gepland. Kom later terug of vraag de leiding om de jaarplanning te vullen.";
     } else if (kind === "filtered") {
         title = "Geen opkomsten zichtbaar met dit filter.";
-        body = "Zet het filter op ‘Alles’ of kies ‘Komend’/‘Verleden’ om andere opkomsten te zien.";
+        body = "Er zijn nog geen opkomsten gepland. Kom later terug of vraag de leiding om de jaarplanning te vullen."
     } else {
         title = "Jaarplanning kon niet geladen worden.";
         body = "Controleer je verbinding en probeer het later opnieuw.";

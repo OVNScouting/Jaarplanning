@@ -1,37 +1,327 @@
 /* ======================================================================
-   MOBILE LAYER — alle mobile overrides
-   Geldt voor <= 900px
+   MOBILE / COMPACTE SCHERMEN
+   Wordt na style.css geladen
    ====================================================================== */
-@media (max-width: 900px) {
 
-  /* ===============================
-     Algemene layout
-     =============================== */
-  body {
-    font-size: 15px;
+/* ============================================================
+   COMPACTE DESKTOPS, LAPTOPS EN TABLETS
+============================================================ */
+@media (max-width: 1100px) {
+
+  .container {
+    width: 100%;
+    max-width: none;
+    padding-inline: 0.75rem;
   }
 
-  /* ===============================
-     Login badge (simpel & stabiel)
-     =============================== */
-  .login-badge {
-    font-size: 13px;
-    padding: 4px 8px;
-    border-radius: 999px;
+  .planning-section,
+  .info-block,
+  .ledenbeheer,
+  .meldingen {
+    padding-inline: 1rem;
+  }
+
+  .planning-header-row {
+    align-items: flex-start;
+  }
+
+  .planning-header-right {
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .legend-container {
+    flex: 1 1 500px;
+  }
+
+  .tabel-edit-btn {
+    flex: 0 0 auto;
+  }
+
+  /*
+   * Geen vaste top-positie.
+   * De knoppen blijven boven de knop Nieuwe opkomst staan.
+   */
+  .leiding-sidebar {
+    top: auto;
+    right: 12px;
+    bottom: 72px;
+    width: min(150px, calc(100vw - 24px));
+  }
+}
+
+
+/* ============================================================
+   TABLET EN MOBIEL
+============================================================ */
+@media (max-width: 900px) {
+
+  body {
+    font-size: 15px;
+    padding-bottom: 150px;
+  }
+
+  /* -------------------------------
+     Topbar
+  -------------------------------- */
+  .topbar {
+    padding: 0.65rem 0.75rem;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .topbar-left {
+    min-width: 0;
+    flex: 1 1 220px;
+  }
+
+  .topbar-right-icons {
+    flex: 0 1 auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .topbar-logo {
+    width: 38px;
+    height: 38px;
+  }
+
+  .speltak-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .topbar-title {
+    min-width: 0;
+  }
+
+  .topbar-title h1 {
+    font-size: 1.05rem;
+    overflow-wrap: anywhere;
+  }
+
+  .topbar-title span {
+    font-size: 0.75rem;
+  }
+
+  .backlink {
     white-space: nowrap;
   }
 
-  /* ===============================
-     Dashboard container
-     =============================== */
+  .login-badge,
+  .leiding-badge {
+    font-size: 0.78rem;
+    padding: 0.3rem 0.65rem;
+  }
+
+  /* -------------------------------
+     Algemene inhoud
+  -------------------------------- */
+  .container {
+    padding: 0.75rem 0.5rem 2rem;
+  }
+
+  .info-block,
+  .planning-section,
+  .ledenbeheer,
+  .meldingen {
+    margin-top: 0.75rem;
+    padding: 1rem 0.75rem;
+    border-radius: 10px;
+  }
+
+  /* -------------------------------
+     Planningheader
+  -------------------------------- */
+  .planning-header-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.8rem;
+  }
+
+  .planning-controls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  #seizoenFilterContainer {
+    margin-right: 0 !important;
+  }
+
+  .planning-header-right {
+    width: 100%;
+    margin-left: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .legend-container {
+    width: 100%;
+    gap: 0.5rem 0.75rem;
+  }
+
+  .legend-item {
+    font-size: 0.76rem;
+  }
+
+  .tabel-edit-btn {
+    align-self: flex-start;
+  }
+
+  /* -------------------------------
+     Tabel
+  -------------------------------- */
+  .table-wrapper {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+
+    /* Op mobiel ook de gewone scrollbar beschikbaar houden */
+    scrollbar-width: thin;
+  }
+
+  .table-wrapper::-webkit-scrollbar {
+    display: block;
+    height: 10px;
+  }
+
+  .table-wrapper::-webkit-scrollbar-track {
+    background: #dae7ff;
+    border-radius: 999px;
+  }
+
+  .table-wrapper::-webkit-scrollbar-thumb {
+    background: var(--blue);
+    border-radius: 999px;
+  }
+
+  .planning-table {
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .planning-table th,
+  .planning-table td {
+    white-space: nowrap;
+  }
+
+  /*
+   * De losse zwevende scrollbar is op touchscreens minder handig.
+   * De natuurlijke scrollbar van de tabel wordt hierboven gebruikt.
+   */
+  .table-h-scroll {
+    display: none !important;
+  }
+
+  /* -------------------------------
+     Vaste actieknoppen
+  -------------------------------- */
+  .fab-add-opkomst {
+    right: 10px;
+    bottom: 10px;
+    max-width: calc(50vw - 15px);
+    padding-inline: 12px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .bug-fab {
+    left: 10px;
+    bottom: 10px;
+    max-width: calc(50vw - 15px);
+    white-space: normal;
+    text-align: center;
+  }
+
+  .floating-account {
+    left: 10px;
+    bottom: 62px;
+    max-width: calc(100vw - 20px);
+  }
+
+  /*
+   * Sidebar niet meer verbergen.
+   * Hij wordt een compacte vaste groep boven de rechter FAB.
+   */
+  .leiding-sidebar {
+    display: flex !important;
+    top: auto;
+    right: 10px;
+    bottom: 62px;
+    width: 140px;
+    max-width: calc(100vw - 20px);
+    gap: 6px;
+  }
+
+  .leiding-sidebar .pill-btn {
+    min-height: 36px;
+    padding: 5px 8px;
+    font-size: 0.8rem;
+  }
+
+  /* -------------------------------
+     Modals
+  -------------------------------- */
+  .modal {
+    align-items: flex-start;
+    overflow-y: auto;
+    padding: 12px;
+  }
+
+  .modal-content {
+    width: 100%;
+    max-width: 100%;
+    max-height: none;
+    margin: auto 0;
+    padding: 1rem;
+  }
+
+  #accountRequestModal .modal-content {
+    width: 100%;
+  }
+
+  .modal-actions {
+    flex-wrap: wrap;
+  }
+
+  .modal-actions button {
+    flex: 1 1 130px;
+    min-height: 42px;
+  }
+
+  .account-checkbox-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* -------------------------------
+     Ledenbeheer
+  -------------------------------- */
+  .ledenbeheer-columns {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .ledenbeheer-col li {
+    align-items: flex-start;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  /* -------------------------------
+     Dashboard
+  -------------------------------- */
   #dashboardOverview {
     padding-left: 12px;
     padding-right: 12px;
   }
 
-  /* ===============================
-     Sticky datumkoppen (dashboard)
-     =============================== */
   .dashboard-date {
     position: sticky;
     top: 0;
@@ -41,9 +331,6 @@
     margin: 0;
   }
 
-  /* ===============================
-     Horizontaal scrollbare tabellen
-     =============================== */
   .dashboard-table-wrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -66,20 +353,9 @@
     font-size: 13px;
   }
 
- 
-@media (max-width: 900px) {
-  #accountRequestButton {
-    bottom: 0.75rem;
-    right: 0.75rem;
-    z-index: 1600;
-  }
-}
-/* ============================================================
-   ADMIN — User sidepanel als mobile sheet (optie B)
-   ============================================================ */
-@media (max-width: 900px) {
-
-  /* backdrop */
+  /* -------------------------------
+     Admin-sidepanel als sheet
+  -------------------------------- */
   .sidepanel-backdrop {
     position: fixed;
     inset: 0;
@@ -87,10 +363,9 @@
     z-index: 1490;
   }
 
-  /* sidepanel wordt sheet */
   #userSidePanel {
     position: fixed;
-    top: 3.5rem;          /* 👈 kleine top-margin */
+    top: 3.5rem;
     right: 0;
     bottom: 0;
     left: 0;
@@ -101,32 +376,139 @@
 
     padding: 1.25rem;
     overflow-y: auto;
-
     z-index: 1500;
 
-    /* animatie */
     transform: translateY(100%);
     transition: transform 0.25s ease;
   }
 
-  /* zichtbaar */
   #userSidePanel.is-open {
     transform: translateY(0);
   }
 
-  /* desktop inline styles neutraliseren */
   #userSidePanel[style] {
     flex: none !important;
   }
 
-  /* body lock */
   body.sidepanel-open {
     overflow: hidden;
   }
 
-  /* extra ruimte onder knoppen */
   #userSidePanel button {
     margin-bottom: 0.5rem;
   }
 }
+
+
+/* ============================================================
+   SMALLE TELEFOONS
+============================================================ */
+@media (max-width: 600px) {
+
+  .topbar {
+    align-items: flex-start;
+  }
+
+  .topbar-left {
+    flex-basis: 100%;
+  }
+
+  .topbar-right-icons {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .topbar-title span {
+    display: none;
+  }
+
+  .planning-controls {
+    gap: 0.35rem;
+  }
+
+  .chip {
+    font-size: 0.78rem;
+    padding: 0.3rem 0.65rem;
+  }
+
+  .legend-item {
+    flex: 1 1 120px;
+  }
+
+  .tabel-edit-btn {
+    width: 100%;
+  }
+
+  .modal {
+    padding: 8px;
+  }
+
+  .modal-content {
+    padding: 0.9rem;
+    border-radius: 10px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions button {
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  /*
+   * Op zeer smalle schermen komen de vaste knoppen als twee
+   * compacte knoppen naast elkaar onderin.
+   */
+  .fab-add-opkomst,
+  .bug-fab {
+    font-size: 0.78rem;
+    min-height: 40px;
+  }
+
+  .leiding-sidebar {
+    width: 125px;
+  }
+
+  .leiding-sidebar .pill-btn {
+    font-size: 0.75rem;
+  }
+}
+
+
+/* ============================================================
+   LAGE LAPTOPSCHERMEN
+============================================================ */
+@media (max-height: 750px) and (min-width: 901px) {
+
+  body {
+    padding-bottom: 90px;
+  }
+
+  .leiding-sidebar {
+    top: auto;
+    bottom: 70px;
+    gap: 5px;
+  }
+
+  .leiding-sidebar .pill-btn {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+  }
+
+  .modal {
+    padding: 12px;
+  }
+
+  .modal-content {
+    max-height: calc(100vh - 24px);
+    padding-block: 1rem;
+  }
+
+  .modal-content input,
+  .modal-content select,
+  .modal-content textarea {
+    margin-bottom: 0.5rem;
+  }
 }

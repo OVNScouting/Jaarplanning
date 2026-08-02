@@ -524,9 +524,7 @@ function updateHorizontalScrollPosition() {
     tableHScroll.style.left = rect.left + "px";
     tableHScroll.style.width = rect.width + "px";
 
-    // ⭐ Belangrijk: Vastgeplakt aan onderkant viewport
-    const bottomOffset = 50; // afstand vanaf onderrand scherm
-    tableHScroll.style.top = `${window.innerHeight - bottomOffset}px`;
+    tableHScroll.style.top = "";
 }
 
 

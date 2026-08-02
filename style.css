@@ -22,9 +22,10 @@ body {
    CONTAINER
 ============================================================ */
 .container {
+  width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 1.5rem 1rem 3rem;
+  padding: 1.5rem 1rem 7rem;
 }
 
 /* ============================================================
@@ -38,12 +39,19 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .topbar-left {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  min-width: 0;
+}
+
+.topbar-title {
+  min-width: 0;
 }
 
 .topbar-logo {
@@ -71,6 +79,8 @@ body {
 .topbar-right-icons {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
@@ -186,6 +196,10 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
   transition: background .15s ease, transform .05s ease;
 }
 
@@ -353,8 +367,9 @@ body {
 .fab-add-opkomst {
   position: fixed;
   right: 15px;
-  bottom: 26px;
+  bottom: 20px;
   z-index: 1400;
+  max-width: calc(100vw - 30px);
   padding-inline: 18px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
 }
@@ -722,22 +737,19 @@ tr.row-grey>.col-datum {
   display: none !important;
 }
 
-/* Zwevende horizontale scrollbar – gekoppeld aan de tabel */
 .table-h-scroll {
   position: fixed;
-  /* hangt los boven de inhoud */
+  bottom: 8px;
   z-index: 1000;
-  /* boven de tabel maar onder modals */
   background: rgba(255, 255, 255, 0.95);
   padding: 4px 0;
   border-radius: 999px;
   box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
 
-  /* breedte en positie (left/top) worden via JS gezet */
+  /* Alleen left en width worden via JS gezet */
   overflow-x: auto;
   overflow-y: hidden;
   display: none;
-  /* JS zet hem aan/uit */
 }
 
 .table-h-inner {
@@ -910,6 +922,8 @@ tr.row-grey>.col-datum {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
   z-index: 2000;
 }
 
@@ -917,16 +931,25 @@ tr.row-grey>.col-datum {
   background: white;
   padding: 1.5rem;
   border-radius: 14px;
-  width: 420px;
-  max-height: 85vh;
+
+  width: min(420px, 100%);
+  max-width: 100%;
+  max-height: calc(100vh - 32px);
+
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
+
   box-shadow: 0 6px 20px rgba(0, 0, 0, .15);
 }
 
 .modal-content input,
 .modal-content select,
 .modal-content textarea {
+  display: block;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   margin-top: 0.35rem;
   margin-bottom: 0.75rem;
   padding: 0.45rem 0.55rem;
@@ -941,12 +964,16 @@ tr.row-grey>.col-datum {
   justify-content: flex-end;
 }
 
+.bug-modal-content {
+  position: relative;
+  width: min(600px, 100%);
+}
 /* ============================================================
    ACCOUNT REQUEST MODAL — professionele layout
 ============================================================ */
 
 #accountRequestModal .modal-content {
-  width: 460px;
+  width: min(460px, 100%);
 }
 
 #accountRequestModal h3 {
@@ -1000,9 +1027,11 @@ tr.row-grey>.col-datum {
 ============================================================ */
 .leiding-sidebar {
   position: fixed;
-  top: 743px;
+  top: auto;
   right: 15px;
+  bottom: 72px;
   width: 150px;
+  max-width: calc(100vw - 30px);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1059,12 +1088,6 @@ tr.row-grey>.col-datum {
 /* ============================================================
    RESPONSIVE
 ============================================================ */
-@media (max-width: 900px) {
-  .leiding-sidebar {
-    display: none !important;
-  }
-}
-
 /* Extra-kolommen consistent */
 .col-extra-aantal,
 .col-extra-namen {
@@ -1789,8 +1812,9 @@ th[class^="ploeg-"]::after {
   position: fixed;
   left: 20px;
   right: auto;
-  bottom: 20px;
-  z-index: 1000;
+  bottom: 72px;
+  max-width: calc(100vw - 40px);
+  z-index: 1400;
 }
 
 .floating-account:hover {
@@ -1947,9 +1971,9 @@ tr.approved {
 .bug-fab {
   position: fixed;
   left: 20px;
-  bottom: 80px;
+  bottom: 20px;
   z-index: 1400;
-  /* Zorgt dat hij netjes boven de inhoud en gelijk aan andere FABs staat */
+  max-width: calc(100vw - 40px);
   box-shadow: var(--shadow);
 }
 
@@ -1999,14 +2023,15 @@ tr.approved {
   gap: 0.5rem;
 }
 
-/* Groepering van legenda & knop rechts */
 .planning-header-right {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 1.25rem;
   flex-wrap: wrap;
   margin-left: auto;
-  /* Drukt het hele blok naar rechts */
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* ============================================================
@@ -2048,12 +2073,13 @@ tr.approved {
   --radius-large: 25px;
 }
 
-/* Legenda styling */
 .legend-container {
   display: flex;
   align-items: center;
   gap: 0.85rem;
   flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
   font-size: 0.82rem;
   color: #555;
 }
@@ -2208,4 +2234,41 @@ tr.row-activiteit {
 .planning-table tbody tr.row-modal-editable .col-delete {
   cursor: pointer;
   text-align: center;
+}
+.modal-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modal-close-btn:hover {
+  background: #f1f5f9;
+  color: var(--text-main);
+}
+.bug-modal-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.bug-modal-actions button {
+  flex: 1 1 160px;
+}
+#seizoenFilterContainer {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  margin-right: 0.5rem;
 }

@@ -206,6 +206,22 @@ function init(isBestuur) {
     const tr = document.createElement("tr");
     tr.dataset.id = item.id;
 
+    if (editMode && isBestuur) {
+      tr.classList.add("row-modal-editable");
+      tr.title = "Klik om dit bestuursitem te bewerken";
+
+      tr.addEventListener("click", event => {
+        if (
+          event.target.closest(".col-delete") ||
+          event.target.closest("button, input, select, textarea, a")
+        ) {
+          return;
+        }
+
+        openEdit(item);
+      });
+    }
+
     // --- 🎨 KLEUR HIGHLIGHTS LOGICA ---
     const past = isPast(item.datum);
     const rawType = (item.type || "overig").toLowerCase().trim().replace(/\s+/g, "");
@@ -220,11 +236,16 @@ function init(isBestuur) {
       tr.classList.add(`row-${rawType}`);
     }
 
-    // --- BEWERK MODUS (Prullenbak) ---
     if (editMode && isBestuur) {
       const del = td("🗑️");
-      del.style.cursor = "pointer";
-      del.onclick = () => deleteItem(item.id);
+      del.classList.add("col-delete");
+      del.title = "Bestuursitem verwijderen";
+
+      del.addEventListener("click", event => {
+        event.stopPropagation();
+        deleteItem(item.id);
+      });
+
       tr.appendChild(del);
     }
 
@@ -233,10 +254,6 @@ function init(isBestuur) {
     tr.appendChild(td(renderTime(item)));
 
     const titleCell = td(item.titel);
-    if (isBestuur) {
-      titleCell.style.cursor = "pointer";
-      titleCell.onclick = () => openEdit(item);
-    }
     tr.appendChild(titleCell);
 
     tr.appendChild(td(item.type));
@@ -359,7 +376,7 @@ function init(isBestuur) {
     editMode = !editMode;
     editModeButton.textContent = editMode
       ? "💾 Klaar met bewerken"
-      : "✏️ Items bewerken";
+      : "✏️ Opkomsten bewerken";
     render();
   });
 

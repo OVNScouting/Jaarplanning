@@ -327,6 +327,7 @@ const saveMember = document.getElementById("saveMember");
 const cancelMember = document.getElementById("cancelMember");
 
 const opModal = document.getElementById("opkomstModal");
+const opModalTitle = document.getElementById("opModalTitle");
 const opDatum = document.getElementById("opDatum");
 const opEindDatum = document.getElementById("opEindDatum"); // NIEUW
 const opEindDatumWrapper = document.getElementById("opEindDatumWrapper"); // NIEUW
@@ -546,9 +547,11 @@ let editingMemberType = null;
 
 let editMode = false;
 
+// Houdt bij of de opkomstmodal een nieuwe of bestaande opkomst bevat
+let editingOpkomstId = null;
+
 // --- NIEUW: SEIZOEN FILTER ---
 let currentSeizoenFilter = getSeizoenVanDatum(todayISO());
-
 // -----------------------------
 // ===============================
 // UNDO BUFFER — OPKOMSTEN
@@ -1349,11 +1352,29 @@ function hideUndoBanner() {
    ====================================================================== */
 function addRow(o) {
     const tr = document.createElement("tr");
-    tr.dataset.id = o.id; // nodig voor scroll + highlight na opslaan
+    tr.dataset.id = o.id;
     tr.dataset.opkomstDatum = o.datum;
 
-    const past = isPast(o.datum);
+    if (isEdit()) {
+        tr.classList.add("row-modal-editable");
+        tr.title = "Klik om deze opkomst te bewerken";
 
+        tr.addEventListener("click", event => {
+            // Klikken op aanwezigheid, verwijderen of een ander interactief
+            // element mag niet ook de opkomstmodal openen.
+            if (
+                event.target.closest(".presence-cell") ||
+                event.target.closest(".col-delete") ||
+                event.target.closest("button, input, select, textarea, a")
+            ) {
+                return;
+            }
+
+            openEditOpkomstModal(o);
+        });
+    }
+
+    const past = isPast(o.datum);
     // Verleden: altijd volledig grijs, geen andere kleurmarkeringen
     if (past) {
         tr.classList.add("row-grey");
@@ -1376,6 +1397,7 @@ function addRow(o) {
         del.textContent = "🗑️";
 
         del.addEventListener("click", () => {
+            event.stopPropagation();
             if (!isLeiding()) return;
 
             if (!confirm("Deze opkomst verwijderen?")) return;
@@ -1439,36 +1461,16 @@ function addRow(o) {
         );
     }
 
-    // --- AANPASSING STAP C: TYPE OPKOMST + EVENT LISTENER ---
     if (!isOuder()) {
-        const typeTd = makeRestrictedEditable(
-            o,
-            "typeOpkomst",
-            ["normaal", "bijzonder", "kamp", "geen"],
-            "col-type"
+        tr.appendChild(
+            makeRestrictedEditable(
+                o,
+                "typeOpkomst",
+                ["normaal", "bijzonder", "kamp", "geen"],
+                "col-type"
+            )
         );
-
-        const select = typeTd.querySelector("select");
-        if (select) {
-            select.addEventListener("change", (e) => {
-                const isKamp = e.target.value === "kamp";
-                const eindInput = tr.querySelector(".input-date-end");
-                const separator = tr.querySelector(".date-separator");
-
-                if (eindInput && separator) {
-                    eindInput.style.display = isKamp ? "inline-block" : "none";
-                    separator.style.display = isKamp ? "inline" : "none";
-
-                    if (!isKamp) {
-                        eindInput.value = "";
-                    }
-                }
-            });
-        }
-
-        tr.appendChild(typeTd);
     }
-    // --------------------------------------------------------
 
     tr.appendChild(makeEditableCell(o, "thema", "col-thema"));
     tr.appendChild(makeEditableCell(o, "bijzonderheden", "col-bijzonderheden", "textarea"));
@@ -1664,147 +1666,52 @@ function addTotalsRow() {
 
 function makeEditableCell(o, field, extraClass = "", type = "text") {
     const td = document.createElement("td");
-    if (extraClass) td.classList.add(extraClass);
+
+    if (extraClass) {
+        td.classList.add(extraClass);
+    }
 
     const value = o[field];
 
-    // LEESMODUS (View mode)
-    if (!isEdit()) {
-        if (field === "datum" && value) {
-            // Als het een kamp is en er is een einddatum, toon het bereik (bijv. "8 maart t/m 12 maart")
-            if (o.typeOpkomst === "kamp" && o.einddatum) {
-                td.textContent = formatDateRange(value, o.einddatum);
-            } else {
-                td.textContent = formatDateDisplay(value);
-            }
+    if (field === "datum" && value) {
+        if (o.typeOpkomst === "kamp" && o.einddatum) {
+            td.textContent = formatDateRange(value, o.einddatum);
         } else {
-            td.textContent = value ?? "";
+            td.textContent = formatDateDisplay(value);
         }
-        return td;
+    } else {
+        td.textContent = value ?? "";
     }
-
-    // BEWERKMODUS (Edit mode)
-    if (field === "datum") {
-        const container = document.createElement("div");
-        container.className = "date-range-container";
-
-        // Begindatum input
-        const inputStart = document.createElement("input");
-        inputStart.type = "date";
-        inputStart.value = value ?? "";
-        inputStart.dataset.field = "datum";
-        inputStart.className = "input-date-start";
-
-        // Scheidingstext ("t/m")
-        const separator = document.createElement("span");
-        separator.className = "date-separator";
-        separator.textContent = " t/m ";
-
-        // Einddatum input
-        const inputEind = document.createElement("input");
-        inputEind.type = "date";
-        inputEind.value = o.einddatum ?? "";
-        inputEind.dataset.field = "einddatum";
-        inputEind.className = "input-date-end";
-
-        // Toon/verberg einddatum afhankelijk van typeOpkomst
-        const isKamp = o.typeOpkomst === "kamp";
-        separator.style.display = isKamp ? "inline" : "none";
-        inputEind.style.display = isKamp ? "inline-block" : "none";
-
-        container.appendChild(inputStart);
-        container.appendChild(separator);
-        container.appendChild(inputEind);
-        td.appendChild(container);
-        return td;
-    }
-
-    if (type === "date") {
-        const input = document.createElement("input");
-        input.type = "date";
-        input.value = value ?? "";
-        input.dataset.field = field;
-        td.appendChild(input);
-        return td;
-    }
-
-    const input = document.createElement("input");
-    input.type = type;
-    input.value = value ?? "";
-    input.dataset.field = field;
-    td.appendChild(input);
 
     return td;
 }
-
-
 /* ======================================================================
    CELFUNCTIES — DROPDOWN
    ====================================================================== */
 function makeRestrictedEditable(o, field, opties, extraClass = "") {
     const td = document.createElement("td");
-    if (extraClass) td.classList.add(extraClass);
+
+    if (extraClass) {
+        td.classList.add(extraClass);
+    }
 
     const value = o[field] || "";
 
-    if (!isEdit()) {
-        td.textContent = value;
-        return td;
+    if (field === "typeOpkomst") {
+        const labels = {
+            normaal: "Normaal",
+            bijzonder: "Bijzonder",
+            kamp: "Kamp",
+            geen: "Geen opkomst"
+        };
+
+        td.textContent = labels[value] || value;
+    } else {
+        td.textContent = value || "—";
     }
 
-    td.classList.add("editable-cell");
-
-    const select = document.createElement("select");
-    select.classList.add("cell-select");
-
-    opties.forEach(opt => {
-        const op = document.createElement("option");
-        op.value = opt;
-        op.textContent = opt || "—";
-        if (opt === value) op.selected = true;
-        select.appendChild(op);
-    });
-
-    select.addEventListener("change", async () => {
-        const newType = select.value;
-
-        // 1) Private opslaan
-        await update(ref(db, `${speltak}/opkomsten/${o.id}`), { [field]: newType });
-
-        // 2) Public type ook bijhouden
-        if (field === "typeOpkomst") {
-            await update(ref(db, `${PUBLIC_ROOT}/opkomsten/${o.id}`), { typeOpkomst: newType });
-        }
-
-        // 3) Als type = "geen" → private alles afwezig + public jeugd afwezig
-        if (field === "typeOpkomst" && newType === "geen") {
-            const updates = {};
-
-            // private jeugd + leiding
-            jeugd.forEach(j => {
-                updates[`${speltak}/opkomsten/${o.id}/aanwezigheid/${j.id}`] = "afwezig";
-            });
-            leiding.forEach(l => {
-                updates[`${speltak}/opkomsten/${o.id}/aanwezigheid/leiding-${l.id}`] = "afwezig";
-            });
-
-            // public: alleen jeugd
-            jeugd.forEach(j => {
-                updates[`${PUBLIC_ROOT}/opkomsten/${o.id}/aanwezigheid/${j.id}`] = "afwezig";
-            });
-
-            await update(ref(db), updates);
-        }
-
-        // 4) Herladen
-        loadEverything();
-    });
-
-
-    td.appendChild(select);
     return td;
 }
-
 /* ======================================================================
    AANWEZIGHEID
    ====================================================================== */
@@ -2526,35 +2433,123 @@ saveMember?.addEventListener("click", async () => {
     }
 });
 
+function openNewOpkomstModal() {
+    if (!isLeiding()) return;
 
+    editingOpkomstId = null;
+    resetOpkomstFields();
+
+    if (opModalTitle) {
+        opModalTitle.textContent = "Nieuwe opkomst";
+    }
+
+    opModal.classList.remove("hidden");
+}
+
+
+function openEditOpkomstModal(opkomst) {
+    if (!isLeiding() || !isEdit()) return;
+
+    editingOpkomstId = opkomst.id;
+
+    if (opModalTitle) {
+        opModalTitle.textContent = "Opkomst bewerken";
+    }
+
+    opDatum.value = opkomst.datum || "";
+    opStart.value = opkomst.starttijd || "";
+    opEind.value = opkomst.eindtijd || "";
+    opThema.value = opkomst.thema || "";
+    opProcor.value = opkomst.procor || "";
+
+    if (opBuddy) {
+        opBuddy.value = opkomst.buddy || "";
+    }
+
+    opType.value = opkomst.typeOpkomst || "normaal";
+    opLocatie.value = opkomst.locatie || "";
+    opMateriaal.value = opkomst.materiaal || "";
+    opBijzonderheden.value = opkomst.bijzonderheden || "";
+    opKijkers.value = Number(opkomst.kijkers || 0);
+    opExtraAantal.value = Number(opkomst.extraAantal || 0);
+    opExtraNamen.value = opkomst.extraNamen || "";
+
+    if (opBert) {
+        opBert.value = opkomst.bert_met || "";
+    }
+
+    const isKamp = opType.value === "kamp";
+
+    if (opEindDatumWrapper) {
+        opEindDatumWrapper.classList.toggle("hidden", !isKamp);
+    }
+
+    if (opEindDatum) {
+        opEindDatum.value = isKamp ? (opkomst.einddatum || "") : "";
+    }
+
+    opModal.classList.remove("hidden");
+}
 /* ======================================================================
    MODALS — OPKOMST
    ====================================================================== */
-cancelOpkomst?.addEventListener("click", () =>
-    opModal.classList.add("hidden")
-);
-
-
-fab?.addEventListener("click", () => {
-    if (!isLeiding()) return;
-
-    // Vul alle velden met standaardwaarden (en opDatum op vandaag)
-    resetOpkomstFields();
-
-    // Open de modal
-    opModal.classList.remove("hidden");
+cancelOpkomst?.addEventListener("click", () => {
+    editingOpkomstId = null;
+    opModal.classList.add("hidden");
 });
+
+fab?.addEventListener("click", openNewOpkomstModal);
 
 saveOpkomst?.addEventListener("click", async () => {
     if (!isLeiding()) return;
-    if (!opDatum.value) return alert("Datum verplicht");
 
-    const newRef = push(ref(db, `${speltak}/opkomsten`));
+    if (!opDatum.value) {
+        alert("Datum is verplicht.");
+        return;
+    }
 
-    const newObj = {
-        id: newRef.key,
+    const bestaandeOpkomst = editingOpkomstId
+        ? opkomsten.find(o => o.id === editingOpkomstId)
+        : null;
+
+    const opkomstId = editingOpkomstId ||
+        push(ref(db, `${speltak}/opkomsten`)).key;
+
+    const aanwezigheid = {
+        ...(bestaandeOpkomst?.aanwezigheid || {})
+    };
+
+    // Bij een nieuwe opkomst de aanwezigheid initialiseren.
+    if (!bestaandeOpkomst) {
+        jeugd.forEach(j => {
+            aanwezigheid[j.id] =
+                opType.value === "geen" ? "afwezig" : "onbekend";
+        });
+
+        leiding.forEach(l => {
+            aanwezigheid[`leiding-${l.id}`] =
+                opType.value === "geen" ? "afwezig" : "onbekend";
+        });
+    }
+
+    // Wanneer een bestaande opkomst wordt veranderd in 'geen opkomst',
+    // iedereen automatisch op afwezig zetten.
+    if (opType.value === "geen") {
+        jeugd.forEach(j => {
+            aanwezigheid[j.id] = "afwezig";
+        });
+
+        leiding.forEach(l => {
+            aanwezigheid[`leiding-${l.id}`] = "afwezig";
+        });
+    }
+
+    const opkomstObj = {
+        id: opkomstId,
         datum: isoFromInput(opDatum.value),
-        einddatum: opType.value === "kamp" ? opEindDatum.value : "",
+        einddatum: opType.value === "kamp"
+            ? (opEindDatum?.value || "")
+            : "",
         thema: opThema.value || "",
         procor: opProcor.value || "",
         bijzonderheden: opBijzonderheden.value || "",
@@ -2567,58 +2562,75 @@ saveOpkomst?.addEventListener("click", async () => {
         kijkers: Number(opKijkers.value || 0),
         extraAantal: Number(opExtraAantal.value || 0),
         extraNamen: opExtraNamen.value || "",
-        aanwezigheid: {}
+        aanwezigheid
     };
 
-
-
-    // BERT
-    if (config.showBert) newObj.bert_met = opBert?.value || "";
-
-    // Automatisch aanwezigheid init
-    if (opType.value === "geen") {
-        jeugd.forEach(j => (newObj.aanwezigheid[j.id] = "afwezig"));
-        leiding.forEach(l => (newObj.aanwezigheid[`leiding-${l.id}`] = "afwezig"));
-    } else {
-        jeugd.forEach(j => (newObj.aanwezigheid[j.id] = "onbekend"));
-        leiding.forEach(l => (newObj.aanwezigheid[`leiding-${l.id}`] = "onbekend"));
+    if (config.showBert) {
+        opkomstObj.bert_met = opBert?.value || "";
     }
 
+    const publicAanwezigheid = {};
+
+    jeugd.forEach(j => {
+        publicAanwezigheid[j.id] =
+            aanwezigheid[j.id] || "onbekend";
+    });
+
+    const publicObj = {
+        datum: opkomstObj.datum,
+        einddatum: opkomstObj.einddatum,
+        starttijd: opkomstObj.starttijd,
+        eindtijd: opkomstObj.eindtijd,
+        thema: opkomstObj.thema,
+        bijzonderheden: opkomstObj.bijzonderheden,
+        typeOpkomst: opkomstObj.typeOpkomst,
+        buddy: opkomstObj.buddy,
+        bert_met: opkomstObj.bert_met || "",
+        aanwezigheid: publicAanwezigheid
+    };
+
+    saveOpkomst.disabled = true;
+    saveOpkomst.textContent = "Opslaan…";
+
     try {
-        // 1) private opslaan
-        await set(newRef, newObj);
+        await Promise.all([
+            set(
+                ref(db, `${speltak}/opkomsten/${opkomstId}`),
+                opkomstObj
+            ),
+            set(
+                ref(db, `${PUBLIC_ROOT}/opkomsten/${opkomstId}`),
+                publicObj
+            )
+        ]);
 
-        // 2) public mirror opslaan (alleen public velden + jeugd-aanwezigheid)
-        const publicObj = {
-            datum: newObj.datum,
-            starttijd: newObj.starttijd,
-            eindtijd: newObj.eindtijd,
-            thema: newObj.thema,
-            bijzonderheden: newObj.bijzonderheden,
-            typeOpkomst: newObj.typeOpkomst || "normaal",
-            buddy: newObj.buddy || "",
-            bert_met: newObj.bert_met || "",
-            aanwezigheid: {}
-        };
-
-        jeugd.forEach(j => {
-            publicObj.aanwezigheid[j.id] = newObj.aanwezigheid?.[j.id] || "onbekend";
-        });
-
-        await set(ref(db, `${PUBLIC_ROOT}/opkomsten/${newRef.key}`), publicObj);
-
+        editingOpkomstId = null;
         opModal.classList.add("hidden");
+
         await loadEverything();
 
-        const row = document.querySelector(`tr[data-id="${newRef.key}"]`);
+        const row = document.querySelector(
+            `tr[data-id="${opkomstId}"]`
+        );
+
         if (row) {
-            row.scrollIntoView({ behavior: "smooth", block: "center" });
+            row.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+
             row.classList.add("row-highlight");
-            setTimeout(() => row.classList.remove("row-highlight"), 2000);
+
+            setTimeout(() => {
+                row.classList.remove("row-highlight");
+            }, 2000);
         }
     } catch (err) {
         console.error(err);
         alert("Opslaan mislukt, probeer het opnieuw.");
+    } finally {
+        saveOpkomst.disabled = false;
+        saveOpkomst.textContent = "Opslaan";
     }
 });
 
@@ -2693,43 +2705,19 @@ filterPast?.addEventListener("click", () => {
 });
 
 
-editModeButton?.addEventListener("click", async () => {
+editModeButton?.addEventListener("click", () => {
     if (!isLeiding()) {
         alert("Log in als leiding om te bewerken.");
         return;
     }
 
-    // --- UIT bewerken: OPSLAAN ---
-    if (editMode) {
-        // Direct visuele feedback geven
-        editModeButton.textContent = "⏳ Bezig met opslaan...";
-        editModeButton.disabled = true;
+    editMode = !editMode;
 
-        try {
-            const rows = Array.from(tableBody.querySelectorAll("tr[data-id]"));
+    editModeButton.textContent = editMode
+        ? "💾 Wijzigen opslaan"
+        : "✏️ Opkomsten bewerken";
 
-            // Sla ALLE rijen TEGELIJK (parallel) op in plaats van achter elkaar
-            await Promise.all(rows.map(tr => saveRow(tr)));
-        } catch (error) {
-            console.error("Fout bij opslaan van wijzigingen:", error);
-            alert("Er is iets misgegaan bij het opslaan.");
-        } finally {
-            editModeButton.disabled = false;
-        }
-
-        editMode = false;
-        setMode("leiding"); // hertekent tabel naar weergavemodus
-        editModeButton.textContent = "✏️ Opkomsten bewerken";
-
-        // Data opnieuw ophalen en weergave verversen
-        await loadEverything();
-        return;
-    }
-
-    // --- NAAR bewerkmodus ---
-    editMode = true;
     setMode("leiding");
-    editModeButton.textContent = "💾 Wijzigingen opslaan";
 });
 
 function scrollToOpkomstFromHash() {

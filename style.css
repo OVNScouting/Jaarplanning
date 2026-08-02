@@ -531,6 +531,17 @@ body {
   z-index: 5;
 }
 
+/* Weekdagafkorting in datumcel */
+.date-weekday {
+  display: inline-block;
+  margin-right: 0.3rem;
+
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+
+}
+
 body.mode-ouder .col-datum,
 body.mode-leiding .col-datum,
 body.mode-bewerken .col-datum {
@@ -2271,4 +2282,57 @@ tr.row-activiteit {
   align-items: flex-start;
   gap: 0.2rem;
   margin-right: 0.5rem;
+}
+/* ============================================================
+   BEVESTIGINGSMODAL
+============================================================ */
+
+.confirm-modal-content {
+  width: min(430px, 100%);
+  text-align: center;
+}
+
+.confirm-modal-icon {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 1rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+  font-size: 1.45rem;
+}
+
+.confirm-modal-icon-danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.confirm-modal-content h3 {
+  margin: 0 0 0.65rem;
+  font-size: 1.2rem;
+}
+
+.confirm-modal-text {
+  margin: 0;
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+.confirm-modal-note {
+  margin: 0.65rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.confirm-modal-actions {
+  justify-content: center;
+  margin-top: 1.25rem;
+}
+
+.confirm-modal-actions button {
+  min-width: 140px;
 }

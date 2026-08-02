@@ -32,9 +32,10 @@
     gap: 0.75rem;
   }
 
-  .legend-container {
-    flex: 1 1 500px;
-  }
+.legend-container {
+  flex: 1 1 auto;
+  min-width: 0;
+}
 
   .tabel-edit-btn {
     flex: 0 0 auto;

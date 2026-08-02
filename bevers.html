@@ -9,7 +9,7 @@
 
 
   <link rel="stylesheet" href="style.css" />
-<link rel="stylesheet" href="mobile.css" />
+  <link rel="stylesheet" href="mobile.css" />
 </head>
 
 <body>
@@ -81,7 +81,7 @@
       <div class="planning-header-row">
         <!-- Filters (Links) -->
         <div class="planning-controls">
-<div id="seizoenFilterContainer"></div>
+          <div id="seizoenFilterContainer"></div>
           <span id="filterAll" class="chip active">Alles</span>
           <span id="filterFuture" class="chip">Komend</span>
           <span id="filterPast" class="chip">Verleden</span>
@@ -286,14 +286,15 @@
 
         <!-- Locatie reserveren -->
         <label for="opLocatie">Locatie reserveren:</label>
-        <select id="opLocatie">
+         <select id="opLocatie">
           <option value="">Selecteer…</option>
           <option value="Kampvuurkuil">Kampvuurkuil</option>
           <option value="Zandveld">Zandveld</option>
           <option value="Grasveld">Grasveld</option>
           <option value="De Hoop">De Hoop</option>
-          <option value="Bever lokaal">Bever lokaal</option>
+          <option value="Bever lokaal">Bever/Scouts lokaal</option>
           <option value="Welpen lokaal">Welpen lokaal</option>
+          <option value="Keuken">Keuken</option>
           <option value="Van terrein af">Van terrein af</option>
           <option value="Externe locatie">Externe locatie</option>
         </select>
@@ -348,7 +349,49 @@
       }
     });
   </script>
+<!-- ============================================================
+     MODAL — Opkomst verwijderen
+============================================================ -->
+<div id="deleteOpkomstModal" class="modal hidden">
+  <div
+    class="modal-content confirm-modal-content"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="deleteOpkomstTitle"
+  >
+    <div class="confirm-modal-icon confirm-modal-icon-danger">
+      🗑️
+    </div>
 
+    <h3 id="deleteOpkomstTitle">Opkomst verwijderen?</h3>
+
+    <p id="deleteOpkomstText" class="confirm-modal-text">
+      Weet je zeker dat je deze opkomst wilt verwijderen?
+    </p>
+
+    <p class="confirm-modal-note">
+      Je kunt deze actie kort na het verwijderen nog ongedaan maken.
+    </p>
+
+    <div class="modal-actions confirm-modal-actions">
+      <button
+        id="cancelDeleteOpkomst"
+        type="button"
+        class="pill-btn outline"
+      >
+        Annuleren
+      </button>
+
+      <button
+        id="confirmDeleteOpkomst"
+        type="button"
+        class="pill-btn danger"
+      >
+        Opkomst verwijderen
+      </button>
+    </div>
+  </div>
+</div>
 
   <!-- ============================================================
      MODAL — Nest wisselen bevestigen
@@ -388,17 +431,11 @@
 
   <!-- De Pop-up (Modal) voor bug melden -->
   <div id="bugModal" class="modal hidden">
-  </div>
-  <div class="modal-content bug-modal-content">
+    <div class="modal-content bug-modal-content">
       <!-- Sluit kruisje -->
-    <button
-  id="closeBugModalBtn"
-  class="modal-close-btn"
-  type="button"
-  aria-label="Sluiten"
->
-  &times;
-</button>
+      <button id="closeBugModalBtn" class="modal-close-btn" type="button" aria-label="Sluiten">
+        &times;
+      </button>
       <h2 style="margin-top: 0; color: var(--text-main); padding-right: 30px;">Meld een probleem of idee!</h2>
       <p class="text-muted">Loop je ergens tegenaan op de website? Laat het hieronder weten.</p>
 
@@ -426,7 +463,7 @@ Wat deed je, waar klikte je op, wat had er moeten gebeuren?"
             style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-small); background: #f9fafb; color: var(--text-muted); font-size: 14px;">
         </div>
 
-<div class="bug-modal-actions">          <button type="submit" class="primary-btn"
+        <div class="bug-modal-actions"> <button type="submit" class="primary-btn"
             style="padding: 12px 24px; cursor: pointer; border: none; border-radius: var(--radius-small); background: var(--blue); color: #fff; font-weight: 600;">
             Verstuur melding
           </button>

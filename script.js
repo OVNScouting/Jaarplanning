@@ -327,6 +327,10 @@ const saveMember = document.getElementById("saveMember");
 const cancelMember = document.getElementById("cancelMember");
 
 const opModal = document.getElementById("opkomstModal");
+const deleteOpkomstModal =  document.getElementById("deleteOpkomstModal");
+const deleteOpkomstText = document.getElementById("deleteOpkomstText");
+const confirmDeleteOpkomst =document.getElementById("confirmDeleteOpkomst");
+const cancelDeleteOpkomst =document.getElementById("cancelDeleteOpkomst");
 const opModalTitle = document.getElementById("opModalTitle");
 const opDatum = document.getElementById("opDatum");
 const opEindDatum = document.getElementById("opEindDatum"); // NIEUW
@@ -524,7 +528,7 @@ function updateHorizontalScrollPosition() {
     tableHScroll.style.left = rect.left + "px";
     tableHScroll.style.width = rect.width + "px";
 
-    tableHScroll.style.top = "";
+
 }
 
 
@@ -555,7 +559,7 @@ let currentSeizoenFilter = getSeizoenVanDatum(todayISO());
 // UNDO BUFFER — OPKOMSTEN
 // ===============================
 let pendingDeleteOpkomst = null; // { id, data, timeout }
-
+let opkomstToDelete = null;
 /* ======================================================================
    MODE FUNCTIONS
    ====================================================================== */
@@ -1344,7 +1348,36 @@ function hideUndoBanner() {
     if (banner) banner.classList.remove("visible");
 }
 
+function openDeleteOpkomstModal(opkomst) {
+    if (!deleteOpkomstModal || !opkomst) return;
 
+    opkomstToDelete = opkomst;
+
+    const datumTekst = opkomst.datum
+        ? formatDateDisplay(opkomst.datum)
+        : "deze datum";
+
+    const titelTekst = opkomst.thema
+        ? ` (“${opkomst.thema}”)`
+        : "";
+
+    if (deleteOpkomstText) {
+        deleteOpkomstText.textContent =
+            `Weet je zeker dat je de opkomst van ${datumTekst}${titelTekst} wilt verwijderen?`;
+    }
+
+    deleteOpkomstModal.classList.remove("hidden");
+    document.body.classList.add("modal-open");
+}
+
+
+function closeDeleteOpkomstModal() {
+    if (!deleteOpkomstModal) return;
+
+    deleteOpkomstModal.classList.add("hidden");
+    document.body.classList.remove("modal-open");
+    opkomstToDelete = null;
+}
 /* ======================================================================
    TABEL — ROWS
    ====================================================================== */
@@ -1392,54 +1425,16 @@ function addRow(o) {
     if (isEdit()) {
         const del = document.createElement("td");
         del.classList.add("editable-cell", "col-delete");
-        del.textContent = "🗑️";
+        del.textContent = "❌";
 
-        del.addEventListener("click", () => {
-            event.stopPropagation();
-            if (!isLeiding()) return;
+        del.addEventListener("click", event => {
+    event.stopPropagation();
 
-            if (!confirm("Deze opkomst verwijderen?")) return;
+    if (!isLeiding()) return;
 
-            // Als er al een pending delete is: eerst afronden
-            if (pendingDeleteOpkomst?.timeout) {
-                clearTimeout(pendingDeleteOpkomst.timeout);
-                pendingDeleteOpkomst = null;
-                hideUndoBanner();
-            }
-
-            // Data veiligstellen
-            const snapshot = { ...o };
-
-            // UI: direct verwijderen uit lokale state
-            opkomsten = opkomsten.filter(x => x.id !== o.id);
-            renderTable();
-
-            // Undo instellen
-            const timeout = setTimeout(async () => {
-                await set(ref(db, `${speltak}/opkomsten/${o.id}`), null);
-                await set(ref(db, `${PUBLIC_ROOT}/opkomsten/${o.id}`), null);
-                pendingDeleteOpkomst = null;
-                hideUndoBanner();
-                loadEverything();
-
-            }, 5000); // 5 seconden undo-tijd
-
-            pendingDeleteOpkomst = {
-                id: o.id,
-                data: snapshot,
-                timeout
-            };
-
-            showUndoBanner("Opkomst verwijderd.", () => {
-                clearTimeout(timeout);
-                pendingDeleteOpkomst = null;
-
-                // Terugzetten in lokale state
-                opkomsten.push(snapshot);
-                // Her-sorteren + next bepalen gebeurt in loadEverything
-                loadEverything();
-            });
-        });
+    openDeleteOpkomstModal(o);
+});
+               
 
         tr.appendChild(del);
     }
@@ -1483,7 +1478,7 @@ function addRow(o) {
             "locatie",
             ["", "Kampvuurkuil", "Zandveld", "Grasveld", "De Hoop",
                 "Bever lokaal", "Welpen lokaal", "Van terrein af",
-                "Externe locatie", "Overig"],
+                "Externe locatie", "Keuken", "Overig"],
             "col-locatie"
         ));
     }
@@ -1661,7 +1656,27 @@ function addTotalsRow() {
 /* ======================================================================
    CELFUNCTIES — EDITABLE
    ====================================================================== */
+function getWeekdagAfkorting(isoDatum) {
+    if (!isoDatum) return "";
 
+    /*
+     * T12:00:00 voorkomt dat een datum door tijdzoneverschillen
+     * onverwacht naar de vorige dag verschuift.
+     */
+    const datum = new Date(`${isoDatum}T12:00:00`);
+
+    const weekdagen = [
+        "Zo",
+        "Ma",
+        "Di",
+        "Wo",
+        "Do",
+        "Vr",
+        "Za"
+    ];
+
+    return weekdagen[datum.getDay()] || "";
+}
 function makeEditableCell(o, field, extraClass = "", type = "text") {
     const td = document.createElement("td");
 
@@ -1672,10 +1687,18 @@ function makeEditableCell(o, field, extraClass = "", type = "text") {
     const value = o[field];
 
     if (field === "datum" && value) {
+        const weekdag = getWeekdagAfkorting(value);
+
         if (o.typeOpkomst === "kamp" && o.einddatum) {
-            td.textContent = formatDateRange(value, o.einddatum);
+            td.innerHTML = `
+                <span class="date-weekday">${weekdag}</span>
+                <span>${formatDateRange(value, o.einddatum)}</span>
+            `;
         } else {
-            td.textContent = formatDateDisplay(value);
+            td.innerHTML = `
+                <span class="date-weekday">${weekdag}</span>
+                <span>${formatDateDisplay(value)}</span>
+            `;
         }
     } else {
         td.textContent = value ?? "";
@@ -2672,7 +2695,68 @@ async function saveRow(tr) {
     }
 }
 
+confirmDeleteOpkomst?.addEventListener("click", () => {
+    if (!isLeiding() || !opkomstToDelete) return;
 
+    const o = opkomstToDelete;
+
+    closeDeleteOpkomstModal();
+
+    // Als er al een pending delete is: eerst afronden
+    if (pendingDeleteOpkomst?.timeout) {
+        clearTimeout(pendingDeleteOpkomst.timeout);
+        pendingDeleteOpkomst = null;
+        hideUndoBanner();
+    }
+
+    // Data veiligstellen voor ongedaan maken
+    const snapshot = {
+        ...o,
+        aanwezigheid: {
+            ...(o.aanwezigheid || {})
+        }
+    };
+
+    // Direct uit de lokale tabel verwijderen
+    opkomsten = opkomsten.filter(item => item.id !== o.id);
+    renderTable();
+
+    // Pas na de undo-periode definitief verwijderen
+    const timeout = setTimeout(async () => {
+        try {
+            await Promise.all([
+                set(
+                    ref(db, `${speltak}/opkomsten/${o.id}`),
+                    null
+                ),
+                set(
+                    ref(db, `${PUBLIC_ROOT}/opkomsten/${o.id}`),
+                    null
+                )
+            ]);
+
+            pendingDeleteOpkomst = null;
+            hideUndoBanner();
+        } catch (error) {
+            console.error("Verwijderen mislukt:", error);
+
+            // Bij een fout de opkomst lokaal terugzetten
+            opkomsten.push(snapshot);
+            opkomsten = sortOpkomsten(opkomsten);
+            renderTable();
+
+            alert("Verwijderen is mislukt. De opkomst is teruggezet.");
+        }
+    }, 7000);
+
+    pendingDeleteOpkomst = {
+        id: o.id,
+        data: snapshot,
+        timeout
+    };
+
+    showUndoBanner();
+});
 /* ======================================================================
    PRINT / FILTERS
    ====================================================================== */

@@ -9,7 +9,7 @@
 
 
   <link rel="stylesheet" href="style.css" />
-<link rel="stylesheet" href="mobile.css" />
+  <link rel="stylesheet" href="mobile.css" />
 </head>
 
 <body>
@@ -81,7 +81,7 @@
       <div class="planning-header-row">
         <!-- Filters (Links) -->
         <div class="planning-controls">
-<div id="seizoenFilterContainer"></div>
+          <div id="seizoenFilterContainer"></div>
           <span id="filterAll" class="chip active">Alles</span>
           <span id="filterFuture" class="chip">Komend</span>
           <span id="filterPast" class="chip">Verleden</span>
@@ -281,8 +281,9 @@
           <option value="Zandveld">Zandveld</option>
           <option value="Grasveld">Grasveld</option>
           <option value="De Hoop">De Hoop</option>
-          <option value="Bever lokaal">Bever lokaal</option>
+          <option value="Bever lokaal">Bever/Scouts lokaal</option>
           <option value="Welpen lokaal">Welpen lokaal</option>
+          <option value="Keuken">Keuken</option>
           <option value="Van terrein af">Van terrein af</option>
           <option value="Externe locatie">Externe locatie</option>
         </select>
@@ -368,16 +369,11 @@
   <!-- De Pop-up (Modal) voor bug melden -->
   <div id="bugModal" class="modal hidden">
 
-  <div class="modal-content bug-modal-content">
+    <div class="modal-content bug-modal-content">
       <!-- Sluit kruisje -->
-     <button
-  id="closeBugModalBtn"
-  class="modal-close-btn"
-  type="button"
-  aria-label="Sluiten"
->
-  &times;
-</button>
+      <button id="closeBugModalBtn" class="modal-close-btn" type="button" aria-label="Sluiten">
+        &times;
+      </button>
       <h2 style="margin-top: 0; color: var(--text-main); padding-right: 30px;">Meld een probleem of idee!</h2>
       <p class="text-muted">Loop je ergens tegenaan op de website? Laat het hieronder weten.</p>
 
@@ -405,7 +401,7 @@ Wat deed je, waar klikte je op, wat had er moeten gebeuren?"
             style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-small); background: #f9fafb; color: var(--text-muted); font-size: 14px;">
         </div>
 
-<div class="bug-modal-actions">          <button type="submit" class="primary-btn"
+        <div class="bug-modal-actions"> <button type="submit" class="primary-btn"
             style="padding: 12px 24px; cursor: pointer; border: none; border-radius: var(--radius-small); background: var(--blue); color: #fff; font-weight: 600;">
             Verstuur melding
           </button>

@@ -249,6 +249,49 @@
     </div>
 
     <!-- ============================================================
+     MODAL — Opkomst verwijderen
+============================================================ -->
+<div id="deleteOpkomstModal" class="modal hidden">
+  <div
+    class="modal-content confirm-modal-content"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="deleteOpkomstTitle"
+  >
+    <div class="confirm-modal-icon confirm-modal-icon-danger">
+      🗑️
+    </div>
+
+    <h3 id="deleteOpkomstTitle">Opkomst verwijderen?</h3>
+
+    <p id="deleteOpkomstText" class="confirm-modal-text">
+      Weet je zeker dat je deze opkomst wilt verwijderen?
+    </p>
+
+    <p class="confirm-modal-note">
+      Je kunt deze actie kort na het verwijderen nog ongedaan maken.
+    </p>
+
+    <div class="modal-actions confirm-modal-actions">
+      <button
+        id="cancelDeleteOpkomst"
+        type="button"
+        class="pill-btn outline"
+      >
+        Annuleren
+      </button>
+
+      <button
+        id="confirmDeleteOpkomst"
+        type="button"
+        class="pill-btn danger"
+      >
+        Opkomst verwijderen
+      </button>
+    </div>
+  </div>
+</div>
+    <!-- ============================================================
          MODAL — Opkomst toevoegen
     ============================================================ -->
     <div id="opkomstModal" class="modal hidden">

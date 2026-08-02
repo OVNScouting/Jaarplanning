@@ -2757,6 +2757,27 @@ confirmDeleteOpkomst?.addEventListener("click", () => {
 
     showUndoBanner();
 });
+
+cancelDeleteOpkomst?.addEventListener(
+    "click",
+    closeDeleteOpkomstModal
+);
+
+deleteOpkomstModal?.addEventListener("click", event => {
+    if (event.target === deleteOpkomstModal) {
+        closeDeleteOpkomstModal();
+    }
+});
+
+document.addEventListener("keydown", event => {
+    if (
+        event.key === "Escape" &&
+        deleteOpkomstModal &&
+        !deleteOpkomstModal.classList.contains("hidden")
+    ) {
+        closeDeleteOpkomstModal();
+    }
+});
 /* ======================================================================
    PRINT / FILTERS
    ====================================================================== */

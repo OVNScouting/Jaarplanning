@@ -4,11 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mijn Profiel - OVN Jaarplanning</title>
-  
-<script src="generaltheme.js"></script>
-     <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="mobile.css" />
+
+    <title>Mijn Profiel – OVN Jaarplanning</title>
+
+    <link rel="icon" href="assets/OVN.logo.png" type="image/png">
+
+    <script src="generaltheme.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile.css">
 </head>
 
 
@@ -28,184 +32,291 @@
         </div>
 
         <div class="topbar-right-icons">
-            <a href="profile.html" class="pill-btn outline active" style="text-decoration: none;">Mijn Profiel</a>
-            <button id="btnLogout" class="pill-btn outline">Uitloggen</button>
+            <a href="profile.html" class="pill-btn outline profile-current-link" aria-current="page">
+                Mijn Profiel
+            </a>
+
+            <button id="btnLogout" class="pill-btn outline" type="button">
+                Uitloggen
+            </button>
         </div>
     </header>
 
-    <!-- BEVEILIGINGSWAARSCHUWING -->
-    <div id="pwWarning" class="banner error hidden"
-        style="margin: 2rem auto 0 auto; max-width: 800px; padding: 1rem; border-radius: 8px;">
-        <strong>Beveiligingswaarschuwing 🔒</strong>
-        <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">
-            Je logt momenteel in met het tijdelijke wachtwoord. Kies hieronder direct een eigen, veilig wachtwoord om je
-            account te beschermen.
-        </p>
-    </div>
+    <!-- ============================================================
+     BEVEILIGINGSWAARSCHUWING
+============================================================ -->
+    <div id="pwWarning" class="profile-security-banner hidden" role="alert">
+        <div class="profile-security-icon" aria-hidden="true">🔒</div>
 
-    <!-- INHOUD (In de vertrouwde admin-stijl 'card') -->
-    <main class="container" style="max-width: 800px; margin-top: 2rem; margin-bottom: 3rem;">
+        <div>
+            <strong>Beveiligingsupdate nodig</strong>
 
-        <div class="card" style="margin-bottom: 2rem;">
-            <h2>Mijn Profiel</h2>
-            <p class="text-muted" style="margin-bottom: 1.5rem;">Je huidige accountgegevens in de jaarplanning.</p>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-                <div>
-                    <strong
-                        style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.25rem;">Volledige
-                        naam</strong>
-                    <span id="profName" style="font-size: 1.1rem; font-weight: 500;">Bezig met laden...</span>
-                </div>
-
-                <div>
-                    <strong
-                        style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.25rem;">E-mailadres</strong>
-                    <span id="profEmail" style="font-size: 1.1rem;">Bezig met laden...</span>
-                </div>
-            </div>
-
-            <div style="margin-top: 1.5rem;">
-                <strong
-                    style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Actieve
-                    Speltakken & Rollen</strong>
-                <div id="profRoles" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                </div>
-            </div>
-
-            <hr style="margin: 2rem 0 1.5rem 0; border: 0; border-top: 1px solid #eee;">
-
-            <p style="font-size: 0.9rem; text-align: center; margin: 0; color: var(--text-muted);">
-                Kloppen deze gegevens niet?
-                <a href="mailto:ovnscouting@gmail.com?subject=Wijziging profielgegevens jaarplanning"
-                    style="color: #ef4444; font-weight: bold; text-decoration: none;">Vraag een wijziging aan bij de
-                    admin</a>.
+            <p>
+                Je gebruikt momenteel een tijdelijk wachtwoord.
+                Kies direct een eigen, veilig wachtwoord om je account
+                te beschermen.
             </p>
         </div>
+    </div>
 
+
+    <!-- ============================================================
+     PROFIELINHOUD
+============================================================ -->
+    <main class="container profile-container">
+
+        <section class="card profile-card">
+            <header class="profile-card-header">
+                <div>
+                    <h2>Mijn profiel</h2>
+
+                    <p class="text-muted">
+                        Je huidige accountgegevens in de jaarplanning.
+                    </p>
+                </div>
+
+                <div class="profile-account-icon" aria-hidden="true">
+                    👤
+                </div>
+            </header>
+
+            <div id="profileLoading" class="profile-loading" aria-live="polite">
+                Profielgegevens worden geladen…
+            </div>
+
+            <div id="profileContent" class="hidden">
+                <div class="profile-details-grid">
+
+                    <div class="profile-detail">
+                        <span class="profile-detail-label">
+                            Volledige naam
+                        </span>
+
+                        <span id="profName" class="profile-detail-value">
+                            —
+                        </span>
+                    </div>
+
+                    <div class="profile-detail">
+                        <span class="profile-detail-label">
+                            E-mailadres
+                        </span>
+
+                        <span id="profEmail" class="profile-detail-value">
+                            —
+                        </span>
+                    </div>
+                </div>
+
+                <div class="profile-roles-section">
+                    <span class="profile-detail-label">
+                        Actieve speltakken en rollen
+                    </span>
+
+                    <div id="profRoles" class="profile-role-list" aria-live="polite"></div>
+                </div>
+
+                <div class="profile-divider"></div>
+
+                <div class="profile-support">
+                    <div>
+                        <strong>Kloppen deze gegevens niet?</strong>
+
+                        <p>
+                            Je profielgegevens worden centraal door de
+                            beheerder bijgehouden.
+                        </p>
+                    </div>
+
+                    <a href="mailto:ovnscouting@gmail.com?subject=Wijziging profielgegevens jaarplanning"
+                        class="pill-btn outline">
+                        Wijziging aanvragen
+                    </a>
+                </div>
+            </div>
+
+            <div id="profileLoadError" class="profile-inline-message profile-inline-message-error hidden" role="alert">
+                De profielgegevens konden niet worden geladen.
+                Probeer de pagina opnieuw te openen.
+            </div>
+        </section>
+
+
+        <!-- ============================================================
+       MODAL — Verplicht wachtwoord wijzigen
+  ============================================================ -->
         <div id="pwUpdateModal" class="modal hidden">
-            <div class="modal-content" style="max-width: 450px; padding: 2rem; border-radius: 12px; background: #fff;">
-                <h3 style="margin-top: 0; font-size: 1.4rem; color: #1e293b;">Beveiligingsupdate 🔒</h3>
-                <p class="text-muted" style="margin-bottom: 1.5rem; font-size: 0.9rem; line-height: 1.4;">
-                    Je maakt momenteel gebruik van een tijdelijk wachtwoord. Kies direct een eigen, veilig wachtwoord om
-                    je account te beschermen.
+            <div class="modal-content profile-password-modal" role="dialog" aria-modal="true"
+                aria-labelledby="pwUpdateTitle" aria-describedby="pwUpdateDescription">
+                <div class="profile-modal-icon" aria-hidden="true">
+                    🔒
+                </div>
+
+                <h3 id="pwUpdateTitle">
+                    Kies een eigen wachtwoord
+                </h3>
+
+                <p id="pwUpdateDescription" class="profile-modal-description">
+                    Je gebruikt momenteel een tijdelijk wachtwoord.
+                    Kies een nieuw wachtwoord voordat je verdergaat.
                 </p>
 
-                <div class="form-group" style="margin-bottom: 1.25rem;">
-                    <label for="newPassword"
-                        style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.85rem; color: #475569;">Nieuw
-                        Wachtwoord</label>
-                    <input id="newPassword" type="password" placeholder="Minimaal 6 tekens"
-                        style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 0.95rem;">
+                <form id="passwordUpdateForm" novalidate>
+                    <div class="profile-form-group">
+                        <label for="newPassword">
+                            Nieuw wachtwoord
+                        </label>
+
+                        <input id="newPassword" type="password" minlength="6" autocomplete="new-password"
+                            placeholder="Minimaal 6 tekens">
+                    </div>
+
+                    <div class="profile-form-group">
+                        <label for="confirmPassword">
+                            Bevestig nieuw wachtwoord
+                        </label>
+
+                        <input id="confirmPassword" type="password" minlength="6" autocomplete="new-password"
+                            placeholder="Herhaal je nieuwe wachtwoord">
+                    </div>
+
+                    <div id="passwordFormMessage" class="profile-inline-message profile-inline-message-error hidden"
+                        role="alert" aria-live="assertive"></div>
+
+                    <button id="btnUpdatePassword" type="submit" class="pill-btn primary profile-password-submit">
+                        Wachtwoord opslaan en activeren
+                    </button>
+                </form>
+            </div>
+        </div>
+
+
+        <!-- ============================================================
+       MODAL — Sessie verlopen
+  ============================================================ -->
+        <div id="reauthErrorModal" class="modal hidden">
+            <div class="modal-content confirm-modal-content" role="dialog" aria-modal="true"
+                aria-labelledby="reauthErrorTitle">
+                <div class="confirm-modal-icon profile-warning-icon" aria-hidden="true">
+                    ⚠️
                 </div>
 
-                <div class="form-group" style="margin-bottom: 1.75rem;">
-                    <label for="confirmPassword"
-                        style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.85rem; color: #475569;">Bevestig
-                        Nieuw Wachtwoord</label>
-                    <input id="confirmPassword" type="password" placeholder="Herhaal je nieuwe wachtwoord"
-                        style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 0.95rem;">
-                </div>
+                <h3 id="reauthErrorTitle">
+                    Sessie verlopen
+                </h3>
 
-                <div style="display: flex; justify-content: flex-end;">
-                    <button id="btnUpdatePassword" class="pill-btn danger"
-                        style="width: 100%; padding: 0.85rem; font-size: 1rem; font-weight: bold; border-radius: 8px; cursor: pointer;">
-                        Wachtwoord Opslaan & Activeren
+                <p class="confirm-modal-text">
+                    Om veiligheidsredenen moet je opnieuw inloggen
+                    voordat je het wachtwoord kunt wijzigen.
+                </p>
+
+                <div class="modal-actions confirm-modal-actions">
+                    <button id="btnReauthLogin" type="button" class="pill-btn primary">
+                        Opnieuw inloggen
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- GESTILEERDE RE-AUTH FOUT POPUP -->
-        <div id="reauthErrorModal" class="modal hidden">
-            <div class="modal-content"
-                style="max-width: 400px; padding: 2rem; border-radius: 12px; background: #fff; text-align: center; margin: auto;">
-                <h3 style="margin-top: 0; font-size: 1.3rem; color: #ef4444;">Sessie verlopen ⚠️</h3>
-                <p class="text-muted"
-                    style="margin-bottom: 1.5rem; font-size: 0.9rem; line-height: 1.4; color: #64748b;">
-                    Vanwege beveiligingsredenen moet je opnieuw inloggen voordat je je wachtwoord kunt wijzigen.
-                </p>
-                <button id="btnReauthLogin" class="pill-btn danger"
-                    style="width: 100%; padding: 0.75rem; font-weight: bold; border-radius: 8px; cursor: pointer; border: none; color: #fff;">
-                    Opnieuw Inloggen
-                </button>
-            </div>
-        </div>
 
-        <!-- CUSTOM MODAL VOOR GEWIJZIGD WACHTWOORD -->
+        <!-- ============================================================
+       MODAL — Wachtwoord gewijzigd
+  ============================================================ -->
         <div id="passwordChangedModal" class="modal hidden">
-            <div class="modal-content">
-                <h3>Wachtwoord gewijzigd! 🎉</h3>
-                <p>Je wachtwoord is succesvol gewijzigd!</p>
-                <div class="modal-actions">
-                    <button id="passwordChangedOkBtn" class="pill-btn">OK</button>
+            <div class="modal-content confirm-modal-content" role="dialog" aria-modal="true"
+                aria-labelledby="passwordChangedTitle">
+                <div class="confirm-modal-icon profile-success-icon" aria-hidden="true">
+                    ✓
+                </div>
+
+                <h3 id="passwordChangedTitle">
+                    Wachtwoord gewijzigd
+                </h3>
+
+                <p class="confirm-modal-text">
+                    Je nieuwe wachtwoord is opgeslagen.
+                    Je kunt voortaan met dit wachtwoord inloggen.
+                </p>
+
+                <div class="modal-actions confirm-modal-actions">
+                    <button id="passwordChangedOkBtn" type="button" class="pill-btn primary">
+                        Doorgaan
+                    </button>
                 </div>
             </div>
         </div>
 
     </main>
 
-    <!-- Bug meld knop -->
-  <button id="openBugModalBtn" class="primary-btn bug-fab"
-    style="display: flex; align-items: center; justify-content: center; text-decoration: none;">
-    Meld een probleem
-  </button>
+    <!-- ============================================================
+     BUG MELDEN
+============================================================ -->
+    <button id="openBugModalBtn" class="primary-btn bug-fab" type="button">
+        Meld een probleem
+    </button>
 
-    <!-- De Pop-up (Modal) voor bug melden -->
-   <div id="bugModal" class="modal hidden">
-  <div class="modal-content bug-modal-content">
-            <!-- Sluit kruisje -->
-           <button
-  id="closeBugModalBtn"
-  class="modal-close-btn"
-  type="button"
-  aria-label="Sluiten"
->
-  &times;
-</button>
-            <h2 style="margin-top: 0; color: var(--text-main); padding-right: 30px;">Meld een probleem of idee!</h2>
-            <p class="text-muted">Loop je ergens tegenaan op de website? Laat het hieronder weten.</p>
+    <div id="bugModal" class="modal hidden">
+        <div class="modal-content bug-modal-content">
 
-            <form id="modalBugForm" style="display: flex; flex-direction: column; gap: 20px; margin-top: 20px;">
+            <button id="closeBugModalBtn" class="modal-close-btn" type="button" aria-label="Sluiten">
+                &times;
+            </button>
+
+            <h2 class="bug-modal-title">
+                Meld een probleem of idee
+            </h2>
+
+            <p class="text-muted">
+                Loop je ergens tegenaan op de website?
+                Laat het hieronder weten.
+            </p>
+
+            <form id="modalBugForm" class="bug-modal-form">
+
                 <div>
-                    <label for="modalBugTitle" style="display: block; font-weight: 600; margin-bottom: 8px;">Korte
-                        omschrijving / Titel:</label>
-                    <input type="text" id="modalBugTitle" required placeholder="Bijv. Knop -account aanvragen- werkt niet."
-                        style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-small); font-size: 14px;">
+                    <label for="modalBugTitle">
+                        Korte omschrijving of titel
+                    </label>
+
+                    <input type="text" id="modalBugTitle" required
+                        placeholder="Bijv. De knop Account aanvragen werkt niet">
                 </div>
 
                 <div>
-                    <label for="modalBugDesc" style="display: block; font-weight: 600; margin-bottom: 8px;">Geef een
-                        duidelijke omschrijving van het probleem:</label>
-                    <textarea id="modalBugDesc" rows="4" required placeholder="Heb je ideeën, suggesties of loop je tegen een probleem aan? 
- 
-Wat deed je, waar klikte je op, wat had er moeten gebeuren?"
-                        style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-small); font-size: 14px; font-family: inherit;"></textarea>
+                    <label for="modalBugDesc">
+                        Beschrijf het probleem of idee
+                    </label>
+
+                    <textarea id="modalBugDesc" rows="5" required
+                        placeholder="Wat deed je, waar klikte je op en wat had er moeten gebeuren?"></textarea>
                 </div>
 
                 <div>
-                    <label for="modalBugEmail" style="display: block; font-weight: 600; margin-bottom: 8px;">Jouw
-                        e-mailadres:</label>
-                    <input type="email" id="modalBugEmail" readonly placeholder="Automatisch ingevuld indien ingelogd"
-                        style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-small); background: #f9fafb; color: var(--text-muted); font-size: 14px;">
+                    <label for="modalBugEmail">
+                        Jouw e-mailadres
+                    </label>
+
+                    <input type="email" id="modalBugEmail" readonly placeholder="Automatisch ingevuld indien ingelogd">
                 </div>
 
-<div class="bug-modal-actions">                    <button type="submit" class="primary-btn"
-                        style="padding: 12px 24px; cursor: pointer; border: none; border-radius: var(--radius-small); background: var(--blue); color: #fff; font-weight: 600;">
+                <div class="modal-actions bug-modal-actions">
+                    <button type="submit" class="pill-btn primary">
                         Verstuur melding
                     </button>
-                    <button type="button" id="cancelBugModalBtn" class="pill-btn outline"
-                        style="padding: 12px 24px; cursor: pointer; border-radius: var(--radius-small);">
+
+                    <button type="button" id="cancelBugModalBtn" class="pill-btn outline">
                         Annuleren
                     </button>
                 </div>
             </form>
-            <div id="modalSuccessMsg" style="display: none; margin-top: 15px; color: #10b981; font-weight: 600;">
-                Bedankt! Je melding is succesvol verzonden.</div>
+
+            <div id="modalSuccessMsg" class="bug-success-message" role="status">
+                Bedankt! Je melding is succesvol verzonden.
+            </div>
         </div>
     </div>
-<link rel="stylesheet" href="style.css" />
-<link rel="stylesheet" href="mobile.css" />
+
+
     <!-- Firebase & App scripts -->
     <script type="module" src="firebase-imports.js"></script>
     <script src="firebase-config.js"></script>

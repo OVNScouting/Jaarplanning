@@ -1,221 +1,488 @@
-// ======================================================================
-// profile.js — Profielbeheer (Fase 2)
-// ======================================================================
+/* ======================================================================
+   PROFILE.JS — PROFIELBEHEER
+   ====================================================================== */
 
-(function () {
-    let database = null;
-    let currentUser = null;
+(() => {
+  "use strict";
 
-    // 1. Wacht tot Firebase en de auth status geladen zijn
-    document.addEventListener("auth-changed", async (e) => {
-        const loggedIn = e.detail.loggedIn;
+  let database = null;
 
-        if (!loggedIn) {
-            // Niet ingelogd? Terug naar de homepage
-            window.location.href = "index.html";
-            return;
-        }
+  const profileLoading =
+    document.getElementById("profileLoading");
 
-        const session = window.getAuthSession();
-        if (!session) return;
+  const profileContent =
+    document.getElementById("profileContent");
 
-        // Initialiseer database connectie
-        const app = window._firebase.getApps().length
-            ? window._firebase.getApp()
-            : window._firebase.initializeApp(window.firebaseConfig);
-        database = window._firebase.getDatabase(app);
+  const profileLoadError =
+    document.getElementById("profileLoadError");
 
-        // Activeer dwingende popup als het standaardwachtwoord gewijzigd moet worden
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get("force_pw_change") === "true") {
-            const modal = document.getElementById("pwUpdateModal");
-            if (modal) {
-                modal.classList.remove("hidden");
-                // Extra CSS-injectie om te voorkomen dat ze per ongeluk de achtergrond kunnen misbruiken
-                modal.style.display = "flex";
-                modal.style.backdropFilter = "blur(5px)";
-            }
-        }
+  const profName =
+    document.getElementById("profName");
 
-        // Laad de gegevens van de gebruiker in de pagina
-        loadUserProfile(session.id);
-    });
+  const profEmail =
+    document.getElementById("profEmail");
 
-    // 2. Gegevens ophalen uit de database en tonen
-    async function loadUserProfile(uid) {
-        try {
-            const userRef = window._firebase.ref(database, `users/${uid}`);
-            const snapshot = await window._firebase.get(userRef);
+  const profRoles =
+    document.getElementById("profRoles");
 
-            if (!snapshot.exists()) {
-                console.error("Gebruiker niet gevonden in database.");
-                const sessionFallback = window.getAuthSession() || {};
-                // Val direct terug op sessiegegevens
-                document.getElementById("profName").textContent = sessionFallback.name || "Nieuwe Gebruiker";
-                document.getElementById("profEmail").textContent = sessionFallback.email || "Geen e-mailadres bekend";
+  const pwWarning =
+    document.getElementById("pwWarning");
 
-                const rolesContainer = document.getElementById("profRoles");
-                rolesContainer.innerHTML = `<span style="color: var(--text-muted); font-style: italic;">Profiel wordt aangemaakt door admin.</span>`;
-                return;
-            }
+  const pwUpdateModal =
+    document.getElementById("pwUpdateModal");
 
-            const data = snapshot.val();
+  const reauthErrorModal =
+    document.getElementById("reauthErrorModal");
 
-            // Vul de naam en het e-mailadres in
-            document.getElementById("profName").textContent = data.fullName || "Geen naam ingesteld";
-            document.getElementById("profEmail").textContent = data.email || "Geen e-mailadres bekend";
+  const passwordChangedModal =
+    document.getElementById("passwordChangedModal");
 
-            // Vul de rollen & speltakken in
-            const rolesContainer = document.getElementById("profRoles");
-            rolesContainer.innerHTML = ""; // leegmaken
+  const passwordUpdateForm =
+    document.getElementById("passwordUpdateForm");
 
-            let badgesToToon = [];
+  const newPassword =
+    document.getElementById("newPassword");
 
-            // Check of de gebruiker Admin of Bestuur is
-            if (data.roles?.admin) badgesToToon.push({ label: "Admin", class: "admin-badge" });
-            if (data.roles?.bestuur) badgesToToon.push({ label: "Bestuur", class: "bestuur-badge" });
+  const confirmPassword =
+    document.getElementById("confirmPassword");
 
-            // Lees de speltakken uit de database (dit is een array/lijst zoals ['welpen'])
-            const speltakken = data.roles?.speltakken;
-            if (Array.isArray(speltakken)) {
-                speltakken.forEach(s => {
-                    badgesToToon.push({ label: s.charAt(0).toUpperCase() + s.slice(1), class: "speltak-badge" });
-                });
-            } else if (speltakken && typeof speltakken === "object") {
-                // Fallback voor als het als object opgeslagen zou staan { welpen: true }
-                Object.keys(speltakken).forEach(s => {
-                    if (speltakken[s]) {
-                        badgesToToon.push({ label: s.charAt(0).toUpperCase() + s.slice(1), class: "speltak-badge" });
-                    }
-                });
-            }
+  const passwordFormMessage =
+    document.getElementById("passwordFormMessage");
 
-            // Als er helemaal niks is toegewezen
-            if (badgesToToon.length === 0) {
-                rolesContainer.innerHTML = `<span style="color: var(--text-muted); font-style: italic;">Geen speltakken of rollen toegewezen.</span>`;
-                return;
-            }
+  const btnUpdatePassword =
+    document.getElementById("btnUpdatePassword");
 
-            // Render de badges naar het scherm
-            badgesToToon.forEach(badge => {
-                const span = document.createElement("span");
-                span.className = `pill-badge ${badge.class || ""}`;
-                span.textContent = badge.label;
-                // Styling voor de badges direct toepassen zodat we geen CSS hoeven te wijzigen
-                span.style.padding = "0.25rem 0.75rem";
-                span.style.borderRadius = "20px";
-                span.style.fontSize = "0.85rem";
-                span.style.fontWeight = "bold";
-                span.style.display = "inline-block";
+  const btnReauthLogin =
+    document.getElementById("btnReauthLogin");
 
-                // Geef speltakken een ander kleurtje dan admin/bestuur
-                if (badge.class === "admin-badge" || badge.class === "bestuur-badge") {
-                    span.style.background = "#e0f2fe";
-                    span.style.color = "#0369a1";
-                } else {
-                    span.style.background = "#dcfce7";
-                    span.style.color = "#15803d";
-                }
+  const passwordChangedOkBtn =
+    document.getElementById("passwordChangedOkBtn");
 
-                rolesContainer.appendChild(span);
-            });
 
-        } catch (err) {
-            console.error("Fout bij laden profiel:", err);
-        }
+  /* ====================================================================
+     MODAL HELPERS
+     ==================================================================== */
+
+  function openModal(modal) {
+    if (!modal) return;
+
+    modal.classList.remove("hidden");
+    document.body.classList.add("modal-open");
+  }
+
+  function closeModal(modal) {
+    if (!modal) return;
+
+    modal.classList.add("hidden");
+
+    const hasOpenModal =
+      document.querySelector(".modal:not(.hidden)");
+
+    if (!hasOpenModal) {
+      document.body.classList.remove("modal-open");
+    }
+  }
+
+
+  /* ====================================================================
+     FEEDBACK
+     ==================================================================== */
+
+  function showPasswordMessage(message) {
+    if (!passwordFormMessage) return;
+
+    passwordFormMessage.textContent = message;
+    passwordFormMessage.classList.remove("hidden");
+  }
+
+  function clearPasswordMessage() {
+    if (!passwordFormMessage) return;
+
+    passwordFormMessage.textContent = "";
+    passwordFormMessage.classList.add("hidden");
+  }
+
+  function setPasswordBusy(isBusy) {
+    if (!btnUpdatePassword) return;
+
+    btnUpdatePassword.disabled = isBusy;
+    btnUpdatePassword.textContent = isBusy
+      ? "Wachtwoord opslaan…"
+      : "Wachtwoord opslaan en activeren";
+  }
+
+
+  /* ====================================================================
+     PROFIEL TONEN
+     ==================================================================== */
+
+  function showProfileContent() {
+    profileLoading?.classList.add("hidden");
+    profileLoadError?.classList.add("hidden");
+    profileContent?.classList.remove("hidden");
+  }
+
+  function showProfileError() {
+    profileLoading?.classList.add("hidden");
+    profileContent?.classList.add("hidden");
+    profileLoadError?.classList.remove("hidden");
+  }
+
+  function createRoleBadge(label, type) {
+    const badge = document.createElement("span");
+
+    badge.className =
+      `profile-role-badge profile-role-${type}`;
+
+    badge.textContent = label;
+
+    return badge;
+  }
+
+  function showEmptyRoles(message) {
+    if (!profRoles) return;
+
+    profRoles.innerHTML = "";
+
+    const empty = document.createElement("span");
+    empty.className = "profile-role-empty";
+    empty.textContent = message;
+
+    profRoles.appendChild(empty);
+  }
+
+  function renderRoles(roles = {}) {
+    if (!profRoles) return;
+
+    profRoles.innerHTML = "";
+
+    const badges = [];
+
+    if (roles.admin) {
+      badges.push({
+        label: "Admin",
+        type: "admin"
+      });
     }
 
-    // 3. Wachtwoord wijzigen logica
-    document.getElementById("btnUpdatePassword").onclick = async () => {
-        const newPw = document.getElementById("newPassword").value;
-        const confirmPw = document.getElementById("confirmPassword").value;
+    if (roles.bestuur) {
+      badges.push({
+        label: "Bestuur",
+        type: "bestuur"
+      });
+    }
 
-        if (!newPw || newPw.length < 6) {
-            alert("Het wachtwoord moet minimaal 6 tekens lang zijn.");
-            return;
+    const speltakken = roles.speltakken;
+
+    if (Array.isArray(speltakken)) {
+      speltakken.forEach(speltak => {
+        badges.push({
+          label:
+            speltak.charAt(0).toUpperCase() +
+            speltak.slice(1),
+          type: "speltak"
+        });
+      });
+    } else if (
+      speltakken &&
+      typeof speltakken === "object"
+    ) {
+      Object.entries(speltakken).forEach(
+        ([speltak, isActive]) => {
+          if (!isActive) return;
+
+          badges.push({
+            label:
+              speltak.charAt(0).toUpperCase() +
+              speltak.slice(1),
+            type: "speltak"
+          });
+        }
+      );
+    }
+
+    if (badges.length === 0) {
+      showEmptyRoles(
+        "Geen speltakken of rollen toegewezen."
+      );
+      return;
+    }
+
+    badges.forEach(({ label, type }) => {
+      profRoles.appendChild(
+        createRoleBadge(label, type)
+      );
+    });
+  }
+
+  async function loadUserProfile(uid) {
+    try {
+      const userRef =
+        window._firebase.ref(
+          database,
+          `users/${uid}`
+        );
+
+      const snapshot =
+        await window._firebase.get(userRef);
+
+      if (!snapshot.exists()) {
+        const fallback =
+          window.getAuthSession?.() || {};
+
+        profName.textContent =
+          fallback.name || "Nieuwe gebruiker";
+
+        profEmail.textContent =
+          fallback.email ||
+          "Geen e-mailadres bekend";
+
+        showEmptyRoles(
+          "Het profiel wordt nog door de beheerder aangemaakt."
+        );
+
+        showProfileContent();
+        return;
+      }
+
+      const data = snapshot.val() || {};
+
+      profName.textContent =
+        data.fullName || "Geen naam ingesteld";
+
+      profEmail.textContent =
+        data.email || "Geen e-mailadres bekend";
+
+      renderRoles(data.roles || {});
+      showProfileContent();
+
+    } catch (error) {
+      console.error(
+        "Fout bij laden profiel:",
+        error
+      );
+
+      showProfileError();
+    }
+  }
+
+
+  /* ====================================================================
+     AUTH INITIALISATIE
+     ==================================================================== */
+
+  document.addEventListener(
+    "auth-changed",
+    async event => {
+      const loggedIn =
+        Boolean(event.detail?.loggedIn);
+
+      if (!loggedIn) {
+        window.location.href = "index.html";
+        return;
+      }
+
+      const session =
+        window.getAuthSession?.();
+
+      if (!session?.id) {
+        window.location.href = "index.html";
+        return;
+      }
+
+      const app =
+        window._firebase.getApps().length
+          ? window._firebase.getApp()
+          : window._firebase.initializeApp(
+              window.firebaseConfig
+            );
+
+      database =
+        window._firebase.getDatabase(app);
+
+      const urlParams =
+        new URLSearchParams(
+          window.location.search
+        );
+
+      if (
+        urlParams.get("force_pw_change") ===
+        "true"
+      ) {
+        pwWarning?.classList.remove("hidden");
+        openModal(pwUpdateModal);
+
+        window.setTimeout(() => {
+          newPassword?.focus();
+        }, 100);
+      }
+
+      await loadUserProfile(session.id);
+    }
+  );
+
+
+  /* ====================================================================
+     WACHTWOORD WIJZIGEN
+     ==================================================================== */
+
+  passwordUpdateForm?.addEventListener(
+    "submit",
+    async event => {
+      event.preventDefault();
+      clearPasswordMessage();
+
+      const newValue =
+        newPassword?.value || "";
+
+      const confirmationValue =
+        confirmPassword?.value || "";
+
+      if (newValue.length < 6) {
+        showPasswordMessage(
+          "Het wachtwoord moet minimaal 6 tekens bevatten."
+        );
+
+        newPassword?.focus();
+        return;
+      }
+
+      if (newValue !== confirmationValue) {
+        showPasswordMessage(
+          "De twee wachtwoorden komen niet overeen."
+        );
+
+        confirmPassword?.focus();
+        return;
+      }
+
+      setPasswordBusy(true);
+
+      try {
+        const app =
+          window._firebase.getApps().length
+            ? window._firebase.getApp()
+            : window._firebase.initializeApp(
+                window.firebaseConfig
+              );
+
+        const auth =
+          window._firebase.getAuth(app);
+
+        const user = auth.currentUser;
+
+        if (!user) {
+          throw new Error(
+            "Er is geen actieve gebruikerssessie gevonden."
+          );
         }
 
-        if (newPw !== confirmPw) {
-            alert("De wachtwoorden komen niet overeen.");
-            return;
+        await window._firebase.updatePassword(
+          user,
+          newValue
+        );
+
+        closeModal(pwUpdateModal);
+        openModal(passwordChangedModal);
+
+      } catch (error) {
+        console.error(
+          "Wachtwoord wijzigen mislukt:",
+          error
+        );
+
+        if (
+          error.code ===
+          "auth/requires-recent-login"
+        ) {
+          closeModal(pwUpdateModal);
+          openModal(reauthErrorModal);
+          return;
         }
 
-        try {
-            const app = window._firebase.getApps().length
-                ? window._firebase.getApp()
-                : window._firebase.initializeApp(window.firebaseConfig);
-            const auth = window._firebase.getAuth(app);
-            const user = auth.currentUser;
-
-            if (!user) {
-                alert("Geen actieve sessie gevonden. Log opnieuw in.");
-                return;
-            }
-
-            try {
-                await window._firebase.updatePassword(user, newPw);
-
-                const successModal = document.getElementById("passwordChangedModal");
-                if (successModal) {
-                    // Toon de mooie pop-up in stijl
-                    successModal.classList.remove("hidden");
-
-                    // Wacht tot de gebruiker op OK klikt om alles op te ruimen en door te sturen
-                    document.getElementById("passwordChangedOkBtn").onclick = () => {
-                        successModal.classList.add("hidden");
-
-                        // Verwijder de query parameter uit de URL en verberg de waarschuwing
-                        document.getElementById("pwWarning")?.classList.add("hidden");
-
-                        // Reset de invoervelden
-                        document.getElementById("newPassword").value = "";
-                        document.getElementById("confirmPassword").value = "";
-
-                        // Stuur de gebruiker terug naar de homepage
-                        window.location.href = "index.html";
-                    };
-                } else {
-                    // Veilige terugvaloptie voor het geval de HTML er nog niet in staat
-                    alert("Je wachtwoord is succesvol gewijzigd! 🎉");
-                    document.getElementById("pwWarning")?.classList.add("hidden");
-                    document.getElementById("newPassword").value = "";
-                    document.getElementById("confirmPassword").value = "";
-                    window.location.href = "index.html";
-                }
-            } catch (err) {
-                // Zorg ervoor dat eventuele fouten bij het wijzigen (bijv. te zwak wachtwoord) 
-                // hieronder netjes worden opgevangen door je bestaande catch-blok.
-                throw err;
-            }
-
-        } catch (err) {
-            console.error("Wachtwoord wijzigen mislukt:", err);
-
-            if (err.code === "auth/requires-recent-login") {
-                // Verberg de wachtwoord-modal
-                document.getElementById("pwUpdateModal").classList.add("hidden");
-
-                // Toon de gestileerde fout-modal
-                const errorModal = document.getElementById("reauthErrorModal");
-                if (errorModal) {
-                    errorModal.classList.remove("hidden");
-                    errorModal.style.display = "flex";
-                    errorModal.style.backdropFilter = "blur(5px)";
-                }
-
-                // Logica voor de "Opnieuw Inloggen" knop
-                document.getElementById("btnReauthLogin").onclick = async () => {
-                    try {
-                        const auth = window._firebase.getAuth(app);
-                        await window._firebase.signOut(auth);
-                        window.location.href = "index.html?trigger_login=true";
-                    } catch (signoutErr) {
-                        window.location.href = "index.html";
-                    }
-                };
-            } else {
-                alert("Fout bij wijzigen: " + err.message);
-            }
+        if (
+          error.code ===
+          "auth/weak-password"
+        ) {
+          showPasswordMessage(
+            "Dit wachtwoord is onvoldoende sterk. Kies een langer wachtwoord."
+          );
+          return;
         }
-    };
+
+        showPasswordMessage(
+          error.message ||
+          "Het wachtwoord kon niet worden gewijzigd."
+        );
+
+      } finally {
+        setPasswordBusy(false);
+      }
+    }
+  );
+
+
+  /* ====================================================================
+     MODALACTIES
+     ==================================================================== */
+
+  btnReauthLogin?.addEventListener(
+    "click",
+    async () => {
+      btnReauthLogin.disabled = true;
+      btnReauthLogin.textContent =
+        "Uitloggen…";
+
+      try {
+        const app =
+          window._firebase.getApps().length
+            ? window._firebase.getApp()
+            : window._firebase.initializeApp(
+                window.firebaseConfig
+              );
+
+        const auth =
+          window._firebase.getAuth(app);
+
+        await window._firebase.signOut(auth);
+
+      } catch (error) {
+        console.error(
+          "Uitloggen voor herauthenticatie mislukt:",
+          error
+        );
+      } finally {
+        window.location.href =
+          "index.html?trigger_login=true";
+      }
+    }
+  );
+
+  passwordChangedOkBtn?.addEventListener(
+    "click",
+    () => {
+      closeModal(passwordChangedModal);
+
+      pwWarning?.classList.add("hidden");
+
+      if (newPassword) {
+        newPassword.value = "";
+      }
+
+      if (confirmPassword) {
+        confirmPassword.value = "";
+      }
+
+      const cleanUrl =
+        `${window.location.pathname}`;
+
+      window.history.replaceState(
+        {},
+        document.title,
+        cleanUrl
+      );
+
+      window.location.href = "index.html";
+    }
+  );
 })();

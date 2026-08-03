@@ -118,6 +118,24 @@
 
                 <div class="profile-divider"></div>
 
+                <div class="profile-security-section">
+                    <div>
+                        <strong>
+                            Wachtwoord en beveiliging
+                        </strong>
+
+                        <p>
+                
+                        </p>
+                    </div>
+
+                    <button id="openPasswordChangeBtn" type="button" class="pill-btn outline">
+                        Wachtwoord wijzigen
+                    </button>
+                </div>
+
+                <div class="profile-divider"></div>
+
                 <div class="profile-support">
                     <div>
                         <strong>Kloppen deze gegevens niet?</strong>
@@ -145,51 +163,155 @@
         <!-- ============================================================
        MODAL — Verplicht wachtwoord wijzigen
   ============================================================ -->
-        <div id="pwUpdateModal" class="modal hidden">
-            <div class="modal-content profile-password-modal" role="dialog" aria-modal="true"
-                aria-labelledby="pwUpdateTitle" aria-describedby="pwUpdateDescription">
-                <div class="profile-modal-icon" aria-hidden="true">
-                    🔒
-                </div>
+      <div id="pwUpdateModal" class="modal hidden">
+  <div
+    class="modal-content profile-password-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="pwUpdateTitle"
+    aria-describedby="pwUpdateDescription"
+  >
+    <button
+      id="closePasswordChangeModal"
+      class="modal-close-btn hidden"
+      type="button"
+      aria-label="Sluiten"
+    >
+      &times;
+    </button>
 
-                <h3 id="pwUpdateTitle">
-                    Kies een eigen wachtwoord
-                </h3>
+    <div
+      class="profile-modal-icon"
+      aria-hidden="true"
+    >
+      🔒
+    </div>
 
-                <p id="pwUpdateDescription" class="profile-modal-description">
-                    Je gebruikt momenteel een tijdelijk wachtwoord.
-                    Kies een nieuw wachtwoord voordat je verdergaat.
-                </p>
+    <h3 id="pwUpdateTitle">
+      Wachtwoord wijzigen
+    </h3>
 
-                <form id="passwordUpdateForm" novalidate>
-                    <div class="profile-form-group">
-                        <label for="newPassword">
-                            Nieuw wachtwoord
-                        </label>
+    <p
+      id="pwUpdateDescription"
+      class="profile-modal-description"
+    >
+      Bevestig eerst je huidige wachtwoord en kies
+      daarna een nieuw wachtwoord.
+    </p>
 
-                        <input id="newPassword" type="password" minlength="6" autocomplete="new-password"
-                            placeholder="Minimaal 6 tekens">
-                    </div>
+    <form id="passwordUpdateForm" novalidate>
 
-                    <div class="profile-form-group">
-                        <label for="confirmPassword">
-                            Bevestig nieuw wachtwoord
-                        </label>
+      <div
+        id="currentPasswordGroup"
+        class="profile-form-group"
+      >
+        <label for="currentPassword">
+          Huidig wachtwoord
+        </label>
 
-                        <input id="confirmPassword" type="password" minlength="6" autocomplete="new-password"
-                            placeholder="Herhaal je nieuwe wachtwoord">
-                    </div>
+        <div class="password-field">
+          <input
+            id="currentPassword"
+            type="password"
+            autocomplete="current-password"
+            placeholder="Vul je huidige wachtwoord in"
+          >
 
-                    <div id="passwordFormMessage" class="profile-inline-message profile-inline-message-error hidden"
-                        role="alert" aria-live="assertive"></div>
-
-                    <button id="btnUpdatePassword" type="submit" class="pill-btn primary profile-password-submit">
-                        Wachtwoord opslaan en activeren
-                    </button>
-                </form>
-            </div>
+          <button
+            type="button"
+            class="password-toggle"
+            data-password-toggle="currentPassword"
+          >
+            Tonen
+          </button>
         </div>
+      </div>
 
+      <div class="profile-form-group">
+        <label for="newPassword">
+          Nieuw wachtwoord
+        </label>
+
+        <div class="password-field">
+          <input
+            id="newPassword"
+            type="password"
+            minlength="8"
+            autocomplete="new-password"
+            placeholder="Minimaal 8 tekens"
+          >
+
+          <button
+            type="button"
+            class="password-toggle"
+            data-password-toggle="newPassword"
+          >
+            Tonen
+          </button>
+        </div>
+      </div>
+
+      <div class="profile-form-group">
+        <label for="confirmPassword">
+          Bevestig nieuw wachtwoord
+        </label>
+
+        <div class="password-field">
+          <input
+            id="confirmPassword"
+            type="password"
+            minlength="8"
+            autocomplete="new-password"
+            placeholder="Herhaal je nieuwe wachtwoord"
+          >
+
+          <button
+            type="button"
+            class="password-toggle"
+            data-password-toggle="confirmPassword"
+          >
+            Tonen
+          </button>
+        </div>
+      </div>
+
+      <ul
+        class="password-requirements"
+        aria-label="Wachtwoordvoorwaarden"
+      >
+        <li>Minimaal 8 tekens</li>
+        <li>
+          Gebruik bij voorkeur een unieke wachtwoordzin
+        </li>
+      </ul>
+
+      <div
+        id="passwordFormMessage"
+        class="auth-inline-message auth-inline-message-error hidden"
+        role="alert"
+        aria-live="assertive"
+      ></div>
+
+      <div class="modal-actions profile-password-actions">
+        <button
+          id="cancelPasswordChangeBtn"
+          type="button"
+          class="pill-btn outline hidden"
+        >
+          Annuleren
+        </button>
+
+        <button
+          id="btnUpdatePassword"
+          type="submit"
+          class="pill-btn primary profile-password-submit"
+        >
+          Wachtwoord opslaan
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
 
         <!-- ============================================================
        MODAL — Sessie verlopen
@@ -321,6 +443,7 @@
     <script type="module" src="firebase-imports.js"></script>
     <script src="firebase-config.js"></script>
     <script src="login.js"></script>
+    <script src="password-ui.js"></script>
     <script src="profile.js"></script>
     <script type="module" src="utils.js"></script>
 </body>

@@ -252,102 +252,503 @@ function initFirebaseAuth(retries = 200) {
     );
   });
 }
+
 // ======================================================================
-// LOGIN MODAL
+// LOGIN + WACHTWOORD HERSTELLEN
 // ======================================================================
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+
+function setInlineMessage(
+  element,
+  message = "",
+  type = "error"
+) {
+  if (!element) return;
+
+  element.textContent = message;
+  element.classList.toggle("hidden", !message);
+
+  element.classList.toggle(
+    "auth-inline-message-error",
+    type === "error"
+  );
+
+  element.classList.toggle(
+    "auth-inline-message-success",
+    type === "success"
+  );
+}
+
+
+function closeLoginModal() {
+  document.getElementById("loginModal")?.remove();
+
+  if (!document.querySelector(".modal:not(.hidden)")) {
+    document.body.classList.remove("modal-open");
+  }
+}
+
+
 function openLoginModal() {
   if (document.getElementById("loginModal")) return;
 
   const modal = document.createElement("div");
-  modal.className = "modal";
+
+  modal.className = "modal auth-modal";
   modal.id = "loginModal";
 
   modal.innerHTML = `
-    <div class="modal-content">
-      <h3>Inloggen</h3>
-      <label>Email</label>
-      <input id="loginUser" type="email">
-      <label>Wachtwoord</label>
-      <input id="loginPass" type="password">
-      
-      <!-- Wachtwoord vergeten link -->
-      <div style="text-align: right; margin-top: -0.5rem; margin-bottom: 1rem;">
-        <a href="#" id="forgotPasswordLink" style="font-size: 0.85rem; color: #777; text-decoration: none;">Wachtwoord vergeten?</a>
+    <div
+      class="modal-content auth-modal-content"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="loginModalTitle"
+    >
+      <button
+        class="modal-close-btn"
+        id="loginClose"
+        type="button"
+        aria-label="Inlogvenster sluiten"
+      >
+        &times;
+      </button>
+
+      <div class="auth-modal-icon" aria-hidden="true">
+        🔐
       </div>
 
-      <div id="loginError" class="hidden">Onjuiste gegevens</div>
-      <div class="modal-actions">
-        <button id="loginCancel">Annuleren</button>
-        <button id="loginSubmit">Inloggen</button>
+      <h3 id="loginModalTitle">
+        Inloggen
+      </h3>
+
+      <p class="auth-modal-description">
+        Log in om de jaarplanning te beheren.
+      </p>
+
+      <form id="loginForm" novalidate>
+        <div class="auth-form-group">
+          <label for="loginUser">
+            E-mailadres
+          </label>
+
+          <input
+            id="loginUser"
+            type="email"
+            autocomplete="username"
+            inputmode="email"
+            placeholder="naam@voorbeeld.nl"
+          >
+        </div>
+
+        <div class="auth-form-group">
+          <label for="loginPass">
+            Wachtwoord
+          </label>
+
+          <div class="password-field">
+            <input
+              id="loginPass"
+              type="password"
+              autocomplete="current-password"
+              placeholder="Vul je wachtwoord in"
+            >
+
+            <button
+              type="button"
+              class="password-toggle"
+              data-password-toggle="loginPass"
+            >
+              Tonen
+            </button>
+          </div>
+        </div>
+
+        <div class="forgot-password-row">
+          <button
+            id="forgotPasswordLink"
+            type="button"
+            class="forgot-password-link"
+          >
+            Wachtwoord vergeten?
+          </button>
+        </div>
+
+        <div
+          id="loginError"
+          class="auth-inline-message auth-inline-message-error hidden"
+          role="alert"
+          aria-live="assertive"
+        ></div>
+
+        <div class="modal-actions auth-modal-actions">
+          <button
+            id="loginCancel"
+            type="button"
+            class="pill-btn outline"
+          >
+            Annuleren
+          </button>
+
+          <button
+            id="loginSubmit"
+            type="submit"
+            class="pill-btn primary"
+          >
+            Inloggen
+          </button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  document.body.classList.add("modal-open");
+
+  window.OVNPasswordUI?.initialise(modal);
+
+  const form =
+    modal.querySelector("#loginForm");
+
+  const emailInput =
+    modal.querySelector("#loginUser");
+
+  const passwordInput =
+    modal.querySelector("#loginPass");
+
+  const submitButton =
+    modal.querySelector("#loginSubmit");
+
+  const errorElement =
+    modal.querySelector("#loginError");
+
+  modal
+    .querySelector("#loginCancel")
+    .addEventListener(
+      "click",
+      closeLoginModal
+    );
+
+  modal
+    .querySelector("#loginClose")
+    .addEventListener(
+      "click",
+      closeLoginModal
+    );
+
+  modal
+    .querySelector("#forgotPasswordLink")
+    .addEventListener("click", () => {
+      const email = emailInput.value.trim();
+
+      setInlineMessage(errorElement);
+
+      if (!isValidEmail(email)) {
+        setInlineMessage(
+          errorElement,
+          "Vul eerst een geldig e-mailadres in."
+        );
+
+        emailInput.focus();
+        return;
+      }
+
+      openPasswordResetRequestModal(email);
+    });
+
+  form.addEventListener(
+    "submit",
+    async event => {
+      event.preventDefault();
+
+      setInlineMessage(errorElement);
+
+      const email =
+        emailInput.value.trim();
+
+      const password =
+        passwordInput.value;
+
+      if (!isValidEmail(email) || !password) {
+        setInlineMessage(
+          errorElement,
+          "Vul je e-mailadres en wachtwoord in."
+        );
+
+        if (!isValidEmail(email)) {
+          emailInput.focus();
+        } else {
+          passwordInput.focus();
+        }
+
+        return;
+      }
+
+      submitButton.disabled = true;
+      submitButton.textContent = "Inloggen…";
+
+      try {
+        await window._firebase
+          .signInWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
+
+        closeLoginModal();
+
+        /*
+         * Bestaande tijdelijke-wachtwoordflow.
+         * Dit kan later nog worden vervangen door
+         * een databaseveld zoals mustChangePassword.
+         */
+        if (password === "Welkom48!") {
+          const tempModal =
+            document.getElementById(
+              "tempPasswordModal"
+            );
+
+          if (tempModal) {
+            tempModal.classList.remove("hidden");
+            document.body.classList.add(
+              "modal-open"
+            );
+
+            document
+              .getElementById("tempPasswordOkBtn")
+              .onclick = () => {
+                tempModal.classList.add("hidden");
+
+                window.location.href =
+                  "profile.html?force_pw_change=true";
+              };
+
+          } else {
+            window.location.href =
+              "profile.html?force_pw_change=true";
+          }
+
+        } else {
+          window.location.reload();
+        }
+
+      } catch (error) {
+        console.error(
+          "Inloggen mislukt:",
+          error
+        );
+
+        setInlineMessage(
+          errorElement,
+          "De combinatie van e-mailadres en wachtwoord klopt niet."
+        );
+
+        submitButton.disabled = false;
+        submitButton.textContent = "Inloggen";
+
+        passwordInput.select();
+      }
+    }
+  );
+
+  modal.addEventListener("click", event => {
+    if (event.target === modal) {
+      closeLoginModal();
+    }
+  });
+
+  window.setTimeout(
+    () => emailInput.focus(),
+    50
+  );
+}
+
+
+function openPasswordResetRequestModal(email) {
+  document
+    .getElementById("passwordResetRequestModal")
+    ?.remove();
+
+  const modal = document.createElement("div");
+
+  modal.id = "passwordResetRequestModal";
+  modal.className = "modal auth-modal";
+
+  modal.innerHTML = `
+    <div
+      class="modal-content auth-modal-content auth-confirm-content"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="passwordResetRequestTitle"
+    >
+      <button
+        id="passwordResetRequestClose"
+        class="modal-close-btn"
+        type="button"
+        aria-label="Sluiten"
+      >
+        &times;
+      </button>
+
+      <div class="auth-modal-icon" aria-hidden="true">
+        ✉️
+      </div>
+
+      <h3 id="passwordResetRequestTitle">
+        Herstelmail versturen?
+      </h3>
+
+      <p class="auth-modal-description">
+        We sturen een beveiligde link naar:
+      </p>
+
+      <strong class="auth-email-preview"></strong>
+
+      <p class="auth-modal-note">
+        Via die link kun je op de OVN Jaarplanning
+        een nieuw wachtwoord instellen.
+        Controleer ook je spammap.
+      </p>
+
+      <div
+        id="passwordResetRequestMessage"
+        class="auth-inline-message hidden"
+        role="status"
+        aria-live="polite"
+      ></div>
+
+      <div class="modal-actions auth-modal-actions">
+        <button
+          id="passwordResetRequestCancel"
+          type="button"
+          class="pill-btn outline"
+        >
+          Annuleren
+        </button>
+
+        <button
+          id="passwordResetRequestSubmit"
+          type="button"
+          class="pill-btn primary"
+        >
+          Herstelmail versturen
+        </button>
       </div>
     </div>
   `;
 
   document.body.appendChild(modal);
 
-  modal.querySelector("#loginCancel").onclick = closeLoginModal;
+  modal.querySelector(
+    ".auth-email-preview"
+  ).textContent = email;
 
-  // Wachtwoord vergeten logica
-  modal.querySelector("#forgotPasswordLink").onclick = async (e) => {
-    e.preventDefault();
-    const email = modal.querySelector("#loginUser").value.trim();
+  document.body.classList.add("modal-open");
 
-    if (!email) {
-      alert("Vul eerst je e-mailadres in bij het inlogveld, en klik daarna op 'Wachtwoord vergeten?'.");
-      return;
+  const message =
+    modal.querySelector(
+      "#passwordResetRequestMessage"
+    );
+
+  const submit =
+    modal.querySelector(
+      "#passwordResetRequestSubmit"
+    );
+
+  function closeResetRequestModal() {
+    modal.remove();
+
+    if (!document.querySelector(
+      ".modal:not(.hidden)"
+    )) {
+      document.body.classList.remove(
+        "modal-open"
+      );
     }
+  }
 
-    if (confirm(`We sturen een e-mail naar ${email} om je wachtwoord te resetten. Weet je dit zeker?`)) {
+  modal
+    .querySelector("#passwordResetRequestClose")
+    .addEventListener(
+      "click",
+      closeResetRequestModal
+    );
+
+  modal
+    .querySelector("#passwordResetRequestCancel")
+    .addEventListener(
+      "click",
+      closeResetRequestModal
+    );
+
+  modal.addEventListener("click", event => {
+    if (event.target === modal) {
+      closeResetRequestModal();
+    }
+  });
+
+  submit.addEventListener(
+    "click",
+    async () => {
+      submit.disabled = true;
+      submit.textContent = "Versturen…";
+
+      setInlineMessage(message);
+
       try {
-        await window._firebase.sendPasswordResetEmail(auth, email);
-        alert("De herstelmail is verzonden! Check ook je spam-map.");
-      } catch (err) {
-        console.error("Fout bij wachtwoord reset:", err);
-        alert("Fout bij versturen: " + err.message);
+        auth.languageCode = "nl";
+
+        await window._firebase
+          .sendPasswordResetEmail(
+            auth,
+            email
+          );
+
+        setInlineMessage(
+          message,
+          "De herstelmail is verstuurd. Open de link in de e-mail om een nieuw wachtwoord te kiezen.",
+          "success"
+        );
+
+        submit.textContent = "Verstuurd";
+
+        window.setTimeout(() => {
+          closeResetRequestModal();
+          closeLoginModal();
+        }, 2600);
+
+      } catch (error) {
+        console.error(
+          "Wachtwoordherstel mislukt:",
+          error
+        );
+
+        const resetErrorMessages = {
+          "auth/invalid-email":
+            "Dit e-mailadres is niet geldig.",
+
+          "auth/too-many-requests":
+            "Er zijn te veel herstelverzoeken gedaan. Probeer het later opnieuw.",
+
+          "auth/network-request-failed":
+            "De verbinding is mislukt. Controleer je internetverbinding."
+        };
+
+        setInlineMessage(
+          message,
+          resetErrorMessages[error.code] ||
+            "De herstelmail kon niet worden verstuurd. Probeer het later opnieuw."
+        );
+
+        submit.disabled = false;
+        submit.textContent =
+          "Opnieuw proberen";
       }
     }
-  };
-
-  modal.querySelector("#loginSubmit").onclick = async () => {
-    const email = modal.querySelector("#loginUser").value.trim();
-    const password = modal.querySelector("#loginPass").value;
-
-    try {
-      await window._firebase.signInWithEmailAndPassword(auth, email, password);
-      closeLoginModal();
-
-      // Check of de gebruiker heeft ingelogd met het tijdelijke wachtwoord
-      if (password === "Welkom48!") {
-        const tempModal = document.getElementById("tempPasswordModal");
-        if (tempModal) {
-          // Toon de mooie pop-up
-          tempModal.classList.remove("hidden");
-
-          // Pas doorsturen als de gebruiker op OK klikt
-          document.getElementById("tempPasswordOkBtn").onclick = () => {
-            tempModal.classList.add("hidden");
-            window.location.href = "profile.html?force_pw_change=true";
-          };
-        } else {
-          // Terugvaloptie als de modal niet in de HTML staat
-          alert("Je logt in met het standaardwachtwoord. Je wordt nu direct doorgestuurd om een eigen wachtwoord in te stellen.");
-          window.location.href = "profile.html?force_pw_change=true";
-        }
-      } else {
-        window.location.reload();
-      }
-    } catch {
-      modal.querySelector("#loginError").classList.remove("hidden");
-    }
-  };
-
-  modal.onclick = (e) => {
-    if (e.target === modal) closeLoginModal();
-  };
-}
-
-function closeLoginModal() {
-  document.getElementById("loginModal")?.remove();
+  );
 }
 
 // ======================================================================

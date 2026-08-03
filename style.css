@@ -3218,3 +3218,265 @@ html[data-theme="dark"] .profile-role-speltak {
   color: #86efac;
   border-color: #15803d;
 }
+/* ======================================================================
+   AUTHENTICATIE EN WACHTWOORDEN
+   ====================================================================== */
+
+.auth-modal-content {
+  position: relative;
+  width: min(440px, 100%);
+}
+
+.auth-modal-content h3,
+.auth-action-card h2 {
+  margin: 0 0 0.55rem;
+  text-align: center;
+}
+
+.auth-modal-icon {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 1rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+  background: var(--blue-soft);
+
+  font-size: 1.4rem;
+}
+
+.auth-modal-description,
+.auth-modal-note {
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.auth-modal-description {
+  margin: 0 0 1.25rem;
+}
+
+.auth-modal-note {
+  margin: 0.8rem 0 0;
+  font-size: 0.86rem;
+}
+
+.auth-form-group,
+.profile-form-group {
+  margin-bottom: 1rem;
+}
+
+.auth-form-group label,
+.profile-form-group label {
+  display: block;
+  margin-bottom: 0.4rem;
+
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+
+/* Wachtwoordveld met toon/verbergknop */
+
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  width: 100%;
+  min-height: 44px;
+  padding-right: 5.3rem !important;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.45rem;
+
+  transform: translateY(-50%);
+
+  min-width: 4.2rem;
+  padding: 0.38rem 0.55rem;
+
+  border: 0;
+  border-radius: 999px;
+
+  background: var(--card-secondary);
+  color: var(--blue);
+
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.password-toggle:hover {
+  background: var(--blue-soft);
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 1px;
+}
+
+
+/* Wachtwoord vergeten */
+
+.forgot-password-row {
+  display: flex;
+  justify-content: flex-end;
+
+  margin: -0.35rem 0 1rem;
+}
+
+.forgot-password-link {
+  padding: 0;
+
+  border: 0;
+  background: transparent;
+
+  color: var(--text-muted);
+
+  font: inherit;
+  font-size: 0.84rem;
+
+  cursor: pointer;
+}
+
+.forgot-password-link:hover {
+  color: var(--blue);
+  text-decoration: underline;
+}
+
+
+/* Inline feedback */
+
+.auth-inline-message {
+  margin: 0.9rem 0;
+  padding: 0.75rem 0.85rem;
+
+  border: 1px solid;
+  border-radius: var(--radius-small);
+
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.auth-inline-message-error {
+  background: var(--danger-soft);
+  color: var(--danger-text);
+  border-color: #fda4af;
+}
+
+.auth-inline-message-success {
+  background: var(--success-soft);
+  color: var(--success-text);
+  border-color: #86efac;
+}
+
+.auth-modal-actions {
+  margin-top: 1.15rem;
+}
+
+.auth-modal-actions button {
+  min-width: 130px;
+}
+
+.auth-email-preview {
+  display: block;
+
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+
+/* Wachtwoordvoorwaarden */
+
+.password-requirements {
+  margin: 0.1rem 0 1rem;
+  padding-left: 1.2rem;
+
+  color: var(--text-muted);
+
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+
+/* Beveiliging op profielpagina */
+
+.profile-security-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.profile-security-section strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.profile-security-section p {
+  margin: 0;
+
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.profile-password-actions {
+  justify-content: flex-end;
+}
+
+.profile-password-actions
+.profile-password-submit {
+  width: auto;
+  margin-top: 0;
+}
+
+
+/* Eigen wachtwoordherstelpagina */
+
+.auth-action-page {
+  min-height: 100vh;
+}
+
+.auth-action-main {
+  width: 100%;
+  max-width: 620px;
+
+  margin: 0 auto;
+  padding: 3rem 1rem;
+}
+
+.auth-action-card {
+  padding: 2rem;
+
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+
+  box-shadow: var(--shadow);
+}
+
+.auth-action-card form {
+  margin-top: 1.5rem;
+}
+
+.auth-action-submit {
+  width: 100%;
+  min-height: 44px;
+}
+
+.auth-result-state {
+  text-align: center;
+}
+
+.auth-result-state p {
+  color: var(--text-muted);
+  line-height: 1.5;
+}

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Wachtwoord herstellen – OVN Jaarplanning
+  </title>
+
+  <link
+    rel="icon"
+    href="assets/OVN.logo.png"
+    type="image/png"
+  >
+
+  <script src="generaltheme.js"></script>
+
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="mobile.css">
+</head>
+
+
+<body class="auth-action-page">
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <a href="index.html" class="backlink">
+        ← Terug
+      </a>
+
+      <img
+        src="assets/OVN.logo.png"
+        class="topbar-logo"
+        alt="OVN logo"
+      >
+
+      <div class="topbar-title">
+        <h1>Wachtwoord herstellen</h1>
+        <span>OVN Jaarplanning</span>
+      </div>
+    </div>
+
+    <div class="topbar-right-icons"></div>
+  </header>
+
+
+  <main class="auth-action-main">
+
+    <section
+      class="card auth-action-card"
+      aria-live="polite"
+    >
+
+      <!-- Link wordt gecontroleerd -->
+      <div id="actionLoading">
+        <div
+          class="auth-modal-icon"
+          aria-hidden="true"
+        >
+          🔐
+        </div>
+
+        <h2>Herstellink controleren…</h2>
+
+        <p class="text-muted">
+          Een moment geduld.
+        </p>
+      </div>
+
+
+      <!-- Nieuw wachtwoord -->
+      <div
+        id="resetPasswordState"
+        class="hidden"
+      >
+        <div
+          class="auth-modal-icon"
+          aria-hidden="true"
+        >
+          🔑
+        </div>
+
+        <h2>Nieuw wachtwoord instellen</h2>
+
+        <p class="auth-modal-description">
+          Je stelt een nieuw wachtwoord in voor:
+        </p>
+
+        <strong
+          id="resetAccountEmail"
+          class="auth-email-preview"
+        ></strong>
+
+        <form
+          id="resetPasswordForm"
+          novalidate
+        >
+          <div class="auth-form-group">
+            <label for="resetNewPassword">
+              Nieuw wachtwoord
+            </label>
+
+            <div class="password-field">
+              <input
+                id="resetNewPassword"
+                type="password"
+                minlength="8"
+                autocomplete="new-password"
+                placeholder="Minimaal 8 tekens"
+              >
+
+              <button
+                type="button"
+                class="password-toggle"
+                data-password-toggle="resetNewPassword"
+              >
+                Tonen
+              </button>
+            </div>
+          </div>
+
+          <div class="auth-form-group">
+            <label for="resetConfirmPassword">
+              Bevestig nieuw wachtwoord
+            </label>
+
+            <div class="password-field">
+              <input
+                id="resetConfirmPassword"
+                type="password"
+                minlength="8"
+                autocomplete="new-password"
+                placeholder="Herhaal je nieuwe wachtwoord"
+              >
+
+              <button
+                type="button"
+                class="password-toggle"
+                data-password-toggle="resetConfirmPassword"
+              >
+                Tonen
+              </button>
+            </div>
+          </div>
+
+          <ul class="password-requirements">
+            <li>Minimaal 8 tekens</li>
+            <li>
+              Gebruik bij voorkeur een unieke wachtwoordzin
+            </li>
+          </ul>
+
+          <div
+            id="resetPasswordMessage"
+            class="auth-inline-message auth-inline-message-error hidden"
+            role="alert"
+          ></div>
+
+          <button
+            id="resetPasswordSubmit"
+            type="submit"
+            class="pill-btn primary auth-action-submit"
+          >
+            Nieuw wachtwoord opslaan
+          </button>
+        </form>
+      </div>
+
+
+      <!-- Succes -->
+      <div
+        id="actionSuccessState"
+        class="hidden auth-result-state"
+      >
+        <div
+          class="confirm-modal-icon profile-success-icon"
+          aria-hidden="true"
+        >
+          ✓
+        </div>
+
+        <h2>Wachtwoord gewijzigd</h2>
+
+        <p>
+          Je nieuwe wachtwoord is opgeslagen.
+          Je kunt nu inloggen.
+        </p>
+
+        <a
+          href="index.html?trigger_login=true"
+          class="pill-btn primary"
+        >
+          Naar inloggen
+        </a>
+      </div>
+
+
+      <!-- Ongeldige link -->
+      <div
+        id="actionErrorState"
+        class="hidden auth-result-state"
+      >
+        <div
+          class="confirm-modal-icon profile-warning-icon"
+          aria-hidden="true"
+        >
+          ⚠️
+        </div>
+
+        <h2>
+          Deze link is niet meer geldig
+        </h2>
+
+        <p id="actionErrorText">
+          De herstellink is ongeldig of verlopen.
+        </p>
+
+        <a
+          href="index.html?trigger_login=true"
+          class="pill-btn outline"
+        >
+          Nieuwe herstelmail aanvragen
+        </a>
+      </div>
+
+    </section>
+  </main>
+
+
+  <script src="firebase-config.js"></script>
+
+  <script
+    type="module"
+    src="firebase-imports.js"
+  ></script>
+
+  <script src="password-ui.js"></script>
+  <script src="auth-action.js"></script>
+
+</body>
+</html>

@@ -5,103 +5,184 @@
 (() => {
   "use strict";
 
-  let database = null;
+ let database = null;
+let auth = null;
+let forcedPasswordChange = false;
 
-  const profileLoading =
-    document.getElementById("profileLoading");
+const $ = id =>
+  document.getElementById(id);
 
-  const profileContent =
-    document.getElementById("profileContent");
+const profileLoading =
+  $("profileLoading");
 
-  const profileLoadError =
-    document.getElementById("profileLoadError");
+const profileContent =
+  $("profileContent");
 
-  const profName =
-    document.getElementById("profName");
+const profileLoadError =
+  $("profileLoadError");
 
-  const profEmail =
-    document.getElementById("profEmail");
+const profName =
+  $("profName");
 
-  const profRoles =
-    document.getElementById("profRoles");
+const profEmail =
+  $("profEmail");
 
-  const pwWarning =
-    document.getElementById("pwWarning");
+const profRoles =
+  $("profRoles");
 
-  const pwUpdateModal =
-    document.getElementById("pwUpdateModal");
+const pwWarning =
+  $("pwWarning");
 
-  const reauthErrorModal =
-    document.getElementById("reauthErrorModal");
+const openPasswordChangeBtn =
+  $("openPasswordChangeBtn");
 
-  const passwordChangedModal =
-    document.getElementById("passwordChangedModal");
+const pwUpdateModal =
+  $("pwUpdateModal");
 
-  const passwordUpdateForm =
-    document.getElementById("passwordUpdateForm");
+const closePasswordChangeModal =
+  $("closePasswordChangeModal");
 
-  const newPassword =
-    document.getElementById("newPassword");
+const cancelPasswordChangeBtn =
+  $("cancelPasswordChangeBtn");
 
-  const confirmPassword =
-    document.getElementById("confirmPassword");
+const passwordUpdateForm =
+  $("passwordUpdateForm");
 
-  const passwordFormMessage =
-    document.getElementById("passwordFormMessage");
+const currentPasswordGroup =
+  $("currentPasswordGroup");
 
-  const btnUpdatePassword =
-    document.getElementById("btnUpdatePassword");
+const currentPassword =
+  $("currentPassword");
 
-  const btnReauthLogin =
-    document.getElementById("btnReauthLogin");
+const newPassword =
+  $("newPassword");
 
-  const passwordChangedOkBtn =
-    document.getElementById("passwordChangedOkBtn");
+const confirmPassword =
+  $("confirmPassword");
+
+const passwordFormMessage =
+  $("passwordFormMessage");
+
+const btnUpdatePassword =
+  $("btnUpdatePassword");
+
+const pwUpdateTitle =
+  $("pwUpdateTitle");
+
+const pwUpdateDescription =
+  $("pwUpdateDescription");
+
+const passwordChangedModal =
+  $("passwordChangedModal");
+
+const passwordChangedOkBtn =
+  $("passwordChangedOkBtn");
+
+const btnLogout =
+  $("btnLogout");
 
 
-  /* ====================================================================
-     MODAL HELPERS
-     ==================================================================== */
+function openModal(modal) {
+  if (!modal) return;
 
-  function openModal(modal) {
-    if (!modal) return;
+  modal.classList.remove("hidden");
+  document.body.classList.add("modal-open");
+}
 
-    modal.classList.remove("hidden");
-    document.body.classList.add("modal-open");
+
+function closeModal(modal) {
+  if (!modal) return;
+
+  modal.classList.add("hidden");
+
+  if (!document.querySelector(
+    ".modal:not(.hidden)"
+  )) {
+    document.body.classList.remove(
+      "modal-open"
+    );
   }
-
-  function closeModal(modal) {
-    if (!modal) return;
-
-    modal.classList.add("hidden");
-
-    const hasOpenModal =
-      document.querySelector(".modal:not(.hidden)");
-
-    if (!hasOpenModal) {
-      document.body.classList.remove("modal-open");
-    }
-  }
+}
 
 
-  /* ====================================================================
-     FEEDBACK
-     ==================================================================== */
+function setPasswordMessage(
+  message = "",
+  type = "error"
+) {
+  if (!passwordFormMessage) return;
 
-  function showPasswordMessage(message) {
-    if (!passwordFormMessage) return;
+  passwordFormMessage.textContent =
+    message;
 
-    passwordFormMessage.textContent = message;
-    passwordFormMessage.classList.remove("hidden");
-  }
+  passwordFormMessage.classList.toggle(
+    "hidden",
+    !message
+  );
 
-  function clearPasswordMessage() {
-    if (!passwordFormMessage) return;
+  passwordFormMessage.classList.toggle(
+    "auth-inline-message-error",
+    type === "error"
+  );
 
-    passwordFormMessage.textContent = "";
-    passwordFormMessage.classList.add("hidden");
-  }
+  passwordFormMessage.classList.toggle(
+    "auth-inline-message-success",
+    type === "success"
+  );
+}
 
+
+function setPasswordBusy(busy) {
+  btnUpdatePassword.disabled = busy;
+
+  btnUpdatePassword.textContent = busy
+    ? "Wachtwoord opslaan…"
+    : "Wachtwoord opslaan";
+}
+
+
+function resetPasswordForm() {
+  passwordUpdateForm?.reset();
+
+  setPasswordMessage();
+
+  window.OVNPasswordUI?.initialise(
+    pwUpdateModal
+  );
+}
+
+
+function configurePasswordModal(isForced) {
+  forcedPasswordChange = isForced;
+
+  resetPasswordForm();
+
+  currentPasswordGroup?.classList.toggle(
+    "hidden",
+    isForced
+  );
+
+  closePasswordChangeModal?.classList.toggle(
+    "hidden",
+    isForced
+  );
+
+  cancelPasswordChangeBtn?.classList.toggle(
+    "hidden",
+    isForced
+  );
+
+  pwUpdateTitle.textContent = isForced
+    ? "Kies een eigen wachtwoord"
+    : "Wachtwoord wijzigen";
+
+  pwUpdateDescription.textContent = isForced
+    ? "Je gebruikt een tijdelijk wachtwoord. Kies een eigen wachtwoord voordat je verdergaat."
+    : "Bevestig eerst je huidige wachtwoord en kies daarna een nieuw, uniek wachtwoord.";
+
+  btnUpdatePassword.textContent = isForced
+    ? "Wachtwoord opslaan en activeren"
+    : "Wachtwoord opslaan";
+}
   function setPasswordBusy(isBusy) {
     if (!btnUpdatePassword) return;
 
@@ -267,222 +348,302 @@
   }
 
 
-  /* ====================================================================
-     AUTH INITIALISATIE
-     ==================================================================== */
+ /* ====================================================================
+   AUTH INITIALISATIE
+   ==================================================================== */
 
-  document.addEventListener(
-    "auth-changed",
-    async event => {
-      const loggedIn =
-        Boolean(event.detail?.loggedIn);
+document.addEventListener(
+  "auth-changed",
+  async event => {
+    if (!event.detail?.loggedIn) {
+      window.location.href =
+        "index.html";
 
-      if (!loggedIn) {
-        window.location.href = "index.html";
-        return;
+      return;
+    }
+
+    const session =
+      window.getAuthSession?.();
+
+    if (!session?.id) {
+      window.location.href =
+        "index.html";
+
+      return;
+    }
+
+    const app =
+      window._firebase.getApps().length
+        ? window._firebase.getApp()
+        : window._firebase.initializeApp(
+            window.firebaseConfig
+          );
+
+    auth =
+      window._firebase.getAuth(app);
+
+    database =
+      window._firebase.getDatabase(app);
+
+    const forcePasswordChange =
+      new URLSearchParams(
+        window.location.search
+      ).get("force_pw_change") === "true";
+
+    if (forcePasswordChange) {
+      pwWarning?.classList.remove("hidden");
+
+      configurePasswordModal(true);
+      openModal(pwUpdateModal);
+
+      window.setTimeout(
+        () => newPassword?.focus(),
+        100
+      );
+    }
+
+    await loadUserProfile(session.id);
+  }
+);
+
+
+/* ====================================================================
+   WACHTWOORDMODAL OPENEN EN SLUITEN
+   ==================================================================== */
+
+openPasswordChangeBtn?.addEventListener(
+  "click",
+  () => {
+    configurePasswordModal(false);
+    openModal(pwUpdateModal);
+
+    window.setTimeout(
+      () => currentPassword?.focus(),
+      100
+    );
+  }
+);
+
+
+closePasswordChangeModal?.addEventListener(
+  "click",
+  () => {
+    if (forcedPasswordChange) return;
+
+    closeModal(pwUpdateModal);
+    resetPasswordForm();
+  }
+);
+
+
+cancelPasswordChangeBtn?.addEventListener(
+  "click",
+  () => {
+    if (forcedPasswordChange) return;
+
+    closeModal(pwUpdateModal);
+    resetPasswordForm();
+  }
+);
+
+
+pwUpdateModal?.addEventListener(
+  "click",
+  event => {
+    if (
+      event.target === pwUpdateModal &&
+      !forcedPasswordChange
+    ) {
+      closeModal(pwUpdateModal);
+      resetPasswordForm();
+    }
+  }
+);
+
+
+/* ====================================================================
+   WACHTWOORD WIJZIGEN
+   ==================================================================== */
+
+passwordUpdateForm?.addEventListener(
+  "submit",
+  async event => {
+    event.preventDefault();
+
+    setPasswordMessage();
+
+    const currentValue =
+      currentPassword?.value || "";
+
+    const newValue =
+      newPassword?.value || "";
+
+    const confirmationValue =
+      confirmPassword?.value || "";
+
+    if (
+      !forcedPasswordChange &&
+      !currentValue
+    ) {
+      setPasswordMessage(
+        "Vul je huidige wachtwoord in."
+      );
+
+      currentPassword.focus();
+      return;
+    }
+
+    if (newValue.length < 8) {
+      setPasswordMessage(
+        "Het nieuwe wachtwoord moet minimaal 8 tekens bevatten."
+      );
+
+      newPassword.focus();
+      return;
+    }
+
+    if (newValue !== confirmationValue) {
+      setPasswordMessage(
+        "De twee nieuwe wachtwoorden komen niet overeen."
+      );
+
+      confirmPassword.focus();
+      return;
+    }
+
+    if (
+      !forcedPasswordChange &&
+      currentValue === newValue
+    ) {
+      setPasswordMessage(
+        "Kies een nieuw wachtwoord dat anders is dan je huidige wachtwoord."
+      );
+
+      newPassword.focus();
+      return;
+    }
+
+    setPasswordBusy(true);
+
+    try {
+      const user =
+        auth?.currentUser;
+
+      if (!user?.email) {
+        throw new Error(
+          "Er is geen actieve gebruikerssessie gevonden."
+        );
       }
 
-      const session =
-        window.getAuthSession?.();
-
-      if (!session?.id) {
-        window.location.href = "index.html";
-        return;
-      }
-
-      const app =
-        window._firebase.getApps().length
-          ? window._firebase.getApp()
-          : window._firebase.initializeApp(
-              window.firebaseConfig
+      /*
+       * Bij een gewone wijziging verifiëren we
+       * eerst opnieuw het huidige wachtwoord.
+       */
+      if (!forcedPasswordChange) {
+        const credential =
+          window._firebase
+            .EmailAuthProvider
+            .credential(
+              user.email,
+              currentValue
             );
 
-      database =
-        window._firebase.getDatabase(app);
-
-      const urlParams =
-        new URLSearchParams(
-          window.location.search
-        );
-
-      if (
-        urlParams.get("force_pw_change") ===
-        "true"
-      ) {
-        pwWarning?.classList.remove("hidden");
-        openModal(pwUpdateModal);
-
-        window.setTimeout(() => {
-          newPassword?.focus();
-        }, 100);
-      }
-
-      await loadUserProfile(session.id);
-    }
-  );
-
-
-  /* ====================================================================
-     WACHTWOORD WIJZIGEN
-     ==================================================================== */
-
-  passwordUpdateForm?.addEventListener(
-    "submit",
-    async event => {
-      event.preventDefault();
-      clearPasswordMessage();
-
-      const newValue =
-        newPassword?.value || "";
-
-      const confirmationValue =
-        confirmPassword?.value || "";
-
-      if (newValue.length < 6) {
-        showPasswordMessage(
-          "Het wachtwoord moet minimaal 6 tekens bevatten."
-        );
-
-        newPassword?.focus();
-        return;
-      }
-
-      if (newValue !== confirmationValue) {
-        showPasswordMessage(
-          "De twee wachtwoorden komen niet overeen."
-        );
-
-        confirmPassword?.focus();
-        return;
-      }
-
-      setPasswordBusy(true);
-
-      try {
-        const app =
-          window._firebase.getApps().length
-            ? window._firebase.getApp()
-            : window._firebase.initializeApp(
-                window.firebaseConfig
-              );
-
-        const auth =
-          window._firebase.getAuth(app);
-
-        const user = auth.currentUser;
-
-        if (!user) {
-          throw new Error(
-            "Er is geen actieve gebruikerssessie gevonden."
+        await window._firebase
+          .reauthenticateWithCredential(
+            user,
+            credential
           );
-        }
+      }
 
-        await window._firebase.updatePassword(
+      await window._firebase
+        .updatePassword(
           user,
           newValue
         );
 
-        closeModal(pwUpdateModal);
-        openModal(passwordChangedModal);
-
-      } catch (error) {
-        console.error(
-          "Wachtwoord wijzigen mislukt:",
-          error
-        );
-
-        if (
-          error.code ===
-          "auth/requires-recent-login"
-        ) {
-          closeModal(pwUpdateModal);
-          openModal(reauthErrorModal);
-          return;
-        }
-
-        if (
-          error.code ===
-          "auth/weak-password"
-        ) {
-          showPasswordMessage(
-            "Dit wachtwoord is onvoldoende sterk. Kies een langer wachtwoord."
-          );
-          return;
-        }
-
-        showPasswordMessage(
-          error.message ||
-          "Het wachtwoord kon niet worden gewijzigd."
-        );
-
-      } finally {
-        setPasswordBusy(false);
-      }
-    }
-  );
-
-
-  /* ====================================================================
-     MODALACTIES
-     ==================================================================== */
-
-  btnReauthLogin?.addEventListener(
-    "click",
-    async () => {
-      btnReauthLogin.disabled = true;
-      btnReauthLogin.textContent =
-        "Uitloggen…";
-
-      try {
-        const app =
-          window._firebase.getApps().length
-            ? window._firebase.getApp()
-            : window._firebase.initializeApp(
-                window.firebaseConfig
-              );
-
-        const auth =
-          window._firebase.getAuth(app);
-
-        await window._firebase.signOut(auth);
-
-      } catch (error) {
-        console.error(
-          "Uitloggen voor herauthenticatie mislukt:",
-          error
-        );
-      } finally {
-        window.location.href =
-          "index.html?trigger_login=true";
-      }
-    }
-  );
-
-  passwordChangedOkBtn?.addEventListener(
-    "click",
-    () => {
-      closeModal(passwordChangedModal);
+      closeModal(pwUpdateModal);
 
       pwWarning?.classList.add("hidden");
 
-      if (newPassword) {
-        newPassword.value = "";
-      }
+      openModal(passwordChangedModal);
 
-      if (confirmPassword) {
-        confirmPassword.value = "";
-      }
-
-      const cleanUrl =
-        `${window.location.pathname}`;
-
-      window.history.replaceState(
-        {},
-        document.title,
-        cleanUrl
+    } catch (error) {
+      console.error(
+        "Wachtwoord wijzigen mislukt:",
+        error
       );
 
-      window.location.href = "index.html";
+      const messages = {
+        "auth/invalid-credential":
+          "Het huidige wachtwoord is niet correct.",
+
+        "auth/wrong-password":
+          "Het huidige wachtwoord is niet correct.",
+
+        "auth/weak-password":
+          "Kies een sterker wachtwoord.",
+
+        "auth/too-many-requests":
+          "Er zijn te veel pogingen gedaan. Probeer het later opnieuw.",
+
+        "auth/network-request-failed":
+          "De verbinding is mislukt. Controleer je internetverbinding.",
+
+        "auth/requires-recent-login":
+          "Log opnieuw in en probeer daarna nogmaals je wachtwoord te wijzigen."
+      };
+
+      setPasswordMessage(
+        messages[error.code] ||
+        error.message ||
+        "Het wachtwoord kon niet worden gewijzigd."
+      );
+
+    } finally {
+      setPasswordBusy(false);
     }
-  );
+  }
+);
+
+
+/* ====================================================================
+   SUCCES EN UITLOGGEN
+   ==================================================================== */
+
+passwordChangedOkBtn?.addEventListener(
+  "click",
+  () => {
+    closeModal(passwordChangedModal);
+    resetPasswordForm();
+
+    history.replaceState(
+      {},
+      document.title,
+      window.location.pathname
+    );
+
+    /*
+     * Alleen na een verplichte wijziging
+     * terug naar de homepage.
+     */
+    if (forcedPasswordChange) {
+      window.location.href =
+        "index.html";
+    }
+  }
+);
+
+
+btnLogout?.addEventListener(
+  "click",
+  async () => {
+    if (auth) {
+      await window._firebase.signOut(auth);
+    }
+
+    window.location.href =
+      "index.html";
+  }
+);
+
 })();

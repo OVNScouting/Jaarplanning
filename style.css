@@ -235,6 +235,7 @@ body {
   color: var(--text-main);
   border: 1px solid var(--border);
 }
+
 /* success/danger voor acties (approve/reject) */
 .pill-btn.success {
   background: #16a34a;
@@ -1311,22 +1312,26 @@ body.mode-ouder .col-divider {
 
 /* Zwart */
 .nest-zwart {
-  background: #28292b;
+  background: var(--nest-zwart);
+  color: var(--nest-zwart-text);
 }
 
 /* Bruin */
 .nest-bruin {
-  background: #69574b;
+  background: var(--nest-bruin);
+  color: var(--nest-bruin-text);
 }
 
 /* Wit */
 .nest-wit {
-  background: #faf7e8;
+  background: var(--nest-wit);
+  color: var(--nest-wit-text);
 }
 
 /* Grijs */
 .nest-grijs {
-  background: #404652;
+  background: var(--nest-grijs);
+  color: var(--nest-grijs-text);
 }
 
 /* Nestloze leden → geen extra styling */
@@ -1506,29 +1511,33 @@ body.mode-ouder .col-divider {
    SCOUTS – PLOEGKLEUREN (header only)
 ============================================ */
 th.ploeg-sperwer {
-  background-color: #f0da6c;
-  color: white;
+  background-color: var(--ploeg-sperwer);
+  color: var(--ploeg-sperwer-text);
   position: relative;
 }
 
 th.ploeg-kievit {
-  background-color: #659c37;
-  color: white;
+  background-color: var(--ploeg-kievit);
+  color: var(--ploeg-kievit-text);
+  position: relative;
 }
 
 th.ploeg-reiger {
-  background-color: #37659c;
-  color: white;
+  background-color: var(--ploeg-reiger);
+  color: var(--ploeg-reiger-text);
+  position: relative;
 }
 
 th.ploeg-meeuw {
-  background-color: #9c3c37;
-  color: white;
+  background-color: var(--ploeg-meeuw);
+  color: var(--ploeg-meeuw-text);
+  position: relative;
 }
 
 th.ploeg- {
-  background-color: #BBBBBB;
-  color: black;
+  background-color: var(--ploeg-none);
+  color: var(--ploeg-none-text);
+  position: relative;
 }
 
 /* Subtiele white overlay zoals bij Welpen */
@@ -1554,23 +1563,23 @@ th[class^="ploeg-"]::after {
 }
 
 .ploeg-header.ploeg-sperwer {
-  background: #f0da6c;
-  color: white;
+  background: var(--ploeg-sperwer);
+  color: var(--ploeg-sperwer-text);
 }
 
 .ploeg-header.ploeg-kievit {
-  background: #659c37;
-  color: white;
+  background: var(--ploeg-kievit);
+  color: var(--ploeg-kievit-text);
 }
 
 .ploeg-header.ploeg-reiger {
-  background: #37659c;
-  color: white;
+  background: var(--ploeg-reiger);
+  color: var(--ploeg-reiger-text);
 }
 
 .ploeg-header.ploeg-meeuw {
-  background: #9c3c37;
-  color: white;
+  background: var(--ploeg-meeuw);
+  color: var(--ploeg-meeuw-text);
 }
 
 .ploeg-header .ploeg-icoon {
@@ -2099,6 +2108,35 @@ tr.approved {
   --opkomst-kamp: #ffe066;
   --opkomst-kamp-bg: #fbfcd5;
 
+  /* Scouts — ploegkleuren */
+  --ploeg-sperwer: #f0da6c;
+  --ploeg-sperwer-text: #2f2a12;
+
+  --ploeg-kievit: #659c37;
+  --ploeg-kievit-text: #ffffff;
+
+  --ploeg-reiger: #37659c;
+  --ploeg-reiger-text: #ffffff;
+
+  --ploeg-meeuw: #9c3c37;
+  --ploeg-meeuw-text: #ffffff;
+
+  --ploeg-none: #bbbbbb;
+  --ploeg-none-text: #111827;
+
+  /* Welpen — nestkleuren */
+  --nest-zwart: #28292b;
+  --nest-zwart-text: #ffffff;
+
+  --nest-bruin: #69574b;
+  --nest-bruin-text: #ffffff;
+
+  --nest-wit: #faf7e8;
+  --nest-wit-text: #111827;
+
+  --nest-grijs: #404652;
+  --nest-grijs-text: #ffffff;
+
   --danger-soft: #fee2e2;
   --danger-text: #b91c1c;
 
@@ -2164,6 +2202,35 @@ html[data-theme="dark"] {
 
   --opkomst-kamp: #facc15;
   --opkomst-kamp-bg: #493d16;
+
+  /* Scouts — ploegkleuren dark mode */
+  --ploeg-sperwer: #c5aa3f;
+  --ploeg-sperwer-text: #171306;
+
+  --ploeg-kievit: #4f7f32;
+  --ploeg-kievit-text: #f8fafc;
+
+  --ploeg-reiger: #355f91;
+  --ploeg-reiger-text: #f8fafc;
+
+  --ploeg-meeuw: #833d3a;
+  --ploeg-meeuw-text: #f8fafc;
+
+  --ploeg-none: #596273;
+  --ploeg-none-text: #f1f5f9;
+
+  /* Welpen — nestkleuren dark mode */
+  --nest-zwart: #303238;
+  --nest-zwart-text: #f8fafc;
+
+  --nest-bruin: #665448;
+  --nest-bruin-text: #f8fafc;
+
+  --nest-wit: #d7d2bf;
+  --nest-wit-text: #16181d;
+
+  --nest-grijs: #4d5563;
+  --nest-grijs-text: #f8fafc;
 
   --danger-soft: #4a2029;
   --danger-text: #fda4af;
@@ -2434,6 +2501,7 @@ tr.row-activiteit {
 .confirm-modal-actions button {
   min-width: 140px;
 }
+
 /* ============================================================
    ALGEMENE FORMULIERVELDEN — THEMAONAFHANKELIJK
 ============================================================ */
@@ -2473,6 +2541,7 @@ option {
   background: var(--input-bg);
   color: var(--input-text);
 }
+
 /* ======================================================================
    DARK MODE — ALGEMENE COMPONENTEN
    ====================================================================== */
@@ -2604,15 +2673,13 @@ html[data-theme="dark"] .pill-btn.outline:hover {
   background: var(--blue-soft);
 }
 
-html[data-theme="dark"]
-.pill-btn:not(.primary):not(.outline):not(.success):not(.danger) {
+html[data-theme="dark"] .pill-btn:not(.primary):not(.outline):not(.success):not(.danger) {
   background: var(--card-secondary);
   color: var(--text-main);
   border-color: var(--border);
 }
 
-html[data-theme="dark"]
-.pill-btn:not(.primary):not(.outline):not(.success):not(.danger):hover {
+html[data-theme="dark"] .pill-btn:not(.primary):not(.outline):not(.success):not(.danger):hover {
   background: var(--card-hover);
 }
 
@@ -2657,10 +2724,22 @@ html[data-theme="dark"] .dashboard-table {
   color: var(--text-main);
 }
 
-html[data-theme="dark"] .planning-table th,
+html[data-theme="dark"]
+.planning-table th:not([class*="ploeg-"]):not([class*="nest-"]),
 html[data-theme="dark"] .dashboard-table th {
   background: var(--table-header-bg);
   color: var(--text-main);
+  border-color: var(--border);
+}
+
+/*
+ * Gekleurde ploeg- en nestheaders behouden hun eigen achtergrond.
+ * Alleen de tabelrand moet aan dark mode worden aangepast.
+ */
+html[data-theme="dark"]
+.planning-table th[class*="ploeg-"],
+html[data-theme="dark"]
+.planning-table th[class*="nest-"] {
   border-color: var(--border);
 }
 
@@ -2686,45 +2765,37 @@ html[data-theme="dark"] .name-vertical {
   color: var(--text-main);
 }
 
-html[data-theme="dark"]
-.dashboard-table tbody tr:nth-child(even) {
+html[data-theme="dark"] .dashboard-table tbody tr:nth-child(even) {
   background: var(--table-even-bg);
 }
 
-html[data-theme="dark"]
-.dashboard-table tbody tr:hover {
+html[data-theme="dark"] .dashboard-table tbody tr:hover {
   background: var(--table-hover-bg);
 }
 
-html[data-theme="dark"]
-.dashboard-table td:empty::after {
+html[data-theme="dark"] .dashboard-table td:empty::after {
   color: var(--text-soft);
 }
 
 /* Sticky datumkleur bij rijkleuren */
 
-html[data-theme="dark"]
-tr.row-bijzonder > .col-datum {
+html[data-theme="dark"] tr.row-bijzonder>.col-datum {
   background: var(--opkomst-bijzonder-bg) !important;
 }
 
-html[data-theme="dark"]
-tr.row-kamp > .col-datum {
+html[data-theme="dark"] tr.row-kamp>.col-datum {
   background: var(--opkomst-kamp-bg) !important;
 }
 
-html[data-theme="dark"]
-tr.row-geenopkomst > .col-datum {
+html[data-theme="dark"] tr.row-geenopkomst>.col-datum {
   background: var(--opkomst-geen-bg) !important;
 }
 
-html[data-theme="dark"]
-tr.row-next > .col-datum {
+html[data-theme="dark"] tr.row-next>.col-datum {
   background: var(--opkomst-volgende-bg) !important;
 }
 
-html[data-theme="dark"]
-tr.row-grey > .col-datum {
+html[data-theme="dark"] tr.row-grey>.col-datum {
   background: var(--opkomst-verleden-bg) !important;
 }
 
@@ -2855,13 +2926,11 @@ html[data-theme="dark"] .table-h-scroll {
   border: 1px solid var(--border);
 }
 
-html[data-theme="dark"]
-.table-h-scroll::-webkit-scrollbar-track {
+html[data-theme="dark"] .table-h-scroll::-webkit-scrollbar-track {
   background: var(--scroll-track);
 }
 
-html[data-theme="dark"]
-.table-h-scroll::-webkit-scrollbar-thumb {
+html[data-theme="dark"] .table-h-scroll::-webkit-scrollbar-thumb {
   background: var(--scroll-thumb);
 }
 
@@ -2903,14 +2972,15 @@ html[data-theme="dark"] .date-weekday {
 
 html[data-theme="dark"] * {
   scrollbar-color:
-    var(--scroll-thumb)
-    var(--scroll-track);
+    var(--scroll-thumb) var(--scroll-track);
 }
+
 .bug-modal-title {
   margin-top: 0;
   padding-right: 30px;
   color: var(--text-main);
 }
+
 /* ======================================================================
    PROFIELPAGINA
    ====================================================================== */
@@ -3190,6 +3260,7 @@ html[data-theme="dark"] * {
 body.modal-open {
   overflow: hidden;
 }
+
 html[data-theme="dark"] .profile-card {
   background: var(--card);
   border-color: var(--border);
@@ -3218,6 +3289,7 @@ html[data-theme="dark"] .profile-role-speltak {
   color: #86efac;
   border-color: #15803d;
 }
+
 /* ======================================================================
    AUTHENTICATIE EN WACHTWOORDEN
    ====================================================================== */
@@ -3432,8 +3504,7 @@ html[data-theme="dark"] .profile-role-speltak {
   justify-content: flex-end;
 }
 
-.profile-password-actions
-.profile-password-submit {
+.profile-password-actions .profile-password-submit {
   width: auto;
   margin-top: 0;
 }
@@ -3479,4 +3550,83 @@ html[data-theme="dark"] .profile-role-speltak {
 .auth-result-state p {
   color: var(--text-muted);
   line-height: 1.5;
+}
+
+/* ============================================================
+   DARK MODE — ploeg- en nesthighlight
+============================================================ */
+
+html[data-theme="dark"] .nest-zwart::before,
+html[data-theme="dark"] .nest-wit::before,
+html[data-theme="dark"] .nest-grijs::before,
+html[data-theme="dark"] .nest-bruin::before,
+html[data-theme="dark"] .ploeg-sperwer::before,
+html[data-theme="dark"] .ploeg-kievit::before,
+html[data-theme="dark"] .ploeg-reiger::before,
+html[data-theme="dark"] .ploeg-meeuw::before {
+  background: rgba(255, 255, 255, 0.16);
+}
+/*
+ * Expliciete eindregels, zodat toekomstige algemene
+ * tabelheaderregels de groepskleuren niet opnieuw overschrijven.
+ */
+
+html[data-theme="dark"]
+.planning-table th.ploeg-sperwer {
+  background-color: var(--ploeg-sperwer);
+  color: var(--ploeg-sperwer-text);
+}
+
+html[data-theme="dark"]
+.planning-table th.ploeg-kievit {
+  background-color: var(--ploeg-kievit);
+  color: var(--ploeg-kievit-text);
+}
+
+html[data-theme="dark"]
+.planning-table th.ploeg-reiger {
+  background-color: var(--ploeg-reiger);
+  color: var(--ploeg-reiger-text);
+}
+
+html[data-theme="dark"]
+.planning-table th.ploeg-meeuw {
+  background-color: var(--ploeg-meeuw);
+  color: var(--ploeg-meeuw-text);
+}
+
+html[data-theme="dark"]
+.planning-table th.ploeg- {
+  background-color: var(--ploeg-none);
+  color: var(--ploeg-none-text);
+}
+
+html[data-theme="dark"]
+.planning-table th.nest-zwart {
+  background-color: var(--nest-zwart);
+  color: var(--nest-zwart-text);
+}
+
+html[data-theme="dark"]
+.planning-table th.nest-bruin {
+  background-color: var(--nest-bruin);
+  color: var(--nest-bruin-text);
+}
+
+html[data-theme="dark"]
+.planning-table th.nest-wit,
+html[data-theme="dark"]
+.planning-table th.nest-wit .name-vertical,
+html[data-theme="dark"]
+.planning-table th.nest-wit .welpen-naam,
+html[data-theme="dark"]
+.planning-table th.nest-wit .welpen-naam-reallife {
+  background-color: var(--nest-wit);
+  color: var(--nest-wit-text) !important;
+}
+
+html[data-theme="dark"]
+.planning-table th.nest-grijs {
+  background-color: var(--nest-grijs);
+  color: var(--nest-grijs-text);
 }

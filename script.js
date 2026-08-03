@@ -316,6 +316,7 @@ function resetOpkomstFields() {
     opType.value = "normaal";
     opMateriaal.value = "";
     opBijzonderheden.value = "";
+    if (opNotities) { opNotities.value = ""; }
     opKijkers.value = "0";
     opExtraAantal.value = "0";
     opExtraNamen.value = "";
@@ -327,10 +328,10 @@ const saveMember = document.getElementById("saveMember");
 const cancelMember = document.getElementById("cancelMember");
 
 const opModal = document.getElementById("opkomstModal");
-const deleteOpkomstModal =  document.getElementById("deleteOpkomstModal");
+const deleteOpkomstModal = document.getElementById("deleteOpkomstModal");
 const deleteOpkomstText = document.getElementById("deleteOpkomstText");
-const confirmDeleteOpkomst =document.getElementById("confirmDeleteOpkomst");
-const cancelDeleteOpkomst =document.getElementById("cancelDeleteOpkomst");
+const confirmDeleteOpkomst = document.getElementById("confirmDeleteOpkomst");
+const cancelDeleteOpkomst = document.getElementById("cancelDeleteOpkomst");
 const opModalTitle = document.getElementById("opModalTitle");
 const opDatum = document.getElementById("opDatum");
 const opEindDatum = document.getElementById("opEindDatum"); // NIEUW
@@ -344,8 +345,14 @@ const opLocatie = document.getElementById("opLocatie");
 const opType = document.getElementById("opType");
 const opMateriaal = document.getElementById("opMateriaal");
 
-const opBijzonderheden = document.getElementById("opBijzonderheden");
-const opKijkers = document.getElementById("opKijkers");
+const opBijzonderheden =
+    document.getElementById("opBijzonderheden");
+
+const opNotities =
+    document.getElementById("opNotities");
+
+const opKijkers =
+    document.getElementById("opKijkers");
 const opExtraAantal = document.getElementById("opExtraAantal");
 const opExtraNamen = document.getElementById("opExtraNamen");
 const opBert = document.getElementById("opBert");
@@ -1122,8 +1129,17 @@ function addHeaders() {
     addMainHeader("Thema", "col-thema");
     addMainHeader("Bijzonderheden", "col-bijzonderheden");
 
-    if (config.showBert) addMainHeader("Bert logeert bij", "col-bert");
+    /*
+     * Interne notities worden alleen voor leiding
+     * aan de tabel toegevoegd.
+     */
+    if (!isOuder()) {
+        addMainHeader("Notities", "col-notities");
+    }
 
+    if (config.showBert) {
+        addMainHeader("Bert logeert bij", "col-bert");
+    }
     const thLoc = addMainHeader("Locatie", "col-locatie");
     if (isOuder()) thLoc.classList.add("hide-view");
 
@@ -1428,13 +1444,13 @@ function addRow(o) {
         del.textContent = "❌";
 
         del.addEventListener("click", event => {
-    event.stopPropagation();
+            event.stopPropagation();
 
-    if (!isLeiding()) return;
+            if (!isLeiding()) return;
 
-    openDeleteOpkomstModal(o);
-});
-               
+            openDeleteOpkomstModal(o);
+        });
+
 
         tr.appendChild(del);
     }
@@ -1466,10 +1482,38 @@ function addRow(o) {
     }
 
     tr.appendChild(makeEditableCell(o, "thema", "col-thema"));
-    tr.appendChild(makeEditableCell(o, "bijzonderheden", "col-bijzonderheden", "textarea"));
+    tr.appendChild(
+        makeEditableCell(
+            o,
+            "bijzonderheden",
+            "col-bijzonderheden",
+            "textarea"
+        )
+    );
+
+    /*
+     * Notities zijn uitsluitend zichtbaar
+     * in de leidingweergave.
+     */
+    if (!isOuder()) {
+        tr.appendChild(
+            makeEditableCell(
+                o,
+                "notities",
+                "col-notities",
+                "textarea"
+            )
+        );
+    }
 
     if (config.showBert) {
-        tr.appendChild(makeEditableCell(o, "bert_met", "col-bert"));
+        tr.appendChild(
+            makeEditableCell(
+                o,
+                "bert_met",
+                "col-bert"
+            )
+        );
     }
 
     if (!isOuder()) {
@@ -1603,6 +1647,9 @@ function addTotalsRow() {
     tr.appendChild(emptyTd("col-thema"));
     tr.appendChild(emptyTd("col-bijzonderheden"));
 
+    if (!isOuder()) {
+        tr.appendChild(emptyTd("col-notities"));
+    }
     if (config.showBert) tr.appendChild(emptyTd("col-bert"));
 
     if (!isOuder()) tr.appendChild(emptyTd("col-locatie"));
@@ -2491,6 +2538,10 @@ function openEditOpkomstModal(opkomst) {
     opLocatie.value = opkomst.locatie || "";
     opMateriaal.value = opkomst.materiaal || "";
     opBijzonderheden.value = opkomst.bijzonderheden || "";
+    if (opNotities) {
+        opNotities.value =
+            opkomst.notities || "";
+    }
     opKijkers.value = Number(opkomst.kijkers || 0);
     opExtraAantal.value = Number(opkomst.extraAantal || 0);
     opExtraNamen.value = opkomst.extraNamen || "";
@@ -2574,6 +2625,7 @@ saveOpkomst?.addEventListener("click", async () => {
         thema: opThema.value || "",
         procor: opProcor.value || "",
         bijzonderheden: opBijzonderheden.value || "",
+        notities: opNotities?.value || "",
         typeOpkomst: opType.value || "normaal",
         starttijd: opStart.value || "",
         eindtijd: opEind.value || "",

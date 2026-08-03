@@ -3665,3 +3665,12 @@ html[data-theme="dark"]
   color: var(--nest-grijs-text);
 }
 
+/* Interne notities voor leiding */
+
+.planning-table .col-notities {
+  min-width: 180px;
+  max-width: 280px;
+
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

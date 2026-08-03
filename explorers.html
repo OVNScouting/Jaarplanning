@@ -7,7 +7,7 @@
   <title>Explorers – Jaarplanning & Aanwezigheid</title>
   <link rel="icon" href="assets/OVN.logo.png" type="image/png">
 
-<script src="generaltheme.js"></script>
+  <script src="generaltheme.js"></script>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="mobile.css" />
 </head>
@@ -204,46 +204,34 @@
     <!-- ============================================================
      MODAL — Opkomst verwijderen
 ============================================================ -->
-<div id="deleteOpkomstModal" class="modal hidden">
-  <div
-    class="modal-content confirm-modal-content"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="deleteOpkomstTitle"
-  >
-    <div class="confirm-modal-icon confirm-modal-icon-danger">
-      🗑️
+    <div id="deleteOpkomstModal" class="modal hidden">
+      <div class="modal-content confirm-modal-content" role="dialog" aria-modal="true"
+        aria-labelledby="deleteOpkomstTitle">
+        <div class="confirm-modal-icon confirm-modal-icon-danger">
+          🗑️
+        </div>
+
+        <h3 id="deleteOpkomstTitle">Opkomst verwijderen?</h3>
+
+        <p id="deleteOpkomstText" class="confirm-modal-text">
+          Weet je zeker dat je deze opkomst wilt verwijderen?
+        </p>
+
+        <p class="confirm-modal-note">
+          Je kunt deze actie kort na het verwijderen nog ongedaan maken.
+        </p>
+
+        <div class="modal-actions confirm-modal-actions">
+          <button id="cancelDeleteOpkomst" type="button" class="pill-btn outline">
+            Annuleren
+          </button>
+
+          <button id="confirmDeleteOpkomst" type="button" class="pill-btn danger">
+            Opkomst verwijderen
+          </button>
+        </div>
+      </div>
     </div>
-
-    <h3 id="deleteOpkomstTitle">Opkomst verwijderen?</h3>
-
-    <p id="deleteOpkomstText" class="confirm-modal-text">
-      Weet je zeker dat je deze opkomst wilt verwijderen?
-    </p>
-
-    <p class="confirm-modal-note">
-      Je kunt deze actie kort na het verwijderen nog ongedaan maken.
-    </p>
-
-    <div class="modal-actions confirm-modal-actions">
-      <button
-        id="cancelDeleteOpkomst"
-        type="button"
-        class="pill-btn outline"
-      >
-        Annuleren
-      </button>
-
-      <button
-        id="confirmDeleteOpkomst"
-        type="button"
-        class="pill-btn danger"
-      >
-        Opkomst verwijderen
-      </button>
-    </div>
-  </div>
-</div>
     <!-- ============================================================
          MODAL — Lid toevoegen
     ============================================================ -->
@@ -309,8 +297,11 @@
 
         <!-- Bijzonderheden -->
         <label for="opBijzonderheden">Bijzonderheden:</label>
-        <input type="text" id="opBijzonderheden" />
+        <input type="text" id="opBijzonderheden" placeholder="Extra informatie voor ouders" />
 
+        <!-- Notities — alleen zichtbaar voor leiding -->
+        <label for="opNotities">Notities voor leiding:</label>
+        <textarea id="opNotities" rows="3" placeholder="Opmerkingen, afspraken of informatie voor leiding"></textarea>
         <!-- Kijkers -->
         <label for="opKijkers">Kijkers (aantal):</label>
         <input type="number" id="opKijkers" class="input" min="0" value="0" />
@@ -324,7 +315,7 @@
 
         <!-- Locatie reserveren -->
         <label>Locatie reserveren:</label>
-          <select id="opLocatie">
+        <select id="opLocatie">
           <option value="">Selecteer…</option>
           <option value="Kampvuurkuil">Kampvuurkuil</option>
           <option value="Zandveld">Zandveld</option>

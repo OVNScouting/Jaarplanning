@@ -37,104 +37,154 @@ function init() {
   loadHighlights(db, section, list);
 }
 
-function getUpdatedMs(i) {
-  const v =
-    i.updatedAt ??
-    i.lastUpdated ??
-    i.modifiedAt ??
-    i.changedAt ??
-    i.createdAt ??
-    0;
-
-  if (typeof v === "number") return v;
-
-  if (typeof v === "string") {
-    const ms = Date.parse(v);
-    return Number.isNaN(ms) ? 0 : ms;
+function formatBestuursTijd(item) {
+  if (item.tijdType === "allday") {
+    return "Hele dag";
   }
 
-  // als je ooit Firestore timestamps zou krijgen
-  if (v && typeof v === "object" && typeof v.seconds === "number") {
-    return v.seconds * 1000;
+  if (
+    item.tijdType === "range" &&
+    item.starttijd
+  ) {
+    return item.eindtijd
+      ? `${item.starttijd}–${item.eindtijd}`
+      : item.starttijd;
   }
 
-  return 0;
+  return "";
 }
+function formatBestuursType(type) {
+  const labels = {
+    bestuursvergadering:
+      "Bestuursvergadering",
 
-function formatUpdatedNL(ms) {
-  if (!ms) return "onbekend";
-  return new Date(ms).toLocaleDateString("nl-NL", {
-    weekday: "short",
-    day: "2-digit",
-    month: "2-digit",
-  });
+    groepsraad:
+      "Groepsraad",
+
+    activiteit:
+      "Activiteit",
+
+    overig:
+      "Overig"
+  };
+
+  return labels[type] || "Bestuursitem";
 }
-
-async function loadHighlights(db, section, list) {
+async function loadHighlights(
+  db,
+  section,
+  list
+) {
   try {
-    const snap = await get(ref(db, "bestuursItems"));
+    const snap = await get(
+      ref(db, "bestuursItems")
+    );
 
-    // Vak moet altijd kunnen renderen (binnen .only-auth bepaalt login.js zichtbaarheid)
     section.classList.remove("hidden");
     list.innerHTML = "";
 
     if (!snap.exists()) {
-      list.innerHTML = `<div class="text-muted">De agenda is leeg.</div>`;
+      list.innerHTML = `
+        <div class="text-muted">
+          Er staan geen komende bestuursitems gepland.
+        </div>
+      `;
+
       return;
     }
 
-    const now = Date.now();
-    const MAX_AGE = 14 * 24 * 60 * 60 * 1000; // 14 dagen
     const MAX_ITEMS = 3;
 
-    const all = Object.entries(snap.val())
-      .map(([id, v]) => ({ id, ...v }))
-      .filter((i) => i.toonOpDashboard && isFutureOrToday(i.datum));
+    const upcomingItems = Object
+      .entries(snap.val())
+      .map(([id, value]) => ({
+        id,
+        ...value
+      }))
+      .filter(item =>
+        item.toonOpDashboard &&
+        item.datum &&
+        isFutureOrToday(item.datum)
+      )
+      .sort((a, b) => {
+        const dateComparison =
+          a.datum.localeCompare(b.datum);
 
-    if (!all.length) {
-      list.innerHTML = `<div class="text-muted">De agenda is leeg.</div>`;
+        if (dateComparison !== 0) {
+          return dateComparison;
+        }
+
+        const aTime =
+          a.starttijd || "99:99";
+
+        const bTime =
+          b.starttijd || "99:99";
+
+        return aTime.localeCompare(bTime);
+      });
+
+    if (!upcomingItems.length) {
+      list.innerHTML = `
+        <div class="text-muted">
+          Er staan geen komende bestuursitems gepland.
+        </div>
+      `;
+
       return;
     }
 
-    // Sorteer op "laatst gewijzigd"
-    const sorted = all
-      .map((i) => ({ ...i, _updatedMs: getUpdatedMs(i) }))
-      .sort((a, b) => (b._updatedMs || 0) - (a._updatedMs || 0));
+    const selected =
+      upcomingItems.slice(0, MAX_ITEMS);
 
-    // 14-dagen venster als hoofdselectie
-    const recent = sorted.filter((i) => now - (i._updatedMs || 0) <= MAX_AGE);
+    selected.forEach(item => {
+      const row =
+        document.createElement("div");
 
-    // Altijd minimaal 1 item: als er niks recent is, pak de meest recente (ook als ouder)
-    const selected = (recent.length ? recent : sorted).slice(0, MAX_ITEMS);
-
-    selected.forEach((i) => {
-      const row = document.createElement("div");
       row.className = "meldingen-row";
       row.style.cursor = "pointer";
 
-      const changedLabel =
-        now - (i._updatedMs || 0) <= MAX_AGE ? "" : " (ouder)";
+      const formattedDate =
+        formatDateDisplay(item.datum);
+
+      const formattedTime =
+        formatBestuursTijd(item);
+
+      const dateAndTime = formattedTime
+        ? `${formattedDate} · ${formattedTime}`
+        : formattedDate;
 
       row.innerHTML = `
-        <div class="meldingen-label">📌 ${i.titel || "(zonder titel)"}</div>
+        <div class="meldingen-label">
+          📌 ${item.titel || "(zonder titel)"}
+        </div>
+
         <div class="meldingen-sub">
-          ${(i.type || "Bestuur")} · gewijzigd ${formatUpdatedNL(i._updatedMs)}${changedLabel}
+          ${dateAndTime}
+          · ${formatBestuursType(item.type)}
         </div>
       `;
 
       row.onclick = () => {
-        window.location.href = `bestuur.html#item=${i.id}`;
+        window.location.href =
+          `bestuur.html#item=${item.id}`;
       };
 
       list.appendChild(row);
     });
-  } catch (err) {
-    console.error("Fout bij laden bestuurs-highlights:", err);
-    // Laat het vak staan met foutmelding ipv verdwijnen
-    try {
-      list.innerHTML = `<div class="text-muted">Kon bestuursitems niet laden.</div>`;
-      section.classList.remove("hidden");
-    } catch { }
+
+  } catch (error) {
+    console.error(
+      "Fout bij laden bestuursitems:",
+      error
+    );
+
+    list.innerHTML = `
+      <div class="text-muted">
+        Kon bestuursitems niet laden.
+      </div>
+    `;
+
+    section.classList.remove("hidden");
   }
 }
 

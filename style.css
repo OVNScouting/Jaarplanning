@@ -211,12 +211,12 @@ body {
 
 .primary-btn:hover,
 .pill-btn.primary:hover {
-  background: #0059d4;
+  background: var(--blue-hover);
   transform: translateY(-1px);
 }
 
 .pill-btn.outline {
-  background: #fff;
+  background: var(--card);
   color: var(--blue);
   border: 1px solid var(--blue);
 }
@@ -231,11 +231,10 @@ body {
 
 /* default pill (als je alleen .pill-btn gebruikt) */
 .pill-btn:not(.primary):not(.outline):not(.success):not(.danger) {
-  background: #f3f4f6;
-  color: #111827;
+  background: var(--card-secondary);
+  color: var(--text-main);
   border: 1px solid var(--border);
 }
-
 /* success/danger voor acties (approve/reject) */
 .pill-btn.success {
   background: #16a34a;
@@ -929,18 +928,20 @@ tr.row-grey>.col-datum {
 .modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, .4);
+  background: var(--overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
   overflow-y: auto;
-  z-index: 2000;
+  z-index: 3000;
 }
 
 .modal-content {
-  background: white;
+  background: var(--card);
+  color: var(--text-main);
   padding: 1.5rem;
+  border: 1px solid var(--border);
   border-radius: 14px;
 
   width: min(420px, 100%);
@@ -951,7 +952,7 @@ tr.row-grey>.col-datum {
   overflow-y: auto;
   overscroll-behavior: contain;
 
-  box-shadow: 0 6px 20px rgba(0, 0, 0, .15);
+  box-shadow: var(--modal-shadow);
 }
 
 .modal-content input,
@@ -979,6 +980,7 @@ tr.row-grey>.col-datum {
   position: relative;
   width: min(600px, 100%);
 }
+
 /* ============================================================
    ACCOUNT REQUEST MODAL — professionele layout
 ============================================================ */
@@ -2049,12 +2051,38 @@ tr.approved {
    ROOT VARIABELEN
 ============================================================ */
 :root {
+  color-scheme: light;
+
   --bg: #f5f7fb;
   --card: #ffffff;
+  --card-secondary: #f8fafc;
+  --card-hover: #f1f5f9;
 
   --blue: #006fff;
+  --blue-hover: #0059d4;
   --blue-soft: #e4f0ff;
   --accent: #ffcd59;
+
+  --text-main: #111827;
+  --text-muted: #6b7280;
+  --text-soft: #94a3b8;
+
+  --border: #ababad;
+  --border-strong: #021328;
+
+  --input-bg: #ffffff;
+  --input-text: #111827;
+  --input-placeholder: #7c8491;
+  --input-disabled-bg: #f9fafb;
+
+  --table-header-bg: #ffffff;
+  --table-even-bg: #f8fafc;
+  --table-hover-bg: #eff6ff;
+
+  --overlay-bg: rgba(15, 23, 42, 0.55);
+
+  --scroll-track: #dae7ff;
+  --scroll-thumb: #006fff;
 
   --opkomst-geen: #f43e3e;
   --opkomst-geen-bg: #f7d4d4;
@@ -2071,17 +2099,83 @@ tr.approved {
   --opkomst-kamp: #ffe066;
   --opkomst-kamp-bg: #fbfcd5;
 
-  --text-main: #111827;
-  --text-muted: #6b7280;
+  --danger-soft: #fee2e2;
+  --danger-text: #b91c1c;
 
-  --border: #ababad;
-  --border-strong: #021328;
+  --success-soft: #dcfce7;
+  --success-text: #166534;
 
-  --shadow: 0 6px 18px rgba(15, 23, 42, .08);
+  --shadow:
+    0 6px 18px rgba(15, 23, 42, 0.08);
+
+  --modal-shadow:
+    0 18px 50px rgba(15, 23, 42, 0.22);
 
   --radius: 14px;
   --radius-small: 8px;
   --radius-large: 25px;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #0f172a;
+  --card: #172033;
+  --card-secondary: #1e293b;
+  --card-hover: #263449;
+
+  --blue: #60a5fa;
+  --blue-hover: #93c5fd;
+  --blue-soft: rgba(59, 130, 246, 0.18);
+  --accent: #facc15;
+
+  --text-main: #f1f5f9;
+  --text-muted: #a7b1c2;
+  --text-soft: #7f8ba0;
+
+  --border: #46536a;
+  --border-strong: #8fa0b8;
+
+  --input-bg: #111827;
+  --input-text: #f1f5f9;
+  --input-placeholder: #8995a8;
+  --input-disabled-bg: #1b2536;
+
+  --table-header-bg: #202c40;
+  --table-even-bg: #192438;
+  --table-hover-bg: #263955;
+
+  --overlay-bg: rgba(2, 6, 23, 0.76);
+
+  --scroll-track: #27354c;
+  --scroll-thumb: #60a5fa;
+
+  --opkomst-geen: #fb7185;
+  --opkomst-geen-bg: #4a2029;
+
+  --opkomst-volgende: #4ade80;
+  --opkomst-volgende-bg: #173b28;
+
+  --opkomst-verleden: #94a3b8;
+  --opkomst-verleden-bg: #303948;
+
+  --opkomst-bijzonder: #22d3ee;
+  --opkomst-bijzonder-bg: #153b47;
+
+  --opkomst-kamp: #facc15;
+  --opkomst-kamp-bg: #493d16;
+
+  --danger-soft: #4a2029;
+  --danger-text: #fda4af;
+
+  --success-soft: #173b28;
+  --success-text: #86efac;
+
+  --shadow:
+    0 8px 24px rgba(0, 0, 0, 0.3);
+
+  --modal-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.48);
 }
 
 .legend-container {
@@ -2246,6 +2340,7 @@ tr.row-activiteit {
   cursor: pointer;
   text-align: center;
 }
+
 .modal-close-btn {
   position: absolute;
   top: 12px;
@@ -2266,6 +2361,7 @@ tr.row-activiteit {
   background: #f1f5f9;
   color: var(--text-main);
 }
+
 .bug-modal-actions {
   display: flex;
   align-items: center;
@@ -2276,6 +2372,7 @@ tr.row-activiteit {
 .bug-modal-actions button {
   flex: 1 1 160px;
 }
+
 #seizoenFilterContainer {
   display: inline-flex;
   flex-direction: column;
@@ -2283,6 +2380,7 @@ tr.row-activiteit {
   gap: 0.2rem;
   margin-right: 0.5rem;
 }
+
 /* ============================================================
    BEVESTIGINGSMODAL
 ============================================================ */
@@ -2335,4 +2433,481 @@ tr.row-activiteit {
 
 .confirm-modal-actions button {
   min-width: 140px;
+}
+/* ============================================================
+   ALGEMENE FORMULIERVELDEN — THEMAONAFHANKELIJK
+============================================================ */
+
+input,
+select,
+textarea,
+.rich-editor,
+.cell-input,
+.cell-select,
+.cell-textarea {
+  background: var(--input-bg);
+  color: var(--input-text);
+  border-color: var(--border);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--input-placeholder);
+  opacity: 1;
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled,
+input[readonly],
+textarea[readonly] {
+  background: var(--input-disabled-bg);
+  color: var(--text-muted);
+}
+
+select {
+  color-scheme: inherit;
+}
+
+option {
+  background: var(--input-bg);
+  color: var(--input-text);
+}
+/* ======================================================================
+   DARK MODE — ALGEMENE COMPONENTEN
+   ====================================================================== */
+
+html,
+body {
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text-main);
+}
+
+body,
+.topbar,
+.info-block,
+.planning-section,
+.ledenbeheer,
+.meldingen,
+.modal-content,
+.card,
+.dashboard-overview,
+#userSidePanel {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* ------------------------------
+   Themaknop
+------------------------------ */
+
+.theme-toggle {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+
+  background: var(--card-secondary);
+  color: var(--text-main);
+
+  font-size: 1.05rem;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.theme-toggle:hover {
+  background: var(--blue-soft);
+  border-color: var(--blue);
+  transform: translateY(-1px);
+}
+
+.theme-toggle:focus-visible {
+  outline: 3px solid rgba(96, 165, 250, 0.35);
+  outline-offset: 2px;
+}
+
+.theme-toggle-fallback {
+  margin-left: auto;
+}
+
+/* ------------------------------
+   Topbar en tekst
+------------------------------ */
+
+html[data-theme="dark"] .topbar {
+  background: var(--card);
+  border-bottom-color: var(--border);
+  box-shadow: var(--shadow);
+}
+
+html[data-theme="dark"] .topbar-title h1,
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] label,
+html[data-theme="dark"] strong {
+  color: var(--text-main);
+}
+
+html[data-theme="dark"] .text-muted,
+html[data-theme="dark"] .topbar-title span,
+html[data-theme="dark"] .legend-container,
+html[data-theme="dark"] .meldingen-sub,
+html[data-theme="dark"] .account-section-title {
+  color: var(--text-muted);
+}
+
+/* ------------------------------
+   Kaarten en secties
+------------------------------ */
+
+html[data-theme="dark"] .info-block,
+html[data-theme="dark"] .planning-section,
+html[data-theme="dark"] .ledenbeheer,
+html[data-theme="dark"] .meldingen,
+html[data-theme="dark"] .card {
+  background: var(--card);
+  color: var(--text-main);
+  border-color: var(--border);
+  box-shadow: var(--shadow);
+}
+
+/* ------------------------------
+   Knoppen
+------------------------------ */
+
+html[data-theme="dark"] .pill-btn.outline {
+  background: transparent;
+  color: var(--blue);
+  border-color: var(--blue);
+}
+
+html[data-theme="dark"] .pill-btn.outline:hover {
+  background: var(--blue-soft);
+}
+
+html[data-theme="dark"]
+.pill-btn:not(.primary):not(.outline):not(.success):not(.danger) {
+  background: var(--card-secondary);
+  color: var(--text-main);
+  border-color: var(--border);
+}
+
+html[data-theme="dark"]
+.pill-btn:not(.primary):not(.outline):not(.success):not(.danger):hover {
+  background: var(--card-hover);
+}
+
+html[data-theme="dark"] .close-section,
+html[data-theme="dark"] .modal-close-btn {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+html[data-theme="dark"] .close-section:hover,
+html[data-theme="dark"] .modal-close-btn:hover {
+  background: var(--card-hover);
+  color: var(--text-main);
+}
+
+/* ------------------------------
+   Filters
+------------------------------ */
+
+html[data-theme="dark"] .chip {
+  background: var(--card-secondary);
+  color: var(--text-main);
+  border-color: transparent;
+}
+
+html[data-theme="dark"] .chip:hover {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+html[data-theme="dark"] .chip.active {
+  background: var(--blue);
+  color: #08111f;
+}
+
+/* ------------------------------
+   Tabellen
+------------------------------ */
+
+html[data-theme="dark"] .planning-table,
+html[data-theme="dark"] .dashboard-table {
+  color: var(--text-main);
+}
+
+html[data-theme="dark"] .planning-table th,
+html[data-theme="dark"] .dashboard-table th {
+  background: var(--table-header-bg);
+  color: var(--text-main);
+  border-color: var(--border);
+}
+
+html[data-theme="dark"] .planning-table td,
+html[data-theme="dark"] .dashboard-table td {
+  color: var(--text-main);
+  border-color: var(--border);
+}
+
+html[data-theme="dark"] .col-datum {
+  background: var(--card);
+}
+
+html[data-theme="dark"] tr.row-totals {
+  background: var(--card-secondary);
+}
+
+html[data-theme="dark"] .col-divider {
+  background: #526078;
+}
+
+html[data-theme="dark"] .name-vertical {
+  color: var(--text-main);
+}
+
+html[data-theme="dark"]
+.dashboard-table tbody tr:nth-child(even) {
+  background: var(--table-even-bg);
+}
+
+html[data-theme="dark"]
+.dashboard-table tbody tr:hover {
+  background: var(--table-hover-bg);
+}
+
+html[data-theme="dark"]
+.dashboard-table td:empty::after {
+  color: var(--text-soft);
+}
+
+/* Sticky datumkleur bij rijkleuren */
+
+html[data-theme="dark"]
+tr.row-bijzonder > .col-datum {
+  background: var(--opkomst-bijzonder-bg) !important;
+}
+
+html[data-theme="dark"]
+tr.row-kamp > .col-datum {
+  background: var(--opkomst-kamp-bg) !important;
+}
+
+html[data-theme="dark"]
+tr.row-geenopkomst > .col-datum {
+  background: var(--opkomst-geen-bg) !important;
+}
+
+html[data-theme="dark"]
+tr.row-next > .col-datum {
+  background: var(--opkomst-volgende-bg) !important;
+}
+
+html[data-theme="dark"]
+tr.row-grey > .col-datum {
+  background: var(--opkomst-verleden-bg) !important;
+}
+
+/* ------------------------------
+   Bestuursagenda
+------------------------------ */
+
+html[data-theme="dark"] tr.row-verleden {
+  background-color: var(--opkomst-verleden-bg);
+  border-left-color: var(--opkomst-verleden);
+}
+
+html[data-theme="dark"] tr.row-eerstvolgende {
+  background-color: var(--opkomst-volgende-bg);
+  border-left-color: var(--opkomst-volgende);
+}
+
+html[data-theme="dark"] tr.row-groepsraad {
+  background-color: rgba(96, 165, 250, 0.16);
+  border-left-color: #60a5fa;
+}
+
+html[data-theme="dark"] tr.row-bestuursvergadering {
+  background-color: rgba(251, 146, 60, 0.16);
+  border-left-color: #fb923c;
+}
+
+html[data-theme="dark"] tr.row-activiteit {
+  background-color: rgba(244, 114, 182, 0.16);
+  border-left-color: #f472b6;
+}
+
+/* ------------------------------
+   Legenda
+------------------------------ */
+
+html[data-theme="dark"] .legend-box {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+html[data-theme="dark"] .legend-box.dot-eerstvolgende,
+html[data-theme="dark"] .legend-box.dot-verleden,
+html[data-theme="dark"] .legend-box.dot-bijzonder,
+html[data-theme="dark"] .legend-box.dot-kamp,
+html[data-theme="dark"] .legend-box.dot-geen {
+  background-color: var(--card-secondary);
+}
+
+/* ------------------------------
+   Rich-texteditor
+------------------------------ */
+
+html[data-theme="dark"] #infoEditorToolbar button {
+  background: var(--card-secondary);
+  color: var(--text-main);
+  border-color: var(--border);
+}
+
+html[data-theme="dark"] #infoEditorToolbar button:hover {
+  background: var(--card-hover);
+}
+
+html[data-theme="dark"] .rich-editor {
+  background: var(--input-bg);
+  color: var(--input-text);
+}
+
+/* ------------------------------
+   Modals
+------------------------------ */
+
+html[data-theme="dark"] .modal {
+  background: var(--overlay-bg);
+}
+
+html[data-theme="dark"] .modal-content {
+  background: var(--card);
+  color: var(--text-main);
+  border-color: var(--border);
+  box-shadow: var(--modal-shadow);
+}
+
+html[data-theme="dark"] .confirm-modal-icon-danger {
+  background: var(--danger-soft);
+  color: var(--danger-text);
+}
+
+html[data-theme="dark"] #modalBugEmail[readonly] {
+  background: var(--input-disabled-bg) !important;
+  color: var(--text-muted) !important;
+}
+
+/* ------------------------------
+   Native dialog
+------------------------------ */
+
+html[data-theme="dark"] dialog {
+  background: var(--card);
+  color: var(--text-main);
+  border-color: var(--border);
+  box-shadow: var(--modal-shadow);
+}
+
+html[data-theme="dark"] dialog::backdrop {
+  background: var(--overlay-bg);
+}
+
+/* ------------------------------
+   Sidebar en admin
+------------------------------ */
+
+html[data-theme="dark"] #userSidePanel {
+  background: var(--card);
+  color: var(--text-main);
+  border-color: var(--border);
+}
+
+html[data-theme="dark"] #userSidePanel.is-busy::after {
+  background: rgba(23, 32, 51, 0.72);
+}
+
+/* ------------------------------
+   Scrollbars
+------------------------------ */
+
+html[data-theme="dark"] .table-h-scroll {
+  background: rgba(23, 32, 51, 0.96);
+  border: 1px solid var(--border);
+}
+
+html[data-theme="dark"]
+.table-h-scroll::-webkit-scrollbar-track {
+  background: var(--scroll-track);
+}
+
+html[data-theme="dark"]
+.table-h-scroll::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+}
+
+/* ------------------------------
+   Statusbadges
+------------------------------ */
+
+html[data-theme="dark"] .status-active,
+html[data-theme="dark"] .status-approved {
+  background: var(--success-soft);
+  color: var(--success-text);
+  border-color: #3f8d61;
+}
+
+html[data-theme="dark"] .status-inactive,
+html[data-theme="dark"] .status-rejected {
+  background: var(--card-secondary);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
+html[data-theme="dark"] .status-pending {
+  background: #493516;
+  color: #fde68a;
+  border-color: #926f28;
+}
+
+/* ------------------------------
+   Horizontale datum- en tekstvelden
+------------------------------ */
+
+html[data-theme="dark"] .date-weekday {
+  color: var(--text-muted);
+}
+
+/* ------------------------------
+   Firefox-scrollbars
+------------------------------ */
+
+html[data-theme="dark"] * {
+  scrollbar-color:
+    var(--scroll-thumb)
+    var(--scroll-track);
+}
+.bug-modal-title {
+  margin-top: 0;
+  padding-right: 30px;
+  color: var(--text-main);
 }

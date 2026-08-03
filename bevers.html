@@ -7,7 +7,7 @@
   <title>Bevers – Jaarplanning & Aanwezigheid</title>
   <link rel="icon" href="assets/OVN.logo.png" type="image/png">
 
-
+  <script src="generaltheme.js"></script>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="mobile.css" />
 </head>
@@ -286,7 +286,7 @@
 
         <!-- Locatie reserveren -->
         <label for="opLocatie">Locatie reserveren:</label>
-         <select id="opLocatie">
+        <select id="opLocatie">
           <option value="">Selecteer…</option>
           <option value="Kampvuurkuil">Kampvuurkuil</option>
           <option value="Zandveld">Zandveld</option>
@@ -349,49 +349,37 @@
       }
     });
   </script>
-<!-- ============================================================
+  <!-- ============================================================
      MODAL — Opkomst verwijderen
 ============================================================ -->
-<div id="deleteOpkomstModal" class="modal hidden">
-  <div
-    class="modal-content confirm-modal-content"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="deleteOpkomstTitle"
-  >
-    <div class="confirm-modal-icon confirm-modal-icon-danger">
-      🗑️
-    </div>
+  <div id="deleteOpkomstModal" class="modal hidden">
+    <div class="modal-content confirm-modal-content" role="dialog" aria-modal="true"
+      aria-labelledby="deleteOpkomstTitle">
+      <div class="confirm-modal-icon confirm-modal-icon-danger">
+        🗑️
+      </div>
 
-    <h3 id="deleteOpkomstTitle">Opkomst verwijderen?</h3>
+      <h3 id="deleteOpkomstTitle">Opkomst verwijderen?</h3>
 
-    <p id="deleteOpkomstText" class="confirm-modal-text">
-      Weet je zeker dat je deze opkomst wilt verwijderen?
-    </p>
+      <p id="deleteOpkomstText" class="confirm-modal-text">
+        Weet je zeker dat je deze opkomst wilt verwijderen?
+      </p>
 
-    <p class="confirm-modal-note">
-      Je kunt deze actie kort na het verwijderen nog ongedaan maken.
-    </p>
+      <p class="confirm-modal-note">
+        Je kunt deze actie kort na het verwijderen nog ongedaan maken.
+      </p>
 
-    <div class="modal-actions confirm-modal-actions">
-      <button
-        id="cancelDeleteOpkomst"
-        type="button"
-        class="pill-btn outline"
-      >
-        Annuleren
-      </button>
+      <div class="modal-actions confirm-modal-actions">
+        <button id="cancelDeleteOpkomst" type="button" class="pill-btn outline">
+          Annuleren
+        </button>
 
-      <button
-        id="confirmDeleteOpkomst"
-        type="button"
-        class="pill-btn danger"
-      >
-        Opkomst verwijderen
-      </button>
+        <button id="confirmDeleteOpkomst" type="button" class="pill-btn danger">
+          Opkomst verwijderen
+        </button>
+      </div>
     </div>
   </div>
-</div>
 
   <!-- ============================================================
      MODAL — Nest wisselen bevestigen
@@ -436,7 +424,9 @@
       <button id="closeBugModalBtn" class="modal-close-btn" type="button" aria-label="Sluiten">
         &times;
       </button>
-      <h2 style="margin-top: 0; color: var(--text-main); padding-right: 30px;">Meld een probleem of idee!</h2>
+      <h2 class="bug-modal-title">
+        Meld een probleem of idee!
+      </h2>
       <p class="text-muted">Loop je ergens tegenaan op de website? Laat het hieronder weten.</p>
 
       <form id="modalBugForm" style="display: flex; flex-direction: column; gap: 20px; margin-top: 20px;">
@@ -459,8 +449,7 @@ Wat deed je, waar klikte je op, wat had er moeten gebeuren?"
         <div>
           <label for="modalBugEmail" style="display: block; font-weight: 600; margin-bottom: 8px;">Jouw
             e-mailadres:</label>
-          <input type="email" id="modalBugEmail" readonly placeholder="Automatisch ingevuld indien ingelogd"
-            style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-small); background: #f9fafb; color: var(--text-muted); font-size: 14px;">
+          <input type="email" id="modalBugEmail" readonly placeholder="Automatisch ingevuld indien ingelogd">
         </div>
 
         <div class="bug-modal-actions"> <button type="submit" class="primary-btn"

@@ -364,11 +364,67 @@ const fab = document.getElementById("fabAddOpkomst");
 const logoutButton = document.getElementById("logoutButton");
 
 opType?.addEventListener("change", () => {
-    if (opType.value === "kamp") {
-        opEindDatumWrapper?.classList.remove("hidden");
+    const isKamp = opType.value === "kamp";
+
+    opEindDatumWrapper?.classList.toggle(
+        "hidden",
+        !isKamp
+    );
+
+    if (!opEindDatum) return;
+
+    if (isKamp) {
+        /*
+         * De einddatum mag niet vóór de
+         * begindatum liggen.
+         */
+        opEindDatum.min = opDatum?.value || "";
+
+        /*
+         * Alleen automatisch invullen wanneer
+         * de einddatum nog leeg is.
+         *
+         * Daardoor opent de datumkiezer direct
+         * bij de gekozen begindatum.
+         */
+        if (!opEindDatum.value && opDatum?.value) {
+            opEindDatum.value = opDatum.value;
+        }
     } else {
-        opEindDatumWrapper?.classList.add("hidden");
-        if (opEindDatum) opEindDatum.value = "";
+        opEindDatum.value = "";
+        opEindDatum.removeAttribute("min");
+    }
+});
+
+opDatum?.addEventListener("change", () => {
+    if (
+        opType?.value !== "kamp" ||
+        !opEindDatum
+    ) {
+        return;
+    }
+
+    const nieuweBegindatum = opDatum.value;
+
+    /*
+     * De einddatum kan nooit vóór
+     * de begindatum worden gekozen.
+     */
+    opEindDatum.min = nieuweBegindatum;
+
+    /*
+     * Corrigeer de einddatum wanneer:
+     * - hij nog leeg is;
+     * - of hij vóór de nieuwe begindatum ligt.
+     */
+    if (
+        nieuweBegindatum &&
+        (
+            !opEindDatum.value ||
+            opEindDatum.value < nieuweBegindatum
+        )
+    ) {
+        opEindDatum.value = nieuweBegindatum;
     }
 });
 
@@ -2556,9 +2612,23 @@ function openEditOpkomstModal(opkomst) {
         opEindDatumWrapper.classList.toggle("hidden", !isKamp);
     }
 
-    if (opEindDatum) {
-        opEindDatum.value = isKamp ? (opkomst.einddatum || "") : "";
+   if (opEindDatum) {
+    if (isKamp) {
+        const begindatum =
+            opDatum?.value ||
+            opkomst.datum ||
+            "";
+
+        opEindDatum.min = begindatum;
+
+        opEindDatum.value =
+            opkomst.einddatum ||
+            begindatum;
+    } else {
+        opEindDatum.value = "";
+        opEindDatum.removeAttribute("min");
     }
+}
 
     opModal.classList.remove("hidden");
 }
@@ -2579,6 +2649,17 @@ saveOpkomst?.addEventListener("click", async () => {
         alert("Datum is verplicht.");
         return;
     }
+    if (
+    opType.value === "kamp" &&
+    opEindDatum?.value &&
+    opEindDatum.value < opDatum.value
+) {
+    await toonMelding(
+        "Ongeldige einddatum",
+        "De einddatum van een kamp kan niet vóór de begindatum liggen."
+    );
+    return;
+}
 
     const bestaandeOpkomst = editingOpkomstId
         ? opkomsten.find(o => o.id === editingOpkomstId)

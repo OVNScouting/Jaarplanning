@@ -485,7 +485,19 @@ body {
 ============================================================ */
 .table-wrapper {
   overflow-x: auto;
-  border-radius: var(--radius-small);
+
+  background: var(--card);
+
+  border: 1px solid var(--border);
+  border-radius: 12px;
+
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+
+  /*
+   * Zorgt ervoor dat tabelachtergronden
+   * niet buiten de afgeronde hoeken komen.
+   */
+  overflow-y: hidden;
 }
 
 /* Native horizontale scrollbar van de tabel verbergen –
@@ -504,16 +516,65 @@ body {
 
 .planning-table {
   width: 100%;
-  border-collapse: collapse;
+
+  border-collapse: separate;
+  border-spacing: 0;
+
+  background: var(--card);
+  color: var(--text-main);
+
   font-size: 0.88rem;
 }
 
 .planning-table th,
 .planning-table td {
-  border: 1px solid var(--border);
-  padding: 0.35rem 0.45rem;
+  padding: 0.48rem 0.55rem;
+
   text-align: center;
   vertical-align: middle;
+
+  color: var(--text-main);
+
+  /*
+   * Rustiger dan een volledige rand
+   * rondom iedere losse cel.
+   */
+  border: 0;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+
+  overflow: hidden;
+}
+
+/*
+ * De wrapper verzorgt de buitenrand.
+ * Daarom hoeft de laatste cel geen extra rechterrand te hebben.
+ */
+.planning-table tr > :last-child {
+  border-right: 0;
+}
+.planning-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.planning-table thead tr:first-child th:first-child {
+  border-top-left-radius: 11px;
+}
+
+.planning-table thead tr:first-child th:last-child {
+  border-top-right-radius: 11px;
+}
+
+.planning-table thead tr:first-child th:first-child {
+  border-top-left-radius: 11px;
+}
+
+.planning-table thead tr:first-child th:last-child {
+  border-top-right-radius: 11px;
+}
+
+
+.planning-table tbody tr:hover {
+  box-shadow: inset 3px 0 0 var(--blue);
 }
 
 /* Datum sticky */
@@ -527,8 +588,20 @@ body {
 .col-datum {
   position: sticky;
   left: 0;
+
   background: var(--card);
+
+  border-right: 1px solid var(--border) !important;
+
+  font-weight: 600;
+
   z-index: 5;
+
+  /*
+   * Maakt bij horizontaal scrollen duidelijk
+   * waar de vaste datumkolom eindigt.
+   */
+  box-shadow: 4px 0 8px rgba(15, 23, 42, 0.05);
 }
 
 /* Weekdagafkorting in datumcel */
@@ -578,12 +651,24 @@ body.mode-bewerken .col-datum {
 }
 
 
-/* Presence */
-/* Presence */
+
 .presence-cell {
+  min-width: 36px;
+  padding: 0.42rem 0.3rem !important;
+
   cursor: pointer;
+
   font-size: 1.05rem;
   font-weight: 600;
+
+  text-align: center;
+  vertical-align: middle;
+}
+
+.planning-table .presence-cell,
+.planning-table th.col-jeugd,
+.planning-table th.col-leiding {
+  border-right: 1px solid var(--border);
 }
 
 .presence-aanwezig {
@@ -601,14 +686,22 @@ body.mode-bewerken .col-datum {
 /* ? grijs */
 
 
-/* Totals row onderaan */
 tr.row-totals {
-  background: #f8fafc;
+  background: var(--card-secondary);
   font-weight: 700;
 }
 
 tr.row-totals td {
   border-top: 2px solid var(--border);
+  border-bottom: 0;
+}
+
+tr.row-totals td:first-child {
+  border-bottom-left-radius: 11px;
+}
+
+tr.row-totals td:last-child {
+  border-bottom-right-radius: 11px;
 }
 
 tr.row-totals td.totals-label {
@@ -733,33 +826,38 @@ tr.row-grey>.col-datum {
   box-shadow: 0 0 0 2px var(--blue-soft);
 }
 
-.planning-table th,
-.planning-table td {
-  border: 1px solid var(--border);
-  padding: 0.35rem 0.45rem;
-  text-align: center;
-  vertical-align: middle;
-  overflow: hidden;
-  /* <-- VOEG DIT TOE */
-}
+
 
 /* Hide elements for parents */
 .hide-view {
   display: none !important;
 }
-
 .table-h-scroll {
   position: fixed;
   bottom: 8px;
+
   z-index: 1000;
-  background: rgba(255, 255, 255, 0.95);
+
+  background: color-mix(
+    in srgb,
+    var(--card) 94%,
+    transparent
+  );
+
   padding: 4px 0;
+
+  border: 1px solid var(--border);
   border-radius: 999px;
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+
+  box-shadow:
+    0 6px 18px rgba(15, 23, 42, 0.16);
+
+  backdrop-filter: blur(6px);
 
   /* Alleen left en width worden via JS gezet */
   overflow-x: auto;
   overflow-y: hidden;
+
   display: none;
 }
 
@@ -1098,6 +1196,21 @@ tr.row-grey>.col-datum {
   border: 2px dashed var(--accent, #888);
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.15);
+}
+
+.planning-table .col-thema,
+.planning-table .col-bijzonderheden,
+.planning-table .col-notities,
+.planning-table .col-materiaal,
+.planning-table .col-bert {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
+
+.planning-table .col-notities {
+  min-width: 180px;
+  max-width: 280px;
 }
 
 /* ============================================================
@@ -2798,6 +2911,9 @@ html[data-theme="dark"] .dashboard-table td {
 
 html[data-theme="dark"] .col-datum {
   background: var(--card);
+
+  box-shadow:
+    5px 0 10px rgba(0, 0, 0, 0.18);
 }
 
 html[data-theme="dark"] tr.row-totals {

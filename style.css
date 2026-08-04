@@ -1668,14 +1668,18 @@ th[class^="ploeg-"]::after {
   color: var(--text-primary, #222);
 }
 
-/* Tabel */
 .dashboard-table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
+
+  background: var(--card);
+  color: var(--text-main);
+
+  border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  box-shadow: var(--shadow);
   margin-bottom: 1.5rem;
 }
 
@@ -1726,42 +1730,51 @@ th[class^="ploeg-"]::after {
   /* Bijzonderheden */
 }
 
-/* Lege dashboard-cellen subtiel maken */
 .dashboard-table td:empty::after {
   content: "—";
-  color: #cbd5e1;
+  color: var(--text-soft);
   font-weight: 400;
 }
 
 
-/* Header */
 .dashboard-table thead th {
-  background: #f4f6f8;
-  color: #444;
+  background: var(--table-header-bg);
+  color: var(--text-main);
+
   font-weight: 600;
   font-size: 0.85rem;
   text-align: left;
+
   padding: 0.6rem 0.7rem;
-  border-bottom: 1px solid #e0e0e0;
+
+  border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
 
-/* Cell */
 .dashboard-table td {
   padding: 0.55rem 0.7rem;
+
+  color: var(--text-main);
   font-size: 0.85rem;
-  border-bottom: 1px solid #eee;
+
+  border-bottom: 1px solid var(--border);
   vertical-align: top;
+}
+
+/* Alle gewone dashboardregels */
+.dashboard-table tbody tr {
+  background: var(--card);
+  color: var(--text-main);
 }
 
 /* Zebra striping */
 .dashboard-table tbody tr:nth-child(even) {
-  background: #fafafa;
+  background: var(--table-even-bg);
 }
 
-/* Hover (subtiel, read-only) */
+/* Hover */
 .dashboard-table tbody tr:hover {
-  background: #f1f5f9;
+  background: var(--table-hover-bg);
 }
 
 /* Speltak-kolom */
@@ -2796,6 +2809,12 @@ html[data-theme="dark"] .col-divider {
 }
 
 html[data-theme="dark"] .name-vertical {
+  color: var(--text-main);
+}
+
+html[data-theme="dark"]
+.dashboard-table tbody tr {
+  background: var(--card);
   color: var(--text-main);
 }
 

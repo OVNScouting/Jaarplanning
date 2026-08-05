@@ -495,51 +495,51 @@
             );
         }
 
-const accountRequestButton =
-    findFirstAvailableElement([
-        ".floating-account",
-        "#openAccountRequestModal",
-        "#openAccountModalBtn"
-    ]);
+        const accountRequestButton =
+            findFirstAvailableElement([
+                ".floating-account",
+                "#openAccountRequestModal",
+                "#openAccountModalBtn"
+            ]);
 
 
-if (accountRequestButton) {
-    menuItems.appendChild(
-        createMenuItem({
-            label: "Account aanvragen",
-            icon: "＋",
+        if (accountRequestButton) {
+            menuItems.appendChild(
+                createMenuItem({
+                    label: "Account aanvragen",
+                    icon: "＋",
 
-            onClick: () => {
-                clickOriginalElement(
-                    accountRequestButton
-                );
-            }
-        })
-    );
-}
-const problemButton =
-    findFirstAvailableElement([
-        "#openBugModalBtn",
-        ".bug-fab"
-    ]);
+                    onClick: () => {
+                        clickOriginalElement(
+                            accountRequestButton
+                        );
+                    }
+                })
+            );
+        }
+        const problemButton =
+            findFirstAvailableElement([
+                "#openBugModalBtn",
+                ".bug-fab"
+            ]);
 
 
-if (problemButton) {
-    menuItems.appendChild(
-        createMenuItem({
-            label:
-                "Probleem of idee melden",
+        if (problemButton) {
+            menuItems.appendChild(
+                createMenuItem({
+                    label:
+                        "Probleem of idee melden",
 
-            icon: "💬",
+                    icon: "💬",
 
-            onClick: () => {
-                clickOriginalElement(
-                    problemButton
-                );
-            }
-        })
-    );
-}
+                    onClick: () => {
+                        clickOriginalElement(
+                            problemButton
+                        );
+                    }
+                })
+            );
+        }
         /*
          * Mijn profiel.
          */
@@ -1037,20 +1037,20 @@ if (problemButton) {
             ]);
 
 
-      if (ledenbeheerButton) {
-    bottomNavigation.appendChild(
-        createBottomNavigationItem({
-            label: "Leden",
-            icon: "👥",
+        if (ledenbeheerButton) {
+            bottomNavigation.appendChild(
+                createBottomNavigationItem({
+                    label: "Leden",
+                    icon: "👥",
 
-            onClick: () => {
-                clickOriginalElement(
-                    ledenbeheerButton
-                );
-            }
-        })
-    );
-}
+                    onClick: () => {
+                        clickOriginalElement(
+                            ledenbeheerButton
+                        );
+                    }
+                })
+            );
+        }
 
 
         /*
@@ -1067,25 +1067,25 @@ if (problemButton) {
             ]);
 
 
-     if (addItemButton) {
-    bottomNavigation.appendChild(
-        createBottomNavigationItem({
-            label:
-                isBestuurPage
-                    ? "Nieuw item"
-                    : "Opkomst",
+        if (addItemButton) {
+            bottomNavigation.appendChild(
+                createBottomNavigationItem({
+                    label:
+                        isBestuurPage
+                            ? "Nieuw item"
+                            : "Opkomst",
 
-            icon: "＋",
-            primary: true,
+                    icon: "＋",
+                    primary: true,
 
-            onClick: () => {
-                clickOriginalElement(
-                    addItemButton
-                );
-            }
-        })
-    );
-}
+                    onClick: () => {
+                        clickOriginalElement(
+                            addItemButton
+                        );
+                    }
+                })
+            );
+        }
 
 
         /*
@@ -1303,142 +1303,450 @@ if (problemButton) {
         }
     }
 
-/* ================================================================
-   MODULE 4
-   INKLAPBARE MOBIELE LEGENDA
-================================================================ */
+    /* ================================================================
+       MODULE 4
+       INKLAPBARE MOBIELE LEGENDA
+    ================================================================ */
 
 
-/* ================================================================
-   LEGENDAKNOP AANMAKEN
-================================================================ */
+    /* ================================================================
+       LEGENDAKNOP AANMAKEN
+    ================================================================ */
 
-function createMobileLegendToggle(
-    planningHeaderRight
-) {
-    if (!planningHeaderRight) {
-        return;
-    }
+    function createMobileLegendToggle(
+        planningHeaderRight
+    ) {
+        if (!planningHeaderRight) {
+            return;
+        }
 
 
-    const legendContainer =
-        planningHeaderRight.querySelector(
-            ".legend-container"
+        const legendContainer =
+            planningHeaderRight.querySelector(
+                ".legend-container"
+            );
+
+
+        if (!legendContainer) {
+            return;
+        }
+
+
+        /*
+         * Voorkom dat dezelfde knop meerdere
+         * keren wordt aangemaakt.
+         */
+
+        if (
+            planningHeaderRight.querySelector(
+                ".mobile-legend-toggle"
+            )
+        ) {
+            return;
+        }
+
+
+        const toggleButton =
+            createElement(
+                "button",
+                {
+                    className:
+                        "mobile-legend-toggle",
+
+                    text:
+                        "Legenda tonen",
+
+                    attributes: {
+                        type: "button",
+
+                        "aria-expanded":
+                            "false",
+
+                        "aria-label":
+                            "Legenda van opkomstkleuren tonen"
+                    }
+                }
+            );
+
+
+        /*
+         * Plaats de knop vóór de bewerkknop.
+         */
+
+        const editButton =
+            planningHeaderRight.querySelector(
+                ".tabel-edit-btn, " +
+                ".primary-tabel-edit-btn, " +
+                "#editModeButton"
+            );
+
+
+        planningHeaderRight.insertBefore(
+            toggleButton,
+            editButton || legendContainer
         );
 
 
-    if (!legendContainer) {
-        return;
+        toggleButton.addEventListener(
+            "click",
+            () => {
+                const isOpen =
+                    planningHeaderRight
+                        .classList
+                        .toggle(
+                            "mobile-legend-open"
+                        );
+
+
+                toggleButton.textContent =
+                    isOpen
+                        ? "Legenda verbergen"
+                        : "Legenda tonen";
+
+
+                toggleButton.setAttribute(
+                    "aria-expanded",
+                    String(isOpen)
+                );
+
+
+                toggleButton.setAttribute(
+                    "aria-label",
+                    isOpen
+                        ? "Legenda van opkomstkleuren verbergen"
+                        : "Legenda van opkomstkleuren tonen"
+                );
+            }
+        );
     }
+
+
+    /* ================================================================
+       ALLE PLANNINGHEADERS CONTROLEREN
+    ================================================================ */
+
+    function initMobileLegends() {
+        document
+            .querySelectorAll(
+                ".planning-header-right"
+            )
+            .forEach(
+                createMobileLegendToggle
+            );
+    }
+
+    /* ================================================================
+       MODULE 5B
+       MOBIELE TABELSCROLL EN VEEGHINT
+    ================================================================ */
 
 
     /*
-     * Voorkom dat dezelfde knop meerdere
-     * keren wordt aangemaakt.
+     * Houdt bij welke wrappers al zijn ingesteld.
+     * Zo krijgen dynamisch opnieuw gerenderde tabellen
+     * geen dubbele listeners of meldingen.
      */
 
-    if (
-        planningHeaderRight.querySelector(
-            ".mobile-legend-toggle"
-        )
+    const enhancedMobileTableWrappers =
+        new WeakSet();
+
+
+    /* ================================================================
+       CONTROLEREN OF EEN TABEL ZIJWAARTS KAN SCROLLEN
+    ================================================================ */
+
+    function tableWrapperHasOverflow(
+        wrapper
     ) {
-        return;
+        return (
+            wrapper.scrollWidth >
+            wrapper.clientWidth + 4
+        );
     }
 
 
-    const toggleButton =
-        createElement(
-            "button",
-            {
-                className:
-                    "mobile-legend-toggle",
+    /* ================================================================
+       CONTROLEREN OF DE TABEL AAN HET EINDE STAAT
+    ================================================================ */
 
-                text:
-                    "Legenda tonen",
+    function updateMobileTableEdgeState(
+        wrapper
+    ) {
+        const remainingScroll =
+            wrapper.scrollWidth
+            -
+            wrapper.clientWidth
+            -
+            wrapper.scrollLeft;
 
-                attributes: {
-                    type: "button",
 
-                    "aria-expanded":
-                        "false",
+        wrapper.classList.toggle(
+            "mobile-scrolled-end",
+            remainingScroll <= 4
+        );
+    }
 
-                    "aria-label":
-                        "Legenda van opkomstkleuren tonen"
+
+    /* ================================================================
+       VEEGHINT VERWIJDEREN
+    ================================================================ */
+
+    function hideMobileTableHint(
+        wrapper
+    ) {
+        const hint =
+            wrapper.nextElementSibling;
+
+
+        if (
+            !hint ||
+            !hint.classList.contains(
+                "mobile-table-hint"
+            )
+        ) {
+            return;
+        }
+
+
+        hint.classList.add(
+            "is-hidden"
+        );
+
+
+        window.setTimeout(
+            () => {
+                hint.remove();
+            },
+            220
+        );
+    }
+
+
+    /* ================================================================
+       ÉÉN TABELWRAPPER INSTELLEN
+    ================================================================ */
+
+    function enhanceMobileTableWrapper(
+        wrapper
+    ) {
+        if (
+            !wrapper ||
+            enhancedMobileTableWrappers.has(
+                wrapper
+            )
+        ) {
+            return;
+        }
+
+
+        const planningTable =
+            wrapper.querySelector(
+                ".planning-table"
+            );
+
+
+        if (!planningTable) {
+            return;
+        }
+
+
+        enhancedMobileTableWrappers.add(
+            wrapper
+        );
+
+
+        const updateOverflowState = () => {
+            const hasOverflow =
+                tableWrapperHasOverflow(
+                    wrapper
+                );
+
+
+            wrapper.classList.toggle(
+                "mobile-has-overflow",
+                hasOverflow
+            );
+
+
+            updateMobileTableEdgeState(
+                wrapper
+            );
+
+
+            let hint =
+                wrapper.nextElementSibling;
+
+
+            const existingHintIsCorrect =
+                hint &&
+                hint.classList.contains(
+                    "mobile-table-hint"
+                );
+
+
+            /*
+             * Geen horizontale overflow:
+             * geen instructie nodig.
+             */
+
+            if (!hasOverflow) {
+                if (existingHintIsCorrect) {
+                    hint.remove();
                 }
+
+                return;
+            }
+
+
+            /*
+             * Alleen een nieuwe hint maken als
+             * er nog geen bestaat.
+             */
+
+            if (!existingHintIsCorrect) {
+                hint = createElement(
+                    "div",
+                    {
+                        className:
+                            "mobile-table-hint",
+
+                        text:
+                            "↔ Veeg zijwaarts voor meer",
+
+                        attributes: {
+                            "aria-hidden": "true"
+                        }
+                    }
+                );
+
+
+                wrapper.insertAdjacentElement(
+                    "afterend",
+                    hint
+                );
+            }
+        };
+
+
+        /*
+         * Bij scrollen de rechterrand bijwerken en
+         * de instructie laten verdwijnen.
+         */
+
+        wrapper.addEventListener(
+            "scroll",
+            () => {
+                updateMobileTableEdgeState(
+                    wrapper
+                );
+
+                hideMobileTableHint(
+                    wrapper
+                );
+            },
+            {
+                passive: true
             }
         );
 
 
-    /*
-     * Plaats de knop vóór de bewerkknop.
-     */
+        /*
+         * Ook bij aanraken mag de instructie verdwijnen.
+         */
 
-    const editButton =
-        planningHeaderRight.querySelector(
-            ".tabel-edit-btn, " +
-            ".primary-tabel-edit-btn, " +
-            "#editModeButton"
+        wrapper.addEventListener(
+            "pointerdown",
+            () => {
+                hideMobileTableHint(
+                    wrapper
+                );
+            },
+            {
+                passive: true,
+                once: true
+            }
         );
 
 
-    planningHeaderRight.insertBefore(
-        toggleButton,
-        editButton || legendContainer
-    );
+        requestAnimationFrame(
+            updateOverflowState
+        );
 
 
-    toggleButton.addEventListener(
-        "click",
-        () => {
-            const isOpen =
-                planningHeaderRight
-                    .classList
-                    .toggle(
-                        "mobile-legend-open"
-                    );
+        /*
+         * Reageer op schermrotatie of veranderende
+         * tabelbreedte.
+         */
+
+        if (
+            "ResizeObserver" in window
+        ) {
+            const resizeObserver =
+                new ResizeObserver(
+                    updateOverflowState
+                );
 
 
-            toggleButton.textContent =
-                isOpen
-                    ? "Legenda verbergen"
-                    : "Legenda tonen";
-
-
-            toggleButton.setAttribute(
-                "aria-expanded",
-                String(isOpen)
+            resizeObserver.observe(
+                wrapper
             );
 
 
-            toggleButton.setAttribute(
-                "aria-label",
-                isOpen
-                    ? "Legenda van opkomstkleuren verbergen"
-                    : "Legenda van opkomstkleuren tonen"
+            resizeObserver.observe(
+                planningTable
             );
         }
-    );
-}
+    }
 
 
-/* ================================================================
-   ALLE PLANNINGHEADERS CONTROLEREN
-================================================================ */
+    /* ================================================================
+       ALLE BESTAANDE TABELWRAPPERS INSTELLEN
+    ================================================================ */
 
-function initMobileLegends() {
-    document
-        .querySelectorAll(
-            ".planning-header-right"
-        )
-        .forEach(
-            createMobileLegendToggle
+    function initMobileTableScrolling() {
+        document
+            .querySelectorAll(
+                ".table-wrapper"
+            )
+            .forEach(
+                enhanceMobileTableWrapper
+            );
+    }
+
+
+    /* ================================================================
+       DYNAMISCH GERENDERDE TABELLEN VOLGEN
+    ================================================================ */
+
+    function observeMobileTables() {
+        const observer =
+            new MutationObserver(
+                () => {
+                    initMobileTableScrolling();
+                }
+            );
+
+
+        observer.observe(
+            document.body,
+            {
+                childList: true,
+                subtree: true
+            }
         );
-}
+    }
     /* ================================================================
        INITIALISATIE
     ================================================================ */
-
     function initMobileUI() {
+        const currentPage =
+            getCurrentPage()
+                .replace(".html", "");
+
+        document.body.dataset.mobilePage =
+            currentPage;
+
+
         document.documentElement.classList.add(
             "mobile-ui-ready"
         );
@@ -1448,8 +1756,8 @@ function initMobileLegends() {
         createMobileMenuButton();
         createMobileBottomNavigation();
         initMobileLegends();
-
-
+        initMobileTableScrolling();
+        observeMobileTables();
         observeTopbarChanges();
 
 

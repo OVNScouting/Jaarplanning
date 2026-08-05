@@ -6,11 +6,11 @@
   <title>Admin – OVN Scouting</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<script src="generaltheme.js"></script>
+  <script src="generaltheme.js"></script>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="mobile.css" />
 
-    <script src="mobile.js" defer></script>
+  <script src="mobile.js" defer></script>
 
 </head>
 
@@ -91,6 +91,7 @@
       <div style="display:flex;gap:1.5rem;align-items:flex-start;">
         <!-- USERS TABLE -->
         <div style="flex:2;min-width:0;">
+
           <table class="planning-table">
             <thead>
               <tr>
@@ -177,29 +178,300 @@
     </section>
 
 
-    <section class="planning-section">
-      <div class="section-header">
-        <h2>Accountaanvragen</h2>
-        <span class="text-muted">Nieuw</span>
+  <section
+  class="planning-section account-requests-section"
+  aria-labelledby="accountRequestsTitle"
+>
+  <div class="section-header">
+    <div>
+      <h2 id="accountRequestsTitle">Accountaanvragen</h2>
+      <p class="account-requests-subtitle">
+        Open een naam om de aanvraag te bekijken en te beoordelen.
+      </p>
+    </div>
+
+    <span
+      id="accountRequestCount"
+      class="account-request-count hidden"
+      aria-live="polite"
+    >
+      0
+    </span>
+  </div>
+
+  <div
+    id="accountRequestList"
+    class="account-request-list"
+    aria-live="polite"
+  >
+    <p class="account-request-empty">
+      Aanvragen laden…
+    </p>
+  </div>
+</section>
+
+
+<!-- ======================================================
+     MODAL ACCOUNTAANVRAAG
+======================================================= -->
+
+<div
+  id="accountRequestAdminModal"
+  class="modal hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="accountRequestModalTitle"
+>
+  <div class="modal-content account-request-detail-modal">
+
+    <button
+      id="closeAccountRequestModal"
+      class="account-request-modal-close"
+      type="button"
+      aria-label="Aanvraag sluiten"
+    >
+      ×
+    </button>
+
+    <div class="account-request-modal-header">
+      <div
+        class="account-request-modal-icon"
+        aria-hidden="true"
+      >
+        👤
       </div>
 
-      <table class="planning-table">
-        <thead>
-          <tr>
-            <th>Naam</th>
-            <th>Email</th>
-            <th>Rollen</th>
-            <th>Speltakken</th>
-            <th>Status</th>
-            <th>Aangemaakt</th>
-            <th>Acties</th>
-          </tr>
-        </thead>
+      <div>
+        <h2 id="accountRequestModalTitle">
+          Accountaanvraag
+        </h2>
 
-        <tbody id="accountRequestTable">
-        </tbody>
-      </table>
-    </section>
+        <p>
+          Controleer en corrigeer de gegevens voordat je de aanvraag goedkeurt.
+        </p>
+      </div>
+    </div>
+
+
+    <div
+      id="accountRequestModalError"
+      class="account-request-modal-error hidden"
+      role="alert"
+    ></div>
+
+
+    <div class="account-request-form-grid">
+
+      <div class="account-request-field account-request-field-full">
+        <label for="accountRequestName">
+          Volledige naam
+        </label>
+
+        <input
+          id="accountRequestName"
+          type="text"
+          autocomplete="name"
+        >
+      </div>
+
+
+      <div class="account-request-field account-request-field-full">
+        <label for="accountRequestEmail">
+          E-mailadres
+        </label>
+
+        <input
+          id="accountRequestEmail"
+          type="email"
+          readonly
+        >
+
+        <span class="account-request-field-help">
+          Het e-mailadres kan hier niet worden gewijzigd.
+        </span>
+      </div>
+
+
+      <fieldset class="account-request-choice-group">
+        <legend>Rollen</legend>
+
+        <label class="account-request-choice">
+          <input
+            id="accountRequestRoleBestuur"
+            type="checkbox"
+          >
+          <span>
+            <strong>Bestuur</strong>
+            <small>Toegang tot bestuursfuncties</small>
+          </span>
+        </label>
+
+        <label class="account-request-choice">
+          <input
+            id="accountRequestRoleAdmin"
+            type="checkbox"
+          >
+          <span>
+            <strong>Admin</strong>
+            <small>Volledige administratieve toegang</small>
+          </span>
+        </label>
+      </fieldset>
+
+
+      <fieldset class="account-request-choice-group">
+        <legend>Speltakken</legend>
+
+        <div class="account-request-speltakken">
+
+          <label class="account-request-choice">
+            <input
+              type="checkbox"
+              name="accountRequestSpeltak"
+              value="bevers"
+            >
+            <span>Bevers</span>
+          </label>
+
+          <label class="account-request-choice">
+            <input
+              type="checkbox"
+              name="accountRequestSpeltak"
+              value="welpen"
+            >
+            <span>Welpen</span>
+          </label>
+
+          <label class="account-request-choice">
+            <input
+              type="checkbox"
+              name="accountRequestSpeltak"
+              value="scouts"
+            >
+            <span>Scouts</span>
+          </label>
+
+          <label class="account-request-choice">
+            <input
+              type="checkbox"
+              name="accountRequestSpeltak"
+              value="explorers"
+            >
+            <span>Explorers</span>
+          </label>
+
+          <label class="account-request-choice">
+            <input
+              type="checkbox"
+              name="accountRequestSpeltak"
+              value="rovers"
+            >
+            <span>Roverscouts</span>
+          </label>
+
+          <label class="account-request-choice">
+            <input
+              type="checkbox"
+              name="accountRequestSpeltak"
+              value="stam"
+            >
+            <span>Stam</span>
+          </label>
+
+        </div>
+      </fieldset>
+
+
+      <div class="account-request-readonly-grid">
+
+        <div class="account-request-readonly-item">
+          <span>Aangevraagd op</span>
+          <strong id="accountRequestCreated">—</strong>
+        </div>
+
+      </div>
+
+
+      <div class="account-request-field account-request-field-full">
+        <span class="account-request-static-label">
+          Bericht van aanvrager
+        </span>
+
+        <div
+          id="accountRequestMessage"
+          class="account-request-message"
+        >
+          Geen bericht toegevoegd.
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- Bevestiging binnen dezelfde modal -->
+
+    <div
+      id="accountRequestRejectConfirm"
+      class="account-request-reject-confirm hidden"
+    >
+      <div>
+        <strong>Aanvraag afwijzen?</strong>
+        <p>
+          De aanvraag wordt verwijderd. Deze actie kan niet ongedaan worden gemaakt.
+        </p>
+      </div>
+
+      <div class="account-request-reject-buttons">
+        <button
+          id="cancelRejectAccountRequest"
+          class="pill-btn outline"
+          type="button"
+        >
+          Niet afwijzen
+        </button>
+
+        <button
+          id="confirmRejectAccountRequest"
+          class="pill-btn danger"
+          type="button"
+        >
+          Definitief afwijzen
+        </button>
+      </div>
+    </div>
+
+
+    <div
+      id="accountRequestModalActions"
+      class="modal-actions account-request-modal-actions"
+    >
+      <button
+        id="rejectAccountRequest"
+        class="pill-btn danger outline"
+        type="button"
+      >
+        Afwijzen
+      </button>
+
+      <button
+        id="cancelAccountRequestModal"
+        class="pill-btn outline"
+        type="button"
+      >
+        Sluiten
+      </button>
+
+      <button
+        id="approveAccountRequest"
+        class="pill-btn success"
+        type="button"
+      >
+        Goedkeuren
+      </button>
+    </div>
+
+  </div>
+</div>
 
   </main>
 

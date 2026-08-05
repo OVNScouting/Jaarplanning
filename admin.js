@@ -21,76 +21,186 @@ function speltakkenToArray(speltakken) {
 }
 
 
-async function approveRequestViaFunction(requestId, rowEl) {
-  rowEl.classList.add("loading");
-  const actionCell = rowEl.querySelector("[data-actions]");
-  if (!actionCell) return;
+async function approveRequestViaFunction(
+  requestId,
+  rowEl = null,
+  triggerButton = null
+) {
+  rowEl?.classList.add("loading");
+
+  setButtonLoading(
+    triggerButton,
+    true,
+    "Goedkeuren…"
+  );
 
   try {
     const app = getFirebaseApp();
     const db = window._firebase.getDatabase(app);
 
-    // 1. Haal de gegevens van de aanvraag op
-    const requestSnap = await window._firebase.get(window._firebase.ref(db, `accountRequests/${requestId}`));
-    if (!requestSnap.exists()) throw new Error("Aanvraag niet gevonden");
-    const requestData = requestSnap.val();
+    // Lees de aanvraag opnieuw in.
+    // Hierdoor worden de zojuist opgeslagen correcties gebruikt.
+    const requestRef =
+      window._firebase.ref(
+        db,
+        `accountRequests/${requestId}`
+      );
 
-    const email = requestData.email.trim();
-    const tempPassword = "Welkom48!"; // Het standaard wachtwoord
+    const requestSnap =
+      await window._firebase.get(
+        requestRef
+      );
 
-    // 2. Maak de gebruiker aan in Firebase Authentication (via een secundaire app-instantie om uitloggen admin te voorkomen)
-    // We maken een tijdelijke app aan met een unieke naam om de gebruiker te registreren
-    const secondaryApp = window._firebase.initializeApp(window.firebaseConfig, "SecondaryAuthApp");
-    const secondaryAuth = window._firebase.getAuth(secondaryApp);
+    if (!requestSnap.exists()) {
+      throw new Error(
+        "Aanvraag niet gevonden"
+      );
+    }
 
-    let userCredential;
+    const requestData =
+      requestSnap.val();
+
+    const email =
+      String(
+        requestData.email || ""
+      ).trim();
+
+    if (!email) {
+      throw new Error(
+        "De aanvraag bevat geen geldig e-mailadres."
+      );
+    }
+
+    const tempPassword =
+      "Welkom48!";
+
+
+    // Maak gebruiker aan zonder de admin uit te loggen.
+    const secondaryAppName =
+      `SecondaryAuthApp-${Date.now()}`;
+
+    const secondaryApp =
+      window._firebase.initializeApp(
+        window.firebaseConfig,
+        secondaryAppName
+      );
+
+    const secondaryAuth =
+      window._firebase.getAuth(
+        secondaryApp
+      );
+
+    let userCredential = null;
+
     try {
-      userCredential = await window._firebase.createUserWithEmailAndPassword(secondaryAuth, email, tempPassword);
-      // Ruim de secundaire app direct weer op via de juiste SDK methode
-      if (window._firebase.deleteApp) {
-        await window._firebase.deleteApp(secondaryApp);
-      }
-    } catch (authErr) {
-      // Als er iets misgaat, proberen we de app alsnog netjes te verwijderen
-      try {
-        if (window._firebase.deleteApp) {
-          await window._firebase.deleteApp(secondaryApp);
-        }
-      } catch (e) { }
+      userCredential =
+        await window._firebase
+          .createUserWithEmailAndPassword(
+            secondaryAuth,
+            email,
+            tempPassword
+          );
 
-      // Als de gebruiker al bestaat in Auth, gaan we gewoon door naar de database-stap
-      if (authErr.code === "auth/email-already-in-use") {
-        console.warn("Email bestaat al in de database, we updaten alleen de gegevens.");
-      } else {
-        throw new Error("Auth registratie mislukt: " + authErr.message);
+    } catch (authError) {
+      if (
+        authError.code !==
+        "auth/email-already-in-use"
+      ) {
+        throw new Error(
+          "Auth-registratie mislukt: " +
+          authError.message
+        );
+      }
+
+      console.warn(
+        "E-mailadres bestaat al in Firebase Authentication. Alleen de databasegegevens worden verwerkt."
+      );
+
+    } finally {
+      try {
+        if (
+          window._firebase.deleteApp
+        ) {
+          await window._firebase.deleteApp(
+            secondaryApp
+          );
+        }
+      } catch (cleanupError) {
+        console.warn(
+          "Tijdelijke Firebase-app kon niet worden verwijderd:",
+          cleanupError
+        );
       }
     }
 
-    const newUid = userCredential ? userCredential.user.uid : requestId;
 
-    // 3. Maak de gebruiker direct aan in de 'users' tabel in de Database
-    await window._firebase.set(window._firebase.ref(db, `users/${newUid}`), {
-      fullName: requestData.fullName || "",
-      email: email,
-      status: "active",
-      createdAt: Date.now(),
-      roles: {
-        admin: !!requestData.requestedRoles?.admin,
-        bestuur: !!requestData.requestedRoles?.bestuur,
-        speltakken: requestData.speltakken || []
+    const newUid =
+      userCredential?.user?.uid ||
+      requestId;
+
+
+    // Maak of actualiseer het gebruikersprofiel.
+    await window._firebase.set(
+      window._firebase.ref(
+        db,
+        `users/${newUid}`
+      ),
+      {
+        fullName:
+          requestData.fullName || "",
+
+        email,
+
+        status: "active",
+
+        createdAt:
+          Date.now(),
+
+        roles: {
+          admin:
+            !!requestData
+              .requestedRoles
+              ?.admin,
+
+          bestuur:
+            !!requestData
+              .requestedRoles
+              ?.bestuur,
+
+          speltakken:
+            requestData.speltakken || {}
+        }
       }
-    });
+    );
 
-    // 4. Verwijder de aanvraag uit de lijst
-    await window._firebase.set(window._firebase.ref(db, `accountRequests/${requestId}`), null);
 
-    rowEl.remove();
-    loadUsers();
+    // Verwijder de afgehandelde aanvraag.
+    await window._firebase.set(
+      requestRef,
+      null
+    );
 
-const firstName = requestData.fullName ? requestData.fullName.trim().split(" ")[0] : 'Scout';
 
-    const mailSubject = "Je account voor de OVN Jaarplanning is actief!";
-    const mailBody = `Heyhoi ${firstName},\n\n` +
+    rowEl?.remove();
+
+    closeAccountRequestModal();
+    await renderAccountRequests();
+    await loadUsers();
+
+
+    const firstName =
+      requestData.fullName
+        ? requestData.fullName
+            .trim()
+            .split(/\s+/)[0]
+        : "Scout";
+
+
+    const mailSubject =
+      "Je account voor de OVN Jaarplanning is actief!";
+
+    const mailBody =
+      `Heyhoi ${firstName},\n\n` +
       `Je account voor de Jaarplanning van OVN is zojuist goedgekeurd!\n\n` +
       `Je kunt nu inloggen met de volgende gegevens:\n` +
       `- Website: https://ovnjaarplanning.nl\n` +
@@ -100,14 +210,48 @@ const firstName = requestData.fullName ? requestData.fullName.trim().split(" ")[
       `Met vriendelijke groet,\n` +
       `De Admin`;
 
-    // We maken een mooie modal met de tekst die je zo kunt kopiëren
-    showCopyModal(email, mailSubject, mailBody);
 
-  } catch (err) {
-    console.error("Goedkeuren mislukt:", err);
-    showToast("Fout bij goedkeuren: " + err.message, "error", 4200);
+    showCopyModal(
+      email,
+      mailSubject,
+      mailBody
+    );
+
+    return true;
+
+  } catch (error) {
+    console.error(
+      "Goedkeuren mislukt:",
+      error
+    );
+
+    showAccountRequestModalError(
+      "Goedkeuren mislukt: " +
+      (
+        error?.message ||
+        "Onbekende fout"
+      )
+    );
+
+    showToast(
+      "Fout bij goedkeuren: " +
+      (
+        error?.message ||
+        "Onbekende fout"
+      ),
+      "error",
+      4200
+    );
+
+    return false;
+
   } finally {
-    rowEl.classList.remove("loading");
+    rowEl?.classList.remove("loading");
+
+    setButtonLoading(
+      triggerButton,
+      false
+    );
   }
 }
 
@@ -218,35 +362,71 @@ function setButtonLoading(btn, loading, label) {
 
 
 
-async function updateAccountRequestStatus(requestId, newStatus, rowEl, reason = "") {
-  if (newStatus !== "rejected") return;
+async function updateAccountRequestStatus(
+  requestId,
+  newStatus,
+  rowEl = null,
+  reason = "",
+  triggerButton = null
+) {
+  if (newStatus !== "rejected") return false;
 
-  rowEl.classList.add("loading");
+  rowEl?.classList.add("loading");
 
-  const actionsCell = rowEl.querySelector("[data-actions]");
-  const originalActions = actionsCell ? actionsCell.innerHTML : "";
-
-  if (actionsCell) {
-    actionsCell.innerHTML = `
-      <span class="inline-loading">
-        <span class="btn-spinner" aria-hidden="true"></span>
-        Afwijzen…
-      </span>
-    `;
-  }
+  setButtonLoading(
+    triggerButton,
+    true,
+    "Afwijzen…"
+  );
 
   try {
-    await callFunction("rejectAccountRequest", { requestId, reason });
+    await callFunction(
+      "rejectAccountRequest",
+      {
+        requestId,
+        reason
+      }
+    );
 
-    // Reject verwijdert aanvraag direct (server-side) → lijst opnieuw ophalen
-    renderAccountRequests();
-    showToast("Aanvraag afgewezen (mail verstuurd)", "success");
+    rowEl?.remove();
 
-  } catch (e) {
-    if (actionsCell) actionsCell.innerHTML = originalActions;
-    showToast(e?.message || "Afwijzen mislukt", "error", 4200);
+    closeAccountRequestModal();
+    await renderAccountRequests();
+
+    showToast(
+      "Aanvraag afgewezen",
+      "success"
+    );
+
+    return true;
+
+  } catch (error) {
+    console.error(
+      "Afwijzen mislukt:",
+      error
+    );
+
+    showAccountRequestModalError(
+      error?.message ||
+      "De aanvraag kon niet worden afgewezen."
+    );
+
+    showToast(
+      error?.message ||
+      "Afwijzen mislukt",
+      "error",
+      4200
+    );
+
+    return false;
+
   } finally {
-    rowEl.classList.remove("loading");
+    rowEl?.classList.remove("loading");
+
+    setButtonLoading(
+      triggerButton,
+      false
+    );
   }
 }
 
@@ -415,89 +595,908 @@ function renderUsers(users) {
   });
 }
 
+// ============================================================
+// ACCOUNTAANVRAGEN — MODALSTATUS
+// ============================================================
 
-function renderAccountRequests() {
-  const app = getFirebaseApp();
+let selectedAccountRequestId = null;
+let selectedAccountRequestData = null;
+let selectedAccountRequestRow = null;
+async function renderAccountRequests() {
+  const list =
+    document.getElementById(
+      "accountRequestList"
+    );
+
+  const count =
+    document.getElementById(
+      "accountRequestCount"
+    );
+
+  if (!list) return;
 
 
-  const db = window._firebase.getDatabase(app);
-  const requestsRef = window._firebase.ref(db, "accountRequests");
+  list.innerHTML = `
+    <p class="account-request-empty">
+      Aanvragen laden…
+    </p>
+  `;
 
-  window._firebase.get(requestsRef).then(snapshot => {
-    if (!snapshot.exists()) return;
 
-    const requests = snapshot.val();
-    const tbody = document.getElementById("accountRequestTable");
-    if (!tbody) return;
+  try {
+    const app =
+      getFirebaseApp();
 
-    tbody.innerHTML = "";
+    const db =
+      window._firebase.getDatabase(
+        app
+      );
 
-    Object.entries(requests)
-      .sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0))
-      .forEach(([id, r]) => {
-        const tr = document.createElement("tr");
+    const requestsRef =
+      window._firebase.ref(
+        db,
+        "accountRequests"
+      );
 
-        const rollen = [
-          r.requestedRoles?.admin ? "Admin" : null,
-          r.requestedRoles?.bestuur ? "Bestuur" : null
-        ].filter(Boolean).join(", ") || "—";
+    const snapshot =
+      await window._firebase.get(
+        requestsRef
+      );
 
-        const speltakkenArr = speltakkenToArray(r.speltakken);
-        const speltakken = speltakkenArr.length > 0
-          ? speltakkenArr.join(", ")
-          : "—";
 
-        const created = r.createdAt
-          ? new Date(r.createdAt).toLocaleString("nl-NL")
-          : "—";
+    const requests =
+      snapshot.exists()
+        ? snapshot.val()
+        : {};
 
-        tr.innerHTML = `
-          <td>${r.fullName || "—"}</td>
-          <td>${r.email || "—"}</td>
-          
-          <td>${rollen}</td>
-          <td>${speltakken}</td>
-         <td data-status>
-<span class="status-badge status-${["approved", "rejected", "pending"].includes(r.status) ? r.status : "pending"}">
-              ${r.status === "approved"
-            ? "Goedgekeurd"
-            : r.status === "rejected"
-              ? "Afgewezen"
-              : "In behandeling"
+
+    const pendingRequests =
+      Object.entries(requests)
+        .filter(
+          ([, request]) =>
+            !request.status ||
+            request.status === "pending"
+        )
+        .sort(
+          (a, b) =>
+            (b[1].createdAt || 0) -
+            (a[1].createdAt || 0)
+        );
+
+
+    list.innerHTML = "";
+
+
+    if (count) {
+      count.textContent =
+        String(
+          pendingRequests.length
+        );
+
+      count.classList.toggle(
+        "hidden",
+        pendingRequests.length === 0
+      );
+    }
+
+
+    if (!pendingRequests.length) {
+      const emptyState =
+        document.createElement(
+          "div"
+        );
+
+      emptyState.className =
+        "account-request-empty-state";
+
+      emptyState.innerHTML = `
+        <span aria-hidden="true">✓</span>
+        <div>
+          <strong>Geen openstaande aanvragen</strong>
+          <p>Nieuwe accountaanvragen verschijnen hier automatisch.</p>
+        </div>
+      `;
+
+      list.appendChild(
+        emptyState
+      );
+
+      return;
+    }
+
+
+    pendingRequests.forEach(
+      ([id, request]) => {
+        const item =
+          document.createElement(
+            "button"
+          );
+
+        item.type =
+          "button";
+
+        item.className =
+          "account-request-list-item";
+
+        item.dataset.requestId =
+          id;
+
+
+        const name =
+          document.createElement(
+            "span"
+          );
+
+        name.className =
+          "account-request-list-name";
+
+        name.textContent =
+          request.fullName ||
+          [
+            request.firstName,
+            request.lastName
+          ]
+            .filter(Boolean)
+            .join(" ") ||
+          "Naam onbekend";
+
+
+        const arrow =
+          document.createElement(
+            "span"
+          );
+
+        arrow.className =
+          "account-request-list-arrow";
+
+        arrow.setAttribute(
+          "aria-hidden",
+          "true"
+        );
+
+        arrow.textContent =
+          "›";
+
+
+        item.append(
+          name,
+          arrow
+        );
+
+
+        item.addEventListener(
+          "click",
+          () => {
+            openAccountRequestModal(
+              id,
+              request,
+              item
+            );
           }
-            </span>
-          </td>
-          <td style="font-size:0.85rem">${created}</td>
-        <td data-actions>
-  ${r.status === "pending" ? `
-    <button class="pill-btn success" data-approve>Goedkeuren</button>
-    <button class="pill-btn danger" data-reject>Afwijzen</button>
-  ` : "—"}
-</td>
+        );
 
 
-        `;
-        if (r.status === "pending") {
-          tr.querySelector("[data-approve]")?.addEventListener("click", () => {
-            approveRequestViaFunction(id, tr);
-          });
+        list.appendChild(
+          item
+        );
+      }
+    );
 
-          tr.querySelector("[data-reject]")?.addEventListener("click", () => {
-            const ok = confirm("Weet je zeker dat je deze aanvraag wilt afwijzen?");
-            if (!ok) return;
+  } catch (error) {
+    console.error(
+      "Accountaanvragen laden mislukt:",
+      error
+    );
 
-            updateAccountRequestStatus(id, "rejected", tr, "");
-          });
-        }
+    list.innerHTML = `
+      <div class="account-request-load-error">
+        Accountaanvragen konden niet worden geladen.
+      </div>
+    `;
 
-
-
-
-        tbody.appendChild(tr);
-      });
-  });
+    if (count) {
+      count.classList.add(
+        "hidden"
+      );
+    }
+  }
 }
-waitForFirebase(renderAccountRequests);
+
+
+waitForFirebase(
+  renderAccountRequests
+);
+
+// ============================================================
+// ACCOUNTAANVRAAG — DETAILMODAL
+// ============================================================
+
+function getAccountRequestModal() {
+  return document.getElementById(
+    "accountRequestAdminModal"
+  );
+}
+
+
+function showAccountRequestModalError(
+  message = ""
+) {
+  const errorElement =
+    document.getElementById(
+      "accountRequestModalError"
+    );
+
+  if (!errorElement) return;
+
+  errorElement.textContent =
+    message;
+
+  errorElement.classList.toggle(
+    "hidden",
+    !message
+  );
+}
+
+
+function setAccountRequestRejectMode(
+  enabled
+) {
+  document
+    .getElementById(
+      "accountRequestRejectConfirm"
+    )
+    ?.classList
+    .toggle(
+      "hidden",
+      !enabled
+    );
+
+  document
+    .getElementById(
+      "accountRequestModalActions"
+    )
+    ?.classList
+    .toggle(
+      "hidden",
+      enabled
+    );
+}
+
+
+function openAccountRequestModal(
+  requestId,
+  requestData,
+  rowElement
+) {
+  const modal =
+    getAccountRequestModal();
+
+  if (!modal) return;
+
+
+  selectedAccountRequestId =
+    requestId;
+
+  selectedAccountRequestData = {
+    ...requestData
+  };
+
+  selectedAccountRequestRow =
+    rowElement;
+
+
+  showAccountRequestModalError(
+    ""
+  );
+
+  setAccountRequestRejectMode(
+    false
+  );
+
+
+  const fullName =
+    requestData.fullName ||
+    [
+      requestData.firstName,
+      requestData.lastName
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+
+  document.getElementById(
+    "accountRequestName"
+  ).value = fullName || "";
+
+
+  document.getElementById(
+    "accountRequestEmail"
+  ).value = requestData.email || "";
+
+
+  document.getElementById(
+    "accountRequestRoleBestuur"
+  ).checked =
+    !!requestData
+      .requestedRoles
+      ?.bestuur;
+
+
+  document.getElementById(
+    "accountRequestRoleAdmin"
+  ).checked =
+    !!requestData
+      .requestedRoles
+      ?.admin;
+
+
+  const selectedSpeltakken =
+    new Set(
+      speltakkenToArray(
+        requestData.speltakken
+      )
+    );
+
+
+  document
+    .querySelectorAll(
+      'input[name="accountRequestSpeltak"]'
+    )
+    .forEach(
+      checkbox => {
+        checkbox.checked =
+          selectedSpeltakken.has(
+            checkbox.value
+          );
+      }
+    );
+
+
+  document.getElementById(
+    "accountRequestCreated"
+  ).textContent =
+    requestData.createdAt
+      ? new Date(
+          requestData.createdAt
+        ).toLocaleString(
+          "nl-NL",
+          {
+            dateStyle: "long",
+            timeStyle: "short"
+          }
+        )
+      : "Onbekend";
+
+
+  const message =
+    String(
+      requestData.message || ""
+    ).trim();
+
+
+  document.getElementById(
+    "accountRequestMessage"
+  ).textContent =
+    message ||
+    "Geen bericht toegevoegd.";
+
+
+  modal.classList.remove(
+    "hidden"
+  );
+
+  document.body.classList.add(
+    "account-request-modal-open"
+  );
+
+
+  requestAnimationFrame(
+    () => {
+      document
+        .getElementById(
+          "accountRequestName"
+        )
+        ?.focus();
+    }
+  );
+}
+
+
+function closeAccountRequestModal() {
+  const modal =
+    getAccountRequestModal();
+
+  modal?.classList.add(
+    "hidden"
+  );
+
+  document.body.classList.remove(
+    "account-request-modal-open"
+  );
+
+
+  setAccountRequestRejectMode(
+    false
+  );
+
+  showAccountRequestModalError(
+    ""
+  );
+
+
+  selectedAccountRequestId =
+    null;
+
+  selectedAccountRequestData =
+    null;
+
+  selectedAccountRequestRow =
+    null;
+}
+
+
+function getEditedAccountRequestData() {
+  const fullName =
+    document
+      .getElementById(
+        "accountRequestName"
+      )
+      ?.value
+      .trim() || "";
+
+
+  if (!fullName) {
+    throw new Error(
+      "Vul een volledige naam in."
+    );
+  }
+
+
+  const requestedRoles = {
+    bestuur:
+      !!document
+        .getElementById(
+          "accountRequestRoleBestuur"
+        )
+        ?.checked,
+
+    admin:
+      !!document
+        .getElementById(
+          "accountRequestRoleAdmin"
+        )
+        ?.checked
+  };
+
+
+  const speltakken = {};
+
+  document
+    .querySelectorAll(
+      'input[name="accountRequestSpeltak"]'
+    )
+    .forEach(
+      checkbox => {
+        speltakken[
+          checkbox.value
+        ] = checkbox.checked;
+      }
+    );
+
+
+  const selectedSpeltakCount =
+    Object.values(
+      speltakken
+    ).filter(Boolean).length;
+
+
+  if (
+    !requestedRoles.bestuur &&
+    !requestedRoles.admin &&
+    selectedSpeltakCount === 0
+  ) {
+    throw new Error(
+      "Selecteer minimaal één rol of speltak."
+    );
+  }
+
+
+  const nameParts =
+    fullName
+      .split(/\s+/)
+      .filter(Boolean);
+
+
+  return {
+    fullName,
+
+    firstName:
+      nameParts[0] || "",
+
+    lastName:
+      nameParts
+        .slice(1)
+        .join(" "),
+
+    requestedRoles,
+
+    speltakken
+  };
+}
+
+
+async function saveAccountRequestEdits(
+  requestId
+) {
+  const editedData =
+    getEditedAccountRequestData();
+
+
+  const app =
+    getFirebaseApp();
+
+  const db =
+    window._firebase.getDatabase(
+      app
+    );
+
+
+  await window._firebase.update(
+    window._firebase.ref(
+      db,
+      `accountRequests/${requestId}`
+    ),
+    editedData
+  );
+
+
+  return editedData;
+}
+// ============================================================
+// ACCOUNTAANVRAAG — DETAILMODAL
+// ============================================================
+
+function getAccountRequestModal() {
+  return document.getElementById(
+    "accountRequestAdminModal"
+  );
+}
+
+
+function showAccountRequestModalError(
+  message = ""
+) {
+  const errorElement =
+    document.getElementById(
+      "accountRequestModalError"
+    );
+
+  if (!errorElement) return;
+
+  errorElement.textContent =
+    message;
+
+  errorElement.classList.toggle(
+    "hidden",
+    !message
+  );
+}
+
+
+function setAccountRequestRejectMode(
+  enabled
+) {
+  document
+    .getElementById(
+      "accountRequestRejectConfirm"
+    )
+    ?.classList
+    .toggle(
+      "hidden",
+      !enabled
+    );
+
+  document
+    .getElementById(
+      "accountRequestModalActions"
+    )
+    ?.classList
+    .toggle(
+      "hidden",
+      enabled
+    );
+}
+
+
+function openAccountRequestModal(
+  requestId,
+  requestData,
+  rowElement
+) {
+  const modal =
+    getAccountRequestModal();
+
+  if (!modal) return;
+
+
+  selectedAccountRequestId =
+    requestId;
+
+  selectedAccountRequestData = {
+    ...requestData
+  };
+
+  selectedAccountRequestRow =
+    rowElement;
+
+
+  showAccountRequestModalError(
+    ""
+  );
+
+  setAccountRequestRejectMode(
+    false
+  );
+
+
+  const fullName =
+    requestData.fullName ||
+    [
+      requestData.firstName,
+      requestData.lastName
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+
+  document.getElementById(
+    "accountRequestName"
+  ).value = fullName || "";
+
+
+  document.getElementById(
+    "accountRequestEmail"
+  ).value = requestData.email || "";
+
+
+  document.getElementById(
+    "accountRequestRoleBestuur"
+  ).checked =
+    !!requestData
+      .requestedRoles
+      ?.bestuur;
+
+
+  document.getElementById(
+    "accountRequestRoleAdmin"
+  ).checked =
+    !!requestData
+      .requestedRoles
+      ?.admin;
+
+
+  const selectedSpeltakken =
+    new Set(
+      speltakkenToArray(
+        requestData.speltakken
+      )
+    );
+
+
+  document
+    .querySelectorAll(
+      'input[name="accountRequestSpeltak"]'
+    )
+    .forEach(
+      checkbox => {
+        checkbox.checked =
+          selectedSpeltakken.has(
+            checkbox.value
+          );
+      }
+    );
+
+
+  document.getElementById(
+    "accountRequestCreated"
+  ).textContent =
+    requestData.createdAt
+      ? new Date(
+          requestData.createdAt
+        ).toLocaleString(
+          "nl-NL",
+          {
+            dateStyle: "long",
+            timeStyle: "short"
+          }
+        )
+      : "Onbekend";
+
+
+  const message =
+    String(
+      requestData.message || ""
+    ).trim();
+
+
+  document.getElementById(
+    "accountRequestMessage"
+  ).textContent =
+    message ||
+    "Geen bericht toegevoegd.";
+
+
+  modal.classList.remove(
+    "hidden"
+  );
+
+  document.body.classList.add(
+    "account-request-modal-open"
+  );
+
+
+  requestAnimationFrame(
+    () => {
+      document
+        .getElementById(
+          "accountRequestName"
+        )
+        ?.focus();
+    }
+  );
+}
+
+
+function closeAccountRequestModal() {
+  const modal =
+    getAccountRequestModal();
+
+  modal?.classList.add(
+    "hidden"
+  );
+
+  document.body.classList.remove(
+    "account-request-modal-open"
+  );
+
+
+  setAccountRequestRejectMode(
+    false
+  );
+
+  showAccountRequestModalError(
+    ""
+  );
+
+
+  selectedAccountRequestId =
+    null;
+
+  selectedAccountRequestData =
+    null;
+
+  selectedAccountRequestRow =
+    null;
+}
+
+
+function getEditedAccountRequestData() {
+  const fullName =
+    document
+      .getElementById(
+        "accountRequestName"
+      )
+      ?.value
+      .trim() || "";
+
+
+  if (!fullName) {
+    throw new Error(
+      "Vul een volledige naam in."
+    );
+  }
+
+
+  const requestedRoles = {
+    bestuur:
+      !!document
+        .getElementById(
+          "accountRequestRoleBestuur"
+        )
+        ?.checked,
+
+    admin:
+      !!document
+        .getElementById(
+          "accountRequestRoleAdmin"
+        )
+        ?.checked
+  };
+
+
+  const speltakken = {};
+
+  document
+    .querySelectorAll(
+      'input[name="accountRequestSpeltak"]'
+    )
+    .forEach(
+      checkbox => {
+        speltakken[
+          checkbox.value
+        ] = checkbox.checked;
+      }
+    );
+
+
+  const selectedSpeltakCount =
+    Object.values(
+      speltakken
+    ).filter(Boolean).length;
+
+
+  if (
+    !requestedRoles.bestuur &&
+    !requestedRoles.admin &&
+    selectedSpeltakCount === 0
+  ) {
+    throw new Error(
+      "Selecteer minimaal één rol of speltak."
+    );
+  }
+
+
+  const nameParts =
+    fullName
+      .split(/\s+/)
+      .filter(Boolean);
+
+
+  return {
+    fullName,
+
+    firstName:
+      nameParts[0] || "",
+
+    lastName:
+      nameParts
+        .slice(1)
+        .join(" "),
+
+    requestedRoles,
+
+    speltakken
+  };
+}
+
+
+async function saveAccountRequestEdits(
+  requestId
+) {
+  const editedData =
+    getEditedAccountRequestData();
+
+
+  const app =
+    getFirebaseApp();
+
+  const db =
+    window._firebase.getDatabase(
+      app
+    );
+
+
+  await window._firebase.update(
+    window._firebase.ref(
+      db,
+      `accountRequests/${requestId}`
+    ),
+    editedData
+  );
+
+
+  return editedData;
+}
 
 function loadUsers() {
   const app = getFirebaseApp();

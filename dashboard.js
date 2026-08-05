@@ -250,28 +250,14 @@ function renderDesktop(grouped) {
     h.textContent = formatDateDisplay(date);
     container.appendChild(h);
 
-    const wrapper = document.createElement("div");
-    wrapper.className = "dashboard-table-wrapper";
+   const wrapper = document.createElement("div");
+wrapper.className = "dashboard-table-wrapper";
 
-    let swipeHint = null;
-    if (window.matchMedia("(max-width: 900px)").matches) {
-      swipeHint = document.createElement("div");
-      swipeHint.className = "table-swipe-hint";
-      swipeHint.innerHTML = "<span>← swipe →</span>";
-      wrapper.appendChild(swipeHint);
-    }
+const table = document.createElement("table");
+table.className = "dashboard-table";
+table.appendChild(renderTheadDesktop());
 
-    const table = document.createElement("table");
-    table.className = "dashboard-table";
-    table.appendChild(renderTheadDesktop());
-
-    wrapper.appendChild(table);
-
-    if (swipeHint) {
-      wrapper.addEventListener("scroll", () => {
-        swipeHint.classList.add("hidden");
-      }, { once: true });
-    }
+wrapper.appendChild(table);
 
     const tbody = document.createElement("tbody");
     grouped[date].forEach(o => tbody.appendChild(renderRowDesktop(o)));

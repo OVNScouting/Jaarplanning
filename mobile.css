@@ -1,828 +1,1479 @@
-/* ======================================================================
-   MOBILE / COMPACTE SCHERMEN
-   Wordt na style.css geladen
-   ====================================================================== */
+/* ==========================================================
+   OVN Jaarplanning
+   Mobile UI v2
 
-/* ============================================================
-   COMPACTE DESKTOPS, LAPTOPS EN TABLETS
-============================================================ */
-@media (max-width: 1100px) {
+   Deze stylesheet bevat uitsluitend mobiele layout.
+   style.css blijft verantwoordelijk voor alle componentstijl.
+========================================================== */
+.mobile-menu-button,
+.mobile-menu-backdrop,
+.mobile-menu-sheet {
+    display: none;
+}
+/* ==========================================================
+   MODULE 1
+   Basis / Mobile Foundation
+========================================================== */
+
+/*
+===========================
+Design tokens
+===========================
+*/
+
+:root {
+
+  --mobile-breakpoint: 768px;
+
+  --mobile-spacing-xs: .35rem;
+  --mobile-spacing-sm: .6rem;
+  --mobile-spacing-md: 1rem;
+  --mobile-spacing-lg: 1.5rem;
+
+  --mobile-radius: 14px;
+
+  --mobile-touch: 44px;
+
+  --mobile-bottom-nav-height: 70px;
+
+}
+
+
+/*
+===========================
+Desktop doet niets
+===========================
+*/
+
+.mobile-only {
+  display: none;
+}
+
+
+/*
+===========================
+Mobiele basis
+===========================
+*/
+
+@media (max-width:768px) {
+
+  html {
+
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+
+    -webkit-text-size-adjust: 100%;
+
+  }
+
+ body {
+    overflow-x: hidden;
+
+    min-height: 100dvh;
+}
+body:has(.mobile-bottom-nav:not(.hidden)) {
+    padding-bottom:
+        calc(
+            var(--mobile-bottom-nav-height)
+            + env(safe-area-inset-bottom)
+        );
+}
+}
+
+
+/*
+===========================
+Universele box sizing
+===========================
+*/
+
+@media (max-width:768px) {
+
+  *,
+  *::before,
+  *::after {
+
+    box-sizing: border-box;
+
+  }
+
+}
+
+
+/*
+===========================
+Containers
+===========================
+*/
+
+@media (max-width:768px) {
 
   .container {
+
     width: 100%;
+
     max-width: none;
-    padding-inline: 0.75rem;
-  }
 
-  .planning-section,
-  .info-block,
-  .ledenbeheer,
-  .meldingen {
-    padding-inline: 1rem;
-  }
+    margin: 0;
 
-  .planning-header-row {
-    align-items: flex-start;
-  }
-
-  .planning-header-right {
-    width: 100%;
-    margin-left: 0;
-    justify-content: space-between;
-    gap: 0.75rem;
-  }
-
-.legend-container {
-  flex: 1 1 auto;
-  min-width: 0;
+  padding:
+    var(--mobile-spacing-md)
+    var(--mobile-spacing-sm)
+    var(--mobile-spacing-lg);
+    body:has(.mobile-bottom-nav:not(.hidden))
+.container {
+    padding-bottom:
+        calc(
+            var(--mobile-spacing-lg)
+            +
+            var(--mobile-bottom-nav-height)
+        );
 }
-
-  .tabel-edit-btn {
-    flex: 0 0 auto;
   }
 
-  /*
-   * Geen vaste top-positie.
-   * De knoppen blijven boven de knop Nieuwe opkomst staan.
-   */
-  .leiding-sidebar {
-    top: auto;
-    right: 12px;
-    bottom: 72px;
-    width: min(150px, calc(100vw - 24px));
-  }
+
 }
 
 
-/* ============================================================
-   TABLET EN MOBIEL
-============================================================ */
-@media (max-width: 900px) {
+/*
+===========================
+Voorkom horizontale overflow
+===========================
+*/
+
+@media (max-width:768px) {
+
+  img,
+  video,
+  iframe,
+  table {
+
+    max-width: 100%;
+
+  }
+
+}
+
+
+/*
+===========================
+Tekst mag afbreken
+===========================
+*/
+
+@media (max-width:768px) {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  p,
+  span,
+  td,
+  th {
+
+    overflow-wrap: anywhere;
+
+  }
+
+}
+
+
+/*
+===========================
+Touch targets
+===========================
+*/
+
+@media (max-width:768px) {
+
+  button,
+  select,
+  input,
+  textarea,
+  a {
+
+    min-height: var(--mobile-touch);
+
+  }
+
+}
+
+
+/*
+===========================
+Desktop helpers
+===========================
+*/
+
+@media (max-width:768px) {
+
+  .desktop-only {
+
+    display: none !important;
+
+  }
+
+  .mobile-only {
+
+    display: initial !important;
+
+  }
+
+}
+
+
+/*
+===========================
+Veilige iPhone randen
+===========================
+*/
+
+@media (max-width:768px) {
 
   body {
-    font-size: 15px;
-    padding-bottom: 150px;
+
+    padding-left:
+
+      max(env(safe-area-inset-left),
+
+        0px);
+
+    padding-right:
+
+      max(env(safe-area-inset-right),
+
+        0px);
+
   }
 
-  /* -------------------------------
-     Topbar
-  -------------------------------- */
-  .topbar {
-    padding: 0.65rem 0.75rem;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+}
+
+
+/*
+===========================
+Touch devices
+===========================
+*/
+
+@media (hover:none) {
+
+  button,
+  a {
+
+    -webkit-tap-highlight-color: transparent;
+
   }
+
+}
+
+/* ==========================================================
+   MODULE 2
+   Mobiele topbar en uitvouwmenu
+========================================================== */
+
+@media (max-width: 768px) {
+
+  /* ------------------------------------------------------
+       TOPBAR
+    ------------------------------------------------------ */
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1200;
+
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+
+    width: 100%;
+    min-height: 64px;
+
+    padding:
+      calc(var(--mobile-spacing-sm) + env(safe-area-inset-top)) var(--mobile-spacing-sm) var(--mobile-spacing-sm);
+
+    gap: var(--mobile-spacing-sm);
+
+    background:
+      color-mix(in srgb,
+        var(--card) 96%,
+        transparent);
+
+    border-bottom: 1px solid var(--border);
+
+    box-shadow:
+      0 4px 14px rgba(15, 23, 42, 0.08);
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+
+  /* ------------------------------------------------------
+       LINKERDEEL
+    ------------------------------------------------------ */
 
   .topbar-left {
+    display: grid;
+
+    grid-template-columns:
+      var(--mobile-touch) 36px minmax(0, 1fr);
+
+    align-items: center;
+
     min-width: 0;
-    flex: 1 1 220px;
+
+    gap: var(--mobile-spacing-sm);
   }
 
-  .topbar-right-icons {
-    flex: 0 1 auto;
-    flex-wrap: wrap;
-    justify-content: flex-end;
+
+  /* ------------------------------------------------------
+       TERUGKNOP
+    ------------------------------------------------------ */
+
+  .topbar .backlink {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: var(--mobile-touch);
+    min-width: var(--mobile-touch);
+    height: var(--mobile-touch);
+    min-height: var(--mobile-touch);
+
+    padding: 0;
+
+    overflow: hidden;
+
+    border: 1px solid var(--border);
+    border-radius: 999px;
+
+    background: var(--card-secondary);
+    color: var(--text-main);
+
+    text-indent: -9999px;
+    white-space: nowrap;
+
+    box-shadow: none;
   }
+
+  .topbar .backlink::before {
+    content: "←";
+
+    display: block;
+
+    text-indent: 0;
+
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+
+  .topbar .backlink:active {
+    transform: scale(0.96);
+  }
+
+
+  /* ------------------------------------------------------
+       OVN-LOGO
+    ------------------------------------------------------ */
 
   .topbar-logo {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
+
+    min-width: 36px;
+
+    object-fit: contain;
   }
 
-  .speltak-icon {
-    width: 40px;
-    height: 40px;
-  }
+
+  /* ------------------------------------------------------
+       TITEL
+    ------------------------------------------------------ */
 
   .topbar-title {
     min-width: 0;
   }
 
   .topbar-title h1 {
+    margin: 0;
+
+    overflow: hidden;
+
     font-size: 1.05rem;
-    overflow-wrap: anywhere;
+    line-height: 1.15;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   .topbar-title span {
-    font-size: 0.75rem;
-  }
-
-  .backlink {
-    white-space: nowrap;
-  }
-
-  .login-badge,
-  .leiding-badge {
-    font-size: 0.78rem;
-    padding: 0.3rem 0.65rem;
-  }
-
-  .pill-btn:not(.primary):not(.outline):not(.success):not(.danger) {
-  background: var(--card-secondary);
-  color: var(--text-main);
-  border: 1px solid var(--border);
-}
-
-.profile-container {
-  padding-top: 1rem;
-}
-
-.profile-card {
-  padding: 1.25rem;
-}
-
-.profile-support {
-  align-items: stretch;
-  flex-direction: column;
-}
-
-.profile-support .pill-btn {
-  align-self: flex-start;
-}
-  /* -------------------------------
-     Algemene inhoud
-  -------------------------------- */
-  .container {
-    padding: 0.75rem 0.5rem 2rem;
-  }
-
-  .info-block,
-  .planning-section,
-  .ledenbeheer,
-  .meldingen {
-    margin-top: 0.75rem;
-    padding: 1rem 0.75rem;
-    border-radius: 10px;
-  }
-
-  /* -------------------------------
-     Planningheader
-  -------------------------------- */
-  .planning-header-row {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.8rem;
-  }
-
-  .planning-controls {
-    width: 100%;
-    flex-wrap: wrap;
-  }
-
-  #seizoenFilterContainer {
-    margin-right: 0 !important;
-  }
-
-  .planning-header-right {
-    width: 100%;
-    margin-left: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.75rem;
-  }
-
-  .legend-container {
-    width: 100%;
-    gap: 0.5rem 0.75rem;
-  }
-
-  .legend-item {
-    font-size: 0.76rem;
-  }
-
-  .tabel-edit-btn {
-    align-self: flex-start;
-  }
-
-  /* -------------------------------
-     Tabel
-  -------------------------------- */
-  .table-wrapper {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: auto;
-    overflow-y: visible;
-    -webkit-overflow-scrolling: touch;
-
-    /* Op mobiel ook de gewone scrollbar beschikbaar houden */
-    scrollbar-width: thin;
-  }
-
-  .table-wrapper::-webkit-scrollbar {
     display: block;
-    height: 10px;
-  }
 
- .table-wrapper::-webkit-scrollbar-track {
-  background: var(--scroll-track);
-  border-radius: 999px;
-}
+    margin-top: 0.1rem;
 
-.table-wrapper::-webkit-scrollbar-thumb {
-  background: var(--scroll-thumb);
-  border-radius: 999px;
-}
+    overflow: hidden;
 
-  .planning-table {
-    width: max-content;
-    min-width: 100%;
-  }
+    font-size: 0.72rem;
+    line-height: 1.2;
 
-  .planning-table th,
-  .planning-table td {
     white-space: nowrap;
+    text-overflow: ellipsis;
   }
+
+
+  /* ------------------------------------------------------
+       RECHTERDEEL
+    ------------------------------------------------------ */
+
+  .topbar-right-icons {
+    display: flex;
+
+    align-items: center;
+    justify-content: flex-end;
+
+    min-width: 0;
+
+    gap: var(--mobile-spacing-xs);
+
+    flex-wrap: nowrap;
+  }
+
 
   /*
-   * De losse zwevende scrollbar is op touchscreens minder handig.
-   * De natuurlijke scrollbar van de tabel wordt hierboven gebruikt.
-   */
-  .table-h-scroll {
+     * Profiel, login, logout en themaknop verdwijnen uit
+     * de zichtbare mobiele topbar.
+     *
+     * De elementen blijven wel in de DOM staan. mobile.js
+     * gebruikt ze om dezelfde bestaande acties uit te voeren.
+     */
+
+ .topbar-right-icons > :not(.speltak-icon):not(.mobile-menu-button) {
     display: none !important;
+}
+
+
+  /* ------------------------------------------------------
+       SPELTAKLOGO
+    ------------------------------------------------------ */
+
+  .speltak-icon {
+    width: 40px;
+    height: 40px;
+
+    min-width: 40px;
+
+    object-fit: contain;
   }
 
-  /* -------------------------------
-     Vaste actieknoppen
-  -------------------------------- */
-  .fab-add-opkomst {
-    right: 10px;
-    bottom: 10px;
-    max-width: calc(50vw - 15px);
-    padding-inline: 12px;
-    white-space: normal;
-    text-align: center;
+
+  /* ------------------------------------------------------
+       HAMBURGERKNOP
+    ------------------------------------------------------ */
+
+  .mobile-menu-button {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: var(--mobile-touch);
+    min-width: var(--mobile-touch);
+    height: var(--mobile-touch);
+    min-height: var(--mobile-touch);
+
+    padding: 0;
+
+    border: 1px solid var(--border);
+    border-radius: 999px;
+
+    background: var(--card-secondary);
+    color: var(--text-main);
+
+    font: inherit;
+    font-size: 1.2rem;
+    line-height: 1;
+
+    cursor: pointer;
+
+    box-shadow: none;
   }
 
-  .bug-fab {
-    left: 10px;
-    bottom: 10px;
-    max-width: calc(50vw - 15px);
-    white-space: normal;
-    text-align: center;
+  .mobile-menu-button:active {
+    transform: scale(0.96);
   }
 
-  .floating-account {
-    left: 10px;
-    bottom: 62px;
-    max-width: calc(100vw - 20px);
-  }
 
-  /*
-   * Sidebar niet meer verbergen.
-   * Hij wordt een compacte vaste groep boven de rechter FAB.
-   */
-  .leiding-sidebar {
-    display: flex !important;
-    top: auto;
-    right: 10px;
-    bottom: 62px;
-    width: 140px;
-    max-width: calc(100vw - 20px);
-    gap: 6px;
-  }
+  /* ------------------------------------------------------
+       DONKERE ACHTERGROND ACHTER MENU
+    ------------------------------------------------------ */
 
-  .leiding-sidebar .pill-btn {
-    min-height: 36px;
-    padding: 5px 8px;
-    font-size: 0.8rem;
-  }
-
-  /* -------------------------------
-     Modals
-  -------------------------------- */
-  .modal {
-    align-items: flex-start;
-    overflow-y: auto;
-    padding: 12px;
-  }
-
-  .modal-content {
-    width: 100%;
-    max-width: 100%;
-    max-height: none;
-    margin: auto 0;
-    padding: 1rem;
-  }
-
-  #accountRequestModal .modal-content {
-    width: 100%;
-  }
-
-  .modal-actions {
-    flex-wrap: wrap;
-  }
-
-  .modal-actions button {
-    flex: 1 1 130px;
-    min-height: 42px;
-  }
-
-  .account-checkbox-grid {
-    grid-template-columns: 1fr;
-  }
-
-  /* -------------------------------
-     Ledenbeheer
-  -------------------------------- */
-  .ledenbeheer-columns {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .ledenbeheer-col li {
-    align-items: flex-start;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
-
-  /* -------------------------------
-     Dashboard
-  -------------------------------- */
-  #dashboardOverview {
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-
-  .dashboard-date {
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    background: #f6f7f9;
-    padding: 8px 4px;
-    margin: 0;
-  }
-
-  .dashboard-table-wrapper {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    margin-bottom: 16px;
-  }
-
-  .dashboard-table {
-    width: max-content;
-    min-width: 100%;
-    border-collapse: collapse;
-  }
-
-  .dashboard-table th,
-  .dashboard-table td {
-    white-space: nowrap;
-    font-size: 14px;
-  }
-
-  .dashboard-table th {
-    font-size: 13px;
-  }
-
-  /* -------------------------------
-     Admin-sidepanel als sheet
-  -------------------------------- */
-  .sidepanel-backdrop {
+  .mobile-menu-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.35);
-    z-index: 1490;
+
+    z-index: 3200;
+
+    display: block;
+
+    background:
+      var(--overlay-bg,
+        rgba(15, 23, 42, 0.58));
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transition: opacity 0.2s ease;
   }
 
-  #userSidePanel {
+  .mobile-menu-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+
+  /* ------------------------------------------------------
+       MENU ALS BOTTOM SHEET
+    ------------------------------------------------------ */
+
+  .mobile-menu-sheet {
     position: fixed;
-    top: 3.5rem;
+
     right: 0;
     bottom: 0;
     left: 0;
 
-    background: #fff;
-    border-left: none;
-    border-radius: 18px 18px 0 0;
+    z-index: 3210;
 
-    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+
+    width: 100%;
+    max-height: min(78dvh, 680px);
+
+    padding:
+      var(--mobile-spacing-sm) var(--mobile-spacing-md) calc(var(--mobile-spacing-md) + env(safe-area-inset-bottom));
+
     overflow-y: auto;
-    z-index: 1500;
 
-    transform: translateY(100%);
-    transition: transform 0.25s ease;
+    background: var(--card);
+    color: var(--text-main);
+
+    border: 1px solid var(--border);
+    border-bottom: 0;
+
+    border-radius:
+      22px 22px 0 0;
+
+    box-shadow:
+      0 -18px 48px rgba(15, 23, 42, 0.24);
+
+    transform: translateY(105%);
+
+    transition:
+      transform 0.24s ease;
   }
 
-  #userSidePanel.is-open {
+  .mobile-menu-sheet.is-open {
     transform: translateY(0);
   }
 
-  #userSidePanel[style] {
-    flex: none !important;
+
+  /* ------------------------------------------------------
+       SLEEPLIJNTJE
+    ------------------------------------------------------ */
+
+  .mobile-menu-handle {
+    width: 42px;
+    height: 4px;
+
+    margin:
+      0 auto var(--mobile-spacing-sm);
+
+    border-radius: 999px;
+
+    background:
+      var(--border-strong,
+        var(--border));
   }
 
-  body.sidepanel-open {
+
+  /* ------------------------------------------------------
+       MENUHEADER
+    ------------------------------------------------------ */
+
+  .mobile-menu-header {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: var(--mobile-spacing-md);
+
+    padding:
+      0 0 var(--mobile-spacing-sm);
+
+    border-bottom: 1px solid var(--border);
+  }
+
+  .mobile-menu-header strong {
+    font-size: 1rem;
+  }
+
+  .mobile-menu-close {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: var(--mobile-touch);
+    min-width: var(--mobile-touch);
+    height: var(--mobile-touch);
+    min-height: var(--mobile-touch);
+
+    padding: 0;
+
+    border: 0;
+    border-radius: 999px;
+
+    background: var(--card-secondary);
+    color: var(--text-main);
+
+    font: inherit;
+    font-size: 1.35rem;
+
+    cursor: pointer;
+  }
+
+
+  /* ------------------------------------------------------
+       MENUOPTIES
+    ------------------------------------------------------ */
+
+  .mobile-menu-items {
+    display: grid;
+
+    gap: var(--mobile-spacing-sm);
+
+    padding-top: var(--mobile-spacing-sm);
+  }
+
+  .mobile-menu-item {
+    display: flex;
+
+    align-items: center;
+
+    width: 100%;
+    min-height: 50px;
+
+    padding:
+      var(--mobile-spacing-sm) var(--mobile-spacing-md);
+
+    gap: var(--mobile-spacing-md);
+
+    border: 1px solid var(--border);
+    border-radius: 13px;
+
+    background: var(--card-secondary);
+    color: var(--text-main);
+
+    text-decoration: none;
+    text-align: left;
+
+    font: inherit;
+    font-weight: 600;
+
+    cursor: pointer;
+  }
+
+  .mobile-menu-item:active {
+    transform: scale(0.985);
+  }
+
+  .mobile-menu-item-icon {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 28px;
+    min-width: 28px;
+
+    font-size: 1.05rem;
+  }
+
+  .mobile-menu-item-label {
+    min-width: 0;
+
+    overflow-wrap: anywhere;
+  }
+
+  .mobile-menu-item-danger {
+    color: var(--danger, #dc2626);
+  }
+
+
+  /* ------------------------------------------------------
+       BODY BLOKKEREN WANNEER MENU OPEN IS
+    ------------------------------------------------------ */
+
+  body.mobile-menu-open {
     overflow: hidden;
+    overscroll-behavior: none;
   }
 
-  #userSidePanel button {
-    margin-bottom: 0.5rem;
-  }
 }
 
+/* ==========================================================
+   MODULE 2
+   Smalle telefoons
+========================================================== */
 
-/* ============================================================
-   SMALLE TELEFOONS
-============================================================ */
-@media (max-width: 600px) {
+@media (max-width: 420px) {
 
   .topbar {
-    align-items: flex-start;
+    gap: var(--mobile-spacing-xs);
   }
 
   .topbar-left {
-    flex-basis: 100%;
+    grid-template-columns:
+      var(--mobile-touch) 32px minmax(0, 1fr);
+
+    gap: var(--mobile-spacing-xs);
   }
 
-  .topbar-right-icons {
-    width: 100%;
-    justify-content: flex-end;
+  .topbar-logo {
+    width: 32px;
+    height: 32px;
+
+    min-width: 32px;
+  }
+
+  .topbar-title h1 {
+    font-size: 0.98rem;
   }
 
   .topbar-title span {
-    display: none;
-  }
-
-  .planning-controls {
-    gap: 0.35rem;
-  }
-
-  .chip {
-    font-size: 0.78rem;
-    padding: 0.3rem 0.65rem;
-  }
-
-  .legend-item {
-    flex: 1 1 120px;
-  }
-
-  .tabel-edit-btn {
-    width: 100%;
-  }
-
-  .modal {
-    padding: 8px;
-  }
-
-  .modal-content {
-    padding: 0.9rem;
-    border-radius: 10px;
-  }
-
-  .modal-actions {
-    flex-direction: column;
-  }
-
-  .modal-actions button {
-    width: 100%;
-    flex-basis: auto;
+    font-size: 0.67rem;
   }
 
   /*
-   * Op zeer smalle schermen komen de vaste knoppen als twee
-   * compacte knoppen naast elkaar onderin.
-   */
-  .fab-add-opkomst,
-  .bug-fab {
-    font-size: 0.78rem;
-    min-height: 40px;
+     * Op de smalste telefoons verdwijnt het speltaklogo.
+     * De speltaknaam blijft al duidelijk in de titel staan.
+     */
+
+  .speltak-icon {
+    display: none;
   }
 
-  .leiding-sidebar {
-    width: 125px;
-  }
-
-  .leiding-sidebar .pill-btn {
-    font-size: 0.75rem;
-  }
 }
+/* ==========================================================
+   MODULE 3
+   Mobiele ondernavigatie
+========================================================== */
 
-.theme-toggle {
-  width: 38px;
-  height: 38px;
-  flex-basis: 38px;
-}
 
-.profile-details-grid {
-  grid-template-columns: 1fr;
-  gap: 1.1rem;
-}
+/* Desktop: mobiele navigatie nooit tonen */
 
-.profile-card-header {
-  margin-bottom: 1.25rem;
-}
-
-.profile-account-icon {
-  width: 42px;
-  height: 42px;
-  flex-basis: 42px;
-}
-
-.profile-security-banner {
-  width: calc(100% - 1rem);
-  margin-top: 0.5rem;
-}
-
-.profile-support .pill-btn {
-  width: 100%;
-}
-/* ============================================================
-   LAGE LAPTOPSCHERMEN
-============================================================ */
-@media (max-height: 750px) and (min-width: 901px) {
-
-  body {
-    padding-bottom: 90px;
-  }
-
-  .leiding-sidebar {
-    top: auto;
-    bottom: 70px;
-    gap: 5px;
-  }
-
-  .leiding-sidebar .pill-btn {
-    padding: 4px 8px;
-    font-size: 0.8rem;
-  }
-
-  .modal {
-    padding: 12px;
-  }
-
-  .modal-content {
-    max-height: calc(100vh - 24px);
-    padding-block: 1rem;
-  }
-
-  .modal-content input,
-  .modal-content select,
-  .modal-content textarea {
-    margin-bottom: 0.5rem;
-  }
-}
-
-/* ======================================================================
-   AUTHENTICATIE EN WACHTWOORDEN
-   ====================================================================== */
-
-.auth-modal-content {
-  position: relative;
-  width: min(440px, 100%);
-}
-
-.auth-modal-content h3,
-.auth-action-card h2 {
-  margin: 0 0 0.55rem;
-  text-align: center;
-}
-
-.auth-modal-icon {
-  width: 54px;
-  height: 54px;
-  margin: 0 auto 1rem;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 999px;
-  background: var(--blue-soft);
-
-  font-size: 1.4rem;
-}
-
-.auth-modal-description,
-.auth-modal-note {
-  color: var(--text-muted);
-  text-align: center;
-  line-height: 1.5;
-}
-
-.auth-modal-description {
-  margin: 0 0 1.25rem;
-}
-
-.auth-modal-note {
-  margin: 0.8rem 0 0;
-  font-size: 0.86rem;
-}
-
-.auth-form-group,
-.profile-form-group {
-  margin-bottom: 1rem;
-}
-
-.auth-form-group label,
-.profile-form-group label {
-  display: block;
-  margin-bottom: 0.4rem;
-
-  font-size: 0.86rem;
-  font-weight: 700;
+.mobile-bottom-nav {
+    display: none;
 }
 
 
-/* Wachtwoordveld met toon/verbergknop */
+@media (max-width: 768px) {
 
-.password-field {
-  position: relative;
+    /* ------------------------------------------------------
+       ORIGINELE ZWEVENDE KNOPPEN VERBERGEN
+    ------------------------------------------------------ */
+
+    /*
+     * De elementen blijven in de DOM aanwezig.
+     * mobile.js gebruikt hun bestaande clickfunctionaliteit.
+     */
+
+    .fab-add-opkomst,
+    .bug-fab,
+    .floating-account,
+    .leiding-sidebar {
+        display: none !important;
+    }
+
+
+    /* ------------------------------------------------------
+       ONDERNAVIGATIE
+    ------------------------------------------------------ */
+
+    .mobile-bottom-nav {
+        position: fixed;
+
+        right: 0;
+        bottom: 0;
+        left: 0;
+
+        z-index: 2500;
+
+        display: grid;
+
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(0, 1fr);
+
+        align-items: stretch;
+
+        min-height:
+            calc(
+                var(--mobile-bottom-nav-height)
+                +
+                env(safe-area-inset-bottom)
+            );
+
+        padding:
+
+            var(--mobile-spacing-xs)
+
+            max(
+                var(--mobile-spacing-xs),
+                env(safe-area-inset-right)
+            )
+
+            calc(
+                var(--mobile-spacing-xs)
+                +
+                env(safe-area-inset-bottom)
+            )
+
+            max(
+                var(--mobile-spacing-xs),
+                env(safe-area-inset-left)
+            );
+
+        border-top: 1px solid var(--border);
+
+        background:
+            color-mix(
+                in srgb,
+                var(--card) 96%,
+                transparent
+            );
+
+        box-shadow:
+            0 -8px 24px
+            rgba(15, 23, 42, 0.14);
+
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+    }
+
+
+    /* ------------------------------------------------------
+       NAVIGATIE-ITEM
+    ------------------------------------------------------ */
+
+    .mobile-bottom-nav-item {
+        display: flex;
+
+        flex-direction: column;
+
+        align-items: center;
+        justify-content: center;
+
+        min-width: 0;
+        min-height: 56px;
+
+        padding:
+            var(--mobile-spacing-xs)
+            0.2rem;
+
+        gap: 0.16rem;
+
+        border: 0;
+        border-radius: 11px;
+
+        background: transparent;
+        color: var(--text-muted);
+
+        text-decoration: none;
+        text-align: center;
+
+        font: inherit;
+        font-size: 0.68rem;
+        font-weight: 700;
+        line-height: 1.1;
+
+        cursor: pointer;
+    }
+
+
+    .mobile-bottom-nav-item:active {
+        transform: scale(0.96);
+
+        background: var(--card-secondary);
+    }
+
+
+    /* ------------------------------------------------------
+       ACTIEVE / PRIMAIRE ACTIE
+    ------------------------------------------------------ */
+
+    .mobile-bottom-nav-item.is-current {
+        color: var(--blue);
+
+        background: var(--blue-soft);
+    }
+
+
+    .mobile-bottom-nav-item.is-primary {
+        color: #ffffff;
+
+        background: var(--blue);
+    }
+
+
+    .mobile-bottom-nav-item.is-primary:active {
+        background:
+            color-mix(
+                in srgb,
+                var(--blue) 85%,
+                #000000
+            );
+    }
+
+
+    /* ------------------------------------------------------
+       ICOON
+    ------------------------------------------------------ */
+
+    .mobile-bottom-nav-icon {
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        min-height: 24px;
+
+        font-size: 1.2rem;
+        line-height: 1;
+    }
+
+
+    /* ------------------------------------------------------
+       LABEL
+    ------------------------------------------------------ */
+
+    .mobile-bottom-nav-label {
+        display: block;
+
+        width: 100%;
+
+        overflow: hidden;
+
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+
+    /* ------------------------------------------------------
+       LICHTE SCHEIDING VOOR 'MEER'
+    ------------------------------------------------------ */
+
+    .mobile-bottom-nav-item:last-child {
+        border-left: 1px solid var(--border);
+        border-radius: 0;
+    }
+
+}
+/* ==========================================================
+   MODULE 3
+   Mobiele ondernavigatie
+========================================================== */
+
+
+/* Desktop: mobiele navigatie nooit tonen */
+
+.mobile-bottom-nav {
+    display: none;
 }
 
-.password-field input {
-  width: 100%;
-  min-height: 44px;
-  padding-right: 5.3rem !important;
+
+@media (max-width: 768px) {
+
+    /* ------------------------------------------------------
+       ORIGINELE ZWEVENDE KNOPPEN VERBERGEN
+    ------------------------------------------------------ */
+
+    /*
+     * De elementen blijven in de DOM aanwezig.
+     * mobile.js gebruikt hun bestaande clickfunctionaliteit.
+     */
+
+    .fab-add-opkomst,
+    .bug-fab,
+    .floating-account,
+    .leiding-sidebar {
+        display: none !important;
+    }
+
+
+    /* ------------------------------------------------------
+       ONDERNAVIGATIE
+    ------------------------------------------------------ */
+
+    .mobile-bottom-nav {
+        position: fixed;
+
+        right: 0;
+        bottom: 0;
+        left: 0;
+
+        z-index: 2500;
+
+        display: grid;
+
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(0, 1fr);
+
+        align-items: stretch;
+
+        min-height:
+            calc(
+                var(--mobile-bottom-nav-height)
+                +
+                env(safe-area-inset-bottom)
+            );
+
+        padding:
+
+            var(--mobile-spacing-xs)
+
+            max(
+                var(--mobile-spacing-xs),
+                env(safe-area-inset-right)
+            )
+
+            calc(
+                var(--mobile-spacing-xs)
+                +
+                env(safe-area-inset-bottom)
+            )
+
+            max(
+                var(--mobile-spacing-xs),
+                env(safe-area-inset-left)
+            );
+
+        border-top: 1px solid var(--border);
+
+        background:
+            color-mix(
+                in srgb,
+                var(--card) 96%,
+                transparent
+            );
+
+        box-shadow:
+            0 -8px 24px
+            rgba(15, 23, 42, 0.14);
+
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+    }
+
+
+    /* ------------------------------------------------------
+       NAVIGATIE-ITEM
+    ------------------------------------------------------ */
+
+    .mobile-bottom-nav-item {
+        display: flex;
+
+        flex-direction: column;
+
+        align-items: center;
+        justify-content: center;
+
+        min-width: 0;
+        min-height: 56px;
+
+        padding:
+            var(--mobile-spacing-xs)
+            0.2rem;
+
+        gap: 0.16rem;
+
+        border: 0;
+        border-radius: 11px;
+
+        background: transparent;
+        color: var(--text-muted);
+
+        text-decoration: none;
+        text-align: center;
+
+        font: inherit;
+        font-size: 0.68rem;
+        font-weight: 700;
+        line-height: 1.1;
+
+        cursor: pointer;
+    }
+
+
+    .mobile-bottom-nav-item:active {
+        transform: scale(0.96);
+
+        background: var(--card-secondary);
+    }
+
+
+    /* ------------------------------------------------------
+       ACTIEVE / PRIMAIRE ACTIE
+    ------------------------------------------------------ */
+
+    .mobile-bottom-nav-item.is-current {
+        color: var(--blue);
+
+        background: var(--blue-soft);
+    }
+
+
+    .mobile-bottom-nav-item.is-primary {
+        color: #ffffff;
+
+        background: var(--blue);
+    }
+
+
+    .mobile-bottom-nav-item.is-primary:active {
+        background:
+            color-mix(
+                in srgb,
+                var(--blue) 85%,
+                #000000
+            );
+    }
+
+
+    /* ------------------------------------------------------
+       ICOON
+    ------------------------------------------------------ */
+
+    .mobile-bottom-nav-icon {
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        min-height: 24px;
+
+        font-size: 1.2rem;
+        line-height: 1;
+    }
+
+
+    /* ------------------------------------------------------
+       LABEL
+    ------------------------------------------------------ */
+
+    .mobile-bottom-nav-label {
+        display: block;
+
+        width: 100%;
+
+        overflow: hidden;
+
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+
+    /* ------------------------------------------------------
+       LICHTE SCHEIDING VOOR 'MEER'
+    ------------------------------------------------------ */
+
+    .mobile-bottom-nav-item:last-child {
+        border-left: 1px solid var(--border);
+        border-radius: 0;
+    }
+
 }
 
-.password-toggle {
-  position: absolute;
-  top: 50%;
-  right: 0.45rem;
+/* ==========================================================
+   MODULE 4
+   Planningheader en inklapbare legenda
+========================================================== */
 
-  transform: translateY(-50%);
+@media (max-width: 768px) {
 
-  min-width: 4.2rem;
-  padding: 0.38rem 0.55rem;
+    /* ------------------------------------------------------
+       ALGEMENE PLANNINGHEADER
+    ------------------------------------------------------ */
 
-  border: 0;
-  border-radius: 999px;
+    .planning-header-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
 
-  background: var(--card-secondary);
-  color: var(--blue);
+        width: 100%;
 
-  font-family: inherit;
-  font-size: 0.76rem;
-  font-weight: 700;
+        align-items: stretch;
 
-  cursor: pointer;
+        gap: var(--mobile-spacing-sm);
+    }
+
+
+    /* ------------------------------------------------------
+       SEIZOEN EN FILTERS
+    ------------------------------------------------------ */
+
+    .planning-controls {
+        display: flex;
+
+        align-items: center;
+
+        width: 100%;
+
+        gap: var(--mobile-spacing-xs);
+
+        overflow-x: auto;
+        overflow-y: hidden;
+
+        padding-bottom: 0.15rem;
+
+        scrollbar-width: none;
+
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .planning-controls::-webkit-scrollbar {
+        display: none;
+    }
+
+
+    /*
+     * Voorkomt dat seizoen en filterknoppen
+     * worden samengedrukt.
+     */
+
+    .planning-controls > *,
+    #seizoenFilterContainer,
+    #seizoenFilterContainer select,
+    .planning-controls .chip {
+        flex: 0 0 auto;
+    }
+
+
+    #seizoenFilterContainer {
+        margin-right: 0 !important;
+    }
+
+
+    #seizoenFilterContainer label {
+        display: none;
+    }
+
+
+    #seizoenFilterContainer select,
+    .planning-controls select {
+        min-height: 40px;
+
+        padding:
+            0.35rem
+            0.55rem;
+
+        font-size: 0.88rem;
+    }
+
+
+    .planning-controls .chip {
+        min-height: 40px;
+
+        padding:
+            0.42rem
+            0.75rem;
+
+        white-space: nowrap;
+    }
+
+
+    /* ------------------------------------------------------
+       RECHTERDEEL MET LEGENDA EN BEWERKEN
+    ------------------------------------------------------ */
+
+    .planning-header-right {
+        display: grid;
+
+        grid-template-columns:
+            minmax(0, 1fr)
+            auto;
+
+        align-items: start;
+
+        width: 100%;
+
+        margin-left: 0;
+
+        gap: var(--mobile-spacing-sm);
+    }
+
+
+    /* ------------------------------------------------------
+       MOBIELE LEGENDAKNOP
+    ------------------------------------------------------ */
+
+    .mobile-legend-toggle {
+        display: inline-flex;
+
+        align-items: center;
+        justify-content: center;
+
+        min-height: 40px;
+
+        padding:
+            0.45rem
+            0.8rem;
+
+        gap: 0.4rem;
+
+        border: 1px solid var(--border);
+        border-radius: 999px;
+
+        background: var(--card-secondary);
+        color: var(--text-main);
+
+        font: inherit;
+        font-size: 0.8rem;
+        font-weight: 700;
+
+        cursor: pointer;
+    }
+
+
+    .mobile-legend-toggle::before {
+        content: "▾";
+
+        display: inline-block;
+
+        transition: transform 0.18s ease;
+    }
+
+
+    .planning-header-right.mobile-legend-open
+    .mobile-legend-toggle::before {
+        transform: rotate(180deg);
+    }
+
+
+    /* ------------------------------------------------------
+       LEGENDA STANDAARD INGEKLAPT
+    ------------------------------------------------------ */
+
+    .legend-container {
+        grid-column: 1 / -1;
+
+        display: flex;
+
+        width: 100%;
+        max-height: 0;
+
+        margin: 0;
+        padding: 0;
+
+        overflow: hidden;
+
+        flex-wrap: wrap;
+
+        gap:
+            var(--mobile-spacing-xs)
+            var(--mobile-spacing-sm);
+
+        opacity: 0;
+
+        transition:
+            max-height 0.22s ease,
+            opacity 0.18s ease,
+            padding 0.22s ease;
+    }
+
+
+    .planning-header-right.mobile-legend-open
+    .legend-container {
+        max-height: 180px;
+
+        padding:
+            var(--mobile-spacing-xs)
+            0;
+
+        opacity: 1;
+    }
+
+
+    .legend-item {
+        flex: 0 0 auto;
+
+        font-size: 0.74rem;
+
+        white-space: nowrap;
+    }
+
+
+    /* ------------------------------------------------------
+       BEWERKKNOP
+    ------------------------------------------------------ */
+
+    .tabel-edit-btn,
+    .primary-tabel-edit-btn,
+    #editModeButton {
+        justify-self: end;
+
+        min-height: 40px;
+
+        padding:
+            0.45rem
+            0.8rem;
+
+        white-space: nowrap;
+    }
+
 }
+/* ==========================================================
+   MODULE 4
+   Smalle telefoons
+========================================================== */
 
-.password-toggle:hover {
-  background: var(--blue-soft);
-}
+@media (max-width: 420px) {
 
-.password-toggle:focus-visible {
-  outline: 2px solid var(--blue);
-  outline-offset: 1px;
-}
-
-
-/* Wachtwoord vergeten */
-
-.forgot-password-row {
-  display: flex;
-  justify-content: flex-end;
-
-  margin: -0.35rem 0 1rem;
-}
-
-.forgot-password-link {
-  padding: 0;
-
-  border: 0;
-  background: transparent;
-
-  color: var(--text-muted);
-
-  font: inherit;
-  font-size: 0.84rem;
-
-  cursor: pointer;
-}
-
-.forgot-password-link:hover {
-  color: var(--blue);
-  text-decoration: underline;
-}
+    .planning-header-right {
+        grid-template-columns:
+            minmax(0, 1fr)
+            minmax(0, 1fr);
+    }
 
 
-/* Inline feedback */
+    .mobile-legend-toggle,
+    .tabel-edit-btn,
+    .primary-tabel-edit-btn,
+    #editModeButton {
+        width: 100%;
 
-.auth-inline-message {
-  margin: 0.9rem 0;
-  padding: 0.75rem 0.85rem;
+        padding-inline: 0.45rem;
 
-  border: 1px solid;
-  border-radius: var(--radius-small);
+        font-size: 0.74rem;
 
-  font-size: 0.86rem;
-  line-height: 1.4;
-}
-
-.auth-inline-message-error {
-  background: var(--danger-soft);
-  color: var(--danger-text);
-  border-color: #fda4af;
-}
-
-.auth-inline-message-success {
-  background: var(--success-soft);
-  color: var(--success-text);
-  border-color: #86efac;
-}
-
-.auth-modal-actions {
-  margin-top: 1.15rem;
-}
-
-.auth-modal-actions button {
-  min-width: 130px;
-}
-
-.auth-email-preview {
-  display: block;
-
-  text-align: center;
-  overflow-wrap: anywhere;
-}
+        white-space: normal;
+    }
 
 
-/* Wachtwoordvoorwaarden */
-
-.password-requirements {
-  margin: 0.1rem 0 1rem;
-  padding-left: 1.2rem;
-
-  color: var(--text-muted);
-
-  font-size: 0.8rem;
-  line-height: 1.5;
-}
+    .legend-container {
+        gap:
+            var(--mobile-spacing-xs)
+            var(--mobile-spacing-sm);
+    }
 
 
-/* Beveiliging op profielpagina */
+    .legend-item {
+        font-size: 0.7rem;
+    }
 
-.profile-security-section {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-}
-
-.profile-security-section strong {
-  display: block;
-  margin-bottom: 0.25rem;
-}
-
-.profile-security-section p {
-  margin: 0;
-
-  color: var(--text-muted);
-  font-size: 0.88rem;
-}
-
-.profile-password-actions {
-  justify-content: flex-end;
-}
-
-.profile-password-actions
-.profile-password-submit {
-  width: auto;
-  margin-top: 0;
-}
-
-
-/* Eigen wachtwoordherstelpagina */
-
-.auth-action-page {
-  min-height: 100vh;
-}
-
-.auth-action-main {
-  width: 100%;
-  max-width: 620px;
-
-  margin: 0 auto;
-  padding: 3rem 1rem;
-}
-
-.auth-action-card {
-  padding: 2rem;
-
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-
-  box-shadow: var(--shadow);
-}
-
-.auth-action-card form {
-  margin-top: 1.5rem;
-}
-
-.auth-action-submit {
-  width: 100%;
-  min-height: 44px;
-}
-
-.auth-result-state {
-  text-align: center;
-}
-
-.auth-result-state p {
-  color: var(--text-muted);
-  line-height: 1.5;
 }

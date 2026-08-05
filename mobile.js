@@ -1487,40 +1487,7 @@
     }
 
 
-    /* ================================================================
-       VEEGHINT VERWIJDEREN
-    ================================================================ */
-
-    function hideMobileTableHint(
-        wrapper
-    ) {
-        const hint =
-            wrapper.nextElementSibling;
-
-
-        if (
-            !hint ||
-            !hint.classList.contains(
-                "mobile-table-hint"
-            )
-        ) {
-            return;
-        }
-
-
-        hint.classList.add(
-            "is-hidden"
-        );
-
-
-        window.setTimeout(
-            () => {
-                hint.remove();
-            },
-            220
-        );
-    }
-
+  
 
     /* ================================================================
        ÉÉN TABELWRAPPER INSTELLEN
@@ -1555,117 +1522,46 @@
         );
 
 
-        const updateOverflowState = () => {
-            const hasOverflow =
-                tableWrapperHasOverflow(
-                    wrapper
-                );
+      const updateOverflowState = () => {
+    const hasOverflow =
+        tableWrapperHasOverflow(
+            wrapper
+        );
 
 
-            wrapper.classList.toggle(
-                "mobile-has-overflow",
-                hasOverflow
-            );
+    /*
+     * Alleen nog gebruiken voor de subtiele
+     * schaduw aan de rechterkant.
+     */
+    wrapper.classList.toggle(
+        "mobile-has-overflow",
+        hasOverflow
+    );
 
 
-            updateMobileTableEdgeState(
-                wrapper
-            );
-
-
-            let hint =
-                wrapper.nextElementSibling;
-
-
-            const existingHintIsCorrect =
-                hint &&
-                hint.classList.contains(
-                    "mobile-table-hint"
-                );
-
-
-            /*
-             * Geen horizontale overflow:
-             * geen instructie nodig.
-             */
-
-            if (!hasOverflow) {
-                if (existingHintIsCorrect) {
-                    hint.remove();
-                }
-
-                return;
-            }
-
-
-            /*
-             * Alleen een nieuwe hint maken als
-             * er nog geen bestaat.
-             */
-
-            if (!existingHintIsCorrect) {
-                hint = createElement(
-                    "div",
-                    {
-                        className:
-                            "mobile-table-hint",
-
-                        text:
-                            "↔ Veeg zijwaarts voor meer",
-
-                        attributes: {
-                            "aria-hidden": "true"
-                        }
-                    }
-                );
-
-
-                wrapper.insertAdjacentElement(
-                    "afterend",
-                    hint
-                );
-            }
-        };
-
+    updateMobileTableEdgeState(
+        wrapper
+    );
+};
 
         /*
          * Bij scrollen de rechterrand bijwerken en
          * de instructie laten verdwijnen.
          */
 
-        wrapper.addEventListener(
-            "scroll",
-            () => {
-                updateMobileTableEdgeState(
-                    wrapper
-                );
-
-                hideMobileTableHint(
-                    wrapper
-                );
-            },
-            {
-                passive: true
-            }
+   wrapper.addEventListener(
+    "scroll",
+    () => {
+        updateMobileTableEdgeState(
+            wrapper
         );
+    },
+    {
+        passive: true
+    }
+);
 
 
-        /*
-         * Ook bij aanraken mag de instructie verdwijnen.
-         */
-
-        wrapper.addEventListener(
-            "pointerdown",
-            () => {
-                hideMobileTableHint(
-                    wrapper
-                );
-            },
-            {
-                passive: true,
-                once: true
-            }
-        );
 
 
         requestAnimationFrame(

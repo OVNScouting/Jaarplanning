@@ -1152,351 +1152,307 @@ async function saveAccountRequestEdits(
 
   return editedData;
 }
+
+
 // ============================================================
-// ACCOUNTAANVRAAG — DETAILMODAL
+// ACCOUNTAANVRAAG — KNOPPEN EN EVENTS
 // ============================================================
 
-function getAccountRequestModal() {
-  return document.getElementById(
-    "accountRequestAdminModal"
-  );
-}
-
-
-function showAccountRequestModalError(
-  message = ""
-) {
-  const errorElement =
-    document.getElementById(
-      "accountRequestModalError"
-    );
-
-  if (!errorElement) return;
-
-  errorElement.textContent =
-    message;
-
-  errorElement.classList.toggle(
-    "hidden",
-    !message
-  );
-}
-
-
-function setAccountRequestRejectMode(
-  enabled
-) {
-  document
-    .getElementById(
-      "accountRequestRejectConfirm"
-    )
-    ?.classList
-    .toggle(
-      "hidden",
-      !enabled
-    );
-
-  document
-    .getElementById(
-      "accountRequestModalActions"
-    )
-    ?.classList
-    .toggle(
-      "hidden",
-      enabled
-    );
-}
-
-
-function openAccountRequestModal(
-  requestId,
-  requestData,
-  rowElement
-) {
+function initAccountRequestModalEvents() {
   const modal =
     getAccountRequestModal();
 
-  if (!modal) return;
+  if (!modal) {
+    console.warn(
+      "Accountaanvraagmodal niet gevonden."
+    );
+
+    return;
+  }
 
 
-  selectedAccountRequestId =
-    requestId;
+  const closeButton =
+    document.getElementById(
+      "closeAccountRequestModal"
+    );
 
-  selectedAccountRequestData = {
-    ...requestData
-  };
+  const cancelButton =
+    document.getElementById(
+      "cancelAccountRequestModal"
+    );
 
-  selectedAccountRequestRow =
-    rowElement;
+  const rejectButton =
+    document.getElementById(
+      "rejectAccountRequest"
+    );
 
+  const cancelRejectButton =
+    document.getElementById(
+      "cancelRejectAccountRequest"
+    );
 
-  showAccountRequestModalError(
-    ""
-  );
+  const confirmRejectButton =
+    document.getElementById(
+      "confirmRejectAccountRequest"
+    );
 
-  setAccountRequestRejectMode(
-    false
-  );
-
-
-  const fullName =
-    requestData.fullName ||
-    [
-      requestData.firstName,
-      requestData.lastName
-    ]
-      .filter(Boolean)
-      .join(" ");
-
-
-  document.getElementById(
-    "accountRequestName"
-  ).value = fullName || "";
-
-
-  document.getElementById(
-    "accountRequestEmail"
-  ).value = requestData.email || "";
-
-
-  document.getElementById(
-    "accountRequestRoleBestuur"
-  ).checked =
-    !!requestData
-      .requestedRoles
-      ?.bestuur;
-
-
-  document.getElementById(
-    "accountRequestRoleAdmin"
-  ).checked =
-    !!requestData
-      .requestedRoles
-      ?.admin;
-
-
-  const selectedSpeltakken =
-    new Set(
-      speltakkenToArray(
-        requestData.speltakken
-      )
+  const approveButton =
+    document.getElementById(
+      "approveAccountRequest"
     );
 
 
-  document
-    .querySelectorAll(
-      'input[name="accountRequestSpeltak"]'
-    )
-    .forEach(
-      checkbox => {
-        checkbox.checked =
-          selectedSpeltakken.has(
-            checkbox.value
-          );
-      }
-    );
+  /*
+   * Voorkom dubbele listeners wanneer de
+   * initialisatie onverhoopt opnieuw wordt uitgevoerd.
+   */
+
+  if (
+    modal.dataset.eventsInitialized ===
+    "true"
+  ) {
+    return;
+  }
+
+  modal.dataset.eventsInitialized =
+    "true";
 
 
-  document.getElementById(
-    "accountRequestCreated"
-  ).textContent =
-    requestData.createdAt
-      ? new Date(
-          requestData.createdAt
-        ).toLocaleString(
-          "nl-NL",
-          {
-            dateStyle: "long",
-            timeStyle: "short"
-          }
-        )
-      : "Onbekend";
+  /*
+   * Modal sluiten via kruisje.
+   */
 
-
-  const message =
-    String(
-      requestData.message || ""
-    ).trim();
-
-
-  document.getElementById(
-    "accountRequestMessage"
-  ).textContent =
-    message ||
-    "Geen bericht toegevoegd.";
-
-
-  modal.classList.remove(
-    "hidden"
-  );
-
-  document.body.classList.add(
-    "account-request-modal-open"
+  closeButton?.addEventListener(
+    "click",
+    closeAccountRequestModal
   );
 
 
-  requestAnimationFrame(
+  /*
+   * Modal sluiten via knop Sluiten.
+   */
+
+  cancelButton?.addEventListener(
+    "click",
+    closeAccountRequestModal
+  );
+
+
+  /*
+   * Eerste klik op Afwijzen opent de
+   * nette bevestiging binnen de modal.
+   */
+
+  rejectButton?.addEventListener(
+    "click",
     () => {
-      document
-        .getElementById(
-          "accountRequestName"
+      showAccountRequestModalError(
+        ""
+      );
+
+      setAccountRequestRejectMode(
+        true
+      );
+    }
+  );
+
+
+  /*
+   * Afwijzen annuleren.
+   */
+
+  cancelRejectButton?.addEventListener(
+    "click",
+    () => {
+      setAccountRequestRejectMode(
+        false
+      );
+    }
+  );
+
+
+  /*
+   * Aanvraag definitief afwijzen.
+   */
+
+  confirmRejectButton?.addEventListener(
+    "click",
+    async () => {
+      if (
+        !selectedAccountRequestId
+      ) {
+        showAccountRequestModalError(
+          "Er is geen aanvraag geselecteerd."
+        );
+
+        return;
+      }
+
+
+      await updateAccountRequestStatus(
+        selectedAccountRequestId,
+        "rejected",
+        selectedAccountRequestRow,
+        "",
+        confirmRejectButton
+      );
+    }
+  );
+
+
+  /*
+   * Gewijzigde gegevens opslaan en daarna
+   * de aanvraag goedkeuren.
+   */
+
+  approveButton?.addEventListener(
+    "click",
+    async () => {
+      if (
+        !selectedAccountRequestId
+      ) {
+        showAccountRequestModalError(
+          "Er is geen aanvraag geselecteerd."
+        );
+
+        return;
+      }
+
+
+      showAccountRequestModalError(
+        ""
+      );
+
+
+      /*
+       * Beide knoppen tijdelijk blokkeren,
+       * zodat de aanvraag niet dubbel kan
+       * worden verwerkt.
+       */
+
+      if (rejectButton) {
+        rejectButton.disabled = true;
+      }
+
+      if (cancelButton) {
+        cancelButton.disabled = true;
+      }
+
+
+      try {
+        /*
+         * Eerst de gecorrigeerde naam, rollen
+         * en speltakken opslaan.
+         */
+
+        await saveAccountRequestEdits(
+          selectedAccountRequestId
+        );
+
+
+        /*
+         * Daarna keurt de bestaande functie
+         * de bijgewerkte aanvraag goed.
+         */
+
+        await approveRequestViaFunction(
+          selectedAccountRequestId,
+          selectedAccountRequestRow,
+          approveButton
+        );
+
+      } catch (error) {
+        console.error(
+          "Accountaanvraag verwerken mislukt:",
+          error
+        );
+
+
+        showAccountRequestModalError(
+          error?.message ||
+          "De aanvraag kon niet worden verwerkt."
+        );
+
+      } finally {
+        if (rejectButton) {
+          rejectButton.disabled = false;
+        }
+
+        if (cancelButton) {
+          cancelButton.disabled = false;
+        }
+      }
+    }
+  );
+
+
+  /*
+   * Klikken op de donkere achtergrond
+   * sluit de modal.
+   */
+
+  modal.addEventListener(
+    "click",
+    event => {
+      if (
+        event.target === modal
+      ) {
+        closeAccountRequestModal();
+      }
+    }
+  );
+
+
+  /*
+   * Escape sluit de modal.
+   */
+
+  document.addEventListener(
+    "keydown",
+    event => {
+      if (
+        event.key !== "Escape" ||
+        modal.classList.contains(
+          "hidden"
         )
-        ?.focus();
+      ) {
+        return;
+      }
+
+
+      const rejectConfirm =
+        document.getElementById(
+          "accountRequestRejectConfirm"
+        );
+
+
+      /*
+       * Wanneer de afwijsbevestiging open is,
+       * sluit Escape eerst alleen die bevestiging.
+       */
+
+      if (
+        rejectConfirm &&
+        !rejectConfirm.classList.contains(
+          "hidden"
+        )
+      ) {
+        setAccountRequestRejectMode(
+          false
+        );
+
+        return;
+      }
+
+
+      closeAccountRequestModal();
     }
   );
 }
 
-
-function closeAccountRequestModal() {
-  const modal =
-    getAccountRequestModal();
-
-  modal?.classList.add(
-    "hidden"
-  );
-
-  document.body.classList.remove(
-    "account-request-modal-open"
-  );
-
-
-  setAccountRequestRejectMode(
-    false
-  );
-
-  showAccountRequestModalError(
-    ""
-  );
-
-
-  selectedAccountRequestId =
-    null;
-
-  selectedAccountRequestData =
-    null;
-
-  selectedAccountRequestRow =
-    null;
-}
-
-
-function getEditedAccountRequestData() {
-  const fullName =
-    document
-      .getElementById(
-        "accountRequestName"
-      )
-      ?.value
-      .trim() || "";
-
-
-  if (!fullName) {
-    throw new Error(
-      "Vul een volledige naam in."
-    );
-  }
-
-
-  const requestedRoles = {
-    bestuur:
-      !!document
-        .getElementById(
-          "accountRequestRoleBestuur"
-        )
-        ?.checked,
-
-    admin:
-      !!document
-        .getElementById(
-          "accountRequestRoleAdmin"
-        )
-        ?.checked
-  };
-
-
-  const speltakken = {};
-
-  document
-    .querySelectorAll(
-      'input[name="accountRequestSpeltak"]'
-    )
-    .forEach(
-      checkbox => {
-        speltakken[
-          checkbox.value
-        ] = checkbox.checked;
-      }
-    );
-
-
-  const selectedSpeltakCount =
-    Object.values(
-      speltakken
-    ).filter(Boolean).length;
-
-
-  if (
-    !requestedRoles.bestuur &&
-    !requestedRoles.admin &&
-    selectedSpeltakCount === 0
-  ) {
-    throw new Error(
-      "Selecteer minimaal één rol of speltak."
-    );
-  }
-
-
-  const nameParts =
-    fullName
-      .split(/\s+/)
-      .filter(Boolean);
-
-
-  return {
-    fullName,
-
-    firstName:
-      nameParts[0] || "",
-
-    lastName:
-      nameParts
-        .slice(1)
-        .join(" "),
-
-    requestedRoles,
-
-    speltakken
-  };
-}
-
-
-async function saveAccountRequestEdits(
-  requestId
-) {
-  const editedData =
-    getEditedAccountRequestData();
-
-
-  const app =
-    getFirebaseApp();
-
-  const db =
-    window._firebase.getDatabase(
-      app
-    );
-
-
-  await window._firebase.update(
-    window._firebase.ref(
-      db,
-      `accountRequests/${requestId}`
-    ),
-    editedData
-  );
-
-
-  return editedData;
-}
+waitForFirebase(
+  initAccountRequestModalEvents
+);
 
 function loadUsers() {
   const app = getFirebaseApp();

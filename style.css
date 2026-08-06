@@ -5272,3 +5272,304 @@ input[type="checkbox"]:focus-visible
 
   cursor: default;
 }
+/* ============================================================
+   ROVERS — AUTOMATISCHE STAMKOPPELING
+============================================================ */
+
+.member-auto-link-info {
+  display: inline-flex;
+
+  align-items: center;
+
+  width: fit-content;
+  max-width: 100%;
+
+  margin-top: 0.9rem;
+
+  padding:
+    0.45rem
+    0.7rem;
+
+  gap: 0.45rem;
+
+  border: 1px solid var(--success);
+  border-radius: 999px;
+
+  background: var(--success-soft);
+  color: var(--success);
+
+  font-size: 0.8rem;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+
+.member-auto-link-icon {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 18px;
+  height: 18px;
+
+  flex: 0 0 18px;
+
+  border-radius: 999px;
+
+  background: var(--success);
+  color: #013816;
+
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+
+.member-auto-link-text {
+  min-width: 0;
+
+  overflow-wrap: anywhere;
+}
+/* ============================================================
+   LEDENBEHEER — KLIKBARE LEDENNAMEN
+============================================================ */
+
+.ledenbeheer-col ul {
+    display: grid;
+
+    margin: 0;
+    padding: 0;
+
+    gap: 0.45rem;
+
+    list-style: none;
+}
+
+
+.ledenbeheer-col li {
+    min-width: 0;
+
+    margin: 0;
+    padding: 0;
+
+    border: 0;
+
+    background: transparent;
+}
+
+
+.member-row-button {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    width: 100%;
+    min-width: 0;
+    min-height: 46px;
+
+    margin: 0;
+    padding:
+        0.65rem
+        0.8rem;
+
+    gap: 0.65rem;
+
+    border: 1px solid var(--border);
+    border-radius: 11px;
+
+    background: var(--card);
+    color: var(--text-main);
+
+    font: inherit;
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        border-color 0.15s ease,
+        background 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.08s ease;
+}
+
+
+.member-row-button:hover {
+    border-color: var(--blue);
+
+    background: var(--blue-soft);
+
+    box-shadow:
+        0 4px 12px
+        rgba(15, 23, 42, 0.07);
+}
+
+
+.member-row-button:active {
+    transform: scale(0.992);
+}
+
+
+.member-row-button:focus-visible {
+    outline: 3px solid var(--blue-soft);
+    outline-offset: 2px;
+}
+
+
+.member-row-name {
+    min-width: 0;
+
+    overflow: hidden;
+
+    font-size: 0.9rem;
+    font-weight: 600;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* Scouts: klein PL/APL-label */
+
+.member-row-role {
+    flex: 0 0 auto;
+
+    padding:
+        0.2rem
+        0.42rem;
+
+    border-radius: 999px;
+
+    background: var(--blue-soft);
+    color: var(--blue);
+
+    font-size: 0.68rem;
+    font-weight: 800;
+}
+
+
+/* ============================================================
+   VERBORGEN LID
+============================================================ */
+
+.ledenbeheer-col li.lid-verborgen
+.member-row-button {
+    border-style: dashed;
+
+    background: var(--card-secondary);
+    color: var(--text-muted);
+
+    opacity: 0.62;
+}
+
+
+.ledenbeheer-col li.lid-verborgen
+.member-row-name {
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+}
+
+
+.ledenbeheer-col li.lid-verborgen
+.member-row-button:hover {
+    opacity: 0.85;
+
+    border-color: var(--blue);
+}
+
+
+/* ============================================================
+   LEDENMODAL — BEHEERACTIES
+============================================================ */
+
+.member-management-actions {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    margin-top: 1rem;
+    padding-top: 1rem;
+
+    gap: 0.6rem;
+
+    border-top: 1px solid var(--border);
+}
+
+
+.member-management-action {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-width: 0;
+    min-height: 42px;
+
+    padding:
+        0.6rem
+        0.7rem;
+
+    gap: 0.4rem;
+
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    background: var(--card-secondary);
+    color: var(--text-main);
+
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+.member-management-action:hover {
+    border-color: var(--blue);
+
+    background: var(--blue-soft);
+    color: var(--blue);
+}
+
+
+.member-management-action.is-show-action {
+    border-color:
+        color-mix(
+            in srgb,
+            var(--success) 45%,
+            var(--border)
+        );
+
+    background: var(--success-soft);
+    color: var(--success);
+}
+
+
+.member-management-action.danger {
+    border-color:
+        color-mix(
+            in srgb,
+            var(--danger) 40%,
+            var(--border)
+        );
+
+    background: var(--danger-soft);
+    color: var(--danger);
+}
+
+
+.member-management-action.danger:hover {
+    border-color: var(--danger);
+
+    background: var(--danger);
+    color: #ffffff;
+}
+
+
+.member-management-action:disabled {
+    opacity: 0.55;
+
+    cursor: wait;
+}

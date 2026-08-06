@@ -2640,3 +2640,84 @@ Touch devices
       minmax(0, 1fr);
   }
 }
+/* ==========================================================
+   LEDENBEHEER — MOBIELE LEDENRIJEN
+========================================================== */
+
+@media (max-width: 768px) {
+
+    .ledenbeheer-col ul {
+        gap: 0.42rem;
+    }
+
+
+    .ledenbeheer-col li {
+        min-height: 54px;
+
+        padding:
+            0.45rem
+            0.45rem
+            0.45rem
+            0.65rem;
+
+        gap: 0.45rem;
+
+        border-radius: 11px;
+    }
+
+
+    .member-row-name {
+        /*
+         * Naam gebruikt alle overgebleven ruimte.
+         */
+        flex:
+            1
+            1
+            auto;
+    }
+
+
+    .member-row-name-text {
+        font-size: 0.86rem;
+    }
+
+
+    .ledenbeheer-controls {
+        gap: 0.3rem;
+    }
+
+
+    /*
+     * Op mobiel worden alle acties compacte
+     * vierkante icoonknoppen.
+     */
+
+    .member-action-btn {
+        width: 38px;
+        min-width: 38px;
+        max-width: 38px;
+
+        height: 38px;
+        min-height: 38px;
+        max-height: 38px;
+
+        padding: 0;
+
+        border-radius: 10px;
+
+        touch-action: manipulation;
+
+        -webkit-tap-highlight-color: transparent;
+    }
+
+
+    .member-action-text {
+        display: none;
+    }
+
+
+    .member-action-icon,
+    .member-action-delete > span {
+        font-size: 0.8rem;
+    }
+}

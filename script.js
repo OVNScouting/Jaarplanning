@@ -163,7 +163,285 @@ const addMemberButton = document.getElementById("addMemberButton");
 const memberModal = document.getElementById("addMemberModal");
 const memberType = document.getElementById("memberType");
 const memberName = document.getElementById("memberName");
+/* ======================================================================
+   LEDENMODAL — BEHEERACTIES
+====================================================================== */
 
+const memberManagementActions =
+    document.getElementById(
+        "memberManagementActions"
+    );
+
+const toggleMemberVisibilityButton =
+    document.getElementById(
+        "toggleMemberVisibility"
+    );
+
+const toggleMemberVisibilityIcon =
+    document.getElementById(
+        "toggleMemberVisibilityIcon"
+    );
+
+const toggleMemberVisibilityText =
+    document.getElementById(
+        "toggleMemberVisibilityText"
+    );
+
+const deleteMemberFromModalButton =
+    document.getElementById(
+        "deleteMemberFromModal"
+    );
+
+
+/*
+ * Volledige gegevens van het lid dat momenteel
+ * in de modal geopend is.
+ */
+
+let editingMemberObject = null;
+
+/* ======================================================================
+   LEDENMODAL — TONEN / VERBERGEN
+====================================================================== */
+
+toggleMemberVisibilityButton
+    ?.addEventListener(
+        "click",
+        async () => {
+            if (
+                !isLeiding() ||
+                !editingMemberObject ||
+                !editingMemberId ||
+                !editingMemberType
+            ) {
+                return;
+            }
+
+
+            const member =
+                editingMemberObject;
+
+            const type =
+                editingMemberType;
+
+            const path =
+                type === "jeugd"
+                    ? "jeugdleden"
+                    : "leiding";
+
+            const newHiddenValue =
+                !member.hidden;
+
+
+            toggleMemberVisibilityButton.disabled =
+                true;
+
+
+            try {
+                const updates = {};
+
+                updates[
+                    `${speltak}/${path}/${member.id}/hidden`
+                ] =
+                    newHiddenValue;
+
+
+                if (type === "jeugd") {
+                    updates[
+                        `${PUBLIC_ROOT}/jeugdleden/${member.id}/hidden`
+                    ] =
+                        newHiddenValue;
+                }
+
+
+                await update(
+                    ref(db),
+                    updates
+                );
+
+
+                /*
+                 * Lokale modalstatus direct bijwerken.
+                 */
+
+                editingMemberObject = {
+                    ...member,
+                    hidden:
+                        newHiddenValue
+                };
+
+
+                updateMemberManagementActions(
+                    editingMemberObject
+                );
+
+
+                await loadEverything();
+
+            } catch (error) {
+                console.error(
+                    "Zichtbaarheid lid wijzigen mislukt:",
+                    error
+                );
+
+                alert(
+                    "De zichtbaarheid kon niet worden gewijzigd."
+                );
+
+            } finally {
+                toggleMemberVisibilityButton.disabled =
+                    false;
+            }
+        }
+    );
+
+   /* ======================================================================
+   LEDENMODAL — LID VERWIJDEREN
+====================================================================== */
+
+deleteMemberFromModalButton
+    ?.addEventListener(
+        "click",
+        async () => {
+            if (
+                !isLeiding() ||
+                !editingMemberObject ||
+                !editingMemberId ||
+                !editingMemberType
+            ) {
+                return;
+            }
+
+
+            const member =
+                editingMemberObject;
+
+            const type =
+                editingMemberType;
+
+            const confirmed =
+                confirm(
+                    `Weet je zeker dat je ${member.naam} wilt verwijderen?`
+                );
+
+
+            if (!confirmed) {
+                return;
+            }
+
+
+            deleteMemberFromModalButton.disabled =
+                true;
+
+
+            try {
+                const path =
+                    type === "jeugd"
+                        ? "jeugdleden"
+                        : "leiding";
+
+                const updates = {};
+
+
+                /*
+                 * Huidige ledenrecord verwijderen.
+                 */
+
+                updates[
+                    `${speltak}/${path}/${member.id}`
+                ] = null;
+
+
+                if (type === "jeugd") {
+                    updates[
+                        `${PUBLIC_ROOT}/jeugdleden/${member.id}`
+                    ] = null;
+                }
+
+
+                /*
+                 * Bij een gekoppeld Rover- of Stamlid blijft
+                 * het lid in de andere planning bestaan.
+                 * Alleen de verwijzing naar dit verwijderde
+                 * record wordt daar opgeruimd.
+                 */
+
+                if (
+                    type === "jeugd" &&
+                    speltak === "rovers" &&
+                    member.linkedStamMemberId
+                ) {
+                    const linkedStamId =
+                        member.linkedStamMemberId;
+
+                    updates[
+                        `stam/jeugdleden/${linkedStamId}/linkedRoverMemberId`
+                    ] = null;
+
+                    updates[
+                        `stam/public/jeugdleden/${linkedStamId}/linkedRoverMemberId`
+                    ] = null;
+                }
+
+
+                if (
+                    type === "jeugd" &&
+                    speltak === "stam" &&
+                    member.linkedRoverMemberId
+                ) {
+                    const linkedRoverId =
+                        member.linkedRoverMemberId;
+
+                    updates[
+                        `rovers/jeugdleden/${linkedRoverId}/linkedStamMemberId`
+                    ] = null;
+
+                    updates[
+                        `rovers/public/jeugdleden/${linkedRoverId}/linkedStamMemberId`
+                    ] = null;
+                }
+
+
+                await update(
+                    ref(db),
+                    updates
+                );
+
+
+                memberModal.classList.add(
+                    "hidden"
+                );
+
+                editingMemberId = null;
+                editingMemberType = null;
+                editingMemberObject = null;
+
+                memberType.disabled =
+                    false;
+
+                memberManagementActions
+                    ?.classList
+                    .add("hidden");
+
+
+                await loadEverything();
+
+            } catch (error) {
+                console.error(
+                    "Lid verwijderen mislukt:",
+                    error
+                );
+
+                alert(
+                    "Het lid kon niet worden verwijderd."
+                );
+
+            } finally {
+                deleteMemberFromModalButton.disabled =
+                    false;
+            }
+        }
+    ); 
 /* ======================================================================
    ROVERS ↔ STAM — LEDENKOPPELING
 ====================================================================== */
@@ -2378,23 +2656,57 @@ function makeMemberRowScouts(obj) {
     li.dataset.type = "jeugd";
     li.dataset.ploeg = obj.Ploeg || "";
 
-    const icon = obj.hidden ? "🚫" : (obj.PL ? "✪" : obj.APL ? "☆" : "👁️");
-
-    li.innerHTML = `
-        <span>${icon} ${obj.naam}</span>
-        <div class="ledenbeheer-controls">
-            <button data-act="edit">Bewerken</button>
-            <button data-act="toggle">${obj.hidden ? "Toon" : "Verberg"}</button>
-            <button data-act="del">🗑️</button>
-        </div>
-    `;
-
-    li.querySelectorAll("button").forEach(b =>
-        b.addEventListener("click", (e) => {
-            e.stopPropagation();
-            handleMemberAction(obj, "jeugd", b.dataset.act);
-        })
+  if (obj.hidden) {
+    li.classList.add(
+        "lid-verborgen"
     );
+}
+
+
+li.innerHTML = `
+    <button
+        type="button"
+        class="member-row-button"
+        aria-label="${obj.naam} openen"
+        title="${obj.hidden
+            ? `${obj.naam} — verborgen`
+            : obj.naam
+        }"
+    >
+        <span class="member-row-name">
+            ${obj.naam}
+        </span>
+
+        ${
+            obj.PL
+                ? `<span class="member-row-role">PL</span>`
+                : obj.APL
+                    ? `<span class="member-row-role">APL</span>`
+                    : ""
+        }
+    </button>
+`;
+
+
+const memberButton =
+    li.querySelector(
+        ".member-row-button"
+    );
+
+
+memberButton?.addEventListener(
+    "click",
+    event => {
+        event.stopPropagation();
+
+        openEditMember(
+            obj,
+            "jeugd"
+        );
+    }
+);
+
+   
 
     // DRAG & DROP
     li.addEventListener("dragstart", e => {
@@ -3486,129 +3798,313 @@ function renderLedenbeheer() {
     }
 }
 
-
-
 function makeMemberRow(obj, type) {
-    const li = document.createElement("li");
+    const li =
+        document.createElement("li");
+
     li.classList.add("draggable");
+
     li.draggable = true;
-    li.dataset.id = obj.id;
-    li.dataset.type = type;
 
-    if (obj.hidden) li.classList.add("lid-verborgen");
+    li.dataset.id =
+        obj.id;
 
-    const icon = obj.hidden ? "🚫" : "👁️";
+    li.dataset.type =
+        type;
+
+
+    if (obj.hidden) {
+        li.classList.add(
+            "lid-verborgen"
+        );
+    }
+
+
+    /*
+     * Alleen de naam wordt zichtbaar.
+     * De volledige rij opent de ledenmodal.
+     */
 
     li.innerHTML = `
-        <span>${icon} ${obj.naam}</span>
-        <div class="ledenbeheer-controls">
-            <button data-act="edit">Bewerken</button>
-            <button data-act="toggle">${obj.hidden ? "Toon" : "Verberg"}</button>
-            <button data-act="del">🗑️</button>
-        </div>
+        <button
+            type="button"
+            class="member-row-button"
+            aria-label="${obj.naam} openen"
+            title="${
+                obj.hidden
+                    ? `${obj.naam} — verborgen`
+                    : obj.naam
+            }"
+        >
+            <span class="member-row-name">
+                ${obj.naam}
+            </span>
+        </button>
     `;
 
-    // Buttons
-    li.querySelectorAll("button").forEach(b =>
-        b.addEventListener("click", (e) => {
-            e.stopPropagation();
-            handleMemberAction(obj, type, b.dataset.act);
-        })
+
+    const memberButton =
+        li.querySelector(
+            ".member-row-button"
+        );
+
+
+    memberButton?.addEventListener(
+        "click",
+        event => {
+            event.stopPropagation();
+
+            openEditMember(
+                obj,
+                type
+            );
+        }
     );
 
-    // Drag & drop
-    function onDragStart(e) {
-        e.dataTransfer.effectAllowed = "move";
-        e.dataTransfer.setData("text/plain", this.dataset.id);
+
+    /* ================================================================
+       DRAG & DROP
+    ================================================================ */
+
+    function onDragStart(event) {
+        event.dataTransfer.effectAllowed =
+            "move";
+
+        event.dataTransfer.setData(
+            "text/plain",
+            li.dataset.id
+        );
     }
 
-    function onDragOver(e) {
-        e.preventDefault();
-        this.classList.add("drag-over");
+
+    function onDragOver(event) {
+        event.preventDefault();
+
+        li.classList.add(
+            "drag-over"
+        );
     }
+
 
     function onDragLeave() {
-        this.classList.remove("drag-over");
+        li.classList.remove(
+            "drag-over"
+        );
     }
 
-    function onDrop(e) {
-        e.preventDefault();
-        this.classList.remove("drag-over");
 
-        const draggedId = e.dataTransfer.getData("text/plain");
-        const targetId = this.dataset.id;
+    function onDrop(event) {
+        event.preventDefault();
 
-        if (draggedId === targetId) return;
+        li.classList.remove(
+            "drag-over"
+        );
 
-        const list = type === "jeugd" ? jeugd : leiding;
 
-        // Misdrop tussen jeugd ↔ leiding → altijd terug
-        if (this.dataset.type !== type) {
-            renderLedenbeheer();
+        const draggedId =
+            event.dataTransfer.getData(
+                "text/plain"
+            );
+
+        const targetId =
+            li.dataset.id;
+
+
+        if (
+            draggedId === targetId
+        ) {
             return;
         }
 
-        const dragged = list.find(m => m.id === draggedId);
-        const target = list.find(m => m.id === targetId);
 
-        const oldNest = dragged.Nest || "";
-        const newNest = target.Nest || "";
+        const list =
+            type === "jeugd"
+                ? jeugd
+                : leiding;
 
-        // ❗ Als nest verandert → popup
-        if (type === "jeugd" && oldNest !== newNest) {
-            const oldLabel = oldNest || "Nestloos";
-            const newLabel = newNest || "Nestloos";
 
-            const icons = {
-                zwart: "⚫", bruin: "🟤", wit: "⚪", grijs: "⚫"
-            };
-
-            const iconOld = icons[oldNest] || "";
-            const iconNew = icons[newNest] || "";
-
-            const ok = confirm(
-                `${dragged.naam} verplaatsen van ${iconOld} ${oldLabel} naar ${iconNew} ${newLabel}?`
+        const dragged =
+            list.find(
+                member =>
+                    member.id === draggedId
             );
 
-            if (!ok) {
+        const target =
+            list.find(
+                member =>
+                    member.id === targetId
+            );
+
+
+        if (
+            !dragged ||
+            !target
+        ) {
+            renderLedenbeheer();
+
+            return;
+        }
+
+
+        const oldNest =
+            dragged.Nest || "";
+
+        const newNest =
+            target.Nest || "";
+
+
+        /*
+         * Bij Welpen bevestigen wanneer een lid
+         * naar een ander nest wordt verplaatst.
+         */
+
+        if (
+            speltak === "welpen" &&
+            type === "jeugd" &&
+            oldNest !== newNest
+        ) {
+            const oldLabel =
+                oldNest || "Nestloos";
+
+            const newLabel =
+                newNest || "Nestloos";
+
+
+            const icons = {
+                zwart: "⚫",
+                bruin: "🟤",
+                wit: "⚪",
+                grijs: "⚫"
+            };
+
+
+            const iconOld =
+                icons[oldNest] || "";
+
+            const iconNew =
+                icons[newNest] || "";
+
+
+            const confirmed =
+                confirm(
+                    `${dragged.naam} verplaatsen van ` +
+                    `${iconOld} ${oldLabel} naar ` +
+                    `${iconNew} ${newLabel}?`
+                );
+
+
+            if (!confirmed) {
                 renderLedenbeheer();
+
                 return;
             }
 
-            // Nest daadwerkelijk aanpassen
-            dragged.Nest = newNest;
-            dragged.NestLeider = false; // nestleider wordt niet automatisch meegenomen
+
+            dragged.Nest =
+                newNest;
+
+            dragged.NestLeider =
+                false;
         }
 
-        // NORMAAL sorteren
-        const fromIndex = list.indexOf(dragged);
-        const toIndex = list.indexOf(target);
-        list.splice(fromIndex, 1);
-        list.splice(toIndex, 0, dragged);
 
-        // volgorde opslaan
+        /*
+         * Lokale volgorde aanpassen.
+         */
+
+        const fromIndex =
+            list.indexOf(dragged);
+
+        const toIndex =
+            list.indexOf(target);
+
+
+        list.splice(
+            fromIndex,
+            1
+        );
+
+        list.splice(
+            toIndex,
+            0,
+            dragged
+        );
+
+
+        /*
+         * Nieuwe volgorde opslaan.
+         */
+
         const updates = {};
-        list.forEach((m, i) => {
-            updates[`${speltak}/${type === "jeugd" ? "jeugdleden" : "leiding"}/${m.id}/volgorde`] = i + 1;
 
-            if (type === "jeugd") {
-                updates[`${speltak}/jeugdleden/${m.id}/Nest`] = m.Nest || "";
 
-                // public mirror
-                updates[`${PUBLIC_ROOT}/jeugdleden/${m.id}/volgorde`] = i + 1;
-                updates[`${PUBLIC_ROOT}/jeugdleden/${m.id}/Nest`] = m.Nest || "";
+        list.forEach(
+            (member, index) => {
+                const path =
+                    type === "jeugd"
+                        ? "jeugdleden"
+                        : "leiding";
+
+
+                updates[
+                    `${speltak}/${path}/${member.id}/volgorde`
+                ] =
+                    index + 1;
+
+
+                if (
+                    type === "jeugd"
+                ) {
+                    updates[
+                        `${speltak}/jeugdleden/${member.id}/Nest`
+                    ] =
+                        member.Nest || "";
+
+
+                    updates[
+                        `${PUBLIC_ROOT}/jeugdleden/${member.id}/volgorde`
+                    ] =
+                        index + 1;
+
+
+                    updates[
+                        `${PUBLIC_ROOT}/jeugdleden/${member.id}/Nest`
+                    ] =
+                        member.Nest || "";
+                }
             }
+        );
 
-        });
 
-        update(ref(db), updates).then(loadEverything);
+        update(
+            ref(db),
+            updates
+        ).then(
+            loadEverything
+        );
     }
 
 
-    li.addEventListener("dragstart", onDragStart);
-    li.addEventListener("dragover", onDragOver);
-    li.addEventListener("drop", onDrop);
-    li.addEventListener("dragleave", onDragLeave);
+    li.addEventListener(
+        "dragstart",
+        onDragStart
+    );
+
+    li.addEventListener(
+        "dragover",
+        onDragOver
+    );
+
+    li.addEventListener(
+        "drop",
+        onDrop
+    );
+
+    li.addEventListener(
+        "dragleave",
+        onDragLeave
+    );
+
 
     return li;
 }
@@ -3655,12 +4151,72 @@ function handleMemberAction(obj, type, act) {
 
 }
 
+/* ======================================================================
+   LEDENMODAL — BEHEERSTATUS BIJWERKEN
+====================================================================== */
+
+function updateMemberManagementActions(
+    member = editingMemberObject
+) {
+    const isEditing =
+        !!editingMemberId &&
+        !!member;
+
+
+    memberManagementActions
+        ?.classList
+        .toggle(
+            "hidden",
+            !isEditing
+        );
+
+
+    if (!isEditing) {
+        return;
+    }
+
+
+    const isHidden =
+        !!member.hidden;
+
+
+    if (toggleMemberVisibilityText) {
+        toggleMemberVisibilityText.textContent =
+            isHidden
+                ? "Lid tonen"
+                : "Lid verbergen";
+    }
+
+
+    if (toggleMemberVisibilityIcon) {
+        toggleMemberVisibilityIcon.textContent =
+            isHidden
+                ? "◉"
+                : "◌";
+    }
+
+
+    toggleMemberVisibilityButton
+        ?.classList
+        .toggle(
+            "is-show-action",
+            isHidden
+        );
+
+
+    toggleMemberVisibilityButton
+        ?.setAttribute(
+            "aria-label",
+            isHidden
+                ? `${member.naam} tonen`
+                : `${member.naam} verbergen`
+        );
+}
+
 function openEditMember(obj, type) {
     if (!isLeiding()) return;
 
-    editingMemberId = obj.id;
-    editingMemberType = type;
-
+   
 // Titel aanpassen
 const title =
     memberModalTitle ||
@@ -3678,6 +4234,14 @@ memberType.disabled = true;
 
 memberName.value = obj.naam || "";
 
+editingMemberId =
+    obj.id;
+
+editingMemberType =
+    type;
+
+editingMemberObject =
+    obj;
 
 /*
  * Tijdens bewerken maken we niet automatisch
@@ -3807,6 +4371,14 @@ if (
             scoutsExtraFields.style.display = "none";
         }
     }
+/*
+ * Tonen/verbergen en verwijderen activeren.
+ */
+
+updateMemberManagementActions(
+    obj
+);
+
     memberModal.classList.remove("hidden");
 }
 
@@ -3840,7 +4412,13 @@ addMemberButton?.addEventListener("click", () => {
     if (!isLeiding()) return alert("Alleen leiding kan leden toevoegen.");
 
     editingMemberId = null;
-    editingMemberType = null;
+editingMemberType = null;
+editingMemberObject = null;
+
+
+memberManagementActions
+    ?.classList
+    .add("hidden");
 
     const title = memberModal.querySelector("h3");
     if (title) title.textContent = "Nieuw lid toevoegen";
@@ -3943,6 +4521,12 @@ cancelMember?.addEventListener("click", () => {
   
 
     showMemberModalLinkStatus("");
+
+editingMemberObject = null;
+
+memberManagementActions
+    ?.classList
+    .add("hidden");
 });
 
 saveMember?.addEventListener("click", async () => {
@@ -4220,12 +4804,21 @@ if (editingMemberId) {
     }
 }
 
+memberModal.classList.add(
+    "hidden"
+);
 
-        memberModal.classList.add("hidden");
-        editingMemberId = null;
-        editingMemberType = null;
+editingMemberId = null;
+editingMemberType = null;
+editingMemberObject = null;
 
-        memberType.disabled = false;
+memberType.disabled =
+    false;
+
+memberManagementActions
+    ?.classList
+    .add("hidden");
+
         await loadEverything();
     } catch (err) {
         console.error(err);

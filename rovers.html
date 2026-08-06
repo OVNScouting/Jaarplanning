@@ -151,15 +151,30 @@
         <h2>Ledenbeheer</h2>
         <button class="close-section" data-target="ledenbeheerSection">×</button>
       </div>
+<div class="ledenbeheer-columns">
+  <div class="ledenbeheer-col" style="width: 100%;">
+    <h3>Leden</h3>
+    <ul id="jeugdLeden"></ul>
+  </div>
+</div>
 
-      <div class="ledenbeheer-columns">
-        <div class="ledenbeheer-col" style="width: 100%;">
-          <h3>Leden</h3>
-          <ul id="jeugdLeden"></ul>
-        </div>
-      </div>
-      <button id="addMemberButton" class="pill-btn primary">Lid toevoegen</button>
+<div class="ledenbeheer-main-actions">
+  <button
+    id="addMemberButton"
+    class="pill-btn primary"
+    type="button"
+  >
+    Lid toevoegen
+  </button>
 
+  <button
+    id="openMemberLinkModalButton"
+    class="pill-btn outline"
+    type="button"
+  >
+    Rovers- en stamleden koppelen
+  </button>
+</div>
     </section>
 
     <!-- ============================================================
@@ -196,27 +211,190 @@
       </div>
     </section>
 
-    <!-- ============================================================
-         MODAL — Lid toevoegen
-    ============================================================ -->
-    <div id="addMemberModal" class="modal hidden">
-      <div class="modal-content">
-        <h3>Nieuw lid toevoegen</h3>
+  <!-- ============================================================
+     MODAL — Lid toevoegen of bewerken
+============================================================ -->
+<div
+  id="addMemberModal"
+  class="modal hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="memberModalTitle"
+>
+  <div class="modal-content member-modal-content">
 
-        <label>Type:</label>
-        <select id="memberType">
-          <option value="jeugd">Lid</option>
-        </select>
+    <h3 id="memberModalTitle">
+      Nieuw lid toevoegen
+    </h3>
 
-        <label>Naam:</label>
-        <input type="text" id="memberName" />
+    <div class="member-form-field">
+      <label for="memberType">
+        Type
+      </label>
 
-        <div class="modal-actions">
-          <button id="saveMember" class="pill-btn primary">Opslaan</button>
-          <button id="cancelMember" class="pill-btn outline">Annuleren</button>
-        </div>
+      <select id="memberType">
+        <option value="jeugd">Lid</option>
+      </select>
+    </div>
+
+    <div class="member-form-field">
+      <label for="memberName">
+        Naam
+      </label>
+
+      <input
+        type="text"
+        id="memberName"
+        autocomplete="name"
+      >
+    </div>
+
+    <div
+      id="roverAutomaticStamNotice"
+      class="member-link-notice"
+    >
+      <span
+        class="member-link-notice-icon"
+        aria-hidden="true"
+      >
+        ↔
+      </span>
+
+      <div>
+        <strong>
+          Wordt automatisch ook Stamlid
+        </strong>
+
+        <p>
+          Bij het aanmaken van een Rover wordt dit lid ook toegevoegd
+          aan de Stamplanning. Beide leden worden automatisch aan elkaar
+          gekoppeld.
+        </p>
       </div>
     </div>
+
+    <div
+      id="memberLinkStatus"
+      class="member-link-status hidden"
+      aria-live="polite"
+    ></div>
+
+    <div class="modal-actions">
+      <button
+        id="saveMember"
+        class="pill-btn primary"
+        type="button"
+      >
+        Opslaan
+      </button>
+
+      <button
+        id="cancelMember"
+        class="pill-btn outline"
+        type="button"
+      >
+        Annuleren
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL — Rovers- en stamleden koppelen
+============================================================ -->
+<div
+  id="memberLinkModal"
+  class="modal hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="memberLinkModalTitle"
+>
+  <div class="modal-content member-link-modal-content">
+
+<div class="member-link-modal-header">
+  <div>
+    <h3 id="memberLinkModalTitle">
+      Leden koppelen
+    </h3>
+
+    <p>
+      Selecteer dezelfde persoon in beide lijsten.
+    </p>
+  </div>
+
+  <button
+    id="closeMemberLinkModal"
+    class="member-link-modal-close"
+    type="button"
+    aria-label="Koppelvenster sluiten"
+  >
+    ×
+  </button>
+</div>
+
+    <div
+      id="memberLinkError"
+      class="member-link-error hidden"
+      role="alert"
+    ></div>
+
+    <div class="member-link-select-grid">
+
+      <div class="member-form-field">
+        <label for="memberLinkRoverSelect">
+          Roverlid
+        </label>
+
+        <select id="memberLinkRoverSelect">
+          <option value="">
+            Selecteer een Rover
+          </option>
+        </select>
+      </div>
+
+
+
+      <div class="member-form-field">
+        <label for="memberLinkStamSelect">
+          Stamlid
+        </label>
+
+        <select id="memberLinkStamSelect">
+          <option value="">
+            Selecteer een Stamlid
+          </option>
+        </select>
+      </div>
+
+    </div>
+
+    <div
+      id="memberLinkCurrentInfo"
+      class="member-link-current-info hidden"
+      aria-live="polite"
+    ></div>
+
+    <div class="modal-actions">
+      <button
+        id="saveMemberLink"
+        class="pill-btn primary"
+        type="button"
+      >
+        Leden koppelen
+      </button>
+
+      <button
+        id="cancelMemberLink"
+        class="pill-btn outline"
+        type="button"
+      >
+        Annuleren
+      </button>
+    </div>
+
+  </div>
+</div>
 
     <!-- ============================================================
      MODAL — Opkomst verwijderen

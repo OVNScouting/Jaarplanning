@@ -4858,3 +4858,417 @@ body.account-request-modal-open {
 
   gap: 0.5rem;
 }
+/* ============================================================
+   ROVERS ↔ STAM — LEDEN KOPPELEN
+============================================================ */
+
+.member-link-modal-content {
+  width: min(460px, calc(100vw - 2rem));
+  max-height: min(86vh, 720px);
+
+  padding: 1.4rem;
+
+  overflow-y: auto;
+
+  border-radius: 18px;
+
+  text-align: left;
+}
+
+
+/* Header */
+
+.member-link-modal-header {
+  display: flex;
+
+  align-items: flex-start;
+  justify-content: space-between;
+
+  margin-bottom: 1.1rem;
+
+  gap: 1rem;
+}
+
+
+.member-link-modal-header h3 {
+  margin: 0;
+
+  font-size: 1.2rem;
+  line-height: 1.25;
+}
+
+
+.member-link-modal-header p {
+  margin:
+    0.3rem
+    0
+    0;
+
+  color: var(--text-muted);
+
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+
+/* Sluitknop */
+
+.member-link-modal-close {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  min-height: 38px;
+
+  flex: 0 0 38px;
+
+  margin: -0.35rem -0.35rem 0 0;
+  padding: 0;
+
+  border: 0;
+  border-radius: 999px;
+
+  background: var(--card-secondary);
+  color: var(--text-main);
+
+  font-size: 1.25rem;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+
+.member-link-modal-close:hover {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+
+/* Selecties */
+
+.member-link-select-grid {
+  display: grid;
+
+  grid-template-columns: minmax(0, 1fr);
+
+  gap: 0.9rem;
+}
+
+
+.member-link-select-grid .member-form-field {
+  min-width: 0;
+}
+
+
+.member-form-field label {
+  display: block;
+
+  margin-bottom: 0.35rem;
+
+  color: var(--text-main);
+
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+
+.member-form-field input,
+.member-form-field select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+
+  padding:
+    0.6rem
+    0.7rem;
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+
+  background: var(--input-bg);
+  color: var(--input-text);
+
+  font: inherit;
+}
+
+
+/* Status- en foutmeldingen */
+
+.member-link-current-info,
+.member-link-error,
+.member-link-status {
+  margin-top: 0.9rem;
+
+  padding:
+    0.7rem
+    0.8rem;
+
+  border-radius: 10px;
+
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+
+.member-link-current-info {
+  border: 1px solid var(--border);
+
+  background: var(--card-secondary);
+  color: var(--text-muted);
+}
+
+
+.member-link-error {
+  border: 1px solid var(--danger);
+
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+
+.member-link-status {
+  border: 1px solid var(--border);
+
+  background: var(--card-secondary);
+  color: var(--text-muted);
+}
+
+
+.member-link-status[data-status="linked"] {
+  border-color: var(--success);
+
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+
+.member-link-status[data-status="warning"] {
+  border-color: var(--warning, #d97706);
+
+  background: rgba(217, 119, 6, 0.12);
+  color: var(--warning, #b45309);
+}
+
+
+/* Acties */
+
+.member-link-modal-content .modal-actions {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1fr);
+
+  margin-top: 1.1rem;
+
+  gap: 0.65rem;
+}
+
+
+.member-link-modal-content .modal-actions button {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+
+  margin: 0;
+}
+
+/* ============================================================
+   STAM — OOK TOEVOEGEN AAN ROVERS
+============================================================ */
+
+.member-rover-option {
+  margin-top: 1rem;
+}
+
+
+/* Complete aanklikbare keuze */
+
+.member-rover-toggle {
+  display: flex;
+
+  align-items: center;
+
+  width: 100%;
+  min-height: 62px;
+
+  margin: 0;
+  padding:
+    0.7rem
+    0.8rem;
+
+  gap: 0.75rem;
+
+  border: 1px solid var(--border);
+  border-radius: 12px;
+
+  background: var(--card-secondary);
+  color: var(--text-main);
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+
+.member-rover-toggle:hover {
+  border-color: var(--blue);
+}
+
+
+/*
+ * De echte checkbox blijft functioneel,
+ * maar wordt visueel verborgen.
+ */
+
+.member-rover-toggle
+input[type="checkbox"] {
+  position: absolute;
+
+  width: 1px !important;
+  min-width: 1px !important;
+  height: 1px !important;
+  min-height: 1px !important;
+
+  margin: 0;
+  padding: 0;
+
+  opacity: 0;
+  pointer-events: none;
+}
+
+
+/* Visuele schuifknop */
+
+.member-rover-toggle-control {
+  position: relative;
+
+  width: 42px;
+  min-width: 42px;
+  height: 24px;
+
+  flex: 0 0 42px;
+
+  border: 1px solid var(--border-strong, var(--border));
+  border-radius: 999px;
+
+  background: var(--card);
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+
+.member-rover-toggle-control::after {
+  content: "";
+
+  position: absolute;
+
+  top: 3px;
+  left: 3px;
+
+  width: 16px;
+  height: 16px;
+
+  border-radius: 999px;
+
+  background: var(--text-muted);
+
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease;
+}
+
+
+/* Ingeschakeld */
+
+.member-rover-toggle
+input[type="checkbox"]:checked
++
+.member-rover-toggle-control {
+  border-color: var(--blue);
+
+  background: var(--blue);
+}
+
+
+.member-rover-toggle
+input[type="checkbox"]:checked
++
+.member-rover-toggle-control::after {
+  transform: translateX(18px);
+
+  background: #ffffff;
+}
+
+
+/* Focus voor toetsenbordbediening */
+
+.member-rover-toggle
+input[type="checkbox"]:focus-visible
++
+.member-rover-toggle-control {
+  outline: 3px solid var(--blue-soft);
+  outline-offset: 2px;
+}
+
+
+/* Tekst */
+
+.member-rover-toggle-text {
+  min-width: 0;
+}
+
+
+.member-rover-toggle-text strong,
+.member-rover-toggle-text small {
+  display: block;
+}
+
+
+.member-rover-toggle-text strong {
+  color: var(--text-main);
+
+  font-size: 0.9rem;
+  line-height: 1.25;
+}
+
+
+.member-rover-toggle-text small {
+  margin-top: 0.15rem;
+
+  color: var(--text-muted);
+
+  font-size: 0.76rem;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+
+/* Hele kaart accentueren wanneer geselecteerd */
+
+.member-rover-toggle:has(
+  input[type="checkbox"]:checked
+) {
+  border-color: var(--blue);
+
+  background: var(--blue-soft);
+}
+
+
+/* Uitgeschakeld bij bestaande koppeling */
+
+.member-rover-toggle:has(
+  input[type="checkbox"]:disabled
+) {
+  opacity: 0.72;
+
+  cursor: default;
+}

@@ -7,7 +7,7 @@
   <title>Stam – Jaarplanning & Aanwezigheid</title>
   <link rel="icon" href="assets/OVN.logo.png" type="image/png">
 
-<script src="generaltheme.js"></script>
+  <script src="generaltheme.js"></script>
 
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="mobile.css" />
@@ -159,8 +159,15 @@
         </div>
       </div>
 
-      <button id="addMemberButton" class="pill-btn primary">Lid toevoegen</button>
+      <div class="ledenbeheer-main-actions">
+        <button id="addMemberButton" class="pill-btn primary" type="button">
+          Lid toevoegen
+        </button>
 
+        <button id="openMemberLinkModalButton" class="pill-btn outline" type="button">
+          Rovers- en stamleden koppelen
+        </button>
+      </div>
     </section>
 
     <!-- ============================================================
@@ -198,70 +205,134 @@
     </section>
 
     <!-- ============================================================
-         MODAL — Lid toevoegen
-    ============================================================ -->
-    <div id="addMemberModal" class="modal hidden">
-      <div class="modal-content">
-        <h3>Nieuw lid toevoegen</h3>
+     MODAL — Lid toevoegen of bewerken
+============================================================ -->
+    <div id="addMemberModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="memberModalTitle">
+      <div class="modal-content member-modal-content">
 
-        <label>Type:</label>
-        <select id="memberType">
-          <option value="jeugd">Lid</option>
-        </select>
+        <h3 id="memberModalTitle">
+          Nieuw lid toevoegen
+        </h3>
 
-        <label>Naam:</label>
-        <input type="text" id="memberName" />
+        <div class="member-form-field">
+          <label for="memberType">
+            Type
+          </label>
+
+          <select id="memberType">
+            <option value="jeugd">Lid</option>
+          </select>
+        </div>
+
+        <div class="member-form-field">
+          <label for="memberName">
+            Naam
+          </label>
+
+          <input type="text" id="memberName" autocomplete="name">
+        </div>
+
+        <div id="stamRoverOption" class="member-rover-option">
+          <label for="memberIsRover" class="member-rover-toggle">
+            <input type="checkbox" id="memberIsRover">
+
+            <span class="member-rover-toggle-control" aria-hidden="true"></span>
+
+            <span class="member-rover-toggle-text">
+              <strong>Ook toevoegen aan Rovers</strong>
+
+              <small>
+                Het lid wordt automatisch aan beide planningen gekoppeld.
+              </small>
+            </span>
+          </label>
+        </div>
+
+        <div id="memberLinkStatus" class="member-link-status hidden" aria-live="polite"></div>
 
         <div class="modal-actions">
-          <button id="saveMember" class="pill-btn primary">Opslaan</button>
-          <button id="cancelMember" class="pill-btn outline">Annuleren</button>
+          <button id="saveMember" class="pill-btn primary" type="button">
+            Opslaan
+          </button>
+
+          <button id="cancelMember" class="pill-btn outline" type="button">
+            Annuleren
+          </button>
         </div>
+
       </div>
     </div>
 
     <!-- ============================================================
-     MODAL — Opkomst verwijderen
+     MODAL — Rovers- en stamleden koppelen
 ============================================================ -->
-<div id="deleteOpkomstModal" class="modal hidden">
-  <div
-    class="modal-content confirm-modal-content"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="deleteOpkomstTitle"
-  >
-    <div class="confirm-modal-icon confirm-modal-icon-danger">
-      🗑️
+    <div id="memberLinkModal" class="modal hidden" role="dialog" aria-modal="true"
+      aria-labelledby="memberLinkModalTitle">
+      <div class="modal-content member-link-modal-content">
+
+        <div class="member-link-modal-header">
+          <div>
+            <h3 id="memberLinkModalTitle">
+              Leden koppelen
+            </h3>
+
+            <p>
+              Selecteer dezelfde persoon in beide lijsten.
+            </p>
+          </div>
+
+          <button id="closeMemberLinkModal" class="member-link-modal-close" type="button"
+            aria-label="Koppelvenster sluiten">
+            ×
+          </button>
+        </div>
+
+        <div id="memberLinkError" class="member-link-error hidden" role="alert"></div>
+
+        <div class="member-link-select-grid">
+
+          <div class="member-form-field">
+            <label for="memberLinkRoverSelect">
+              Roverlid
+            </label>
+
+            <select id="memberLinkRoverSelect">
+              <option value="">
+                Selecteer een Rover
+              </option>
+            </select>
+          </div>
+
+
+
+          <div class="member-form-field">
+            <label for="memberLinkStamSelect">
+              Stamlid
+            </label>
+
+            <select id="memberLinkStamSelect">
+              <option value="">
+                Selecteer een Stamlid
+              </option>
+            </select>
+          </div>
+
+        </div>
+
+        <div id="memberLinkCurrentInfo" class="member-link-current-info hidden" aria-live="polite"></div>
+
+        <div class="modal-actions">
+          <button id="saveMemberLink" class="pill-btn primary" type="button">
+            Leden koppelen
+          </button>
+
+          <button id="cancelMemberLink" class="pill-btn outline" type="button">
+            Annuleren
+          </button>
+        </div>
+
+      </div>
     </div>
-
-    <h3 id="deleteOpkomstTitle">Opkomst verwijderen?</h3>
-
-    <p id="deleteOpkomstText" class="confirm-modal-text">
-      Weet je zeker dat je deze opkomst wilt verwijderen?
-    </p>
-
-    <p class="confirm-modal-note">
-      Je kunt deze actie kort na het verwijderen nog ongedaan maken.
-    </p>
-
-    <div class="modal-actions confirm-modal-actions">
-      <button
-        id="cancelDeleteOpkomst"
-        type="button"
-        class="pill-btn outline"
-      >
-        Annuleren
-      </button>
-
-      <button
-        id="confirmDeleteOpkomst"
-        type="button"
-        class="pill-btn danger"
-      >
-        Opkomst verwijderen
-      </button>
-    </div>
-  </div>
-</div>
     <!-- ============================================================
          MODAL — Opkomst toevoegen
     ============================================================ -->
@@ -300,7 +371,7 @@
         <input type="text" id="opProcor" />
 
         <!-- Bijzonderheden -->
-         <!-- Bijzonderheden -->
+        <!-- Bijzonderheden -->
         <label for="opBijzonderheden">Bijzonderheden:</label>
         <input type="text" id="opBijzonderheden" placeholder="Extra informatie voor ouders" />
 
@@ -372,7 +443,7 @@
   <!-- Firebase setup -->
   <script src="firebase-config.js"></script>
   <script type="module" src="firebase-imports.js"></script>
-<script src="mobile.js"></script>
+  <script src="mobile.js"></script>
 
 
   <!-- App scripts -->

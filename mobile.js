@@ -1297,11 +1297,48 @@
        BREAKPOINTWIJZIGING
     ================================================================ */
 
-    function handleMobileChange() {
-        if (!isMobile()) {
-            closeMobileMenu();
-        }
+   function handleMobileChange() {
+    if (!isMobile()) {
+        closeMobileMenu();
+
+
+        /*
+         * Mobiele legendaknoppen verwijderen wanneer
+         * het scherm naar desktopformaat gaat.
+         */
+
+        document
+            .querySelectorAll(
+                ".mobile-legend-toggle"
+            )
+            .forEach(
+                button =>
+                    button.remove()
+            );
+
+
+        document
+            .querySelectorAll(
+                ".planning-header-right.mobile-legend-open"
+            )
+            .forEach(
+                container =>
+                    container.classList.remove(
+                        "mobile-legend-open"
+                    )
+            );
+
+        return;
     }
+
+
+    /*
+     * Bij terugschakelen naar mobiel de knoppen
+     * opnieuw toevoegen.
+     */
+
+    initMobileLegends();
+}
 
     /* ================================================================
        MODULE 4
@@ -1313,12 +1350,31 @@
        LEGENDAKNOP AANMAKEN
     ================================================================ */
 
-    function createMobileLegendToggle(
+  function createMobileLegendToggle(
+    planningHeaderRight
+) {
+    if (!planningHeaderRight) {
+        return;
+    }
+
+
+    /*
+     * Deze knop bestaat uitsluitend in de mobiele UI.
+     */
+
+    if (!isMobile()) {
         planningHeaderRight
-    ) {
-        if (!planningHeaderRight) {
-            return;
-        }
+            .querySelector(
+                ".mobile-legend-toggle"
+            )
+            ?.remove();
+
+        planningHeaderRight.classList.remove(
+            "mobile-legend-open"
+        );
+
+        return;
+    }
 
 
         const legendContainer =

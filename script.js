@@ -873,27 +873,23 @@ function fillMemberLinkSelect(
         option.value =
             member.id;
 
-        option.textContent =
-            getMemberDisplayName(member);
+const sourceSpeltak =
+    selectElement === memberLinkRoverSelect
+        ? "rovers"
+        : "stam";
 
 
-        /*
-         * Gekoppelde leden blijven selecteerbaar,
-         * maar worden herkenbaar gemarkeerd.
-         */
+const linkedId =
+    getLinkedMemberId(
+        member,
+        sourceSpeltak
+    );
 
-        const linkedId =
-            getLinkedMemberId(
-                member,
-                selectElement === memberLinkRoverSelect
-                    ? "rovers"
-                    : "stam"
-            );
 
-        if (linkedId) {
-            option.textContent +=
-                " — al gekoppeld";
-        }
+option.textContent =
+    linkedId
+        ? `${getMemberDisplayName(member)} — gekoppeld`
+        : `${getMemberDisplayName(member)} `;
 
 
         selectElement.appendChild(
@@ -947,6 +943,12 @@ async function populateMemberLinkSelects() {
                 ? "Selecteer een Stamlid"
                 : "Geen Stamleden gevonden"
         );
+        showMemberLinkInfo("");
+
+updateMemberLinkSaveButton({
+    disabled: true,
+    text: "Leden koppelen"
+});
 
     } finally {
         memberLinkRoverSelect.disabled =
@@ -1418,10 +1420,10 @@ async function openMemberLinkModal() {
     }
 
 
-    if (saveMemberLinkButton) {
-        saveMemberLinkButton.disabled =
-            true;
-    }
+  updateMemberLinkSaveButton({
+    disabled: true,
+    text: "Leden koppelen"
+});
 
 
     memberLinkModal.classList.remove(
@@ -1432,10 +1434,10 @@ async function openMemberLinkModal() {
     try {
         await populateMemberLinkSelects();
 
-        if (saveMemberLinkButton) {
-            saveMemberLinkButton.disabled =
-                false;
-        }
+        updateMemberLinkSaveButton({
+    disabled: true,
+    text: "Leden koppelen"
+});
 
     } catch (error) {
         console.error(
@@ -1469,6 +1471,11 @@ function closeMemberLinkModal() {
     if (memberLinkStamSelect) {
         memberLinkStamSelect.value = "";
     }
+updateMemberLinkSaveButton({
+    disabled: true,
+    text: "Leden koppelen"
+});
+
 }
 
 
@@ -1507,7 +1514,24 @@ memberLinkModal?.addEventListener(
 /* ======================================================================
    KOPPELMODAL — SELECTIE-INFORMATIE
 ====================================================================== */
+/* ======================================================================
+   KOPPELMODAL — OPSLAANKNOP BIJWERKEN
+====================================================================== */
 
+function updateMemberLinkSaveButton({
+    disabled = false,
+    text = "Leden koppelen"
+} = {}) {
+    if (!saveMemberLinkButton) {
+        return;
+    }
+
+    saveMemberLinkButton.disabled =
+        disabled;
+
+    saveMemberLinkButton.textContent =
+        text;
+}
 function updateSelectedMemberLinkInfo() {
     if (
         !memberLinkRoverSelect ||
@@ -1524,21 +1548,16 @@ function updateSelectedMemberLinkInfo() {
         memberLinkStamSelect.value;
 
 
-    if (!roverId && !stamId) {
-        showMemberLinkInfo("");
-        showMemberLinkError("");
-        return;
-    }
-
-
     const rover =
         availableRoverMembers.find(
-            member => member.id === roverId
+            member =>
+                member.id === roverId
         );
 
     const stam =
         availableStamMembers.find(
-            member => member.id === stamId
+            member =>
+                member.id === stamId
         );
 
 
@@ -1546,11 +1565,44 @@ function updateSelectedMemberLinkInfo() {
 
 
     /*
-     * Alleen een Rover gekozen.
+     * Standaardtoestand.
      */
 
-    if (rover && !stam) {
-        if (rover.linkedStamMemberId) {
+    updateMemberLinkSaveButton({
+        disabled:
+            !roverId ||
+            !stamId,
+
+        text:
+            "Leden koppelen"
+    });
+
+
+    /*
+     * Niets geselecteerd.
+     */
+
+    if (
+        !roverId &&
+        !stamId
+    ) {
+        showMemberLinkInfo("");
+
+        return;
+    }
+
+
+    /*
+     * Alleen een Rover geselecteerd.
+     */
+
+    if (
+        rover &&
+        !stam
+    ) {
+        if (
+            rover.linkedStamMemberId
+        ) {
             const linkedStam =
                 availableStamMembers.find(
                     member =>
@@ -1558,15 +1610,16 @@ function updateSelectedMemberLinkInfo() {
                         rover.linkedStamMemberId
                 );
 
+
             showMemberLinkInfo(
                 linkedStam
-                    ? `${rover.naam} Gekoppeld aan ${linkedStam.naam} in Stam.`
-                    : `${rover.naam} Het gekoppelde lid is niet gevonden.`
+                    ? `Gekoppeld aan ${getMemberDisplayName(linkedStam)} in Stam.`
+                    : "De bestaande Stamkoppeling kon niet worden gevonden."
             );
 
         } else {
             showMemberLinkInfo(
-                `${rover.naam} Nog niet gekoppeld.`
+                "Dit Roverlid is nog niet gekoppeld."
             );
         }
 
@@ -1575,11 +1628,16 @@ function updateSelectedMemberLinkInfo() {
 
 
     /*
-     * Alleen een Stamlid gekozen.
+     * Alleen een Stamlid geselecteerd.
      */
 
-    if (!rover && stam) {
-        if (stam.linkedRoverMemberId) {
+    if (
+        !rover &&
+        stam
+    ) {
+        if (
+            stam.linkedRoverMemberId
+        ) {
             const linkedRover =
                 availableRoverMembers.find(
                     member =>
@@ -1587,15 +1645,16 @@ function updateSelectedMemberLinkInfo() {
                         stam.linkedRoverMemberId
                 );
 
+
             showMemberLinkInfo(
                 linkedRover
-                    ? `${stam.naam} gekoppeld aan ${linkedRover.naam} bij Rovers.`
-                    : `${stam.naam} Gekoppelde lid is niet gevonden.`
+                    ? `Gekoppeld aan ${getMemberDisplayName(linkedRover)} bij Rovers.`
+                    : "De bestaande Roverkoppeling kon niet worden gevonden."
             );
 
         } else {
             showMemberLinkInfo(
-                `${stam.naam} Nog niet gekoppeld.`
+                "Dit Stamlid is nog niet gekoppeld."
             );
         }
 
@@ -1604,46 +1663,89 @@ function updateSelectedMemberLinkInfo() {
 
 
     /*
-     * Beide geselecteerd.
+     * Beide leden geselecteerd.
      */
 
-    if (rover && stam) {
-        const alreadyLinkedTogether =
-            rover.linkedStamMemberId === stam.id &&
-            stam.linkedRoverMemberId === rover.id;
+    if (
+        !rover ||
+        !stam
+    ) {
+        showMemberLinkInfo("");
 
-
-        if (alreadyLinkedTogether) {
-            showMemberLinkInfo(
-                `${rover.naam} en ${stam.naam} zijn al aan elkaar gekoppeld.`
-            );
-
-            return;
-        }
-
-
-        const conflictingRoverLink =
-            rover.linkedStamMemberId &&
-            rover.linkedStamMemberId !== stam.id;
-
-        const conflictingStamLink =
-            stam.linkedRoverMemberId &&
-            stam.linkedRoverMemberId !== rover.id;
-
-
-        if (
-            conflictingRoverLink ||
-            conflictingStamLink
-        ) {
-            showMemberLinkInfo(
-"Let op: een bestaande koppeling wordt vervangen.")
-            return;
-        }
-
-
-        showMemberLinkInfo(
-`${rover.naam} kopppelen aan ${stam.naam}`        );
+        return;
     }
+
+
+    const alreadyLinkedTogether =
+        rover.linkedStamMemberId === stam.id &&
+        stam.linkedRoverMemberId === rover.id;
+
+
+    /*
+     * Exact deze combinatie bestaat al.
+     */
+
+    if (alreadyLinkedTogether) {
+        showMemberLinkInfo(
+            "Deze leden zijn al aan elkaar gekoppeld."
+        );
+
+
+        updateMemberLinkSaveButton({
+            disabled: true,
+            text: "Al gekoppeld"
+        });
+
+        return;
+    }
+
+
+    const roverHasOtherLink =
+        rover.linkedStamMemberId &&
+        rover.linkedStamMemberId !== stam.id;
+
+
+    const stamHasOtherLink =
+        stam.linkedRoverMemberId &&
+        stam.linkedRoverMemberId !== rover.id;
+
+
+    /*
+     * Minimaal één van de twee heeft al een
+     * andere koppeling.
+     */
+
+    if (
+        roverHasOtherLink ||
+        stamHasOtherLink
+    ) {
+        showMemberLinkInfo(
+            "Let op: de bestaande koppeling wordt vervangen."
+        );
+
+
+        updateMemberLinkSaveButton({
+            disabled: false,
+            text: "Koppeling vervangen"
+        });
+
+        return;
+    }
+
+
+    /*
+     * Normale nieuwe koppeling.
+     */
+
+    showMemberLinkInfo(
+        `${getMemberDisplayName(rover)} wordt gekoppeld aan ${getMemberDisplayName(stam)}.`
+    );
+
+
+    updateMemberLinkSaveButton({
+        disabled: false,
+        text: "Leden koppelen"
+    });
 }
 
 /* ======================================================================
@@ -1749,13 +1851,10 @@ async function saveSelectedMemberLink() {
     showMemberLinkError("");
 
 
-    if (saveMemberLinkButton) {
-        saveMemberLinkButton.disabled =
-            true;
-
-        saveMemberLinkButton.textContent =
-            "Koppelen…";
-    }
+   updateMemberLinkSaveButton({
+    disabled: true,
+    text: "Koppelen…"
+});
 
 
     try {
@@ -1882,13 +1981,19 @@ async function saveSelectedMemberLink() {
         );
 
     } finally {
-        if (saveMemberLinkButton) {
-            saveMemberLinkButton.disabled =
-                false;
+       /*
+ * Alleen resetten wanneer de modal nog open is.
+ * Bij succes wordt hij kort daarna gesloten.
+ */
 
-            saveMemberLinkButton.textContent =
-                "Leden koppelen";
-        }
+if (
+    memberLinkModal &&
+    !memberLinkModal.classList.contains(
+        "hidden"
+    )
+) {
+    updateSelectedMemberLinkInfo();
+}
     }
 }
 
@@ -2460,20 +2565,57 @@ async function loadEverything() {
         nextUpcomingId = nextUpcoming ? nextUpcoming.id : null;
 
         // Jeugd
-        jeugd = Object.entries(data.jeugdleden || {})
-            .map(([id, v]) => ({
-                id,
-                naam: v.naam || "",
-                WelpenNaam: v.WelpenNaam || "",
-                Nest: (v.Nest || "").toLowerCase(),
-                NestLeider: !!v.NestLeider,
-                Ploeg: (v.Ploeg || "").toLowerCase(),
-                PL: !!v.PL,
-                APL: !!v.APL,
-                hidden: !!v.hidden,
-                volgorde: v.volgorde ?? 999
-            }))
-            .sort((a, b) => a.volgorde - b.volgorde);
+// Jeugd
+jeugd = Object.entries(data.jeugdleden || {})
+    .map(([id, v]) => ({
+        id,
+
+        naam:
+            v.naam || "",
+
+        WelpenNaam:
+            v.WelpenNaam || "",
+
+        Nest:
+            (v.Nest || "").toLowerCase(),
+
+        NestLeider:
+            !!v.NestLeider,
+
+        Ploeg:
+            (v.Ploeg || "").toLowerCase(),
+
+        PL:
+            !!v.PL,
+
+        APL:
+            !!v.APL,
+
+        hidden:
+            !!v.hidden,
+
+        volgorde:
+            v.volgorde ?? 999,
+
+
+        /*
+         * Rover ↔ Stam-koppeling behouden.
+         *
+         * Deze velden zijn alleen gevuld bij gekoppelde
+         * Rover- en Stamleden. Op andere speltakken
+         * blijven ze gewoon een lege string.
+         */
+
+        linkedStamMemberId:
+            v.linkedStamMemberId || "",
+
+        linkedRoverMemberId:
+            v.linkedRoverMemberId || ""
+    }))
+    .sort(
+        (a, b) =>
+            a.volgorde - b.volgorde
+    );
 
         if (speltak === "welpen") {
             const NestOrder = { zwart: 1, bruin: 2, wit: 3, grijs: 4, "": 5, none: 5 };

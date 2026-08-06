@@ -1081,59 +1081,468 @@ tr.row-grey>.col-datum {
   width: min(600px, 100%);
 }
 
+
 /* ============================================================
-   ACCOUNT REQUEST MODAL — professionele layout
+   ACCOUNT AANVRAGEN — PUBLIEKE MODAL
 ============================================================ */
 
-#accountRequestModal .modal-content {
-  width: min(460px, 100%);
+#accountRequestModal {
+  padding: 1rem;
 }
+
+
+/* Modalvenster */
+
+#accountRequestModal .modal-content {
+  position: relative;
+
+  width: min(540px, 100%);
+  max-height: min(90vh, 820px);
+
+  padding: 1.5rem;
+
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  border: 1px solid var(--border);
+  border-radius: 18px;
+
+  background: var(--card);
+  color: var(--text-main);
+
+  text-align: left;
+
+  box-shadow: var(--modal-shadow);
+}
+
+
+/* Titel */
 
 #accountRequestModal h3 {
-  margin-top: 0;
-  margin-bottom: 1rem;
+  margin:
+    0
+    0
+    0.35rem;
+
+  font-size: 1.3rem;
+  line-height: 1.25;
 }
 
-/* Secties */
-.account-section {
-  margin-top: 1.1rem;
-  padding-top: 0.8rem;
+
+/*
+ * Korte uitleg onder de titel.
+ * Deze wordt met ::after toegevoegd, dus geen JS-wijziging nodig.
+ */
+
+#accountRequestModal h3::after {
+  content:
+    "Vul je gegevens in en selecteer de toegang die je nodig hebt.";
+
+  display: block;
+
+  max-width: 420px;
+
+  margin-top: 0.35rem;
+
+  color: var(--text-muted);
+
+  font-size: 0.86rem;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+
+/* ============================================================
+   FORMULIERVELDEN
+============================================================ */
+
+#accountRequestModal .account-section:first-of-type {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap:
+    0.35rem
+    0.8rem;
+
+  margin-top: 1.25rem;
+  padding-top: 0;
+
+  border-top: 0;
+}
+
+
+/*
+ * Labels en invoervelden worden in login.js los achter
+ * elkaar geplaatst. Met nth-of-type koppelen we ze toch
+ * netjes aan dezelfde gridkolom.
+ */
+
+#accountRequestModal .account-section:first-of-type
+label:nth-of-type(1),
+#accountRequestModal .account-section:first-of-type
+input:nth-of-type(1) {
+  grid-column: 1;
+}
+
+
+#accountRequestModal .account-section:first-of-type
+label:nth-of-type(2),
+#accountRequestModal .account-section:first-of-type
+input:nth-of-type(2) {
+  grid-column: 2;
+}
+
+
+#accountRequestModal .account-section:first-of-type
+label:nth-of-type(3),
+#accountRequestModal .account-section:first-of-type
+input:nth-of-type(3) {
+  grid-column: 1 / -1;
+}
+
+
+#accountRequestModal .account-section:first-of-type label {
+  margin: 0;
+
+  color: var(--text-main);
+
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+
+/*
+ * Zorg dat elk inputveld direct onder zijn eigen label komt.
+ */
+
+#accountRequestModal #reqFirstName {
+  grid-row: 2;
+}
+
+#accountRequestModal #reqLastName {
+  grid-row: 2;
+}
+
+#accountRequestModal
+.account-section:first-of-type
+label:nth-of-type(3) {
+  grid-row: 3;
+
+  margin-top: 0.4rem;
+}
+
+#accountRequestModal #reqEmail {
+  grid-row: 4;
+}
+
+
+/* Tekstinvoer */
+
+#accountRequestModal
+input[type="text"],
+#accountRequestModal
+input[type="email"] {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+
+  margin: 0;
+  padding:
+    0.65rem
+    0.75rem;
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+
+  background: var(--input-bg);
+  color: var(--input-text);
+
+  font: inherit;
+
+  outline: none;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+
+#accountRequestModal
+input[type="text"]:focus,
+#accountRequestModal
+input[type="email"]:focus {
+  border-color: var(--blue);
+
+  box-shadow:
+    0 0 0 3px
+    var(--blue-soft);
+}
+
+
+/* ============================================================
+   SECTIES
+============================================================ */
+
+#accountRequestModal .account-section {
+  margin-top: 1.15rem;
+  padding-top: 1rem;
+
   border-top: 1px solid var(--border);
 }
 
-.account-section:first-of-type {
-  border-top: none;
-  padding-top: 0;
-}
 
-/* Subkopjes */
-.account-section-title {
-  font-size: 0.9rem;
-  font-weight: 600;
+#accountRequestModal .account-section-title {
+  margin-bottom: 0.65rem;
+
   color: var(--text-muted);
-  margin-bottom: 0.4rem;
+
+  font-size: 0.8rem;
+  font-weight: 800;
+
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
 }
 
-/* Checkbox grid */
-.account-checkbox-grid {
+
+/* ============================================================
+   CHECKBOXKAARTEN
+============================================================ */
+
+#accountRequestModal .account-checkbox-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.4rem 1.2rem;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 0.55rem;
 }
 
-/* Checkbox labels */
-.account-checkbox-grid label {
+
+#accountRequestModal .account-checkbox-grid label {
   display: flex;
+
   align-items: center;
-  gap: 0.5rem;
+
+  min-width: 0;
+  min-height: 48px;
+
+  margin: 0;
+  padding:
+    0.6rem
+    0.7rem;
+
+  gap: 0.65rem;
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+
+  background: var(--card-secondary);
+  color: var(--text-main);
+
+  font-size: 0.88rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.08s ease;
+}
+
+
+#accountRequestModal .account-checkbox-grid label:hover {
+  border-color: var(--blue);
+
+  background: var(--blue-soft);
+}
+
+
+#accountRequestModal .account-checkbox-grid label:active {
+  transform: scale(0.985);
+}
+
+
+/*
+ * Zeer belangrijk:
+ * voorkom dat algemene mobiele inputregels de checkbox
+ * 44px hoog maken.
+ */
+
+#accountRequestModal
+input[type="checkbox"] {
+  appearance: auto;
+  -webkit-appearance: checkbox;
+
+  width: 20px;
+  min-width: 20px;
+
+  height: 20px;
+  min-height: 20px;
+
+  flex: 0 0 20px;
+
+  margin: 0;
+  padding: 0;
+
+  accent-color: var(--blue);
+
   cursor: pointer;
 }
 
-/* Foutmelding rustiger */
-#reqError {
-  font-size: 0.85rem;
+
+/*
+ * Geselecteerde kaart accentueren in browsers
+ * die :has() ondersteunen.
+ */
+
+#accountRequestModal
+.account-checkbox-grid label:has(input:checked) {
+  border-color: var(--blue);
+
+  background: var(--blue-soft);
+  color: var(--text-main);
 }
 
+
+/* ============================================================
+   FOUTMELDING
+============================================================ */
+
+#accountRequestModal #reqError {
+  margin-top: 1rem !important;
+  padding:
+    0.7rem
+    0.8rem;
+
+  border: 1px solid var(--danger);
+  border-radius: 10px;
+
+  background: var(--danger-soft);
+  color: var(--danger) !important;
+
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+
+/* ============================================================
+   ACTIEKNOPPEN
+============================================================ */
+
+#accountRequestModal .modal-actions {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1.35fr);
+
+  margin-top: 1.25rem;
+
+  gap: 0.65rem;
+}
+
+
+#accountRequestModal
+#reqCancel,
+#accountRequestModal
+#reqSubmit {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+
+  margin: 0;
+  padding:
+    0.65rem
+    0.85rem;
+
+  border-radius: 999px;
+
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+
+  text-align: center;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.08s ease;
+}
+
+
+#accountRequestModal #reqCancel {
+  border: 1px solid var(--blue);
+
+  background: var(--card);
+  color: var(--blue);
+}
+
+
+#accountRequestModal #reqCancel:hover {
+  background: var(--blue-soft);
+}
+
+
+#accountRequestModal #reqSubmit {
+  border: 1px solid var(--blue);
+
+  background: var(--blue);
+  color: #ffffff;
+}
+
+
+#accountRequestModal #reqSubmit:hover {
+  background: var(--blue-hover);
+  border-color: var(--blue-hover);
+}
+
+
+#accountRequestModal
+#reqCancel:active,
+#accountRequestModal
+#reqSubmit:active {
+  transform: scale(0.985);
+}
+
+
+#accountRequestModal
+#reqSubmit:disabled {
+  opacity: 0.65;
+
+  cursor: wait;
+  transform: none;
+}
+
+
+/* ============================================================
+   SUCCESWEERGAVE
+============================================================ */
+
+#accountRequestModal
+.modal-content > p {
+  color: var(--text-muted);
+
+  line-height: 1.55;
+}
+
+
+#accountRequestModal
+.modal-content > .modal-actions:only-child,
+#accountRequestModal
+.modal-content > p + .modal-actions {
+  grid-template-columns:
+    minmax(0, 1fr);
+}
 
 /* ============================================================
    SIDEBAR (LEIDING)

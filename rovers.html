@@ -264,13 +264,51 @@
     Wordt ook toegevoegd aan Stam
   </span>
 </div>
-    <div
-      id="memberLinkStatus"
-      class="member-link-status hidden"
-      aria-live="polite"
-    ></div>
+   <div
+  id="memberLinkStatus"
+  class="member-link-status hidden"
+  aria-live="polite"
+></div>
 
-    <div class="modal-actions">
+<!-- Alleen zichtbaar wanneer een bestaand lid wordt bewerkt -->
+<div
+  id="memberManagementActions"
+  class="member-management-actions hidden"
+>
+  <button
+    id="toggleMemberVisibility"
+    class="member-management-action"
+    type="button"
+  >
+    <span
+      id="toggleMemberVisibilityIcon"
+      aria-hidden="true"
+    >
+      ◌
+    </span>
+
+    <span id="toggleMemberVisibilityText">
+      Lid verbergen
+    </span>
+  </button>
+
+  <button
+    id="deleteMemberFromModal"
+    class="member-management-action danger"
+    type="button"
+  >
+    <span aria-hidden="true">
+      🗑️
+    </span>
+
+    <span>
+      Lid verwijderen
+    </span>
+  </button>
+</div>
+
+<div class="modal-actions">
+
       <button
         id="saveMember"
         class="pill-btn primary"

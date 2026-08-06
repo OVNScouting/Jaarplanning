@@ -5573,3 +5573,170 @@ input[type="checkbox"]:focus-visible
 
     cursor: wait;
 }
+/* ============================================================
+   LEDENBEHEER — KEUZEMODAL VOOR ACTIES
+============================================================ */
+
+.member-action-choice-content {
+  width: min(440px, calc(100vw - 2rem));
+  max-height: min(86vh, 680px);
+
+  padding: 1.35rem;
+
+  overflow-y: auto;
+
+  border-radius: 18px;
+
+  text-align: left;
+}
+
+
+.member-action-choice-header {
+  display: flex;
+
+  align-items: flex-start;
+  justify-content: space-between;
+
+  margin-bottom: 1rem;
+
+  gap: 1rem;
+}
+
+
+.member-action-choice-header h3 {
+  margin: 0;
+
+  font-size: 1.15rem;
+  line-height: 1.25;
+}
+
+
+.member-action-choice-header p {
+  margin:
+    0.3rem
+    0
+    0;
+
+  color: var(--text-muted);
+
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+
+.member-action-choice-options {
+  display: grid;
+
+  gap: 0.65rem;
+}
+
+
+.member-action-choice-option {
+  display: flex;
+  flex-direction: column;
+
+  align-items: flex-start;
+
+  width: 100%;
+  min-height: 62px;
+
+  margin: 0;
+  padding:
+    0.75rem
+    0.85rem;
+
+  gap: 0.2rem;
+
+  border: 1px solid var(--border);
+  border-radius: 12px;
+
+  background: var(--card-secondary);
+  color: var(--text-main);
+
+  font: inherit;
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.08s ease;
+}
+
+
+.member-action-choice-option:hover {
+  border-color: var(--blue);
+
+  background: var(--blue-soft);
+}
+
+
+.member-action-choice-option:active {
+  transform: scale(0.992);
+}
+
+
+.member-action-choice-option.primary {
+  border-color:
+    color-mix(
+      in srgb,
+      var(--blue) 45%,
+      var(--border)
+    );
+}
+
+
+.member-action-choice-option.danger {
+  border-color:
+    color-mix(
+      in srgb,
+      var(--danger) 40%,
+      var(--border)
+    );
+
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+
+.member-action-choice-option.danger:hover {
+  border-color: var(--danger);
+
+  background: var(--danger);
+  color: #ffffff;
+}
+
+
+.member-action-choice-option-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+
+.member-action-choice-option-description {
+  color: var(--text-muted);
+
+  font-size: 0.76rem;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+
+.member-action-choice-option.danger:hover
+.member-action-choice-option-description {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+
+.member-action-choice-cancel {
+  width: 100%;
+
+  margin-top: 0.85rem;
+}
+
+
+body.member-action-choice-open {
+  overflow: hidden;
+}

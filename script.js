@@ -201,6 +201,440 @@ const deleteMemberFromModalButton =
 let editingMemberObject = null;
 
 /* ======================================================================
+   LEDENBEHEER — DYNAMISCHE ACTIEKEUZE
+====================================================================== */
+
+let memberActionChoiceModal = null;
+let memberActionChoiceResolver = null;
+
+
+/*
+ * De keuze-modal wordt één keer opgebouwd.
+ * Daardoor hoeft dezelfde HTML niet in alle speltakpagina's
+ * te worden toegevoegd.
+ */
+
+function ensureMemberActionChoiceModal() {
+    if (memberActionChoiceModal) {
+        return memberActionChoiceModal;
+    }
+
+
+    const modal =
+        document.createElement("div");
+
+    modal.id =
+        "memberActionChoiceModal";
+
+    modal.className =
+        "modal hidden member-action-choice-modal";
+
+    modal.setAttribute(
+        "role",
+        "dialog"
+    );
+
+    modal.setAttribute(
+        "aria-modal",
+        "true"
+    );
+
+    modal.setAttribute(
+        "aria-labelledby",
+        "memberActionChoiceTitle"
+    );
+
+
+    modal.innerHTML = `
+        <div class="modal-content member-action-choice-content">
+
+            <div class="member-action-choice-header">
+                <div>
+                    <h3 id="memberActionChoiceTitle">
+                        Kies een actie
+                    </h3>
+
+                    <p id="memberActionChoiceDescription"></p>
+                </div>
+
+                <button
+                    id="closeMemberActionChoice"
+                    class="member-link-modal-close"
+                    type="button"
+                    aria-label="Venster sluiten"
+                >
+                    ×
+                </button>
+            </div>
+
+            <div
+                id="memberActionChoiceOptions"
+                class="member-action-choice-options"
+            ></div>
+
+            <button
+                id="cancelMemberActionChoice"
+                class="pill-btn outline member-action-choice-cancel"
+                type="button"
+            >
+                Annuleren
+            </button>
+
+        </div>
+    `;
+
+
+    document.body.appendChild(
+        modal
+    );
+
+
+    memberActionChoiceModal =
+        modal;
+
+
+    const closeButton =
+        modal.querySelector(
+            "#closeMemberActionChoice"
+        );
+
+    const cancelButton =
+        modal.querySelector(
+            "#cancelMemberActionChoice"
+        );
+
+
+    closeButton?.addEventListener(
+        "click",
+        closeMemberActionChoice
+    );
+
+
+    cancelButton?.addEventListener(
+        "click",
+        closeMemberActionChoice
+    );
+
+
+    modal.addEventListener(
+        "click",
+        event => {
+            if (event.target === modal) {
+                closeMemberActionChoice();
+            }
+        }
+    );
+
+
+    return modal;
+}
+
+
+/*
+ * Modal sluiten en de wachtende Promise afronden.
+ */
+
+function closeMemberActionChoice(result = null) {
+    memberActionChoiceModal
+        ?.classList
+        .add("hidden");
+
+
+    document.body.classList.remove(
+        "member-action-choice-open"
+    );
+
+
+    if (memberActionChoiceResolver) {
+        memberActionChoiceResolver(
+            result
+        );
+
+        memberActionChoiceResolver =
+            null;
+    }
+}
+
+
+/*
+ * Herbruikbare keuze-modal openen.
+ *
+ * Voorbeeld:
+ *
+ * const result = await openMemberActionChoice({
+ *     title: "Lid verbergen",
+ *     description: "Waar wil je dit lid verbergen?",
+ *     options: [...]
+ * });
+ */
+
+function openMemberActionChoice({
+    title,
+    description = "",
+    options = []
+}) {
+    const modal =
+        ensureMemberActionChoiceModal();
+
+
+    const titleElement =
+        modal.querySelector(
+            "#memberActionChoiceTitle"
+        );
+
+    const descriptionElement =
+        modal.querySelector(
+            "#memberActionChoiceDescription"
+        );
+
+    const optionsContainer =
+        modal.querySelector(
+            "#memberActionChoiceOptions"
+        );
+
+
+    if (titleElement) {
+        titleElement.textContent =
+            title;
+    }
+
+
+    if (descriptionElement) {
+        descriptionElement.textContent =
+            description;
+
+        descriptionElement.classList.toggle(
+            "hidden",
+            !description
+        );
+    }
+
+
+    if (optionsContainer) {
+        optionsContainer.innerHTML =
+            "";
+
+
+        options.forEach(option => {
+            const button =
+                document.createElement("button");
+
+            button.type =
+                "button";
+
+            button.className =
+                [
+                    "member-action-choice-option",
+                    option.danger
+                        ? "danger"
+                        : "",
+                    option.primary
+                        ? "primary"
+                        : ""
+                ]
+                    .filter(Boolean)
+                    .join(" ");
+
+
+            button.innerHTML = `
+                <span class="member-action-choice-option-title">
+                    ${option.title}
+                </span>
+
+                ${
+                    option.description
+                        ? `
+                            <span class="member-action-choice-option-description">
+                                ${option.description}
+                            </span>
+                        `
+                        : ""
+                }
+            `;
+
+
+            button.addEventListener(
+                "click",
+                () => {
+                    closeMemberActionChoice(
+                        option.value
+                    );
+                }
+            );
+
+
+            optionsContainer.appendChild(
+                button
+            );
+        });
+    }
+
+
+    modal.classList.remove(
+        "hidden"
+    );
+
+
+    document.body.classList.add(
+        "member-action-choice-open"
+    );
+
+
+    return new Promise(resolve => {
+        memberActionChoiceResolver =
+            resolve;
+    });
+}
+
+
+/*
+ * Escape sluit ook deze modal.
+ */
+
+document.addEventListener(
+    "keydown",
+    event => {
+        if (
+            event.key === "Escape" &&
+            memberActionChoiceModal &&
+            !memberActionChoiceModal.classList.contains(
+                "hidden"
+            )
+        ) {
+            closeMemberActionChoice();
+        }
+    }
+);
+/* ======================================================================
+   LEDENMODAL — HULPFUNCTIES VOOR GEKOPPELDE ACTIES
+====================================================================== */
+
+/*
+ * Naam van de huidige planning voor zichtbare teksten.
+ */
+
+function getCurrentSpeltakLabel() {
+    if (speltak === "rovers") {
+        return "Rovers";
+    }
+
+    if (speltak === "stam") {
+        return "Stam";
+    }
+
+    return (
+        speltak.charAt(0).toUpperCase() +
+        speltak.slice(1)
+    );
+}
+
+
+/*
+ * Bepalen of het geopende lid aan een lid
+ * in de andere planning gekoppeld is.
+ */
+
+function getLinkedMemberActionContext(
+    member,
+    type
+) {
+    if (
+        type !== "jeugd" ||
+        !member
+    ) {
+        return null;
+    }
+
+
+    if (
+        speltak === "rovers" &&
+        member.linkedStamMemberId
+    ) {
+        return {
+            currentSpeltak:
+                "rovers",
+
+            currentLabel:
+                "Rovers",
+
+            linkedSpeltak:
+                "stam",
+
+            linkedLabel:
+                "Stam",
+
+            linkedMemberId:
+                member.linkedStamMemberId,
+
+            linkedField:
+                "linkedRoverMemberId"
+        };
+    }
+
+
+    if (
+        speltak === "stam" &&
+        member.linkedRoverMemberId
+    ) {
+        return {
+            currentSpeltak:
+                "stam",
+
+            currentLabel:
+                "Stam",
+
+            linkedSpeltak:
+                "rovers",
+
+            linkedLabel:
+                "Rovers",
+
+            linkedMemberId:
+                member.linkedRoverMemberId,
+
+            linkedField:
+                "linkedStamMemberId"
+        };
+    }
+
+
+    return null;
+}
+
+
+/*
+ * Gewone ledenmodal sluiten en volledig resetten.
+ */
+
+function closeAndResetMemberModal() {
+    memberModal
+        ?.classList
+        .add("hidden");
+
+
+    editingMemberId =
+        null;
+
+    editingMemberType =
+        null;
+
+    editingMemberObject =
+        null;
+
+
+    if (memberType) {
+        memberType.disabled =
+            false;
+    }
+
+
+    memberManagementActions
+        ?.classList
+        .add("hidden");
+}
+
+
+/* ======================================================================
    LEDENMODAL — TONEN / VERBERGEN
 ====================================================================== */
 
@@ -232,6 +666,98 @@ toggleMemberVisibilityButton
             const newHiddenValue =
                 !member.hidden;
 
+            const actionWord =
+                newHiddenValue
+                    ? "verbergen"
+                    : "tonen";
+
+            const actionTitle =
+                newHiddenValue
+                    ? "Lid verbergen"
+                    : "Lid tonen";
+
+            const currentLabel =
+                getCurrentSpeltakLabel();
+
+            const linkedContext =
+                getLinkedMemberActionContext(
+                    member,
+                    type
+                );
+
+
+            /*
+             * Gekoppeld Rover-/Stamlid:
+             * kiezen tussen huidige of beide planningen.
+             */
+
+            const options =
+                linkedContext
+                    ? [
+                        {
+                            value:
+                                "current",
+
+                            title:
+                                `Alleen bij ${linkedContext.currentLabel} ${actionWord}`,
+
+                            description:
+                                `De zichtbaarheid bij ${linkedContext.linkedLabel} blijft ongewijzigd.`,
+
+                            primary:
+                                true
+                        },
+
+                        {
+                            value:
+                                "both",
+
+                            title:
+                                `Bij ${linkedContext.currentLabel} én ${linkedContext.linkedLabel} ${actionWord}`,
+
+                            description:
+                                "De zichtbaarheid wordt in beide planningen gelijk aangepast."
+                        }
+                    ]
+                    : [
+                        {
+                            value:
+                                "current",
+
+                            title:
+                                `${member.naam} ${actionWord}`,
+
+                            description:
+                                `Dit wijzigt de zichtbaarheid in de planning van ${currentLabel}.`,
+
+                            primary:
+                                true
+                        }
+                    ];
+
+
+            const choice =
+                await openMemberActionChoice({
+                    title:
+                        actionTitle,
+
+                    description:
+                        linkedContext
+                            ? `Waar wil je ${member.naam} ${actionWord}?`
+                            : `Wil je ${member.naam} ${actionWord}?`,
+
+                    options
+                });
+
+
+            /*
+             * Gesloten of geannuleerd.
+             */
+
+            if (!choice) {
+                return;
+            }
+
 
             toggleMemberVisibilityButton.disabled =
                 true;
@@ -239,6 +765,11 @@ toggleMemberVisibilityButton
 
             try {
                 const updates = {};
+
+
+                /*
+                 * Huidige planning aanpassen.
+                 */
 
                 updates[
                     `${speltak}/${path}/${member.id}/hidden`
@@ -254,6 +785,31 @@ toggleMemberVisibilityButton
                 }
 
 
+                /*
+                 * Bij keuze 'beide' ook het gekoppelde
+                 * Rover- of Stamrecord aanpassen.
+                 */
+
+                if (
+                    choice === "both" &&
+                    linkedContext
+                ) {
+                    updates[
+                        `${linkedContext.linkedSpeltak}/jeugdleden/${linkedContext.linkedMemberId}/hidden`
+                    ] =
+                        newHiddenValue;
+
+                    updates[
+                        `${linkedContext.linkedSpeltak}/public/jeugdleden/${linkedContext.linkedMemberId}/hidden`
+                    ] =
+                        newHiddenValue;
+                }
+
+
+                /*
+                 * Eén atomische update.
+                 */
+
                 await update(
                     ref(db),
                     updates
@@ -261,11 +817,12 @@ toggleMemberVisibilityButton
 
 
                 /*
-                 * Lokale modalstatus direct bijwerken.
+                 * De geopende modal direct actualiseren.
                  */
 
                 editingMemberObject = {
                     ...member,
+
                     hidden:
                         newHiddenValue
                 };
@@ -284,6 +841,7 @@ toggleMemberVisibilityButton
                     error
                 );
 
+
                 alert(
                     "De zichtbaarheid kon niet worden gewijzigd."
                 );
@@ -295,7 +853,8 @@ toggleMemberVisibilityButton
         }
     );
 
-   /* ======================================================================
+
+/* ======================================================================
    LEDENMODAL — LID VERWIJDEREN
 ====================================================================== */
 
@@ -319,13 +878,92 @@ deleteMemberFromModalButton
             const type =
                 editingMemberType;
 
-            const confirmed =
-                confirm(
-                    `Weet je zeker dat je ${member.naam} wilt verwijderen?`
+            const path =
+                type === "jeugd"
+                    ? "jeugdleden"
+                    : "leiding";
+
+            const currentLabel =
+                getCurrentSpeltakLabel();
+
+            const linkedContext =
+                getLinkedMemberActionContext(
+                    member,
+                    type
                 );
 
 
-            if (!confirmed) {
+            /*
+             * Gekoppelde leden krijgen twee keuzes.
+             */
+
+            const options =
+                linkedContext
+                    ? [
+                        {
+                            value:
+                                "current",
+
+                            title:
+                                `Alleen verwijderen uit ${linkedContext.currentLabel}`,
+
+                            description:
+                                `Het lid blijft bestaan bij ${linkedContext.linkedLabel}. De koppeling wordt verwijderd.`,
+
+                            danger:
+                                true
+                        },
+
+                        {
+                            value:
+                                "both",
+
+                            title:
+                                `Volledig verwijderen uit ${linkedContext.currentLabel} én ${linkedContext.linkedLabel}`,
+
+                            description:
+                                "Beide gekoppelde ledenrecords worden definitief verwijderd.",
+
+                            danger:
+                                true
+                        }
+                    ]
+                    : [
+                        {
+                            value:
+                                "current",
+
+                            title:
+                                `${member.naam} verwijderen`,
+
+                            description:
+                                `Het lid wordt definitief verwijderd uit ${currentLabel}.`,
+
+                            danger:
+                                true
+                        }
+                    ];
+
+
+            const choice =
+                await openMemberActionChoice({
+                    title:
+                        "Lid verwijderen",
+
+                    description:
+                        linkedContext
+                            ? `Wat wil je met ${member.naam} doen?`
+                            : `Weet je zeker dat je ${member.naam} wilt verwijderen?`,
+
+                    options
+                });
+
+
+            /*
+             * Gesloten of geannuleerd.
+             */
+
+            if (!choice) {
                 return;
             }
 
@@ -335,72 +973,75 @@ deleteMemberFromModalButton
 
 
             try {
-                const path =
-                    type === "jeugd"
-                        ? "jeugdleden"
-                        : "leiding";
-
                 const updates = {};
 
 
                 /*
-                 * Huidige ledenrecord verwijderen.
+                 * Huidige record altijd verwijderen.
                  */
 
                 updates[
                     `${speltak}/${path}/${member.id}`
-                ] = null;
+                ] =
+                    null;
 
 
                 if (type === "jeugd") {
                     updates[
                         `${PUBLIC_ROOT}/jeugdleden/${member.id}`
-                    ] = null;
+                    ] =
+                        null;
                 }
 
 
                 /*
-                 * Bij een gekoppeld Rover- of Stamlid blijft
-                 * het lid in de andere planning bestaan.
-                 * Alleen de verwijzing naar dit verwijderde
-                 * record wordt daar opgeruimd.
+                 * Gekoppeld Rover-/Stamlid.
                  */
 
-                if (
-                    type === "jeugd" &&
-                    speltak === "rovers" &&
-                    member.linkedStamMemberId
-                ) {
-                    const linkedStamId =
-                        member.linkedStamMemberId;
+                if (linkedContext) {
 
-                    updates[
-                        `stam/jeugdleden/${linkedStamId}/linkedRoverMemberId`
-                    ] = null;
+                    /*
+                     * Alleen uit huidige planning verwijderen:
+                     * gekoppelde lid blijft bestaan, maar
+                     * verwijzing naar het verwijderde record verdwijnt.
+                     */
 
-                    updates[
-                        `stam/public/jeugdleden/${linkedStamId}/linkedRoverMemberId`
-                    ] = null;
+                    if (choice === "current") {
+                        updates[
+                            `${linkedContext.linkedSpeltak}/jeugdleden/${linkedContext.linkedMemberId}/${linkedContext.linkedField}`
+                        ] =
+                            null;
+
+                        updates[
+                            `${linkedContext.linkedSpeltak}/public/jeugdleden/${linkedContext.linkedMemberId}/${linkedContext.linkedField}`
+                        ] =
+                            null;
+                    }
+
+
+                    /*
+                     * Volledig verwijderen:
+                     * ook het gekoppelde private en publieke
+                     * ledenrecord verwijderen.
+                     */
+
+                    if (choice === "both") {
+                        updates[
+                            `${linkedContext.linkedSpeltak}/jeugdleden/${linkedContext.linkedMemberId}`
+                        ] =
+                            null;
+
+                        updates[
+                            `${linkedContext.linkedSpeltak}/public/jeugdleden/${linkedContext.linkedMemberId}`
+                        ] =
+                            null;
+                    }
                 }
 
 
-                if (
-                    type === "jeugd" &&
-                    speltak === "stam" &&
-                    member.linkedRoverMemberId
-                ) {
-                    const linkedRoverId =
-                        member.linkedRoverMemberId;
-
-                    updates[
-                        `rovers/jeugdleden/${linkedRoverId}/linkedStamMemberId`
-                    ] = null;
-
-                    updates[
-                        `rovers/public/jeugdleden/${linkedRoverId}/linkedStamMemberId`
-                    ] = null;
-                }
-
+                /*
+                 * Alle verwijderingen in één keer uitvoeren.
+                 */
 
                 await update(
                     ref(db),
@@ -408,20 +1049,7 @@ deleteMemberFromModalButton
                 );
 
 
-                memberModal.classList.add(
-                    "hidden"
-                );
-
-                editingMemberId = null;
-                editingMemberType = null;
-                editingMemberObject = null;
-
-                memberType.disabled =
-                    false;
-
-                memberManagementActions
-                    ?.classList
-                    .add("hidden");
+                closeAndResetMemberModal();
 
 
                 await loadEverything();
@@ -432,6 +1060,7 @@ deleteMemberFromModalButton
                     error
                 );
 
+
                 alert(
                     "Het lid kon niet worden verwijderd."
                 );
@@ -441,7 +1070,7 @@ deleteMemberFromModalButton
                     false;
             }
         }
-    ); 
+    );
 /* ======================================================================
    ROVERS ↔ STAM — LEDENKOPPELING
 ====================================================================== */

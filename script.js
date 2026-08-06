@@ -3143,8 +3143,22 @@ function applyModeVisibility() {
    LOAD EVERYTHING
    ====================================================================== */
 async function loadEverything() {
-    loadingIndicator?.classList.remove("hidden");
-    errorIndicator?.classList.add("hidden");
+    loadingIndicator?.classList.remove(
+        "hidden"
+    );
+
+    errorIndicator?.classList.add(
+        "hidden"
+    );
+
+
+    /*
+     * Alleen op de Roverspagina wordt deze variabele
+     * gevuld met publieke Stamopkomsten.
+     */
+
+    let sharedStamOpkomsten = {};
+
 
     try {
         if (isOuder()) {
@@ -3183,15 +3197,138 @@ async function loadEverything() {
                 });
             }
         }
+        /*
+         * Rovers toont ook de publieke Stamopkomsten.
+         *
+         * We lezen alleen stam/public/opkomsten:
+         * - ouders mogen deze gegevens zien;
+         * - Roverleiding krijgt geen private Stamnotities;
+         * - aanwezigheid staat al in dezelfde publieke opkomst.
+         */
 
+        if (speltak === "rovers") {
+            const stamPublicOpkomstenSnapshot =
+                await get(
+                    ref(
+                        db,
+                        "stam/public/opkomsten"
+                    )
+                );
+
+
+            sharedStamOpkomsten =
+                stamPublicOpkomstenSnapshot.exists()
+                    ? (
+                        stamPublicOpkomstenSnapshot.val() ||
+                        {}
+                    )
+                    : {};
+        }
         loadingIndicator?.classList.add("hidden");
 
-        // Opkomsten
-        opkomsten = Object.entries(data.opkomsten || {}).map(([id, v]) => ({ id, ...v }));
-        opkomsten = sortOpkomsten(opkomsten);
+  /* ================================================================
+   OPKOMSTEN — EIGEN PLANNING + GEDEELDE STAMOPKOMSTEN
+================================================================ */
 
-        const nextUpcoming = getNextUpcoming(opkomsten);
-        nextUpcomingId = nextUpcoming ? nextUpcoming.id : null;
+/*
+ * Opkomsten van de actieve pagina.
+ */
+
+const ownOpkomsten =
+    Object
+        .entries(
+            data.opkomsten || {}
+        )
+        .map(
+            ([id, value]) => ({
+                id,
+
+                ...value,
+
+                /*
+                 * Werkelijke Firebasebron.
+                 */
+
+                bronSpeltak:
+                    speltak,
+
+                /*
+                 * Op de Stampagina zelf is een Stamopkomst
+                 * geen extern gedeelde opkomst.
+                 */
+
+                isGedeeldeStamOpkomst:
+                    false,
+
+                /*
+                 * Unieke lokale sleutel.
+                 * Handig omdat verschillende Firebase-nodes
+                 * theoretisch dezelfde push-ID kunnen bevatten.
+                 */
+
+                rowKey:
+                    `${speltak}:${id}`
+            })
+        );
+
+
+/*
+ * Publieke Stamopkomsten die alleen op de
+ * Roverspagina worden toegevoegd.
+ */
+
+const sharedOpkomsten =
+    speltak === "rovers"
+        ? Object
+            .entries(
+                sharedStamOpkomsten
+            )
+            .map(
+                ([id, value]) => ({
+                    id,
+
+                    ...value,
+
+                    bronSpeltak:
+                        "stam",
+
+                    isGedeeldeStamOpkomst:
+                        true,
+
+                    rowKey:
+                        `stam:${id}`
+                })
+            )
+        : [];
+
+
+/*
+ * Beide lijsten samenvoegen en daarna opnieuw
+ * chronologisch sorteren.
+ */
+
+opkomsten =
+    sortOpkomsten([
+        ...ownOpkomsten,
+        ...sharedOpkomsten
+    ]);
+
+
+/*
+ * Eerstvolgende opkomst bepalen over de
+ * volledige gecombineerde planning.
+ */
+
+const nextUpcoming =
+    getNextUpcoming(
+        opkomsten
+    );
+
+
+nextUpcomingId =
+    nextUpcoming
+        ? nextUpcoming.rowKey
+        : null;
 
         // Jeugd
 // Jeugd
@@ -3925,29 +4062,104 @@ function closeDeleteOpkomstModal() {
    TABEL — ROWS
    ====================================================================== */
 function addRow(o) {
-    const tr = document.createElement("tr");
-    tr.dataset.id = o.id;
-    tr.dataset.opkomstDatum = o.datum;
+    const tr =
+        document.createElement("tr");
 
-    if (isEdit()) {
-        tr.classList.add("row-modal-editable");
-        tr.title = "Klik om deze opkomst te bewerken";
 
-        tr.addEventListener("click", event => {
-            // Klikken op aanwezigheid, verwijderen of een ander interactief
-            // element mag niet ook de opkomstmodal openen.
+    /*
+     * rowKey is uniek over meerdere speltakken.
+     * De originele Firebase-ID bewaren we apart.
+     */
+
+    tr.dataset.id =
+        o.rowKey || o.id;
+
+    tr.dataset.firebaseId =
+        o.id;
+
+    tr.dataset.bronSpeltak =
+        o.bronSpeltak || speltak;
+
+    tr.dataset.opkomstDatum =
+        o.datum;
+
+        /*
+ * Gedeelde Stamopkomsten herkenbaar maken
+ * voor styling en verdere logica.
+ */
+
+if (o.isGedeeldeStamOpkomst) {
+    tr.classList.add(
+        "row-shared-stam"
+    );
+
+    tr.dataset.sharedOpkomst =
+        "stam";
+}
+
+if (isEdit()) {
+    tr.classList.add(
+        "row-modal-editable"
+    );
+
+
+    if (
+        o.isGedeeldeStamOpkomst
+    ) {
+        tr.classList.add(
+            "row-shared-stam-locked"
+        );
+
+        tr.title =
+            "Klik voor beheer via de Stamplanning";
+
+    } else {
+        tr.title =
+            "Klik om deze opkomst te bewerken";
+    }
+
+
+    tr.addEventListener(
+        "click",
+        event => {
+            /*
+             * Klikken op aanwezigheid, verwijderen
+             * of een ander interactief element mag
+             * geen rijactie uitvoeren.
+             */
+
             if (
-                event.target.closest(".presence-cell") ||
-                event.target.closest(".col-delete") ||
-                event.target.closest("button, input, select, textarea, a")
+                event.target.closest(
+                    ".presence-cell"
+                ) ||
+                event.target.closest(
+                    ".col-delete"
+                ) ||
+                event.target.closest(
+                    "button, input, select, textarea, a"
+                )
             ) {
                 return;
             }
 
-            openEditOpkomstModal(o);
-        });
-    }
 
+            if (
+                o.isGedeeldeStamOpkomst
+            ) {
+                openSharedStamOpkomstNotice(
+                    o
+                );
+
+                return;
+            }
+
+
+            openEditOpkomstModal(
+                o
+            );
+        }
+    );
+}
     const past = isPast(o.datum);
     // Verleden: altijd volledig grijs, geen andere kleurmarkeringen
     if (past) {
@@ -3958,29 +4170,82 @@ function addRow(o) {
         else if (o.typeOpkomst === "bijzonder") tr.classList.add("row-bijzonder");
         else if (o.typeOpkomst === "kamp") tr.classList.add("row-kamp");
 
-        // Next-highlight mag NIET over "geen" heen
-        if (o.id === nextUpcomingId && o.typeOpkomst !== "geen") {
-            tr.classList.add("row-next");
-        }
+if (
+    (o.rowKey || o.id) ===
+        nextUpcomingId &&
+    o.typeOpkomst !== "geen"
+) {
+    tr.classList.add(
+        "row-next"
+    );
+}
     }
 
 
-    if (isEdit()) {
-        const del = document.createElement("td");
-        del.classList.add("editable-cell", "col-delete");
-        del.textContent = "❌";
+if (isEdit()) {
+    const del =
+        document.createElement("td");
 
-        del.addEventListener("click", event => {
-            event.stopPropagation();
-
-            if (!isLeiding()) return;
-
-            openDeleteOpkomstModal(o);
-        });
+    del.classList.add(
+        "col-delete"
+    );
 
 
-        tr.appendChild(del);
+    if (
+        o.isGedeeldeStamOpkomst
+    ) {
+        /*
+         * De cel blijft bestaan voor correcte
+         * uitlijning met de tabelheader.
+         */
+
+        del.classList.add(
+            "shared-opkomst-lock-cell"
+        );
+
+        del.textContent =
+            "🔒";
+
+        del.title =
+            "Beheer deze opkomst vanuit de Stamplanning";
+
+        del.setAttribute(
+            "aria-label",
+            "Stamopkomst is hier niet te verwijderen"
+        );
+
+    } else {
+        del.classList.add(
+            "editable-cell"
+        );
+
+        del.textContent =
+            "❌";
+
+
+        del.addEventListener(
+            "click",
+            event => {
+                event.stopPropagation();
+
+
+                if (!isLeiding()) {
+                    return;
+                }
+
+
+                openDeleteOpkomstModal(
+                    o
+                );
+            }
+        );
     }
+
+
+    tr.appendChild(
+        del
+    );
+}
 
     tr.appendChild(makeEditableCell(o, "datum", "col-datum", "date"));
     tr.appendChild(makeEditableCell(o, "starttijd", "", "time"));
@@ -4280,33 +4545,101 @@ function makeEditableCell(o, field, extraClass = "", type = "text") {
 
     return td;
 }
+
+function getOpkomstTypeLabel(
+    typeOpkomst
+) {
+    const labels = {
+        normaal:
+            "Normaal",
+
+        bijzonder:
+            "Bijzonder",
+
+        kamp:
+            "Kamp",
+
+        geen:
+            "Geen opkomst"
+    };
+
+
+    return (
+        labels[typeOpkomst] ||
+        typeOpkomst ||
+        "—"
+    );
+}
 /* ======================================================================
    CELFUNCTIES — DROPDOWN
    ====================================================================== */
-function makeRestrictedEditable(o, field, opties, extraClass = "") {
-    const td = document.createElement("td");
+
+function makeRestrictedEditable(
+    o,
+    field,
+    opties,
+    extraClass = ""
+) {
+    const td =
+        document.createElement("td");
+
 
     if (extraClass) {
-        td.classList.add(extraClass);
+        td.classList.add(
+            extraClass
+        );
     }
 
-    const value = o[field] || "";
 
-    if (field === "typeOpkomst") {
-        const labels = {
-            normaal: "Normaal",
-            bijzonder: "Bijzonder",
-            kamp: "Kamp",
-            geen: "Geen opkomst"
-        };
+    const value =
+        o[field] || "";
 
-        td.textContent = labels[value] || value;
+
+    if (
+        field === "typeOpkomst"
+    ) {
+        /*
+         * Op Rovers overschrijven we alleen
+         * de zichtbare tekst.
+         *
+         * o.typeOpkomst zelf blijft bijvoorbeeld
+         * 'kamp' of 'bijzonder', zodat de bestaande
+         * rijkleur behouden blijft.
+         */
+
+        if (
+            o.isGedeeldeStamOpkomst
+        ) {
+            td.textContent =
+                "Stamopkomst";
+
+            td.classList.add(
+                "shared-stam-type"
+            );
+
+            td.title =
+                `Oorspronkelijk type: ${
+                    getOpkomstTypeLabel(
+                        value
+                    )
+                }`;
+
+        } else {
+            td.textContent =
+                getOpkomstTypeLabel(
+                    value
+                );
+        }
+
     } else {
-        td.textContent = value || "—";
+        td.textContent =
+            value || "—";
     }
+
 
     return td;
 }
+
 /* ======================================================================
    AANWEZIGHEID
    ====================================================================== */
@@ -5610,6 +5943,62 @@ function openNewOpkomstModal() {
     opModal.classList.remove("hidden");
 }
 
+/* ======================================================================
+   GEDEELDE STAMOPKOMST — DOORSTUREN NAAR STAMPLANNING
+====================================================================== */
+
+async function openSharedStamOpkomstNotice(
+    opkomst
+) {
+    const datumTekst =
+        opkomst?.datum
+            ? formatDateDisplay(
+                opkomst.datum
+            )
+            : "deze opkomst";
+
+
+    const keuze =
+        await openMemberActionChoice({
+            title:
+                "Stamopkomst",
+
+            description:
+                `De Stamopkomst van ${datumTekst} is alleen bewerkbaar via de Stam-jaarplanning.`,
+
+            options: [
+                {
+                    value:
+                        "open-stam",
+
+                    title:
+                        "Naar de Stam-jaarplanning",
+
+                    primary:
+                        true
+                }
+            ]
+        });
+
+
+    if (
+        keuze !== "open-stam"
+    ) {
+        return;
+    }
+
+
+    /*
+     * De opkomst-ID wordt als hash meegestuurd.
+     * De bestaande scrollToOpkomstFromHash()-logica
+     * kan de juiste rij dan direct opzoeken.
+     */
+
+    window.location.href =
+        `stam.html#opkomst-${encodeURIComponent(
+            opkomst.id
+        )}`;
+}
 
 function openEditOpkomstModal(opkomst) {
     if (!isLeiding() || !isEdit()) return;

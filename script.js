@@ -87,7 +87,61 @@ function hasSpeltakRechten() {
     return false;
 }
 
+/*
+ * Controleren of de huidige gebruiker private gegevens
+ * van een specifieke speltak mag wijzigen.
+ *
+ * Dit is nodig omdat een Roverleider een gedeelde
+ * Stamopkomst wel publiek mag invullen, maar niet
+ * automatisch schrijfrechten heeft op stam/opkomsten.
+ */
 
+function hasSpeltakRechtenVoor(
+    targetSpeltak
+) {
+    const session =
+        getSession();
+
+
+    if (!session) {
+        return false;
+    }
+
+
+    if (
+        session.roles?.admin ||
+        session.roles?.bestuur
+    ) {
+        return true;
+    }
+
+
+    const speltakken =
+        session.roles?.speltakken;
+
+
+    if (
+        Array.isArray(speltakken)
+    ) {
+        return speltakken.includes(
+            targetSpeltak
+        );
+    }
+
+
+    if (
+        speltakken &&
+        typeof speltakken === "object"
+    ) {
+        return (
+            speltakken[targetSpeltak] ===
+            true
+        );
+    }
+
+
+    return false;
+}
 const config = window.speltakConfig || { showBert: false, showLeiding: true };
 
 const app = getApps().length ? getApp() : initializeApp(window.firebaseConfig);
@@ -3005,6 +3059,7 @@ let data = {};
 let opkomsten = [];
 let jeugd = [];
 let leiding = [];
+let sharedStamMembers = [];
 let nextUpcomingId = null;
 let infoEditActive = false;
 let editingMemberId = null;
@@ -3158,7 +3213,7 @@ async function loadEverything() {
      */
 
     let sharedStamOpkomsten = {};
-
+sharedStamMembers = [];
 
     try {
         if (isOuder()) {
@@ -3206,24 +3261,79 @@ async function loadEverything() {
          * - aanwezigheid staat al in dezelfde publieke opkomst.
          */
 
-        if (speltak === "rovers") {
-            const stamPublicOpkomstenSnapshot =
-                await get(
-                    ref(
-                        db,
-                        "stam/public/opkomsten"
-                    )
-                );
+if (speltak === "rovers") {
+    /*
+     * Stamopkomsten en publieke Stamleden tegelijk laden.
+     *
+     * De Stamleden zijn nodig om in de kolom
+     * 'Aanw. leden' het volledige aantal Stamleden
+     * te tonen, dus niet alleen gekoppelde Rovers.
+     */
+
+    const [
+        stamPublicOpkomstenSnapshot,
+        stamPublicMembersSnapshot
+    ] =
+        await Promise.all([
+            get(
+                ref(
+                    db,
+                    "stam/public/opkomsten"
+                )
+            ),
+
+            get(
+                ref(
+                    db,
+                    "stam/public/jeugdleden"
+                )
+            )
+        ]);
 
 
-            sharedStamOpkomsten =
-                stamPublicOpkomstenSnapshot.exists()
-                    ? (
-                        stamPublicOpkomstenSnapshot.val() ||
-                        {}
-                    )
-                    : {};
-        }
+    sharedStamOpkomsten =
+        stamPublicOpkomstenSnapshot.exists()
+            ? (
+                stamPublicOpkomstenSnapshot.val() ||
+                {}
+            )
+            : {};
+
+
+    const stamMembersData =
+        stamPublicMembersSnapshot.exists()
+            ? (
+                stamPublicMembersSnapshot.val() ||
+                {}
+            )
+            : {};
+
+
+    sharedStamMembers =
+        Object
+            .entries(
+                stamMembersData
+            )
+            .map(
+                ([id, member]) => ({
+                    id,
+
+                    naam:
+                        member.naam || "",
+
+                    hidden:
+                        !!member.hidden,
+
+                    volgorde:
+                        member.volgorde ?? 999
+                })
+            )
+            .sort(
+                (a, b) =>
+                    a.volgorde -
+                    b.volgorde
+            );
+}
         loadingIndicator?.classList.add("hidden");
 
   /* ================================================================
@@ -4396,16 +4506,67 @@ function addTotalsRow() {
         return (currentSeizoenFilter === "all" || opkomstSeizoen === currentSeizoenFilter);
     });
 
-    // Bereken de totalen op basis van de seizoensgefilterde opkomsten
-    gefilterdeOpkomsten.forEach(o => {
-        zichtbareJeugd.forEach(j => {
-            if (o.aanwezigheid?.[j.id] === "aanwezig") totals[j.id]++;
-        });
-        zichtbareLeiding.forEach(l => {
-            const key = `leiding-${l.id}`;
-            if (o.aanwezigheid?.[key] === "aanwezig") totals[key]++;
-        });
-    });
+/*
+ * Bereken de totalen op basis van de
+ * seizoensgefilterde opkomsten.
+ *
+ * Bij gedeelde Stamopkomsten wordt automatisch
+ * het gekoppelde Stam-ID gebruikt.
+ */
+
+gefilterdeOpkomsten.forEach(
+    opkomst => {
+
+        zichtbareJeugd.forEach(
+            member => {
+                const {
+                    context,
+                    status
+                } =
+                    getPresenceStatus(
+                        opkomst,
+                        member.id,
+                        false
+                    );
+
+
+                if (
+                    context.available &&
+                    status === "aanwezig"
+                ) {
+                    totals[member.id]++;
+                }
+            }
+        );
+
+
+        zichtbareLeiding.forEach(
+            member => {
+                const displayKey =
+                    `leiding-${member.id}`;
+
+
+                const {
+                    context,
+                    status
+                } =
+                    getPresenceStatus(
+                        opkomst,
+                        displayKey,
+                        true
+                    );
+
+
+                if (
+                    context.available &&
+                    status === "aanwezig"
+                ) {
+                    totals[displayKey]++;
+                }
+            }
+        );
+    }
+);
 
 
     const tr = document.createElement("tr");
@@ -4643,123 +4804,667 @@ function makeRestrictedEditable(
 /* ======================================================================
    AANWEZIGHEID
    ====================================================================== */
-function makePresenceCell(o, key, hidden, isLeidingCell) {
-    const td = document.createElement("td");
+/* ======================================================================
+   AANWEZIGHEID — ROVER ↔ STAM CONTEXT
+====================================================================== */
 
-    // basis-classes
-    if (hidden) td.classList.add("hide-view");
+/*
+ * Geeft voor een zichtbare tabelcel terug:
+ *
+ * - welk ID in Firebase gebruikt moet worden;
+ * - naar welke speltak geschreven moet worden;
+ * - of de cel daadwerkelijk beschikbaar is.
+ *
+ * `displayKey` blijft het Rover-ID waarmee de kolom
+ * op rovers.html is opgebouwd.
+ *
+ * `databaseKey` wordt bij een Stamopkomst het
+ * gekoppelde Stam-ID.
+ */
+
+function getPresenceContext(
+    opkomst,
+    displayKey,
+    isLeidingCell = false
+) {
+    const targetSpeltak =
+        opkomst?.bronSpeltak ||
+        speltak;
+
+
+    /*
+     * Gewone opkomst van de huidige planning.
+     */
+
+    if (
+        !opkomst
+            ?.isGedeeldeStamOpkomst
+    ) {
+        return {
+            available:
+                true,
+
+            displayKey,
+
+            databaseKey:
+                displayKey,
+
+            targetSpeltak,
+
+            isSharedStam:
+                false
+        };
+    }
+
+
+    /*
+     * De gedeelde Stamopkomst gebruikt op Rovers
+     * uitsluitend gekoppelde jeugd-/ledenrecords.
+     *
+     * Leidingaanwezigheid van Stam wordt niet via
+     * de Roverplanning beheerd.
+     */
 
     if (isLeidingCell) {
-        td.classList.add("col-leiding");
-        if (!isLeiding()) td.classList.add("hide-view");
-    } else {
-        td.classList.add("col-jeugd");
+        return {
+            available:
+                false,
+
+            displayKey,
+
+            databaseKey:
+                "",
+
+            targetSpeltak:
+                "stam",
+
+            isSharedStam:
+                true,
+
+            reason:
+                "Stamleiding wordt beheerd via de Stamplanning."
+        };
     }
 
-    // volledig verbergen als het lid zelf verborgen is
-    const m = key.startsWith("leiding-")
-        ? leiding.find(l => l.id === key.replace("leiding-", ""))
-        : jeugd.find(j => j.id === key);
 
-    if (!m) {
-        td.classList.add("hide-view");
+    const roverMember =
+        jeugd.find(
+            member =>
+                member.id ===
+                displayKey
+        );
+
+
+    const linkedStamMemberId =
+        roverMember
+            ?.linkedStamMemberId ||
+        "";
+
+
+    if (!linkedStamMemberId) {
+        return {
+            available:
+                false,
+
+            displayKey,
+
+            databaseKey:
+                "",
+
+            targetSpeltak:
+                "stam",
+
+            isSharedStam:
+                true,
+
+            reason:
+                "Dit Roverlid is nog niet gekoppeld aan een Stamlid."
+        };
+    }
+
+
+    return {
+        available:
+            true,
+
+        displayKey,
+
+        databaseKey:
+            linkedStamMemberId,
+
+        targetSpeltak:
+            "stam",
+
+        isSharedStam:
+            true
+    };
+}
+
+
+/*
+ * Status van één aanwezigheidscel ophalen.
+ */
+
+function getPresenceStatus(
+    opkomst,
+    displayKey,
+    isLeidingCell = false
+) {
+    const context =
+        getPresenceContext(
+            opkomst,
+            displayKey,
+            isLeidingCell
+        );
+
+
+    if (
+        !context.available ||
+        !context.databaseKey
+    ) {
+        return {
+            context,
+
+            status:
+                null
+        };
+    }
+
+
+    return {
+        context,
+
+        status:
+            opkomst
+                ?.aanwezigheid
+                ?.[context.databaseKey] ||
+            "onbekend"
+    };
+}
+
+function makePresenceCell(
+    o,
+    key,
+    hidden,
+    isLeidingCell
+) {
+    const td =
+        document.createElement("td");
+
+
+    /*
+     * Basisclasses.
+     */
+
+    if (hidden) {
+        td.classList.add(
+            "hide-view"
+        );
+    }
+
+
+    if (isLeidingCell) {
+        td.classList.add(
+            "col-leiding"
+        );
+
+
+        if (!isLeiding()) {
+            td.classList.add(
+                "hide-view"
+            );
+        }
+
+    } else {
+        td.classList.add(
+            "col-jeugd"
+        );
+    }
+
+
+    /*
+     * Het zichtbare lid in de huidige planning zoeken.
+     */
+
+    const member =
+        key.startsWith("leiding-")
+            ? leiding.find(
+                leidingMember =>
+                    leidingMember.id ===
+                    key.replace(
+                        "leiding-",
+                        ""
+                    )
+            )
+            : jeugd.find(
+                jeugdMember =>
+                    jeugdMember.id ===
+                    key
+            );
+
+
+    if (!member) {
+        td.classList.add(
+            "hide-view"
+        );
+
         return td;
     }
-    // SCOUTS — kleuraccent per ploeg
-    if (speltak === "scouts" && !isLeidingCell) {
-        const ploeg = (m.Ploeg || "").toLowerCase();
-        td.classList.add("scouts-accent");
 
-        if (ploeg === "sperwer") td.classList.add("presence-scout-sperwer");
-        else if (ploeg === "kievit") td.classList.add("presence-scout-kievit");
-        else if (ploeg === "reiger") td.classList.add("presence-scout-reiger");
-        else if (ploeg === "meeuw") td.classList.add("presence-scout-meeuw");
+
+    /*
+     * Scouts: bestaand kleuraccent per ploeg behouden.
+     */
+
+    if (
+        speltak === "scouts" &&
+        !isLeidingCell
+    ) {
+        const ploeg =
+            (
+                member.Ploeg ||
+                ""
+            ).toLowerCase();
+
+
+        td.classList.add(
+            "scouts-accent"
+        );
+
+
+        if (ploeg === "sperwer") {
+            td.classList.add(
+                "presence-scout-sperwer"
+            );
+
+        } else if (
+            ploeg === "kievit"
+        ) {
+            td.classList.add(
+                "presence-scout-kievit"
+            );
+
+        } else if (
+            ploeg === "reiger"
+        ) {
+            td.classList.add(
+                "presence-scout-reiger"
+            );
+
+        } else if (
+            ploeg === "meeuw"
+        ) {
+            td.classList.add(
+                "presence-scout-meeuw"
+            );
+        }
     }
 
-    const cur = o.aanwezigheid?.[key] || "onbekend";
+
+    const {
+        context,
+        status
+    } =
+        getPresenceStatus(
+            o,
+            key,
+            isLeidingCell
+        );
+
+
+    /*
+     * Geen gekoppeld Stamlid:
+     * toon een neutrale, niet-klikbare cel.
+     */
+
+    if (
+        !context.available
+    ) {
+        td.textContent =
+            "—";
+
+        td.classList.add(
+            "presence-cell",
+            "presence-unavailable"
+        );
+
+        td.title =
+            context.reason ||
+            "Aanwezigheid is hier niet beschikbaar.";
+
+        td.setAttribute(
+            "aria-label",
+            td.title
+        );
+
+        return td;
+    }
+
+
+    const currentStatus =
+        status ||
+        "onbekend";
+
 
     const symbols = {
-        aanwezig: "✅",
-        afwezig: "✖️",
-        onbekend: "❓",
-        urgent: "⚠️" // voor: 5 dagen voor opkomst nog onbekend
+        aanwezig:
+            "✅",
+
+        afwezig:
+            "✖️",
+
+        onbekend:
+            "❓",
+
+        urgent:
+            "⚠️"
     };
 
-    // Fallback: als er ooit een onbekende status in de DB staat
-    const icon = symbols[cur] || "❔";
-    td.textContent = icon;
 
-    // Class blijft handig (hover/filters) — en kan later voor urgent styling gebruikt worden
-    td.classList.add("presence-cell", `presence-${cur}`);
+    td.textContent =
+        symbols[currentStatus] ||
+        "❔";
 
 
-    // JEUGD: altijd klikbaar (ook voor ouders)
+    td.classList.add(
+        "presence-cell",
+        `presence-${currentStatus}`
+    );
+
+
+    /*
+     * Handige informatie voor inspectie en styling.
+     */
+
+    td.dataset.displayMemberId =
+        key;
+
+    td.dataset.databaseMemberId =
+        context.databaseKey;
+
+    td.dataset.presenceSpeltak =
+        context.targetSpeltak;
+
+
+    /*
+     * Jeugd/leden: altijd klikbaar, ook voor ouders.
+     */
+
     if (!isLeidingCell) {
-        td.classList.add("editable-cell");
-        td.addEventListener("click", () => togglePresence(o, key));
+        td.classList.add(
+            "editable-cell"
+        );
+
+
+        td.addEventListener(
+            "click",
+            () =>
+                togglePresence(
+                    o,
+                    key,
+                    false
+                )
+        );
+
+
+    /*
+     * Leiding: alleen aanklikbaar door leiding.
+     */
+
+    } else if (isLeiding()) {
+        td.classList.add(
+            "editable-cell"
+        );
+
+
+        td.addEventListener(
+            "click",
+            () =>
+                togglePresence(
+                    o,
+                    key,
+                    true
+                )
+        );
     }
-    // LEIDING: alleen zichtbaar/klikbaar als leiding
-    else if (isLeiding()) {
-        td.classList.add("editable-cell");
-        td.addEventListener("click", () => togglePresence(o, key));
-    }
+
 
     return td;
 }
 
 let heeftBevestigd3Dagen = sessionStorage.getItem("heeftBevestigd3Dagen");
 
-async function togglePresence(o, key) {
-    const datumOpkomst = new Date(o.datum);
-    const vandaag = new Date();
-    vandaag.setHours(0, 0, 0, 0);
+async function togglePresence(
+    o,
+    key,
+    isLeidingCell = false
+) {
+    const datumOpkomst =
+        new Date(
+            `${o.datum}T12:00:00`
+        );
 
-    // 1. Check op verleden
-    if (datumOpkomst < vandaag) {
-        await toonMelding("Datum verstreken", "Deze opkomst is al geweest.");
+    const vandaag =
+        new Date();
+
+
+    vandaag.setHours(
+        0,
+        0,
+        0,
+        0
+    );
+
+
+    /*
+     * Verleden niet meer wijzigbaar.
+     */
+
+    if (
+        datumOpkomst <
+        vandaag
+    ) {
+        await toonMelding(
+            "Datum verstreken",
+            "Deze opkomst is al geweest."
+        );
+
         return;
     }
 
-    // 2. Check of we binnen 3 dagen zitten EN of de gebruiker nog niet heeft bevestigd in deze sessie
-    // We lezen de waarde direct uit de sessionStorage bij elke klik
-    const alBevestigd = sessionStorage.getItem("heeftBevestigd3Dagen") === "true";
 
-    if (isBinnen3Dagen(o.datum) && !alBevestigd) {
-        const bevestigd = await toonWaarschuwing(
-            "Bevestigen",
-            "Let op: deze opkomst is binnen 3 dagen. Heb je dit doorgegeven aan je leiding?"
-        );
+    /*
+     * Binnen drie dagen bevestiging vragen.
+     */
+
+    const alBevestigd =
+        sessionStorage.getItem(
+            "heeftBevestigd3Dagen"
+        ) === "true";
+
+
+    if (
+        isBinnen3Dagen(
+            o.datum
+        ) &&
+        !alBevestigd
+    ) {
+        const bevestigd =
+            await toonWaarschuwing(
+                "Bevestigen",
+                "Let op: deze opkomst is binnen 3 dagen. Heb je dit doorgegeven aan je leiding?"
+            );
+
 
         if (!bevestigd) {
-            return; // Stop actie als gebruiker op "Annuleren" klikt
-        } else {
-            // Gebruiker is akkoord: sla vlag op in sessie
-            sessionStorage.setItem("heeftBevestigd3Dagen", "true");
+            return;
         }
+
+
+        sessionStorage.setItem(
+            "heeftBevestigd3Dagen",
+            "true"
+        );
     }
 
-    // 3. Update logica
-    const huidigeStatus = o.aanwezigheid?.[key] || "onbekend";
-    let nieuweStatus = (huidigeStatus === "onbekend") ? "aanwezig" : (huidigeStatus === "aanwezig" ? "afwezig" : "onbekend");
+
+    const {
+        context,
+        status:
+            huidigeStatus
+    } =
+        getPresenceStatus(
+            o,
+            key,
+            isLeidingCell
+        );
+
+
+    /*
+     * Bijvoorbeeld een ongekoppeld Roverlid.
+     */
+
+    if (
+        !context.available ||
+        !context.databaseKey
+    ) {
+        await toonMelding(
+            "Niet gekoppeld",
+            context.reason ||
+            "Deze aanwezigheid kan niet worden aangepast."
+        );
+
+        return;
+    }
+
+
+    const nieuweStatus =
+        huidigeStatus === "onbekend"
+            ? "aanwezig"
+            : huidigeStatus === "aanwezig"
+                ? "afwezig"
+                : "onbekend";
+
 
     try {
         const updates = {};
-        const user = auth.currentUser;
 
-        if (!key.startsWith("leiding-")) {
-            updates[`${speltak}/public/opkomsten/${o.id}/aanwezigheid/${key}`] = nieuweStatus;
+
+        /*
+         * Jeugd/leden wordt altijd in public opgeslagen.
+         *
+         * Dit pad is ook door ouders beschrijfbaar.
+         */
+
+        if (!isLeidingCell) {
+            updates[
+                `${context.targetSpeltak}/public/opkomsten/${o.id}/aanwezigheid/${context.databaseKey}`
+            ] =
+                nieuweStatus;
         }
 
-        if (user) {
-            updates[`${speltak}/opkomsten/${o.id}/aanwezigheid/${key}`] = nieuweStatus;
+
+        /*
+         * Private aanwezigheid alleen bijwerken wanneer
+         * de gebruiker daadwerkelijk rechten heeft voor
+         * de doelspeltak.
+         *
+         * Dit voorkomt dat een Roverleider bij een
+         * Stamopkomst een atomische update laat mislukken.
+         */
+
+        if (
+            auth.currentUser &&
+            hasSpeltakRechtenVoor(
+                context.targetSpeltak
+            )
+        ) {
+            updates[
+                `${context.targetSpeltak}/opkomsten/${o.id}/aanwezigheid/${context.databaseKey}`
+            ] =
+                nieuweStatus;
         }
 
-        await update(ref(db), updates);
+
+        /*
+         * Een leidingcel heeft geen openbaar pad.
+         * Zonder private rechten kan deze dus niet
+         * worden gewijzigd.
+         */
+
+        if (
+            isLeidingCell &&
+            !hasSpeltakRechtenVoor(
+                context.targetSpeltak
+            )
+        ) {
+            await toonMelding(
+                "Geen toegang",
+                "Je hebt geen rechten om deze leidingaanwezigheid te wijzigen."
+            );
+
+            return;
+        }
+
+
+        if (
+            Object.keys(updates).length ===
+            0
+        ) {
+            return;
+        }
+
+
+        await update(
+            ref(db),
+            updates
+        );
+
+
+        /*
+         * Direct lokaal bijwerken.
+         *
+         * Hierdoor reageert de cel meteen, ook voordat
+         * Firebase opnieuw volledig is ingeladen.
+         */
+
+        o.aanwezigheid = {
+            ...(
+                o.aanwezigheid ||
+                {}
+            ),
+
+            [context.databaseKey]:
+                nieuweStatus
+        };
+
+
         await loadEverything();
+
     } catch (error) {
-        console.error("Fout bij opslaan:", error);
+        console.error(
+            "Fout bij opslaan aanwezigheid:",
+            {
+                error,
+                opkomstId:
+                    o.id,
+                targetSpeltak:
+                    context.targetSpeltak,
+                displayKey:
+                    key,
+                databaseKey:
+                    context.databaseKey
+            }
+        );
+
+
+        await toonMelding(
+            "Opslaan mislukt",
+            "De aanwezigheid kon niet worden opgeslagen. Probeer het opnieuw."
+        );
     }
 }
+
 async function toonWaarschuwing(titel, bericht) {
     const dialog = document.getElementById("waarschuwingPopup");
     document.getElementById("popupTitel").innerText = titel;
@@ -4801,27 +5506,148 @@ function toonMelding(titel, tekst) {
         });
     });
 }
+function countPresence(
+    o
+) {
+    let jeugdCount =
+        0;
 
-function countPresence(o) {
-    let j = 0, l = 0;
+    let leidingCount =
+        0;
 
-    jeugd.forEach(x => {
-        if (!x.hidden && o.aanwezigheid?.[x.id] === "aanwezig") j++;
-    });
+
+    /*
+     * Gedeelde Stamopkomst op rovers.html:
+     *
+     * tel alle zichtbare Stamleden uit de publieke
+     * Stamledenlijst, dus niet alleen gekoppelde Rovers.
+     */
+
+    if (
+        speltak === "rovers" &&
+        o.isGedeeldeStamOpkomst
+    ) {
+        sharedStamMembers.forEach(
+            stamMember => {
+                if (stamMember.hidden) {
+                    return;
+                }
+
+
+                if (
+                    o.aanwezigheid
+                        ?.[stamMember.id] ===
+                    "aanwezig"
+                ) {
+                    jeugdCount++;
+                }
+            }
+        );
+
+
+    /*
+     * Alle normale opkomsten en de Stampagina zelf.
+     */
+
+    } else {
+        jeugd.forEach(
+            member => {
+                if (member.hidden) {
+                    return;
+                }
+
+
+                const {
+                    context,
+                    status
+                } =
+                    getPresenceStatus(
+                        o,
+                        member.id,
+                        false
+                    );
+
+
+                if (
+                    context.available &&
+                    status === "aanwezig"
+                ) {
+                    jeugdCount++;
+                }
+            }
+        );
+    }
+
+
+    /*
+     * Leiding blijft volgens de gewone paginalogica tellen.
+     *
+     * Rovers en Stam zijn leden-only speltakken, waardoor
+     * config.showLeiding daar normaal gesproken false is.
+     */
 
     if (config.showLeiding) {
-        leiding.forEach(x => {
-            if (!x.hidden && o.aanwezigheid?.[`leiding-${x.id}`] === "aanwezig") l++;
-        });
+        leiding.forEach(
+            member => {
+                if (member.hidden) {
+                    return;
+                }
+
+
+                const {
+                    context,
+                    status
+                } =
+                    getPresenceStatus(
+                        o,
+                        `leiding-${member.id}`,
+                        true
+                    );
+
+
+                if (
+                    context.available &&
+                    status === "aanwezig"
+                ) {
+                    leidingCount++;
+                }
+            }
+        );
     }
 
-    if (config.showKijkers !== false) {
-        j += Number(o.kijkers || 0);
+
+    /*
+     * Kijkers blijven meetellen zoals op stam.html.
+     */
+
+    if (
+        config.showKijkers !==
+        false
+    ) {
+        jeugdCount +=
+            Number(
+                o.kijkers ||
+                0
+            );
     }
-    if (config.showExtraLeiding !== false) {
-        l += Number(o.extraAantal || 0);
+
+
+    if (
+        config.showExtraLeiding !==
+        false
+    ) {
+        leidingCount +=
+            Number(
+                o.extraAantal ||
+                0
+            );
     }
-    return [j, l];
+
+
+    return [
+        jeugdCount,
+        leidingCount
+    ];
 }
 
 /* ======================================================================

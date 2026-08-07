@@ -248,6 +248,42 @@
         <label>Naam:</label>
         <input type="text" id="memberName" />
 
+        <!-- Alleen zichtbaar wanneer een bestaand lid wordt bewerkt -->
+<div
+  id="memberManagementActions"
+  class="member-management-actions hidden"
+>
+  <button
+    id="toggleMemberVisibility"
+    class="member-management-action"
+    type="button"
+  >
+    <span
+      id="toggleMemberVisibilityIcon"
+      aria-hidden="true"
+    >
+      ◉
+    </span>
+
+    <span id="toggleMemberVisibilityText">
+      Lid verbergen
+    </span>
+  </button>
+
+  <button
+    id="deleteMemberFromModal"
+    class="member-management-action danger"
+    type="button"
+  >
+    <span aria-hidden="true">
+      🗑️
+    </span>
+
+    <span>
+      Lid verwijderen
+    </span>
+  </button>
+</div>
         <div class="modal-actions">
           <button id="saveMember" class="pill-btn primary">Opslaan</button>
           <button id="cancelMember" class="pill-btn outline">Annuleren</button>

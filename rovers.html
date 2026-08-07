@@ -536,7 +536,42 @@
         <!-- Materiaal -->
         <label>Materiaal reserveren:</label>
         <input type="text" id="opMateriaal" />
+<!-- Alleen zichtbaar wanneer een bestaand lid wordt bewerkt -->
+<div
+  id="memberManagementActions"
+  class="member-management-actions hidden"
+>
+  <button
+    id="toggleMemberVisibility"
+    class="member-management-action"
+    type="button"
+  >
+    <span
+      id="toggleMemberVisibilityIcon"
+      aria-hidden="true"
+    >
+      ◉
+    </span>
 
+    <span id="toggleMemberVisibilityText">
+      Lid verbergen
+    </span>
+  </button>
+
+  <button
+    id="deleteMemberFromModal"
+    class="member-management-action danger"
+    type="button"
+  >
+    <span aria-hidden="true">
+      🗑️
+    </span>
+
+    <span>
+      Lid verwijderen
+    </span>
+  </button>
+</div>
         <!-- ACTIES -->
         <div class="modal-actions">
           <button id="saveOpkomst" class="pill-btn primary">Opslaan</button>

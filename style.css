@@ -2194,30 +2194,36 @@ th[class^="ploeg-"]::after {
 
 .dashboard-table th:nth-child(3),
 .dashboard-table td:nth-child(3) {
-  min-width: 180px;
-  /* Titel */
+  min-width: 100px;
+  /* Procor */
 }
 
 .dashboard-table th:nth-child(4),
 .dashboard-table td:nth-child(4) {
-  width: 110px;
-  /* Type */
+  min-width: 180px;
+  /* Titel */
 }
 
 .dashboard-table th:nth-child(5),
 .dashboard-table td:nth-child(5) {
-  min-width: 140px;
-  /* Locatie */
+  width: 110px;
+  /* Type */
 }
 
 .dashboard-table th:nth-child(6),
 .dashboard-table td:nth-child(6) {
-  min-width: 160px;
-  /* Materiaal */
+  min-width: 140px;
+  /* Locatie */
 }
 
 .dashboard-table th:nth-child(7),
 .dashboard-table td:nth-child(7) {
+  min-width: 160px;
+  /* Materiaal */
+}
+
+.dashboard-table th:nth-child(8),
+.dashboard-table td:nth-child(8) {
   min-width: 200px;
   /* Bijzonderheden */
 }
@@ -2287,9 +2293,9 @@ th[class^="ploeg-"]::after {
 }
 
 /* Lange tekstvelden netjes laten wrappen */
-.dashboard-table td:nth-child(3),
-.dashboard-table td:nth-child(7),
-.dashboard-table td:nth-child(8) {
+.dashboard-table td:nth-child(4),
+.dashboard-table td:nth-child(8),
+.dashboard-table td:nth-child(9) {
   max-width: 280px;
   word-break: break-word;
 }

@@ -130,7 +130,8 @@ async function loadDashboard() {
               type: o.typeOpkomst || "",
               locatie: o.locatie || "",
               materiaal: o.materiaal || "",
-              bijzonderheden: o.bijzonderheden || ""
+              bijzonderheden: o.bijzonderheden || "",
+              procor: o.procor || ""
             });
           }
         });
@@ -150,7 +151,8 @@ async function loadDashboard() {
             type: o.typeOpkomst || "",
             locatie: o.locatie || "",
             materiaal: o.materiaal || "",
-            bijzonderheden: o.bijzonderheden || ""
+            bijzonderheden: o.bijzonderheden || "",
+            procor: o.procor || ""
           });
         }
       }
@@ -247,6 +249,7 @@ async function loadBestuursItems() {
       locatie: "",
       materiaal: "",
       bijzonderheden: "",
+      procor: "",
       link: `bestuur.html#item=${id}`
     });
   }
@@ -305,7 +308,8 @@ function renderTheadDesktop() {
   const thead = document.createElement("thead");
   const tr = document.createElement("tr");
 
-  ["Speltak", "Tijd", "Titel", "Type", "Locatie", "Materiaal", "Bijzonderheden"].forEach(label => {
+  // Procor direct na de tijd, zelfde volgorde als op de speltakpagina's.
+  ["Speltak", "Tijd", "Procor", "Titel", "Type", "Locatie", "Materiaal", "Bijzonderheden"].forEach(label => {
     const th = document.createElement("th");
     th.textContent = label;
     tr.appendChild(th);
@@ -326,6 +330,7 @@ function renderRowDesktop(o) {
   tr.appendChild(tdSp);
 
   tr.appendChild(td(o.tijd));
+  tr.appendChild(td(o.procor || ""));
   tr.appendChild(td(o.titel));
   const tdType = document.createElement("td");
   tdType.textContent = o.type || "";

@@ -1860,9 +1860,9 @@ Touch devices
     .dashboard-table th:nth-child(3),
     body[data-mobile-page="dashboard"]
     .dashboard-table td:nth-child(3) {
-        width: 180px;
-        min-width: 180px;
-        max-width: 180px;
+        width: 100px;
+        min-width: 100px;
+        max-width: 100px;
 
         white-space: normal;
         overflow-wrap: anywhere;
@@ -1873,9 +1873,12 @@ Touch devices
     .dashboard-table th:nth-child(4),
     body[data-mobile-page="dashboard"]
     .dashboard-table td:nth-child(4) {
-        width: 110px;
-        min-width: 110px;
-        max-width: 110px;
+        width: 180px;
+        min-width: 180px;
+        max-width: 180px;
+
+        white-space: normal;
+        overflow-wrap: anywhere;
     }
 
 
@@ -1883,6 +1886,16 @@ Touch devices
     .dashboard-table th:nth-child(5),
     body[data-mobile-page="dashboard"]
     .dashboard-table td:nth-child(5) {
+        width: 110px;
+        min-width: 110px;
+        max-width: 110px;
+    }
+
+
+    body[data-mobile-page="dashboard"]
+    .dashboard-table th:nth-child(6),
+    body[data-mobile-page="dashboard"]
+    .dashboard-table td:nth-child(6) {
         width: 140px;
         min-width: 140px;
         max-width: 140px;
@@ -1892,9 +1905,9 @@ Touch devices
 
 
     body[data-mobile-page="dashboard"]
-    .dashboard-table th:nth-child(6),
+    .dashboard-table th:nth-child(7),
     body[data-mobile-page="dashboard"]
-    .dashboard-table td:nth-child(6) {
+    .dashboard-table td:nth-child(7) {
         width: 160px;
         min-width: 160px;
         max-width: 160px;
@@ -1904,9 +1917,9 @@ Touch devices
 
 
     body[data-mobile-page="dashboard"]
-    .dashboard-table th:nth-child(7),
+    .dashboard-table th:nth-child(8),
     body[data-mobile-page="dashboard"]
-    .dashboard-table td:nth-child(7) {
+    .dashboard-table td:nth-child(8) {
         width: 220px;
         min-width: 220px;
         max-width: 220px;

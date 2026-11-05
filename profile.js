@@ -209,6 +209,79 @@ function configurePasswordModal(isForced) {
     profileLoadError?.classList.remove("hidden");
   }
 
+  /*
+   * Mijn meldingen: samenvattingen die de server (Cloud Function
+   * onBugWritten) onder users/{uid}/meldingen bijhoudt.
+   */
+  function renderMijnMeldingen(meldingen = {}) {
+    const list = document.getElementById("mijnMeldingenList");
+    if (!list) return;
+
+    const items = Object.entries(meldingen)
+      .map(([id, m]) => ({ id, ...m }))
+      .sort((a, b) =>
+        String(b.bijgewerkt || b.datum || "").localeCompare(
+          String(a.bijgewerkt || a.datum || "")
+        )
+      );
+
+    list.innerHTML = "";
+
+    if (!items.length) {
+      const empty = document.createElement("p");
+      empty.className = "text-muted";
+      empty.textContent =
+        "Je hebt nog geen meldingen gestuurd. Loop je ergens tegenaan? Gebruik de knop \"Meld een probleem\".";
+      list.appendChild(empty);
+      return;
+    }
+
+    const icons = { bug: "🐞", wens: "💡", vraag: "❓" };
+    const statusClass = {
+      "Nieuw": "is-new",
+      "In behandeling": "is-busy",
+      "Opgelost": "is-done",
+      "Niet van toepassing": "is-skip"
+    };
+
+    items.forEach(m => {
+      const item = document.createElement("article");
+      item.className = "mijn-melding";
+
+      const head = document.createElement("div");
+      head.className = "mijn-melding-head";
+
+      const title = document.createElement("strong");
+      title.textContent = `${icons[m.type] || "🐞"} ${m.titel || "(zonder titel)"}`;
+
+      const badge = document.createElement("span");
+      badge.className = `melding-badge status ${statusClass[m.status] || "is-new"}`;
+      badge.textContent = m.status || "Nieuw";
+
+      head.append(title, badge);
+
+      const date = document.createElement("span");
+      date.className = "mijn-melding-date text-muted";
+      const d = new Date(m.datum || "");
+      date.textContent = Number.isNaN(d.getTime())
+        ? ""
+        : `Gemeld op ${d.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}`;
+
+      item.append(head, date);
+
+      if (m.reactie) {
+        const reply = document.createElement("p");
+        reply.className = "mijn-melding-reply";
+        const label = document.createElement("strong");
+        label.textContent = "Reactie: ";
+        reply.append(label, document.createTextNode(m.reactie));
+        item.appendChild(reply);
+      }
+
+      list.appendChild(item);
+    });
+  }
+
   function createRoleBadge(label, type) {
     const badge = document.createElement("span");
 
@@ -322,6 +395,8 @@ function configurePasswordModal(isForced) {
           "Het profiel wordt nog door de beheerder aangemaakt."
         );
 
+        renderMijnMeldingen({});
+
         showProfileContent();
         return;
       }
@@ -335,6 +410,7 @@ function configurePasswordModal(isForced) {
         data.email || "Geen e-mailadres bekend";
 
       renderRoles(data.roles || {});
+      renderMijnMeldingen(data.meldingen || {});
       showProfileContent();
 
     } catch (error) {
@@ -385,10 +461,22 @@ document.addEventListener(
     database =
       window._firebase.getDatabase(app);
 
+    /*
+     * Alleen een verplichte wijziging (zonder huidig wachtwoord)
+     * als dat echt nodig is: het account heeft mustChangePassword
+     * in de database, of er is net met het oude standaard-
+     * wachtwoord ingelogd. Alleen de URL-parameter is niet genoeg;
+     * anders kon iedereen met toegang tot een open sessie het
+     * wachtwoord wijzigen zonder het huidige te kennen.
+     */
     const forcePasswordChange =
       new URLSearchParams(
         window.location.search
-      ).get("force_pw_change") === "true";
+      ).get("force_pw_change") === "true" &&
+      (
+        session.mustChangePassword === true ||
+        window.hasPendingForcedPasswordChange?.() === true
+      );
 
     if (forcePasswordChange) {
       pwWarning?.classList.remove("hidden");
@@ -560,6 +648,38 @@ passwordUpdateForm?.addEventListener(
           user,
           newValue
         );
+
+      // Verplichte wijziging is afgerond: vlag opruimen.
+      window.clearForcedPasswordChange?.();
+
+      if (forcedPasswordChange && database) {
+        try {
+          await window._firebase.set(
+            window._firebase.ref(
+              database,
+              `users/${user.uid}/mustChangePassword`
+            ),
+            null
+          );
+        } catch (flagError) {
+          // Niet fataal: het wachtwoord is wel gewijzigd.
+          console.warn(
+            "Kon mustChangePassword niet opruimen:",
+            flagError
+          );
+        }
+
+        const session = window.getAuthSession?.();
+        if (session) {
+          session.mustChangePassword = false;
+          try {
+            localStorage.setItem(
+              "ovn_auth_session",
+              JSON.stringify(session)
+            );
+          } catch {}
+        }
+      }
 
       closeModal(pwUpdateModal);
 

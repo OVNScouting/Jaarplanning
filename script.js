@@ -3,6 +3,9 @@
    ====================================================================== */
 import {
     sanitizeText,
+    escapeHtml,
+    sanitizeHtml,
+    linkifyText,
     todayISO,
     isPast,
     isFutureOrToday,
@@ -12,6 +15,7 @@ import {
     isoFromInput,
     sortOpkomsten,
     getNextUpcoming,
+    isOpkomstVoorbij,
     getSeizoenVanDatum,
     isSeizoenToegestaan,
     isBinnen3Dagen
@@ -492,14 +496,14 @@ function openMemberActionChoice({
 
             button.innerHTML = `
                 <span class="member-action-choice-option-title">
-                    ${option.title}
+                    ${escapeHtml(option.title)}
                 </span>
 
                 ${
                     option.description
                         ? `
                             <span class="member-action-choice-option-description">
-                                ${option.description}
+                                ${escapeHtml(option.description)}
                             </span>
                         `
                         : ""
@@ -3056,6 +3060,16 @@ initHorizontalScrollProxy();
    STATE
    ====================================================================== */
 let data = {};
+
+// Mobiele kaartjesweergave (hier bovenaan gedeclareerd: setMode() rendert
+// al tijdens het laden van de module, vóór de functies verderop).
+const MOBILE_VIEW_KEY = "ovn_mobile_view";
+const expandedCards = new Set();
+const PRESENCE_LABELS = {
+    aanwezig: { icon: "✓", label: "Aanwezig" },
+    afwezig: { icon: "✗", label: "Afwezig" },
+    onbekend: { icon: "?", label: "Onbekend" }
+};
 let opkomsten = [];
 let jeugd = [];
 let leiding = [];
@@ -3173,11 +3187,18 @@ function applyModeVisibility() {
         const isLeidingCheck = !isOuder();
 
         // Logica voor welke opties we tonen
-        const opties = [
-            { val: "2025-2026", label: "25/26" },
-            { val: "2026-2027", label: "26/27" }
-            // Voeg hier eventueel dynamisch meer jaren toe
-        ];
+        // Automatisch: vanaf 2025-2026 t/m het seizoen na het huidige.
+        // (Voorheen stond hier een vaste lijst t/m 26/27, waardoor
+        // 27/28 nooit verscheen.)
+        const huidigSeizoen = getSeizoenVanDatum(todayISO());
+        const huidigStartJaar = Number(huidigSeizoen.split("-")[0]);
+        const opties = [];
+        for (let jaar = 2025; jaar <= huidigStartJaar + 1; jaar++) {
+            opties.push({
+                val: `${jaar}-${jaar + 1}`,
+                label: `${String(jaar).slice(2)}/${String(jaar + 1).slice(2)}`
+            });
+        }
 
         let html = `<label>Seizoen:</label><select id="filterSeizoen" class="cell-select">`;
 
@@ -3563,8 +3584,11 @@ function renderEverything() {
    INFO BLOK
    ====================================================================== */
 function loadInfo() {
-    infoTekst.innerHTML = data.infotekst || "";
-    infoEdit.innerHTML = data.infotekst || "";
+    // Ook bij het tonen opschonen: beschermt tegen oude of
+    // rechtstreeks in de database gezette HTML.
+    const veilig = sanitizeHtml(data.infotekst || "");
+    infoTekst.innerHTML = veilig;
+    infoEdit.innerHTML = veilig;
 }
 
 function toggleInfoEdit() {
@@ -3578,12 +3602,13 @@ function toggleInfoEdit() {
         infoEditButton.textContent = "Opslaan info";
     } else {
         // Opslaan
-        const sanitized = sanitizeText(infoEdit.innerHTML);
+        const sanitized = sanitizeHtml(infoEdit.innerHTML);
 
-        Promise.all([
-            update(ref(db, speltak), { infotekst: sanitized }),
-            update(ref(db, PUBLIC_ROOT), { infotekst: sanitized })
-        ]).then(() => {
+        // Eén atomische update: privé en publiek lopen nooit uit elkaar.
+        update(ref(db), {
+            [`${speltak}/infotekst`]: sanitized,
+            [`${PUBLIC_ROOT}/infotekst`]: sanitized
+        }).then(() => {
             // Lokale state en weergave direct bijwerken
             data.infotekst = sanitized;
             infoTekst.innerHTML = sanitized;
@@ -3592,6 +3617,15 @@ function toggleInfoEdit() {
             infoEditorWrapper.classList.add("hidden");
             infoTekst.classList.remove("hidden");
             infoEditButton.textContent = "Info bewerken";
+        }).catch(error => {
+            // Voorheen faalde opslaan stil; nu blijft de editor open
+            // zodat de tekst niet verloren gaat.
+            console.error("Info opslaan mislukt:", error);
+            infoEditActive = true;
+            toonMelding(
+                "Opslaan mislukt",
+                "De informatie kon niet worden opgeslagen. Controleer je verbinding en probeer het opnieuw."
+            );
         });
     }
 }
@@ -3651,8 +3685,8 @@ function renderLedenbeheerScouts() {
         const header = document.createElement("div");
         header.className = `ploeg-header ploeg-${ploeg}`;
         header.innerHTML = icon
-            ? `<img src="${icon}" class="ploeg-icoon"> ${label}`
-            : `${label}`;
+            ? `<img src="${escapeHtml(icon)}" class="ploeg-icoon" alt=""> ${escapeHtml(label)}`
+            : escapeHtml(label);
         jeugdContainer.appendChild(header);
 
         leden
@@ -3685,14 +3719,14 @@ li.innerHTML = `
     <button
         type="button"
         class="member-row-button"
-        aria-label="${obj.naam} openen"
+        aria-label="${escapeHtml(obj.naam)} openen"
         title="${obj.hidden
-            ? `${obj.naam} — verborgen`
-            : obj.naam
+            ? `${escapeHtml(obj.naam)} — verborgen`
+            : escapeHtml(obj.naam)
         }"
     >
         <span class="member-row-name">
-            ${obj.naam}
+            ${escapeHtml(obj.naam)}
         </span>
 
         ${
@@ -3766,19 +3800,16 @@ memberButton?.addEventListener(
             );
             if (!ok) return;
 
-            await update(ref(db, `${speltak}/jeugdleden/${dragged.id}`), {
-                Ploeg: newPloeg,
-                PL: false,
-                APL: false,
-                volgorde: 999
-            });
-
-            await update(ref(db, `${PUBLIC_ROOT}/jeugdleden/${dragged.id}`), {
-                Ploeg: newPloeg,
-                PL: false,
-                APL: false,
-                volgorde: 999
-            });
+            // Eén atomische update voor privé én publiek.
+            const ploegUpdates = {};
+            for (const root of [speltak, PUBLIC_ROOT]) {
+                const base = `${root}/jeugdleden/${dragged.id}`;
+                ploegUpdates[`${base}/Ploeg`] = newPloeg;
+                ploegUpdates[`${base}/PL`] = false;
+                ploegUpdates[`${base}/APL`] = false;
+                ploegUpdates[`${base}/volgorde`] = 999;
+            }
+            await update(ref(db), ploegUpdates);
 
             return loadEverything();
 
@@ -3827,8 +3858,8 @@ function renderTable() {
     const visible = opkomsten.filter(o => {
         // 1. Tijd-filter
         let timeMatch = true;
-        if (currentFilter === "future") timeMatch = isFutureOrToday(o.datum);
-        if (currentFilter === "past") timeMatch = isPast(o.datum);
+        if (currentFilter === "future") timeMatch = !isOpkomstVoorbij(o);
+        if (currentFilter === "past") timeMatch = isOpkomstVoorbij(o);
 
         // 2. Seizoen-filter (Helperfunctie uit utils.js)
         // Importeer getSeizoenVanDatum in je bestand indien nog niet gedaan
@@ -3841,12 +3872,14 @@ function renderTable() {
     // Lege staten
     if (!opkomsten || opkomsten.length === 0) {
         renderEmptyTableState("nodata");
+        renderMobileCards([], "nodata");
         syncHorizontalScrollProxy();
         return;
     }
 
     if (visible.length === 0) {
         renderEmptyTableState("filtered");
+        renderMobileCards([], "filtered");
         syncHorizontalScrollProxy();
         return;
     }
@@ -3855,7 +3888,259 @@ function renderTable() {
     visible.forEach(o => addRow(o));
     if (isLeiding()) addTotalsRow();
 
+    renderMobileCards(visible);
     syncHorizontalScrollProxy();
+}
+
+
+/* ======================================================================
+   MOBIEL — KAARTJESWEERGAVE
+   Op de telefoon is de brede tabel lastig te lezen (zie melding over
+   in- en uitzoomen). Kaartjes tonen per opkomst de belangrijkste info
+   en de aanwezigheid; de tabel blijft beschikbaar via de schakelaar.
+   ====================================================================== */
+
+// Desktop: Dashboard/Ledenbeheer niet meer zwevend rechtsonder (ze
+// verstopten de knop 'Nieuwe opkomst'), maar naast 'Opkomsten bewerken'.
+(function moveLeidingSidebarToToolbar() {
+    const sidebarEl = document.getElementById("leidingSidebar");
+    const headerRight = document.querySelector(".planning-header-right");
+    if (!sidebarEl || !headerRight) return;
+    const editBtn = headerRight.querySelector("#editModeButton");
+    headerRight.insertBefore(sidebarEl, editBtn || null);
+    sidebarEl.classList.add("in-toolbar");
+})();
+
+function getMobileView() {
+    try {
+        return localStorage.getItem(MOBILE_VIEW_KEY) === "tabel" ? "tabel" : "kaarten";
+    } catch {
+        return "kaarten";
+    }
+}
+
+function setMobileView(view) {
+    try {
+        localStorage.setItem(MOBILE_VIEW_KEY, view);
+    } catch {
+        // Geen opslag beschikbaar: alleen voor deze sessie.
+    }
+    applyMobileView();
+}
+
+function applyMobileView() {
+    const view = getMobileView();
+    document.body.classList.toggle("mobile-view-tabel", view === "tabel");
+    document.body.classList.toggle("mobile-view-kaarten", view === "kaarten");
+    document.querySelectorAll(".mobile-view-toggle button").forEach(btn => {
+        const active = btn.dataset.view === view;
+        btn.classList.toggle("is-active", active);
+        btn.setAttribute("aria-pressed", String(active));
+    });
+}
+
+function ensureMobileCardsContainer() {
+    let container = document.getElementById("mobileCards");
+    if (container) return container;
+
+    const anchor =
+        document.getElementById("tableScrollAnchor") ||
+        document.querySelector(".planning-main .table-wrapper") ||
+        document.querySelector(".table-wrapper");
+    if (!anchor) return null;
+
+    const toggle = document.createElement("div");
+    toggle.className = "mobile-view-toggle";
+    toggle.setAttribute("role", "group");
+    toggle.setAttribute("aria-label", "Weergave");
+    toggle.innerHTML = `
+        <button type="button" data-view="kaarten">Kaartjes</button>
+        <button type="button" data-view="tabel">Tabel</button>
+    `;
+    toggle.querySelectorAll("button").forEach(btn =>
+        btn.addEventListener("click", () => setMobileView(btn.dataset.view))
+    );
+
+    container = document.createElement("div");
+    container.id = "mobileCards";
+    container.className = "mobile-cards";
+    container.setAttribute("aria-live", "polite");
+
+    anchor.parentNode.insertBefore(toggle, anchor);
+    anchor.parentNode.insertBefore(container, anchor);
+    applyMobileView();
+    return container;
+}
+
+
+function renderMobileCards(visible = [], emptyKind = "") {
+    const container = ensureMobileCardsContainer();
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    if (!visible.length) {
+        const empty = document.createElement("p");
+        empty.className = "mobile-cards-empty";
+        empty.textContent = emptyKind === "filtered"
+            ? "Geen opkomsten zichtbaar met dit filter."
+            : "Er zijn nog geen opkomsten gepland.";
+        container.appendChild(empty);
+        return;
+    }
+
+    const nextUpcoming = getNextUpcoming(visible);
+
+    visible.forEach(o => {
+        const id = o.rowKey || o.id;
+        const past = isOpkomstVoorbij(o);
+        const type = o.typeOpkomst || "normaal";
+
+        const card = document.createElement("article");
+        card.className = `opkomst-card type-${type}`;
+        if (past) card.classList.add("is-past");
+        if (nextUpcoming && (nextUpcoming.rowKey || nextUpcoming.id) === id && type !== "geen") {
+            card.classList.add("is-next");
+        }
+
+        const weekdag = getWeekdagAfkorting(o.datum);
+        const datum = type === "kamp" && o.einddatum
+            ? formatDateRange(o.datum, o.einddatum)
+            : formatDateDisplay(o.datum);
+        const tijd = type === "geen"
+            ? ""
+            : [o.starttijd, o.eindtijd].filter(Boolean).join("–");
+
+        const head = document.createElement("div");
+        head.className = "opkomst-card-head";
+        head.innerHTML = `
+            <div class="opkomst-card-date">
+                <span class="opkomst-card-weekday">${escapeHtml(weekdag)}</span>
+                <strong>${escapeHtml(datum)}</strong>
+                ${tijd ? `<span class="opkomst-card-time">${escapeHtml(tijd)}</span>` : ""}
+            </div>
+            <span class="opkomst-card-type">${escapeHtml(getOpkomstTypeLabel(type))}</span>
+        `;
+        card.appendChild(head);
+
+        if (o.thema) {
+            const thema = document.createElement("h3");
+            thema.className = "opkomst-card-thema";
+            thema.innerHTML = linkifyText(o.thema);
+            card.appendChild(thema);
+        }
+
+        const rows = [
+            ["Bijzonderheden", o.bijzonderheden],
+            ["Buddy", ["explorers", "rovers"].includes(speltak) ? o.buddy : ""],
+            ["Bert logeert bij", config.showBert ? o.bert_met : ""]
+        ];
+
+        if (!isOuder()) {
+            rows.push(
+                ["Procor", o.procor],
+                ["Locatie", o.locatie],
+                ["Materiaal", o.materiaal],
+                ["Notities", o.notities]
+            );
+        }
+
+        const details = rows.filter(([, v]) => v && String(v).trim());
+        if (details.length) {
+            const dl = document.createElement("dl");
+            dl.className = "opkomst-card-details";
+            dl.innerHTML = details.map(([k, v]) =>
+                `<div><dt>${escapeHtml(k)}</dt><dd>${linkifyText(v)}</dd></div>`
+            ).join("");
+            card.appendChild(dl);
+        }
+
+        // Aanwezigheid
+        if (type !== "geen") {
+            const zichtbareJeugd = jeugd.filter(j => !j.hidden);
+            const counts = { aanwezig: 0, afwezig: 0, onbekend: 0 };
+            const entries = zichtbareJeugd.map(j => {
+                const { status } = getPresenceStatus(o, j.id, false);
+                if (status && counts[status] !== undefined) counts[status]++;
+                return { j, status };
+            });
+
+            if (entries.length) {
+                const expanded = expandedCards.has(id);
+                const presence = document.createElement("div");
+                presence.className = "opkomst-card-presence";
+
+                const summary = document.createElement("button");
+                summary.type = "button";
+                summary.className = "opkomst-card-presence-toggle";
+                summary.setAttribute("aria-expanded", String(expanded));
+                summary.innerHTML = `
+                    <span>Aanwezigheid</span>
+                    <span class="presence-counts">
+                        <span class="pc pc-aanwezig">✓ ${counts.aanwezig}</span>
+                        <span class="pc pc-afwezig">✗ ${counts.afwezig}</span>
+                        <span class="pc pc-onbekend">? ${counts.onbekend}</span>
+                    </span>
+                    <span class="presence-chevron" aria-hidden="true">${expanded ? "▴" : "▾"}</span>
+                `;
+                summary.addEventListener("click", () => {
+                    if (expandedCards.has(id)) expandedCards.delete(id);
+                    else expandedCards.add(id);
+                    renderMobileCards(visible, emptyKind);
+                });
+                presence.appendChild(summary);
+
+                if (expanded) {
+                    const hint = document.createElement("p");
+                    hint.className = "presence-hint";
+                    hint.textContent = past && !isLeiding()
+                        ? "Deze opkomst is al geweest."
+                        : "Tik op een naam om de aanwezigheid te wijzigen.";
+                    presence.appendChild(hint);
+
+                    const list = document.createElement("ul");
+                    list.className = "presence-list";
+
+                    entries.forEach(({ j, status }) => {
+                        const li = document.createElement("li");
+                        const btn = document.createElement("button");
+                        btn.type = "button";
+                        const st = status || "onbekend";
+                        btn.className = `presence-chip is-${st}`;
+                        btn.disabled = !status || (past && !isLeiding());
+                        const info = PRESENCE_LABELS[st];
+                        btn.innerHTML = `<span class="presence-icon" aria-hidden="true">${info.icon}</span><span>${escapeHtml(j.naam || "")}</span>`;
+                        btn.setAttribute("aria-label", `${j.naam || ""}: ${info.label}. Tik om te wijzigen.`);
+                        btn.addEventListener("click", () => togglePresence(o, j.id, false));
+                        li.appendChild(btn);
+                        list.appendChild(li);
+                    });
+
+                    presence.appendChild(list);
+                }
+
+                card.appendChild(presence);
+            }
+        }
+
+        if (isLeiding() && isEdit() && !o.isGedeeldeStamOpkomst) {
+            const actions = document.createElement("div");
+            actions.className = "opkomst-card-actions";
+            const edit = document.createElement("button");
+            edit.type = "button";
+            edit.className = "pill-btn outline";
+            edit.textContent = "Bewerken";
+            edit.addEventListener("click", () => openEditOpkomstModal(o));
+            actions.appendChild(edit);
+            card.appendChild(actions);
+        }
+
+        card.querySelectorAll("a").forEach(a =>
+            a.addEventListener("click", e => e.stopPropagation())
+        );
+
+        container.appendChild(card);
+    });
 }
 
 
@@ -3935,11 +4220,13 @@ function addHeaders() {
             }
 
             // Icons bij PL/APL
+            // Het sterretje staat rechtop in een eigen element; in de
+            // gedraaide tekst viel het anders half buiten de kolom.
             let icon = "";
-            if (j.PL) icon = "✪ ";
-            else if (j.APL) icon = "☆ ";
+            if (j.PL) icon = `<span class="pl-icon" title="PL" aria-label="PL">★</span>`;
+            else if (j.APL) icon = `<span class="pl-icon is-apl" title="APL" aria-label="APL">☆</span>`;
 
-            th.innerHTML = `<div class="name-vertical">${icon}${j.naam}</div>`;
+            th.innerHTML = `<div class="name-vertical">${icon}${escapeHtml(j.naam)}</div>`;
             trTop.appendChild(th);
         });
     } else {
@@ -4001,7 +4288,7 @@ function addHeaders() {
                 const th = document.createElement("th");
                 th.classList.add("col-leiding");
                 if (isOuder()) th.classList.add("hide-view");
-                th.innerHTML = `<div class="name-vertical">${l.naam}</div>`;
+                th.innerHTML = `<div class="name-vertical">${escapeHtml(l.naam)}</div>`;
                 trTop.appendChild(th);
             });
         } else {
@@ -4101,8 +4388,8 @@ function renderEmptyTableState(kind) {
 
     td.innerHTML = `
     <div class="empty-state">
-      <div class="empty-title">${title}</div>
-      <div class="empty-body">${body}</div>
+      <div class="empty-title">${escapeHtml(title)}</div>
+      <div class="empty-body">${escapeHtml(body)}</div>
     </div>
   `;
 
@@ -4121,7 +4408,7 @@ function showUndoBanner(message, onUndo) {
     }
 
     banner.innerHTML = `
-        <span>${message}</span>
+        <span>${escapeHtml(message)}</span>
         <button id="undoDeleteBtn">Ongedaan maken</button>
     `;
 
@@ -4270,7 +4557,7 @@ if (isEdit()) {
         }
     );
 }
-    const past = isPast(o.datum);
+    const past = isOpkomstVoorbij(o);
     // Verleden: altijd volledig grijs, geen andere kleurmarkeringen
     if (past) {
         tr.classList.add("row-grey");
@@ -4692,14 +4979,23 @@ function makeEditableCell(o, field, extraClass = "", type = "text") {
         if (o.typeOpkomst === "kamp" && o.einddatum) {
             td.innerHTML = `
                 <span class="date-weekday">${weekdag}</span>
-                <span>${formatDateRange(value, o.einddatum)}</span>
+                <span>${escapeHtml(formatDateRange(value, o.einddatum))}</span>
             `;
         } else {
             td.innerHTML = `
                 <span class="date-weekday">${weekdag}</span>
-                <span>${formatDateDisplay(value)}</span>
+                <span>${escapeHtml(formatDateDisplay(value))}</span>
             `;
         }
+    } else if (
+        ["thema", "bijzonderheden", "notities"].includes(field) &&
+        /https?:\/\//i.test(String(value || ""))
+    ) {
+        // Links klikbaar maken (veilig: linkifyText escapet eerst).
+        td.innerHTML = linkifyText(value);
+        td.querySelectorAll("a").forEach(a =>
+            a.addEventListener("click", e => e.stopPropagation())
+        );
     } else {
         td.textContent = value ?? "";
     }
@@ -5239,9 +5535,10 @@ async function togglePresence(
     key,
     isLeidingCell = false
 ) {
+    // Bij een kamp telt de laatste dag (een lopend kamp is niet voorbij).
     const datumOpkomst =
         new Date(
-            `${o.datum}T12:00:00`
+            `${isOpkomstVoorbij(o) ? o.datum : todayISO()}T12:00:00`
         );
 
     const vandaag =
@@ -5257,16 +5554,18 @@ async function togglePresence(
 
 
     /*
-     * Verleden niet meer wijzigbaar.
+     * Verleden: ouders kunnen niets meer wijzigen; leiding wel, zodat
+     * de aanwezigheid achteraf netjes bijgewerkt kan worden.
      */
 
     if (
         datumOpkomst <
-        vandaag
+        vandaag &&
+        !isLeiding()
     ) {
         await toonMelding(
             "Datum verstreken",
-            "Deze opkomst is al geweest."
+            "Deze opkomst is al geweest. Neem contact op met de leiding als de aanwezigheid niet klopt."
         );
 
         return;
@@ -5284,6 +5583,7 @@ async function togglePresence(
 
 
     if (
+        !isLeiding() &&
         isBinnen3Dagen(
             o.datum
         ) &&
@@ -5491,8 +5791,8 @@ function toonMelding(titel, tekst) {
         // Zorg voor de HTML structuur
         overlay.innerHTML = `
             <div class="popup-box">
-                <h3>${titel}</h3>
-                <p>${tekst}</p>
+                <h3>${escapeHtml(titel)}</h3>
+                <p>${escapeHtml(tekst)}</p>
                 <button id="ok-btn">OK</button>
             </div>
         `;
@@ -5759,15 +6059,15 @@ function makeMemberRow(obj, type) {
         <button
             type="button"
             class="member-row-button"
-            aria-label="${obj.naam} openen"
+            aria-label="${escapeHtml(obj.naam)} openen"
             title="${
                 obj.hidden
-                    ? `${obj.naam} — verborgen`
-                    : obj.naam
+                    ? `${escapeHtml(obj.naam)} — verborgen`
+                    : escapeHtml(obj.naam)
             }"
         >
             <span class="member-row-name">
-                ${obj.naam}
+                ${escapeHtml(obj.naam)}
             </span>
         </button>
     `;
@@ -6047,7 +6347,8 @@ function handleMemberAction(obj, type, act) {
 
     const path = type === "jeugd" ? "jeugdleden" : "leiding";
     const list = type === "jeugd" ? jeugd : leiding;
-    const baseRef = ref(db, `${speltak}/${path}/${obj.id}`);
+    const basePath = `${speltak}/${path}/${obj.id}`;
+    const baseRef = ref(db, basePath);
 
     // Bewerken van lid
     if (act === "edit") {
@@ -6060,22 +6361,34 @@ function handleMemberAction(obj, type, act) {
     // Verwijderen
     if (act === "del") {
         if (confirm(`Verwijder ${obj.naam}?`)) {
-            Promise.all([
-                set(baseRef, null),
-                type === "jeugd" ? set(ref(db, `${PUBLIC_ROOT}/jeugdleden/${obj.id}`), null) : Promise.resolve()
-            ]).then(loadEverything);
+            const delUpdates = { [basePath]: null };
+            if (type === "jeugd") {
+                delUpdates[`${PUBLIC_ROOT}/jeugdleden/${obj.id}`] = null;
+            }
+            update(ref(db), delUpdates)
+                .then(loadEverything)
+                .catch(error => {
+                    console.error("Verwijderen lid mislukt:", error);
+                    alert("Verwijderen is mislukt. Probeer het opnieuw.");
+                });
         }
         return;
     }
 
     // Verborgen / zichtbaar wisselen
     if (act === "toggle") {
-        Promise.all([
-            update(baseRef, { hidden: !obj.hidden }),
-            type === "jeugd"
-                ? update(ref(db, `${PUBLIC_ROOT}/jeugdleden/${obj.id}`), { hidden: !obj.hidden })
-                : Promise.resolve()
-        ]).then(loadEverything);
+        const hideUpdates = {
+            [`${basePath}/hidden`]: !obj.hidden
+        };
+        if (type === "jeugd") {
+            hideUpdates[`${PUBLIC_ROOT}/jeugdleden/${obj.id}/hidden`] = !obj.hidden;
+        }
+        update(ref(db), hideUpdates)
+            .then(loadEverything)
+            .catch(error => {
+                console.error("Zichtbaarheid wijzigen mislukt:", error);
+                alert("Wijzigen is mislukt. Probeer het opnieuw.");
+            });
         return;
     }
 
@@ -6586,31 +6899,22 @@ if (editingMemberId) {
 
 
     /*
-     * Het huidige record bijwerken.
+     * Het huidige record bijwerken; jeugdleden in dezelfde
+     * atomische update ook naar public spiegelen.
      */
 
-    await update(
-        ref(
-            db,
-            `${speltak}/${path}/${editingMemberId}`
-        ),
-        updateObj
-    );
+    const memberUpdates = {};
+    const memberRoots = type === "jeugd"
+        ? [`${speltak}/${path}`, `${PUBLIC_ROOT}/jeugdleden`]
+        : [`${speltak}/${path}`];
 
-
-    /*
-     * Jeugdleden ook naar public spiegelen.
-     */
-
-    if (type === "jeugd") {
-        await update(
-            ref(
-                db,
-                `${PUBLIC_ROOT}/jeugdleden/${editingMemberId}`
-            ),
-            updateObj
-        );
+    for (const root of memberRoots) {
+        for (const [key, value] of Object.entries(updateObj)) {
+            memberUpdates[`${root}/${editingMemberId}/${key}`] = value;
+        }
     }
+
+    await update(ref(db), memberUpdates);
 
 
     /*
@@ -6717,21 +7021,15 @@ if (editingMemberId) {
     };
 
 
-    await set(
-        newRef,
-        base
-    );
-
+    const newMemberUpdates = {
+        [`${speltak}/${path}/${newRef.key}`]: base
+    };
 
     if (type === "jeugd") {
-        await set(
-            ref(
-                db,
-                `${PUBLIC_ROOT}/jeugdleden/${newRef.key}`
-            ),
-            base
-        );
+        newMemberUpdates[`${PUBLIC_ROOT}/jeugdleden/${newRef.key}`] = base;
     }
+
+    await update(ref(db), newMemberUpdates);
 }
 
 memberModal.classList.add(
@@ -7002,16 +7300,11 @@ saveOpkomst?.addEventListener("click", async () => {
     saveOpkomst.textContent = "Opslaan…";
 
     try {
-        await Promise.all([
-            set(
-                ref(db, `${speltak}/opkomsten/${opkomstId}`),
-                opkomstObj
-            ),
-            set(
-                ref(db, `${PUBLIC_ROOT}/opkomsten/${opkomstId}`),
-                publicObj
-            )
-        ]);
+        // Eén atomische update: privé en publiek altijd gelijk.
+        await update(ref(db), {
+            [`${speltak}/opkomsten/${opkomstId}`]: opkomstObj,
+            [`${PUBLIC_ROOT}/opkomsten/${opkomstId}`]: publicObj
+        });
 
         editingOpkomstId = null;
         opModal.classList.add("hidden");
@@ -7063,23 +7356,24 @@ async function saveRow(tr) {
 
     // 2. Schrijf de data weg naar Firebase
     try {
-        // Private data updaten
-        await update(ref(db, `${speltak}/opkomsten/${opkomstId}`), updatedData);
-
-        // Publieke data updaten (alleen velden die publiek mogen zijn)
-        if (PUBLIC_ROOT) {
-            const publicData = {};
-            for (const [key, value] of Object.entries(updatedData)) {
-                if (isPublicOpkomstField(key)) {
-                    publicData[key] = value;
-                }
+        // Privé + publiek (alleen publieke velden) in één atomische update.
+        const rowUpdates = {};
+        for (const [key, value] of Object.entries(updatedData)) {
+            rowUpdates[`${speltak}/opkomsten/${opkomstId}/${key}`] = value;
+            if (isPublicOpkomstField(key)) {
+                rowUpdates[`${PUBLIC_ROOT}/opkomsten/${opkomstId}/${key}`] = value;
             }
-            if (Object.keys(publicData).length > 0) {
-                await update(ref(db, `${PUBLIC_ROOT}/opkomsten/${opkomstId}`), publicData);
-            }
+        }
+        if (Object.keys(rowUpdates).length > 0) {
+            await update(ref(db), rowUpdates);
         }
     } catch (error) {
         console.error(`Fout bij opslaan van opkomst ${opkomstId}:`, error);
+        // Voorheen ging dit stil mis; nu ziet de leiding het.
+        await toonMelding(
+            "Opslaan mislukt",
+            "Een opkomst kon niet worden opgeslagen. Controleer je verbinding en probeer het opnieuw."
+        );
     }
 }
 
@@ -7112,16 +7406,10 @@ confirmDeleteOpkomst?.addEventListener("click", () => {
     // Pas na de undo-periode definitief verwijderen
     const timeout = setTimeout(async () => {
         try {
-            await Promise.all([
-                set(
-                    ref(db, `${speltak}/opkomsten/${o.id}`),
-                    null
-                ),
-                set(
-                    ref(db, `${PUBLIC_ROOT}/opkomsten/${o.id}`),
-                    null
-                )
-            ]);
+            await update(ref(db), {
+                [`${speltak}/opkomsten/${o.id}`]: null,
+                [`${PUBLIC_ROOT}/opkomsten/${o.id}`]: null
+            });
 
             pendingDeleteOpkomst = null;
             hideUndoBanner();

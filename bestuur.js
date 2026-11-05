@@ -250,7 +250,12 @@ function init(isBestuur) {
     }
 
     // --- DATACELLEN ---
-    tr.appendChild(td(formatDateDisplay(item.datum)));
+    // Jaartal erbij als het item niet in het huidige jaar valt
+    // (de agenda loopt over meerdere jaren).
+    const jaar = String(item.datum || "").slice(0, 4);
+    const datumTekst = formatDateDisplay(item.datum) +
+      (jaar && jaar !== String(new Date().getFullYear()) ? ` ${jaar}` : "");
+    tr.appendChild(td(datumTekst));
     tr.appendChild(td(renderTime(item)));
 
     const titleCell = td(item.titel);
@@ -376,7 +381,7 @@ function init(isBestuur) {
     editMode = !editMode;
     editModeButton.textContent = editMode
       ? "💾 Klaar met bewerken"
-      : "✏️ Opkomsten bewerken";
+      : "✏️ Agenda bewerken";
     render();
   });
 

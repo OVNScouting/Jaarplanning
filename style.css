@@ -5698,3 +5698,1310 @@ body.member-action-choice-open {
 
   opacity: 1;
 }
+
+/* ============================================================
+   BEHEER & MELDINGEN (2026)
+   Admin-startscherm, meldingencentrum, meldformulier,
+   Mijn meldingen, logboek en beheer-teller.
+============================================================ */
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.pill-btn.danger-outline {
+  background: transparent;
+  color: var(--danger-text);
+  border: 1px solid currentColor;
+}
+
+.pill-btn.danger-outline:hover:not(:disabled) {
+  background: var(--danger-soft);
+}
+
+.pill-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+html[data-theme="dark"] {
+  --danger-text: #fca5a5;
+  --danger-soft: rgba(239, 68, 68, 0.16);
+  --success-text: #86efac;
+  --success-soft: rgba(34, 197, 94, 0.16);
+}
+
+/* ---------- Beheer-teller in de header ---------- */
+.admin-inbox-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card-secondary);
+  color: var(--text-main);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.admin-inbox-badge.has-items {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #1f2937;
+}
+
+.admin-inbox-badge:hover {
+  filter: brightness(0.96);
+}
+
+/* ---------- Gedeelde chips, badges, zoekveld ---------- */
+.meldingen-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.meldingen-chip,
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 34px;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-main);
+  font-size: 0.85rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.filter-chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.meldingen-chip.is-active,
+.filter-chip.is-active,
+.filter-chip:has(input:checked) {
+  background: var(--blue-soft);
+  border-color: var(--blue);
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.filter-chip:focus-within {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.meldingen-search {
+  width: 100%;
+  max-width: 340px;
+  min-height: 38px;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--input-text);
+  font-size: 0.9rem;
+}
+
+.melding-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.melding-badge.status.is-new { background: var(--blue-soft); color: var(--blue); }
+.melding-badge.status.is-busy { background: rgba(245, 158, 11, 0.16); color: #b45309; }
+.melding-badge.status.is-done { background: var(--success-soft); color: var(--success-text); }
+.melding-badge.status.is-skip { background: var(--card-secondary); color: var(--text-muted); border-color: var(--border); }
+.melding-badge.prio-hoog { background: var(--danger-soft); color: var(--danger-text); }
+.melding-badge.prio-laag { background: var(--card-secondary); color: var(--text-muted); }
+
+html[data-theme="dark"] .melding-badge.status.is-busy { color: #fcd34d; }
+
+/* ---------- Meldformulier (modal) ---------- */
+.melding-modal {
+  width: min(560px, 100%);
+}
+
+.melding-title {
+  margin: 0 2rem 0.25rem 0;
+}
+
+.melding-intro {
+  margin: 0 0 1rem;
+}
+
+.melding-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.melding-types {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.melding-types legend {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.melding-type {
+  position: relative;
+  cursor: pointer;
+}
+
+.melding-type input {
+  position: absolute;
+  opacity: 0;
+  margin: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.melding-type > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 44px;
+  padding: 0.5rem;
+  border-radius: var(--radius-small);
+  border: 1px solid var(--border);
+  background: var(--card-secondary);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.melding-type input:checked + span {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.melding-type input:focus-visible + span {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.melding-field label {
+  font-weight: 600;
+}
+
+.melding-modal .melding-field input,
+.melding-modal .melding-field textarea {
+  margin-bottom: 0;
+  background: var(--input-bg);
+  color: var(--input-text);
+  font: inherit;
+}
+
+.melding-context-note {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.melding-success {
+  text-align: center;
+  padding: 0.5rem 0;
+}
+
+.melding-success-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 0.75rem;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  background: var(--success-soft);
+  color: var(--success-text);
+}
+
+.melding-success .bug-modal-actions {
+  justify-content: center;
+}
+
+@media (max-width: 480px) {
+  .melding-types {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Meldingencentrum (bug.html) ---------- */
+.meldingen-page {
+  max-width: 980px;
+}
+
+.meldingen-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.meldingen-tabs {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: var(--card-secondary);
+  border: 1px solid var(--border);
+  align-self: flex-start;
+}
+
+.meldingen-tab {
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 600;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.meldingen-tab.is-active {
+  background: var(--card);
+  color: var(--text-main);
+  box-shadow: var(--shadow);
+}
+
+.meldingen-tab-count {
+  display: inline-block;
+  min-width: 1.4em;
+  margin-left: 0.25rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-size: 0.78rem;
+}
+
+.meldingen-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.meldingen-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.meldingen-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.melding-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  overflow: hidden;
+}
+
+.melding-card.is-expanded {
+  border-color: var(--blue);
+  box-shadow: var(--shadow);
+}
+
+.melding-summary {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.melding-summary:hover {
+  background: var(--card-hover);
+}
+
+.melding-summary:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: -2px;
+}
+
+.melding-type-icon {
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+
+.melding-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.melding-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.melding-card-title {
+  margin-right: auto;
+}
+
+.melding-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.melding-preview {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.melding-detail {
+  padding: 0 1rem 1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.melding-description {
+  white-space: normal;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.melding-context {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem 1rem;
+  margin: 0;
+  padding: 0.75rem;
+  border-radius: var(--radius-small);
+  background: var(--card-secondary);
+  font-size: 0.85rem;
+}
+
+.melding-context dt {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.melding-context dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.melding-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.melding-edit-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.melding-edit label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.melding-edit select,
+.melding-edit textarea {
+  padding: 0.45rem 0.55rem;
+  border-radius: var(--radius-small);
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--input-text);
+  font: inherit;
+  font-weight: 400;
+}
+
+.melding-reply-label .text-muted {
+  font-weight: 400;
+  font-size: 0.8rem;
+}
+
+.melding-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.melding-quick-btn {
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--text-main);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.melding-quick-btn:hover {
+  border-style: solid;
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.melding-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.melding-actions-right {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+@media (max-width: 640px) {
+  .melding-detail {
+    padding: 0 0.85rem 0.85rem;
+  }
+
+  .melding-edit-row {
+    grid-template-columns: 1fr;
+  }
+
+  .meldingen-search {
+    max-width: none;
+  }
+}
+
+/* ---------- Mijn meldingen (profiel) ---------- */
+.mijn-meldingen {
+  margin-top: 1.25rem;
+}
+
+.mijn-meldingen-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.mijn-melding {
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--card-secondary);
+}
+
+.mijn-melding-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.mijn-melding-date {
+  font-size: 0.8rem;
+}
+
+.mijn-melding-reply {
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0.7rem;
+  border-left: 3px solid var(--blue);
+  background: var(--card);
+  border-radius: 0 var(--radius-small) var(--radius-small) 0;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Admin-overzicht ---------- */
+.admin-overview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.admin-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-main);
+  text-decoration: none;
+  box-shadow: var(--shadow);
+}
+
+a.admin-stat:hover {
+  border-color: var(--blue);
+}
+
+.admin-stat.needs-attention {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent) inset, var(--shadow);
+}
+
+.admin-stat-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.admin-stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.admin-stat-sub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.admin-stat-wide {
+  grid-column: 1 / -1;
+}
+
+.admin-speltak-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.speltak-count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card-secondary);
+  color: var(--text-main);
+  font-size: 0.88rem;
+  text-decoration: none;
+}
+
+a.speltak-count:hover {
+  border-color: var(--blue);
+}
+
+.speltak-count::before {
+  content: "";
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 999px;
+  background: var(--sp-color, var(--text-soft));
+  align-self: center;
+}
+
+.speltak-count.speltak-bevers { --sp-color: #e61700; }
+.speltak-count.speltak-welpen { --sp-color: #19b30b; }
+.speltak-count.speltak-scouts { --sp-color: #c4b584; }
+.speltak-count.speltak-explorers { --sp-color: #8a0a03; }
+.speltak-count.speltak-rovers { --sp-color: #590501; }
+.speltak-count.speltak-stam { --sp-color: #f0d800; }
+.speltak-count.speltak-total { font-weight: 600; }
+
+html[data-theme="dark"] .speltak-count::before {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.55);
+}
+.speltak-count.speltak-total::before { display: none; }
+
+@media (max-width: 720px) {
+  .admin-overview {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-overview .admin-stat:nth-child(4) {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---------- Gebruikerslijst ---------- */
+.user-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+
+.user-layout {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+
+.user-table-wrap {
+  flex: 2;
+  min-width: 0;
+}
+
+.user-table th,
+.user-table td {
+  text-align: left;
+  vertical-align: middle;
+}
+
+.user-name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.user-name {
+  font-weight: 600;
+}
+
+.user-email {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.user-login-cell {
+  white-space: nowrap;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+#userTable tr.user-row.is-selected {
+  background: var(--blue-soft);
+}
+
+#userTable tr.user-row.is-inactive {
+  opacity: 0.55;
+}
+
+.attention-dot {
+  color: #d97706;
+  font-size: 0.8rem;
+}
+
+.role-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.role-chip {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--card-secondary);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
+.role-chip.role-admin { background: #1e3a8a; border-color: #1e3a8a; color: #fff; }
+.role-chip.role-bestuur { background: #1822b5; border-color: #1822b5; color: #fff; }
+.role-chip.role-none { color: var(--text-muted); font-weight: 400; }
+.role-chip.role-bevers { border-color: #e61700; }
+.role-chip.role-welpen { border-color: #19b30b; }
+.role-chip.role-scouts { border-color: #c4b584; }
+.role-chip.role-explorers { border-color: #8a0a03; }
+.role-chip.role-rovers { border-color: #590501; }
+.role-chip.role-stam { border-color: #f0d800; }
+
+html[data-theme="dark"] .role-chip.role-rovers,
+html[data-theme="dark"] .role-chip.role-explorers { border-color: #d45757; }
+
+/* Zijpaneel */
+.user-side-panel {
+  position: sticky;
+  top: 1rem;
+  flex: 1;
+  min-width: 280px;
+  max-width: 380px;
+  padding: 1.1rem 1.1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+.user-side-panel .modal-close-btn {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+}
+
+.user-side-panel h3 {
+  margin: 0 2rem 0.75rem 0;
+  overflow-wrap: anywhere;
+}
+
+.panel-details {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0 0 0.9rem;
+}
+
+.panel-details dt {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.panel-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.panel-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.panel-warning {
+  margin: 0.75rem 0 0;
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--radius-small);
+  background: rgba(245, 158, 11, 0.14);
+  color: #92400e;
+  font-size: 0.85rem;
+}
+
+html[data-theme="dark"] .panel-warning { color: #fcd34d; }
+
+.panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+}
+
+.panel-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.panel-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.panel-field input {
+  padding: 0.45rem 0.55rem;
+  border-radius: var(--radius-small);
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--input-text);
+  font: inherit;
+  font-weight: 400;
+}
+
+.panel-fieldset {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem 0.75rem;
+  margin: 0;
+  padding: 0.6rem 0.75rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+
+.panel-fieldset-single {
+  grid-template-columns: 1fr;
+}
+
+.panel-fieldset legend {
+  padding: 0 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.panel-fieldset label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 32px;
+}
+
+@media (max-width: 900px) {
+  .user-layout {
+    display: block;
+  }
+
+  .user-side-panel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    max-width: none;
+    max-height: 85vh;
+    overflow-y: auto;
+    border-radius: var(--radius) var(--radius) 0 0;
+    z-index: 2600;
+  }
+
+  .sidepanel-backdrop:not(.hidden) {
+    position: fixed;
+    inset: 0;
+    background: var(--overlay-bg);
+    z-index: 2500;
+  }
+
+  .user-table th:nth-child(3),
+  .user-table td:nth-child(3) {
+    display: none;
+  }
+}
+
+@media (min-width: 901px) {
+  .sidepanel-backdrop {
+    display: none !important;
+  }
+}
+
+/* ---------- Logboek ---------- */
+.audit-list {
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.audit-entry {
+  padding: 0.7rem 0 0.7rem 1rem;
+  border-left: 2px solid var(--border);
+  position: relative;
+}
+
+.audit-entry::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 1rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--blue);
+}
+
+.audit-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: baseline;
+}
+
+.audit-details {
+  margin: 0.3rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.88rem;
+}
+
+.audit-meta {
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+}
+
+/* PL/APL-sterretje rechtop boven de gedraaide naam (viel half weg) */
+.name-vertical .pl-icon {
+  display: inline-block;
+  writing-mode: horizontal-tb;
+  transform: rotate(180deg);
+  font-size: 0.85rem;
+  line-height: 1;
+  margin: 0 0 3px;
+  color: inherit;
+}
+
+
+/* ============================================================
+   LEIDING & OUDERS (2026)
+   Actieknoppen in de toolbar, vaste tabelkop, contrast,
+   kaartjesweergave op mobiel.
+============================================================ */
+
+/* Dashboard/Ledenbeheer in de toolbar i.p.v. zwevend */
+.leiding-sidebar.in-toolbar {
+  position: static;
+  width: auto;
+  max-width: none;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  z-index: auto;
+}
+
+.leiding-sidebar.in-toolbar .pill-btn {
+  width: auto;
+  padding: 0.5rem 1.1rem;
+}
+
+/* Vaste tabelkop op desktop: de kop (met namen) blijft zichtbaar
+   tijdens het scrollen door een lange planning. */
+@media (min-width: 769px) {
+  .planning-main .table-wrapper,
+  #tableScrollAnchor .table-wrapper {
+    max-height: calc(100vh - 170px);
+    overflow: auto;
+    scrollbar-width: thin;
+  }
+
+  .planning-main .table-wrapper::-webkit-scrollbar,
+  #tableScrollAnchor .table-wrapper::-webkit-scrollbar {
+    display: block;
+    width: 8px;
+    height: 8px;
+  }
+
+  .planning-main .table-wrapper::-webkit-scrollbar-thumb,
+  #tableScrollAnchor .table-wrapper::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 999px;
+  }
+
+  .planning-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+
+  .planning-table thead th {
+    background: var(--table-header-bg);
+  }
+
+  .mobile-view-toggle,
+  .mobile-cards {
+    display: none !important;
+  }
+}
+
+/* Contrast: witte tekst op lichtblauw haalde in donker thema maar
+   ~2,5:1. Donkere tekst op de knop geeft ruim voldoende contrast. */
+html[data-theme="dark"] .primary-btn,
+html[data-theme="dark"] .pill-btn.primary {
+  color: #0b1220;
+}
+
+/* Infoblok: kleuren uit de editor zijn gekozen voor het lichte thema
+   (donkerblauw); in donker thema onleesbaar. Daar lichter tonen. */
+html[data-theme="dark"] #infotekst font[color],
+html[data-theme="dark"] #infotekst [style*="color"] {
+  color: var(--blue) !important;
+}
+
+html[data-theme="dark"] #infotekst font[color="#ff0000"],
+html[data-theme="dark"] #infotekst font[color="#d3363e"],
+html[data-theme="dark"] #infotekst font[color="red"] {
+  color: #fca5a5 !important;
+}
+
+/* Links in tabelcellen */
+.planning-table td a,
+.opkomst-card a {
+  color: var(--blue);
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Mobiel: kaartjes ---------- */
+@media (max-width: 768px) {
+  .mobile-view-toggle {
+    display: inline-flex;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    margin: 0.25rem 0 0.75rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--card-secondary);
+  }
+
+  .mobile-view-toggle button {
+    min-height: 36px;
+    padding: 0.3rem 1rem;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .mobile-view-toggle button.is-active {
+    background: var(--card);
+    color: var(--text-main);
+    box-shadow: var(--shadow);
+  }
+
+  body.mobile-view-kaarten .planning-main .table-wrapper,
+  body.mobile-view-kaarten #tableScrollAnchor,
+  body.mobile-view-kaarten .table-h-scroll {
+    display: none !important;
+  }
+
+  body.mobile-view-tabel .mobile-cards {
+    display: none;
+  }
+
+  .mobile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .mobile-cards-empty {
+    padding: 1.5rem 0.5rem;
+    text-align: center;
+    color: var(--text-muted);
+  }
+
+  .opkomst-card {
+    --card-accent: var(--border);
+    position: relative;
+    padding: 0.85rem 0.95rem 0.9rem 1.1rem;
+    border: 1px solid var(--border);
+    border-left: 5px solid var(--card-accent);
+    border-radius: var(--radius);
+    background: var(--card);
+    color: var(--text-main);
+  }
+
+  .opkomst-card.type-bijzonder { --card-accent: var(--opkomst-bijzonder); }
+  .opkomst-card.type-kamp { --card-accent: var(--opkomst-kamp); }
+  .opkomst-card.type-geen { --card-accent: var(--opkomst-geen); }
+  .opkomst-card.is-next { --card-accent: var(--opkomst-volgende); box-shadow: 0 0 0 1px var(--opkomst-volgende) inset; }
+  .opkomst-card.is-past { opacity: 0.6; --card-accent: var(--opkomst-verleden); }
+
+  .opkomst-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .opkomst-card-date {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem;
+  }
+
+  .opkomst-card-weekday {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .opkomst-card-time {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .opkomst-card-type {
+    flex: 0 0 auto;
+    padding: 0.1rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--card-secondary);
+    border: 1px solid var(--card-accent);
+  }
+
+  .opkomst-card.is-next .opkomst-card-head::after {
+    content: "Eerstvolgende";
+    position: absolute;
+    top: -0.6rem;
+    left: 0.9rem;
+    padding: 0 0.45rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    background: var(--opkomst-volgende);
+    color: #0b1220;
+  }
+
+  .opkomst-card-thema {
+    margin: 0.45rem 0 0;
+    font-size: 1.05rem;
+    line-height: 1.3;
+  }
+
+  .opkomst-card-details {
+    display: grid;
+    gap: 0.35rem;
+    margin: 0.55rem 0 0;
+    font-size: 0.9rem;
+  }
+
+  .opkomst-card-details dt {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+
+  .opkomst-card-details dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .opkomst-card-presence {
+    margin-top: 0.7rem;
+    border-top: 1px solid var(--border);
+    padding-top: 0.55rem;
+  }
+
+  .opkomst-card-presence-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: 40px;
+    padding: 0.2rem 0;
+    border: 0;
+    background: transparent;
+    color: var(--text-main);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .presence-counts {
+    display: inline-flex;
+    gap: 0.35rem;
+    margin-left: auto;
+    font-weight: 600;
+    font-size: 0.82rem;
+  }
+
+  .pc {
+    padding: 0.05rem 0.45rem;
+    border-radius: 999px;
+    background: var(--card-secondary);
+  }
+
+  .pc-aanwezig { color: var(--success-text); }
+  .pc-afwezig { color: var(--danger-text); }
+  .pc-onbekend { color: var(--text-muted); }
+
+  .presence-chevron {
+    color: var(--text-muted);
+  }
+
+  .presence-hint {
+    margin: 0.25rem 0 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .presence-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .presence-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
+    min-height: 44px;
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--radius-small);
+    border: 1px solid var(--border);
+    background: var(--card-secondary);
+    color: var(--text-main);
+    font: inherit;
+    font-size: 0.9rem;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .presence-chip:disabled {
+    cursor: default;
+    opacity: 0.7;
+  }
+
+  .presence-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    flex: 0 0 1.5rem;
+    border-radius: 999px;
+    font-weight: 700;
+    background: var(--card);
+    border: 1px solid var(--border);
+  }
+
+  .presence-chip.is-aanwezig { border-color: var(--success-text); }
+  .presence-chip.is-aanwezig .presence-icon { background: var(--success-soft); color: var(--success-text); border-color: transparent; }
+  .presence-chip.is-afwezig { border-color: var(--danger-text); }
+  .presence-chip.is-afwezig .presence-icon { background: var(--danger-soft); color: var(--danger-text); border-color: transparent; }
+
+  .opkomst-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.7rem;
+  }
+}

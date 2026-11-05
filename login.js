@@ -171,6 +171,73 @@ function updateHeader() {
 window.updateHeader = updateHeader;
 
 // ======================================================================
+// BEHEER-TELLER (alleen admins): open aanvragen + nieuwe meldingen
+// ======================================================================
+async function updateAdminInbox() {
+  const existing = document.getElementById("adminInboxBadge");
+  const session = getSession();
+  const isAdmin = isLoggedIn() && session?.roles?.admin === true;
+
+  if (!isAdmin) {
+    existing?.remove();
+    return;
+  }
+
+  const container =
+    document.querySelector(".topbar-right-icons") ||
+    document.querySelector(".topbar-right");
+  if (!container || !window._firebase) return;
+
+  let requests = 0;
+  let nieuw = 0;
+
+  try {
+    const app = window._firebase.getApps().length
+      ? window._firebase.getApp()
+      : window._firebase.initializeApp(window.firebaseConfig);
+    const db = window._firebase.getDatabase(app);
+
+    const [reqSnap, bugSnap] = await Promise.all([
+      window._firebase.get(window._firebase.ref(db, "accountRequests")),
+      window._firebase.get(window._firebase.ref(db, "bugs"))
+    ]);
+
+    requests = Object.values(reqSnap.val() || {})
+      .filter(r => !r?.status || r.status === "pending").length;
+    nieuw = Object.values(bugSnap.val() || {})
+      .filter(b => !b?.status || b.status === "Nieuw").length;
+  } catch (err) {
+    console.warn("Beheer-teller laden mislukt:", err);
+    return;
+  }
+
+  const total = requests + nieuw;
+  const onAdminPage = /\/(admin|bug)\.html$/.test(window.location.pathname);
+
+  let badge = existing;
+  if (!badge) {
+    badge = document.createElement("a");
+    badge.id = "adminInboxBadge";
+    badge.className = "admin-inbox-badge";
+    container.insertBefore(badge, container.firstChild);
+  }
+
+  badge.href = requests ? "admin.html" : nieuw ? "bug.html" : "admin.html";
+  badge.classList.toggle("has-items", total > 0);
+  badge.classList.toggle("hidden", onAdminPage && total === 0);
+
+  const parts = [];
+  if (requests) parts.push(`${requests} ${requests === 1 ? "aanvraag" : "aanvragen"}`);
+  if (nieuw) parts.push(`${nieuw} ${nieuw === 1 ? "nieuwe melding" : "nieuwe meldingen"}`);
+
+  badge.textContent = total ? `Beheer · ${total}` : "Beheer";
+  badge.title = parts.length ? parts.join(", ") : "Niets nieuws in beheer";
+  badge.setAttribute("aria-label", parts.length ? `Beheer: ${parts.join(", ")}` : "Beheer");
+}
+
+window.updateAdminInbox = updateAdminInbox;
+
+// ======================================================================
 // FIREBASE INIT + AUTH LISTENER
 // ======================================================================
 function initFirebaseAuth(retries = 200) {
@@ -205,6 +272,7 @@ function initFirebaseAuth(retries = 200) {
 
     let roles = {};
     let status = "active";
+    let mustChangePassword = false;
 
     try {
       const db = window._firebase.getDatabase(app);
@@ -215,6 +283,7 @@ function initFirebaseAuth(retries = 200) {
         const data = snapshot.val();
         roles = data.roles || {};
         status = data.status || "active";
+        mustChangePassword = data.mustChangePassword === true;
       }
     } catch (err) {
       console.warn("Kon gebruikersgegevens niet laden:", err);
@@ -242,15 +311,81 @@ function initFirebaseAuth(retries = 200) {
       email: user.email,
       roles,
       status,
+      mustChangePassword,
       loginAt: Date.now(),
     });
 
     updateHeader();
     applyAuthVisibility();
+    updateAdminInbox();
     document.dispatchEvent(
       new CustomEvent("auth-changed", { detail: { loggedIn: true } })
     );
+
+    // Tijdelijk wachtwoord? Dan eerst een eigen wachtwoord kiezen.
+    if (mustChangePassword || hasPendingForcedPasswordChange()) {
+      redirectToForcedPasswordChange();
+    }
   });
+}
+
+// ======================================================================
+// VERPLICHT WACHTWOORD WIJZIGEN
+// ======================================================================
+
+const FORCE_PW_KEY = "ovn_force_pw_change";
+
+// SHA-256 van het oude gedeelde standaardwachtwoord (alleen voor de
+// overgangsperiode; mag weg zodra niemand het meer gebruikt).
+const OLD_DEFAULT_PASSWORD_SHA256 =
+  "7cb94054014d7d02fe30c91ccd2a07338d82db2c5f36d5e81cf6db480f223958";
+
+async function isOldDefaultPassword(password) {
+  try {
+    const bytes = new TextEncoder().encode(password);
+    const digest = await crypto.subtle.digest("SHA-256", bytes);
+    const hex = [...new Uint8Array(digest)]
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
+    return hex === OLD_DEFAULT_PASSWORD_SHA256;
+  } catch {
+    return false;
+  }
+}
+
+function hasPendingForcedPasswordChange() {
+  try {
+    return sessionStorage.getItem(FORCE_PW_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function clearForcedPasswordChange() {
+  try {
+    sessionStorage.removeItem(FORCE_PW_KEY);
+  } catch {}
+}
+window.clearForcedPasswordChange = clearForcedPasswordChange;
+window.hasPendingForcedPasswordChange = hasPendingForcedPasswordChange;
+
+function redirectToForcedPasswordChange() {
+  if (/\/profile\.html$/.test(window.location.pathname)) return;
+
+  const target = "profile.html?force_pw_change=true";
+  const tempModal = document.getElementById("tempPasswordModal");
+  const okBtn = document.getElementById("tempPasswordOkBtn");
+
+  if (tempModal && okBtn) {
+    tempModal.classList.remove("hidden");
+    document.body.classList.add("modal-open");
+    okBtn.onclick = () => {
+      window.location.href = target;
+    };
+    return;
+  }
+
+  window.location.href = target;
 }
 
 // ======================================================================
@@ -498,42 +633,24 @@ function openLoginModal() {
             password
           );
 
+        /*
+         * Overgangsregeling voor accounts die nog het oude,
+         * gedeelde standaardwachtwoord gebruiken. We vergelijken
+         * alleen een hash; het wachtwoord zelf staat niet meer in
+         * de code. Nieuwe accounts krijgen een uniek tijdelijk
+         * wachtwoord + het databaseveld mustChangePassword.
+         */
+        if (await isOldDefaultPassword(password)) {
+          try {
+            sessionStorage.setItem(FORCE_PW_KEY, "1");
+          } catch {}
+        }
+
         closeLoginModal();
 
-        /*
-         * Bestaande tijdelijke-wachtwoordflow.
-         * Dit kan later nog worden vervangen door
-         * een databaseveld zoals mustChangePassword.
-         */
-        if (password === "Welkom48!") {
-          const tempModal =
-            document.getElementById(
-              "tempPasswordModal"
-            );
-
-          if (tempModal) {
-            tempModal.classList.remove("hidden");
-            document.body.classList.add(
-              "modal-open"
-            );
-
-            document
-              .getElementById("tempPasswordOkBtn")
-              .onclick = () => {
-                tempModal.classList.add("hidden");
-
-                window.location.href =
-                  "profile.html?force_pw_change=true";
-              };
-
-          } else {
-            window.location.href =
-              "profile.html?force_pw_change=true";
-          }
-
-        } else {
-          window.location.reload();
-        }
+        // De auth-listener stuurt door naar het profiel als
+        // er eerst een nieuw wachtwoord gekozen moet worden.
+        window.location.reload();
 
       } catch (error) {
         console.error(
@@ -767,13 +884,13 @@ function openAccountRequestModal() {
 
 <div class="account-section">
  <label>Voornaam</label>
-<input id="reqFirstName" type="text" />
+<input id="reqFirstName" type="text" maxlength="60" autocomplete="given-name" />
 
 <label>Achternaam</label>
-<input id="reqLastName" type="text" />
+<input id="reqLastName" type="text" maxlength="60" autocomplete="family-name" />
 
   <label>Email</label>
-  <input id="reqEmail" type="email" />
+  <input id="reqEmail" type="email" maxlength="120" autocomplete="email" />
 </div>
 
 <div class="account-section">

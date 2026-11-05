@@ -6662,3 +6662,338 @@ html[data-theme="dark"] .panel-warning { color: #fcd34d; }
   margin: 0 0 3px;
   color: inherit;
 }
+
+
+/* ============================================================
+   LEIDING & OUDERS (2026)
+   Actieknoppen in de toolbar, vaste tabelkop, contrast,
+   kaartjesweergave op mobiel.
+============================================================ */
+
+/* Dashboard/Ledenbeheer in de toolbar i.p.v. zwevend */
+.leiding-sidebar.in-toolbar {
+  position: static;
+  width: auto;
+  max-width: none;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  z-index: auto;
+}
+
+.leiding-sidebar.in-toolbar .pill-btn {
+  width: auto;
+  padding: 0.5rem 1.1rem;
+}
+
+/* Vaste tabelkop op desktop: de kop (met namen) blijft zichtbaar
+   tijdens het scrollen door een lange planning. */
+@media (min-width: 769px) {
+  .planning-main .table-wrapper,
+  #tableScrollAnchor .table-wrapper {
+    max-height: calc(100vh - 170px);
+    overflow: auto;
+    scrollbar-width: thin;
+  }
+
+  .planning-main .table-wrapper::-webkit-scrollbar,
+  #tableScrollAnchor .table-wrapper::-webkit-scrollbar {
+    display: block;
+    width: 8px;
+    height: 8px;
+  }
+
+  .planning-main .table-wrapper::-webkit-scrollbar-thumb,
+  #tableScrollAnchor .table-wrapper::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 999px;
+  }
+
+  .planning-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+
+  .planning-table thead th {
+    background: var(--table-header-bg);
+  }
+
+  .mobile-view-toggle,
+  .mobile-cards {
+    display: none !important;
+  }
+}
+
+/* Contrast: witte tekst op lichtblauw haalde in donker thema maar
+   ~2,5:1. Donkere tekst op de knop geeft ruim voldoende contrast. */
+html[data-theme="dark"] .primary-btn,
+html[data-theme="dark"] .pill-btn.primary {
+  color: #0b1220;
+}
+
+/* Infoblok: kleuren uit de editor zijn gekozen voor het lichte thema
+   (donkerblauw); in donker thema onleesbaar. Daar lichter tonen. */
+html[data-theme="dark"] #infotekst font[color],
+html[data-theme="dark"] #infotekst [style*="color"] {
+  color: var(--blue) !important;
+}
+
+html[data-theme="dark"] #infotekst font[color="#ff0000"],
+html[data-theme="dark"] #infotekst font[color="#d3363e"],
+html[data-theme="dark"] #infotekst font[color="red"] {
+  color: #fca5a5 !important;
+}
+
+/* Links in tabelcellen */
+.planning-table td a,
+.opkomst-card a {
+  color: var(--blue);
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Mobiel: kaartjes ---------- */
+@media (max-width: 768px) {
+  .mobile-view-toggle {
+    display: inline-flex;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    margin: 0.25rem 0 0.75rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--card-secondary);
+  }
+
+  .mobile-view-toggle button {
+    min-height: 36px;
+    padding: 0.3rem 1rem;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .mobile-view-toggle button.is-active {
+    background: var(--card);
+    color: var(--text-main);
+    box-shadow: var(--shadow);
+  }
+
+  body.mobile-view-kaarten .planning-main .table-wrapper,
+  body.mobile-view-kaarten #tableScrollAnchor,
+  body.mobile-view-kaarten .table-h-scroll {
+    display: none !important;
+  }
+
+  body.mobile-view-tabel .mobile-cards {
+    display: none;
+  }
+
+  .mobile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .mobile-cards-empty {
+    padding: 1.5rem 0.5rem;
+    text-align: center;
+    color: var(--text-muted);
+  }
+
+  .opkomst-card {
+    --card-accent: var(--border);
+    position: relative;
+    padding: 0.85rem 0.95rem 0.9rem 1.1rem;
+    border: 1px solid var(--border);
+    border-left: 5px solid var(--card-accent);
+    border-radius: var(--radius);
+    background: var(--card);
+    color: var(--text-main);
+  }
+
+  .opkomst-card.type-bijzonder { --card-accent: var(--opkomst-bijzonder); }
+  .opkomst-card.type-kamp { --card-accent: var(--opkomst-kamp); }
+  .opkomst-card.type-geen { --card-accent: var(--opkomst-geen); }
+  .opkomst-card.is-next { --card-accent: var(--opkomst-volgende); box-shadow: 0 0 0 1px var(--opkomst-volgende) inset; }
+  .opkomst-card.is-past { opacity: 0.6; --card-accent: var(--opkomst-verleden); }
+
+  .opkomst-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .opkomst-card-date {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem;
+  }
+
+  .opkomst-card-weekday {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .opkomst-card-time {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .opkomst-card-type {
+    flex: 0 0 auto;
+    padding: 0.1rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--card-secondary);
+    border: 1px solid var(--card-accent);
+  }
+
+  .opkomst-card.is-next .opkomst-card-head::after {
+    content: "Eerstvolgende";
+    position: absolute;
+    top: -0.6rem;
+    left: 0.9rem;
+    padding: 0 0.45rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    background: var(--opkomst-volgende);
+    color: #0b1220;
+  }
+
+  .opkomst-card-thema {
+    margin: 0.45rem 0 0;
+    font-size: 1.05rem;
+    line-height: 1.3;
+  }
+
+  .opkomst-card-details {
+    display: grid;
+    gap: 0.35rem;
+    margin: 0.55rem 0 0;
+    font-size: 0.9rem;
+  }
+
+  .opkomst-card-details dt {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+
+  .opkomst-card-details dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .opkomst-card-presence {
+    margin-top: 0.7rem;
+    border-top: 1px solid var(--border);
+    padding-top: 0.55rem;
+  }
+
+  .opkomst-card-presence-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: 40px;
+    padding: 0.2rem 0;
+    border: 0;
+    background: transparent;
+    color: var(--text-main);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .presence-counts {
+    display: inline-flex;
+    gap: 0.35rem;
+    margin-left: auto;
+    font-weight: 600;
+    font-size: 0.82rem;
+  }
+
+  .pc {
+    padding: 0.05rem 0.45rem;
+    border-radius: 999px;
+    background: var(--card-secondary);
+  }
+
+  .pc-aanwezig { color: var(--success-text); }
+  .pc-afwezig { color: var(--danger-text); }
+  .pc-onbekend { color: var(--text-muted); }
+
+  .presence-chevron {
+    color: var(--text-muted);
+  }
+
+  .presence-hint {
+    margin: 0.25rem 0 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .presence-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .presence-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
+    min-height: 44px;
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--radius-small);
+    border: 1px solid var(--border);
+    background: var(--card-secondary);
+    color: var(--text-main);
+    font: inherit;
+    font-size: 0.9rem;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .presence-chip:disabled {
+    cursor: default;
+    opacity: 0.7;
+  }
+
+  .presence-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    flex: 0 0 1.5rem;
+    border-radius: 999px;
+    font-weight: 700;
+    background: var(--card);
+    border: 1px solid var(--border);
+  }
+
+  .presence-chip.is-aanwezig { border-color: var(--success-text); }
+  .presence-chip.is-aanwezig .presence-icon { background: var(--success-soft); color: var(--success-text); border-color: transparent; }
+  .presence-chip.is-afwezig { border-color: var(--danger-text); }
+  .presence-chip.is-afwezig .presence-icon { background: var(--danger-soft); color: var(--danger-text); border-color: transparent; }
+
+  .opkomst-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.7rem;
+  }
+}

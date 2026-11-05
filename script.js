@@ -5,6 +5,7 @@ import {
     sanitizeText,
     escapeHtml,
     sanitizeHtml,
+    linkifyText,
     todayISO,
     isPast,
     isFutureOrToday,
@@ -3861,12 +3862,14 @@ function renderTable() {
     // Lege staten
     if (!opkomsten || opkomsten.length === 0) {
         renderEmptyTableState("nodata");
+        renderMobileCards([], "nodata");
         syncHorizontalScrollProxy();
         return;
     }
 
     if (visible.length === 0) {
         renderEmptyTableState("filtered");
+        renderMobileCards([], "filtered");
         syncHorizontalScrollProxy();
         return;
     }
@@ -3875,7 +3878,266 @@ function renderTable() {
     visible.forEach(o => addRow(o));
     if (isLeiding()) addTotalsRow();
 
+    renderMobileCards(visible);
     syncHorizontalScrollProxy();
+}
+
+
+/* ======================================================================
+   MOBIEL — KAARTJESWEERGAVE
+   Op de telefoon is de brede tabel lastig te lezen (zie melding over
+   in- en uitzoomen). Kaartjes tonen per opkomst de belangrijkste info
+   en de aanwezigheid; de tabel blijft beschikbaar via de schakelaar.
+   ====================================================================== */
+const MOBILE_VIEW_KEY = "ovn_mobile_view";
+
+// Desktop: Dashboard/Ledenbeheer niet meer zwevend rechtsonder (ze
+// verstopten de knop 'Nieuwe opkomst'), maar naast 'Opkomsten bewerken'.
+(function moveLeidingSidebarToToolbar() {
+    const sidebarEl = document.getElementById("leidingSidebar");
+    const headerRight = document.querySelector(".planning-header-right");
+    if (!sidebarEl || !headerRight) return;
+    const editBtn = headerRight.querySelector("#editModeButton");
+    headerRight.insertBefore(sidebarEl, editBtn || null);
+    sidebarEl.classList.add("in-toolbar");
+})();
+const expandedCards = new Set();
+
+function getMobileView() {
+    try {
+        return localStorage.getItem(MOBILE_VIEW_KEY) === "tabel" ? "tabel" : "kaarten";
+    } catch {
+        return "kaarten";
+    }
+}
+
+function setMobileView(view) {
+    try {
+        localStorage.setItem(MOBILE_VIEW_KEY, view);
+    } catch {
+        // Geen opslag beschikbaar: alleen voor deze sessie.
+    }
+    applyMobileView();
+}
+
+function applyMobileView() {
+    const view = getMobileView();
+    document.body.classList.toggle("mobile-view-tabel", view === "tabel");
+    document.body.classList.toggle("mobile-view-kaarten", view === "kaarten");
+    document.querySelectorAll(".mobile-view-toggle button").forEach(btn => {
+        const active = btn.dataset.view === view;
+        btn.classList.toggle("is-active", active);
+        btn.setAttribute("aria-pressed", String(active));
+    });
+}
+
+function ensureMobileCardsContainer() {
+    let container = document.getElementById("mobileCards");
+    if (container) return container;
+
+    const anchor =
+        document.getElementById("tableScrollAnchor") ||
+        document.querySelector(".planning-main .table-wrapper") ||
+        document.querySelector(".table-wrapper");
+    if (!anchor) return null;
+
+    const toggle = document.createElement("div");
+    toggle.className = "mobile-view-toggle";
+    toggle.setAttribute("role", "group");
+    toggle.setAttribute("aria-label", "Weergave");
+    toggle.innerHTML = `
+        <button type="button" data-view="kaarten">Kaartjes</button>
+        <button type="button" data-view="tabel">Tabel</button>
+    `;
+    toggle.querySelectorAll("button").forEach(btn =>
+        btn.addEventListener("click", () => setMobileView(btn.dataset.view))
+    );
+
+    container = document.createElement("div");
+    container.id = "mobileCards";
+    container.className = "mobile-cards";
+    container.setAttribute("aria-live", "polite");
+
+    anchor.parentNode.insertBefore(toggle, anchor);
+    anchor.parentNode.insertBefore(container, anchor);
+    applyMobileView();
+    return container;
+}
+
+const PRESENCE_LABELS = {
+    aanwezig: { icon: "✓", label: "Aanwezig" },
+    afwezig: { icon: "✗", label: "Afwezig" },
+    onbekend: { icon: "?", label: "Onbekend" }
+};
+
+function renderMobileCards(visible = [], emptyKind = "") {
+    const container = ensureMobileCardsContainer();
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    if (!visible.length) {
+        const empty = document.createElement("p");
+        empty.className = "mobile-cards-empty";
+        empty.textContent = emptyKind === "filtered"
+            ? "Geen opkomsten zichtbaar met dit filter."
+            : "Er zijn nog geen opkomsten gepland.";
+        container.appendChild(empty);
+        return;
+    }
+
+    const nextUpcoming = getNextUpcoming(visible);
+
+    visible.forEach(o => {
+        const id = o.rowKey || o.id;
+        const past = isOpkomstVoorbij(o);
+        const type = o.typeOpkomst || "normaal";
+
+        const card = document.createElement("article");
+        card.className = `opkomst-card type-${type}`;
+        if (past) card.classList.add("is-past");
+        if (nextUpcoming && (nextUpcoming.rowKey || nextUpcoming.id) === id && type !== "geen") {
+            card.classList.add("is-next");
+        }
+
+        const weekdag = getWeekdagAfkorting(o.datum);
+        const datum = type === "kamp" && o.einddatum
+            ? formatDateRange(o.datum, o.einddatum)
+            : formatDateDisplay(o.datum);
+        const tijd = type === "geen"
+            ? ""
+            : [o.starttijd, o.eindtijd].filter(Boolean).join("–");
+
+        const head = document.createElement("div");
+        head.className = "opkomst-card-head";
+        head.innerHTML = `
+            <div class="opkomst-card-date">
+                <span class="opkomst-card-weekday">${escapeHtml(weekdag)}</span>
+                <strong>${escapeHtml(datum)}</strong>
+                ${tijd ? `<span class="opkomst-card-time">${escapeHtml(tijd)}</span>` : ""}
+            </div>
+            <span class="opkomst-card-type">${escapeHtml(getOpkomstTypeLabel(type))}</span>
+        `;
+        card.appendChild(head);
+
+        if (o.thema) {
+            const thema = document.createElement("h3");
+            thema.className = "opkomst-card-thema";
+            thema.innerHTML = linkifyText(o.thema);
+            card.appendChild(thema);
+        }
+
+        const rows = [
+            ["Bijzonderheden", o.bijzonderheden],
+            ["Buddy", ["explorers", "rovers"].includes(speltak) ? o.buddy : ""],
+            ["Bert logeert bij", config.showBert ? o.bert_met : ""]
+        ];
+
+        if (!isOuder()) {
+            rows.push(
+                ["Procor", o.procor],
+                ["Locatie", o.locatie],
+                ["Materiaal", o.materiaal],
+                ["Notities", o.notities]
+            );
+        }
+
+        const details = rows.filter(([, v]) => v && String(v).trim());
+        if (details.length) {
+            const dl = document.createElement("dl");
+            dl.className = "opkomst-card-details";
+            dl.innerHTML = details.map(([k, v]) =>
+                `<div><dt>${escapeHtml(k)}</dt><dd>${linkifyText(v)}</dd></div>`
+            ).join("");
+            card.appendChild(dl);
+        }
+
+        // Aanwezigheid
+        if (type !== "geen") {
+            const zichtbareJeugd = jeugd.filter(j => !j.hidden);
+            const counts = { aanwezig: 0, afwezig: 0, onbekend: 0 };
+            const entries = zichtbareJeugd.map(j => {
+                const { status } = getPresenceStatus(o, j.id, false);
+                if (status && counts[status] !== undefined) counts[status]++;
+                return { j, status };
+            });
+
+            if (entries.length) {
+                const expanded = expandedCards.has(id);
+                const presence = document.createElement("div");
+                presence.className = "opkomst-card-presence";
+
+                const summary = document.createElement("button");
+                summary.type = "button";
+                summary.className = "opkomst-card-presence-toggle";
+                summary.setAttribute("aria-expanded", String(expanded));
+                summary.innerHTML = `
+                    <span>Aanwezigheid</span>
+                    <span class="presence-counts">
+                        <span class="pc pc-aanwezig">✓ ${counts.aanwezig}</span>
+                        <span class="pc pc-afwezig">✗ ${counts.afwezig}</span>
+                        <span class="pc pc-onbekend">? ${counts.onbekend}</span>
+                    </span>
+                    <span class="presence-chevron" aria-hidden="true">${expanded ? "▴" : "▾"}</span>
+                `;
+                summary.addEventListener("click", () => {
+                    if (expandedCards.has(id)) expandedCards.delete(id);
+                    else expandedCards.add(id);
+                    renderMobileCards(visible, emptyKind);
+                });
+                presence.appendChild(summary);
+
+                if (expanded) {
+                    const hint = document.createElement("p");
+                    hint.className = "presence-hint";
+                    hint.textContent = past && !isLeiding()
+                        ? "Deze opkomst is al geweest."
+                        : "Tik op een naam om de aanwezigheid te wijzigen.";
+                    presence.appendChild(hint);
+
+                    const list = document.createElement("ul");
+                    list.className = "presence-list";
+
+                    entries.forEach(({ j, status }) => {
+                        const li = document.createElement("li");
+                        const btn = document.createElement("button");
+                        btn.type = "button";
+                        const st = status || "onbekend";
+                        btn.className = `presence-chip is-${st}`;
+                        btn.disabled = !status || (past && !isLeiding());
+                        const info = PRESENCE_LABELS[st];
+                        btn.innerHTML = `<span class="presence-icon" aria-hidden="true">${info.icon}</span><span>${escapeHtml(j.naam || "")}</span>`;
+                        btn.setAttribute("aria-label", `${j.naam || ""}: ${info.label}. Tik om te wijzigen.`);
+                        btn.addEventListener("click", () => togglePresence(o, j.id, false));
+                        li.appendChild(btn);
+                        list.appendChild(li);
+                    });
+
+                    presence.appendChild(list);
+                }
+
+                card.appendChild(presence);
+            }
+        }
+
+        if (isLeiding() && isEdit() && !o.isGedeeldeStamOpkomst) {
+            const actions = document.createElement("div");
+            actions.className = "opkomst-card-actions";
+            const edit = document.createElement("button");
+            edit.type = "button";
+            edit.className = "pill-btn outline";
+            edit.textContent = "Bewerken";
+            edit.addEventListener("click", () => openEditOpkomstModal(o));
+            actions.appendChild(edit);
+            card.appendChild(actions);
+        }
+
+        card.querySelectorAll("a").forEach(a =>
+            a.addEventListener("click", e => e.stopPropagation())
+        );
+
+        container.appendChild(card);
+    });
 }
 
 
@@ -4722,6 +4984,15 @@ function makeEditableCell(o, field, extraClass = "", type = "text") {
                 <span>${escapeHtml(formatDateDisplay(value))}</span>
             `;
         }
+    } else if (
+        ["thema", "bijzonderheden", "notities"].includes(field) &&
+        /https?:\/\//i.test(String(value || ""))
+    ) {
+        // Links klikbaar maken (veilig: linkifyText escapet eerst).
+        td.innerHTML = linkifyText(value);
+        td.querySelectorAll("a").forEach(a =>
+            a.addEventListener("click", e => e.stopPropagation())
+        );
     } else {
         td.textContent = value ?? "";
     }

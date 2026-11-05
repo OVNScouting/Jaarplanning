@@ -159,6 +159,24 @@
             </div>
         </section>
 
+        <!-- ============================================================
+         MIJN MELDINGEN
+        ============================================================ -->
+        <section id="mijnMeldingen" class="card profile-card mijn-meldingen" aria-labelledby="mijnMeldingenTitle">
+            <header class="profile-card-header">
+                <div>
+                    <h2 id="mijnMeldingenTitle">Mijn meldingen</h2>
+                    <p class="text-muted">
+                        Problemen, ideeën en vragen die je via "Meld een probleem" hebt gestuurd,
+                        met de status en reactie van de beheerder.
+                    </p>
+                </div>
+            </header>
+            <div id="mijnMeldingenList" class="mijn-meldingen-list" aria-live="polite">
+                <p class="text-muted">Meldingen laden…</p>
+            </div>
+        </section>
+
 
         <!-- ============================================================
        MODAL — Verplicht wachtwoord wijzigen
@@ -370,76 +388,7 @@
 
     </main>
 
-    <!-- ============================================================
-     BUG MELDEN
-============================================================ -->
-    <button id="openBugModalBtn" class="primary-btn bug-fab" type="button">
-        Meld een probleem
-    </button>
-
-    <div id="bugModal" class="modal hidden">
-        <div class="modal-content bug-modal-content">
-
-            <button id="closeBugModalBtn" class="modal-close-btn" type="button" aria-label="Sluiten">
-                &times;
-            </button>
-
-            <h2 class="bug-modal-title">
-                Meld een probleem of idee
-            </h2>
-
-            <p class="text-muted">
-                Loop je ergens tegenaan op de website?
-                Laat het hieronder weten.
-            </p>
-
-            <form id="modalBugForm" class="bug-modal-form">
-
-                <div>
-                    <label for="modalBugTitle">
-                        Korte omschrijving of titel
-                    </label>
-
-                    <input type="text" id="modalBugTitle" required
-                        placeholder="Bijv. De knop Account aanvragen werkt niet">
-                </div>
-
-                <div>
-                    <label for="modalBugDesc">
-                        Beschrijf het probleem of idee
-                    </label>
-
-                    <textarea id="modalBugDesc" rows="5" required
-                        placeholder="Wat deed je, waar klikte je op en wat had er moeten gebeuren?"></textarea>
-                </div>
-
-                <div>
-                    <label for="modalBugEmail">
-                        Jouw e-mailadres
-                    </label>
-
-                    <input type="email" id="modalBugEmail" readonly placeholder="Automatisch ingevuld indien ingelogd">
-                </div>
-
-                <div class="modal-actions bug-modal-actions">
-                    <button type="submit" class="pill-btn primary">
-                        Verstuur melding
-                    </button>
-
-                    <button type="button" id="cancelBugModalBtn" class="pill-btn outline">
-                        Annuleren
-                    </button>
-                </div>
-            </form>
-
-            <div id="modalSuccessMsg" class="bug-success-message" role="status">
-                Bedankt! Je melding is succesvol verzonden.
-            </div>
-        </div>
-    </div>
-
-
-    <!-- Firebase & App scripts -->
+<!-- Firebase & App scripts -->
     <script type="module" src="firebase-imports.js"></script>
     <script src="firebase-config.js"></script>
     <script src="mobile.js"></script>

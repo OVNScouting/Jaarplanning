@@ -6353,6 +6353,10 @@ a.speltak-count:hover {
 .speltak-count.speltak-rovers { --sp-color: #590501; }
 .speltak-count.speltak-stam { --sp-color: #f0d800; }
 .speltak-count.speltak-total { font-weight: 600; }
+
+html[data-theme="dark"] .speltak-count::before {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.55);
+}
 .speltak-count.speltak-total::before { display: none; }
 
 @media (max-width: 720px) {
@@ -6555,6 +6559,10 @@ html[data-theme="dark"] .panel-warning { color: #fcd34d; }
   padding: 0.6rem 0.75rem 0.75rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-small);
+}
+
+.panel-fieldset-single {
+  grid-template-columns: 1fr;
 }
 
 .panel-fieldset legend {

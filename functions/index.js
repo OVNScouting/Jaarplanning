@@ -512,6 +512,14 @@ exports.deleteUserAccount = onCall(async (request) => {
 exports.getAdminOverview = onCall(async (request) => {
   await assertAdmin(request.auth);
 
+  // Eenmalige inhaalslag: oudere meldingen (van vóór de spiegeling)
+  // ook in 'Mijn meldingen' van de melder zetten.
+  try {
+    await backfillMeldingen();
+  } catch (err) {
+    console.warn("Backfill meldingen mislukt:", err);
+  }
+
   const lastSignIn = {};
   let pageToken;
   do {
@@ -531,6 +539,45 @@ exports.getAdminOverview = onCall(async (request) => {
 // Meldingen (bugs) en accountaanvragen
 // ==========================================
 
+function meldingSummary(bug = {}) {
+  return {
+    titel: clip(bug.titel, 120),
+    type: bug.type || "bug",
+    status: bug.status || "Nieuw",
+    reactie: clip(bug.reactie, 1000),
+    datum: bug.datum || null,
+    bijgewerkt: bug.bijgewerkt || bug.datum || null
+  };
+}
+
+async function findMelderUid(bug) {
+  if (!bug) return null;
+  if (bug.melderUid) return bug.melderUid;
+  const email = String(bug.melder || "").trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
+  try {
+    return (await admin.auth().getUserByEmail(email)).uid;
+  } catch {
+    return null;
+  }
+}
+
+/** Spiegel meldingen die nog geen samenvatting bij de melder hebben. */
+async function backfillMeldingen() {
+  const db = admin.database();
+  const flag = db.ref("_meta/meldingenBackfilled");
+  if ((await flag.get()).val() === true) return;
+
+  const bugs = (await db.ref("bugs").get()).val() || {};
+  const updates = {};
+  for (const [id, bug] of Object.entries(bugs)) {
+    const uid = await findMelderUid(bug);
+    if (uid) updates[`users/${uid}/meldingen/${id}`] = meldingSummary(bug);
+  }
+  updates["_meta/meldingenBackfilled"] = true;
+  await db.ref().update(updates);
+}
+
 /**
  * Bij elke wijziging van een melding:
  * - nieuwe melding → mail naar admins
@@ -546,17 +593,7 @@ exports.onBugWritten = onValueWritten(
     const after = event.data.after.val();
     const db = admin.database();
 
-    const findUid = async (bug) => {
-      if (!bug) return null;
-      if (bug.melderUid) return bug.melderUid;
-      const email = String(bug.melder || "").trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
-      try {
-        return (await admin.auth().getUserByEmail(email)).uid;
-      } catch {
-        return null;
-      }
-    };
+    const findUid = findMelderUid;
 
     // Verwijderd → spiegel opruimen
     if (!after) {
@@ -567,14 +604,7 @@ exports.onBugWritten = onValueWritten(
 
     const uid = await findUid(after);
     if (uid) {
-      await db.ref(`users/${uid}/meldingen/${bugId}`).set({
-        titel: clip(after.titel, 120),
-        type: after.type || "bug",
-        status: after.status || "Nieuw",
-        reactie: clip(after.reactie, 1000),
-        datum: after.datum || null,
-        bijgewerkt: after.bijgewerkt || after.datum || null
-      });
+      await db.ref(`users/${uid}/meldingen/${bugId}`).set(meldingSummary(after));
     }
 
     if (!before) {

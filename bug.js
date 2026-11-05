@@ -23,6 +23,8 @@ const app = getApps().length ? getApp() : initializeApp(window.firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
+const SITE_URL = "https://ovnjaarplanning.nl";
+
 const TYPES = {
   bug: { label: "Bug", icon: "🐞" },
   wens: { label: "Wens", icon: "💡" },
@@ -270,6 +272,11 @@ function renderDetail(bug) {
     <div class="melding-description">${linkifyText(bug.beschrijving || "—").replace(/\n/g, "<br>")}</div>
     <dl class="melding-context">${contextRows}</dl>
 
+    <div class="melding-ai">
+      <button type="button" class="pill-btn outline melding-ai-btn">🤖 Prompt voor Claude</button>
+      <span class="text-muted">Zet deze melding om in een kant-en-klare opdracht om in Claude te plakken.</span>
+    </div>
+
     <form class="melding-edit">
       <div class="melding-edit-row">
         <label>Status
@@ -333,6 +340,10 @@ function renderDetail(bug) {
     });
   });
 
+  detail.querySelector(".melding-ai-btn").addEventListener("click", () => {
+    openPromptModal(bug);
+  });
+
   detail.querySelector(".melding-cancel").addEventListener("click", () => {
     delete state.drafts[bug.id];
     state.expandedId = null;
@@ -391,6 +402,206 @@ function renderDetail(bug) {
   });
 
   return detail;
+}
+
+// ----------------------------------------------------------------------
+// Prompt voor Claude
+// Zet een melding om in een complete, zelfstandige opdracht. Bevat
+// bewust GEEN naam of e-mailadres van de melder.
+// ----------------------------------------------------------------------
+const REPO = "OVNScouting/Jaarplanning";
+const SPELTAK_PAGES = ["bevers", "welpen", "scouts", "explorers", "rovers", "stam"];
+
+function pageSlug(url = "") {
+  const m = String(url).match(/([a-z0-9-]+)\.html/i);
+  return m ? m[1].toLowerCase() : "index";
+}
+
+function likelyFiles(bug) {
+  const slug = pageSlug(bug.pagina);
+  const files = new Set();
+
+  if (SPELTAK_PAGES.includes(slug)) {
+    ["script.js", "utils.js", `${slug}.html`, "style.css"].forEach((f) => files.add(f));
+  } else {
+    const map = {
+      index: ["index.html", "index-bestuur.js", "login.js"],
+      admin: ["admin.html", "admin.js", "functions/index.js"],
+      bug: ["bug.html", "bug.js"],
+      profile: ["profile.html", "profile.js"],
+      dashboard: ["dashboard.html", "dashboard.js", "functions/index.js"],
+      bestuur: ["bestuur.html", "bestuur.js"]
+    };
+    (map[slug] || ["index.html"]).forEach((f) => files.add(f));
+    files.add("style.css");
+  }
+
+  const apparaat = String(bug.context?.apparaat || "");
+  if (/Telefoon|Tablet/i.test(apparaat)) {
+    files.add("mobile.css");
+    files.add("mobile.js");
+  }
+
+  const text = `${bug.titel || ""} ${bug.beschrijving || ""}`.toLowerCase();
+  if (/inlog|wachtwoord|account|login/.test(text)) files.add("login.js");
+  if (/melding|probleem melden/.test(text)) files.add("utils.js");
+  if (/rechten|toegang|permission|geweigerd/.test(text)) files.add("database.rules.json");
+
+  return [...files];
+}
+
+function buildClaudePrompt(bug) {
+  const type = TYPES[bug.type] || TYPES.bug;
+  const ctx = bug.context || {};
+  const slug = pageSlug(bug.pagina);
+  const datum = bug.datum ? formatDate(bug.datum) : "onbekend";
+
+  const aanpak = {
+    bug: [
+      "1. Lees de genoemde bestanden en zoek de oorzaak. Reproduceer het probleem waar mogelijk (let op apparaat en schermbreedte).",
+      "2. Leg kort uit wat de oorzaak is voordat je iets verandert.",
+      "3. Los het op met een zo klein mogelijke wijziging die bestaande functionaliteit en stijl intact laat.",
+      "4. Test op desktop én telefoonbreedte, in licht en donker thema."
+    ],
+    wens: [
+      "1. Bekijk hoe het huidige gedrag werkt in de genoemde bestanden.",
+      "2. Doe eerst een kort voorstel (wat, waar, gevolgen voor ouders/leiding/admin) en wacht op mijn akkoord voordat je bouwt.",
+      "3. Houd het simpel voor vrijwilligers en ouders; geen nieuwe frameworks of build-stap.",
+      "4. Test op desktop én telefoonbreedte, in licht en donker thema."
+    ],
+    vraag: [
+      "1. Zoek in de code uit hoe het nu werkt.",
+      "2. Beantwoord de vraag in gewone taal, zodat ik die aan de melder kan doorgeven.",
+      "3. Stel alleen een wijziging voor als het antwoord laat zien dat er iets mis is."
+    ]
+  }[bug.type] || [];
+
+  return [
+    `Je werkt aan de OVN Jaarplanning, de jaarplanning-website van Scouting Olivier van Noort (${SITE_URL}).`,
+    `Code: GitHub-repo ${REPO} (branch main). Statische HTML/CSS/JS op GitHub Pages, Firebase Realtime Database (rules in database.rules.json), Firebase Auth en Cloud Functions (functions/index.js, Node 22). Rollen: ouders (niet ingelogd, alleen bekijken + aanwezigheid), leiding per speltak, bestuur, admin.`,
+    ``,
+    `## Melding (${type.label})`,
+    `Titel: ${bug.titel || "(zonder titel)"}`,
+    `Gemeld op: ${datum}`,
+    `Status: ${bug.status || "Nieuw"}${bug.prioriteit && bug.prioriteit !== "normaal" ? ` · prioriteit ${bug.prioriteit}` : ""}`,
+    ``,
+    `Omschrijving van de melder:`,
+    `"""`,
+    String(bug.beschrijving || "(geen omschrijving)").trim(),
+    `"""`,
+    ``,
+    `## Technische context`,
+    `- Pagina: ${slug}.html`,
+    `- Apparaat: ${[ctx.apparaat, ctx.scherm].filter(Boolean).join(", ") || "onbekend"}`,
+    `- Browser: ${[ctx.browser, ctx.systeem].filter(Boolean).join(" op ") || "onbekend"}`,
+    `- Rol van de melder: ${ctx.rol || "onbekend"}`,
+    `- Waarschijnlijk betrokken bestanden: ${likelyFiles(bug).join(", ")}`,
+    bug.reactie ? `- Eerdere reactie van de beheerder: ${bug.reactie}` : null,
+    ``,
+    `## Aanpak`,
+    ...aanpak,
+    ``,
+    `## Werkwijze`,
+    `- Werk op een nieuwe branch en open een concept-pull request; verander niets direct op main (de live site).`,
+    `- Pas de database rules alleen aan als dat echt nodig is, en zeg het dan expliciet.`,
+    `- Sluit af met: oorzaak/oplossing in een paar zinnen, gewijzigde bestanden, hoe ik het test, en een korte reactie die ik aan de melder kan sturen.`
+  ].filter((line) => line !== null).join("\n");
+}
+
+let promptModal = null;
+
+function openPromptModal(bug) {
+  if (!promptModal) {
+    promptModal = document.createElement("div");
+    promptModal.className = "modal hidden";
+    promptModal.id = "claudePromptModal";
+    promptModal.innerHTML = `
+      <div class="modal-content prompt-modal" role="dialog" aria-modal="true" aria-labelledby="claudePromptTitle">
+        <button type="button" class="modal-close-btn" data-close aria-label="Sluiten">&times;</button>
+        <h2 id="claudePromptTitle">Prompt voor Claude</h2>
+        <p class="text-muted">Pas eventueel iets aan, kopieer de tekst en plak hem in een nieuw Claude-gesprek. Naam en e-mailadres van de melder staan er bewust niet in.</p>
+        <label class="visually-hidden" for="claudePromptText">Prompt</label>
+        <textarea id="claudePromptText" rows="16" spellcheck="false"></textarea>
+        <label class="prompt-status-option">
+          <input type="checkbox" id="claudePromptSetBusy" checked>
+          Melding op "In behandeling" zetten
+        </label>
+        <div class="prompt-actions">
+          <button type="button" class="pill-btn outline" data-close>Annuleren</button>
+          <a class="pill-btn outline" href="https://claude.ai/new" target="_blank" rel="noopener noreferrer">Open Claude ↗</a>
+          <button type="button" class="pill-btn primary" id="claudePromptCopy">Kopieer prompt</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(promptModal);
+
+    const close = () => {
+      promptModal.classList.add("hidden");
+      document.body.classList.remove("modal-open");
+    };
+    promptModal.querySelectorAll("[data-close]").forEach((el) => el.addEventListener("click", close));
+    promptModal.addEventListener("click", (e) => {
+      if (e.target === promptModal) close();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !promptModal.classList.contains("hidden")) close();
+    });
+    promptModal._close = close;
+  }
+
+  const textarea = promptModal.querySelector("#claudePromptText");
+  const busyOption = promptModal.querySelector("#claudePromptSetBusy");
+  const busyLabel = busyOption.closest("label");
+  textarea.value = buildClaudePrompt(bug);
+
+  const isNew = bug.status === "Nieuw";
+  busyLabel.classList.toggle("hidden", !isNew);
+  busyOption.checked = isNew;
+
+  const copyBtn = promptModal.querySelector("#claudePromptCopy");
+  copyBtn.textContent = "Kopieer prompt";
+  copyBtn.onclick = async () => {
+    const ok = await copyText(textarea.value, textarea);
+    if (!ok) {
+      showToast("Kopiëren lukte niet; selecteer de tekst en kopieer hem handmatig.", "error", 4200);
+      return;
+    }
+    copyBtn.textContent = "Gekopieerd ✓";
+
+    if (isNew && busyOption.checked) {
+      try {
+        await update(ref(db, `bugs/${bug.id}`), {
+          status: "In behandeling",
+          bijgewerkt: new Date().toISOString()
+        });
+        showToast("Prompt gekopieerd · melding staat op In behandeling", "success");
+      } catch (error) {
+        console.error(error);
+        showToast("Prompt gekopieerd, maar de status kon niet worden bijgewerkt", "error", 4200);
+      }
+    } else {
+      showToast("Prompt gekopieerd", "success");
+    }
+  };
+
+  promptModal.classList.remove("hidden");
+  document.body.classList.add("modal-open");
+  setTimeout(() => copyBtn.focus(), 50);
+}
+
+async function copyText(text, fallbackEl) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    try {
+      fallbackEl.focus();
+      fallbackEl.select();
+      return document.execCommand("copy");
+    } catch {
+      return false;
+    }
+  }
 }
 
 // ----------------------------------------------------------------------

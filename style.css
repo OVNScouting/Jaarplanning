@@ -7005,3 +7005,66 @@ html[data-theme="dark"] #infotekst font[color="red"] {
     margin-top: 0.7rem;
   }
 }
+
+/* ---------- Prompt voor Claude (meldingencentrum) ---------- */
+.melding-ai {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius-small);
+  border: 1px dashed var(--border);
+}
+
+.melding-ai .text-muted {
+  font-size: 0.82rem;
+}
+
+.prompt-modal {
+  width: min(760px, 100%);
+}
+
+.prompt-modal h2 {
+  margin: 0 2rem 0.25rem 0;
+}
+
+.prompt-modal textarea {
+  min-height: 320px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  background: var(--input-bg);
+  color: var(--input-text);
+  resize: vertical;
+}
+
+.prompt-status-option {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.88rem;
+}
+
+.prompt-status-option input {
+  width: auto;
+  margin: 0;
+}
+
+.prompt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+.prompt-actions a.pill-btn {
+  text-decoration: none;
+}
+
+@media (max-width: 560px) {
+  .prompt-actions > * {
+    flex: 1 1 100%;
+  }
+}

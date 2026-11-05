@@ -104,6 +104,7 @@ async function approveRequestViaFunction(
     closeAccountRequestModal();
     await renderAccountRequests();
     await loadUsers();
+    loadAuditLog();
 
 
     const firstName =
@@ -319,6 +320,7 @@ async function updateAccountRequestStatus(
 
     closeAccountRequestModal();
     await renderAccountRequests();
+    loadAuditLog();
 
     showToast(
       "Aanvraag afgewezen",
@@ -439,6 +441,52 @@ waitForFirebase(() => {
 });
 
 
+const SPELTAK_KEYS = ["bevers", "welpen", "scouts", "explorers", "rovers", "stam"];
+const SPELTAK_LABELS = {
+  bevers: "Bevers",
+  welpen: "Welpen",
+  scouts: "Scouts",
+  explorers: "Explorers",
+  rovers: "Rovers",
+  stam: "Stam"
+};
+
+// Laatst ingelogd per uid (uit getAdminOverview). null = nooit.
+let LAST_SIGNIN = null;
+
+function formatLastLogin(uid) {
+  if (!LAST_SIGNIN) return "—";
+  if (!(uid in LAST_SIGNIN)) return "Geen login";
+  const ts = LAST_SIGNIN[uid];
+  if (!ts) return "Nog nooit";
+  const days = Math.floor((Date.now() - ts) / 86400000);
+  if (days <= 0) return "Vandaag";
+  if (days === 1) return "Gisteren";
+  if (days < 30) return `${days} dagen geleden`;
+  return new Date(ts).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" });
+}
+
+// Heeft dit account aandacht nodig? (nooit ingelogd, tijdelijk
+// wachtwoord, of al meer dan 120 dagen niet ingelogd)
+function needsAttention(uid, user) {
+  if (user.status === "inactive") return false;
+  if (user.mustChangePassword === true) return true;
+  if (!LAST_SIGNIN) return false;
+  const ts = LAST_SIGNIN[uid];
+  if (ts === null || !(uid in LAST_SIGNIN)) return true;
+  return Date.now() - ts > 120 * 86400000;
+}
+
+function roleChipsHtml(user) {
+  const chips = [];
+  if (user.roles?.admin) chips.push(`<li class="role-chip role-admin">Admin</li>`);
+  if (user.roles?.bestuur) chips.push(`<li class="role-chip role-bestuur">Bestuur</li>`);
+  speltakkenToArray(user.roles?.speltakken)
+    .filter(sp => SPELTAK_KEYS.includes(sp))
+    .forEach(sp => chips.push(`<li class="role-chip role-${sp}">${SPELTAK_LABELS[sp]}</li>`));
+  return chips.length ? chips.join("") : `<li class="role-chip role-none">Geen rol</li>`;
+}
+
 function renderUsers(users) {
   USERS_CACHE = users || {};
   const tbody = document.getElementById("userTable");
@@ -450,66 +498,89 @@ function renderUsers(users) {
     document.querySelectorAll("#userFilters input:checked")
   ).map(cb => cb.dataset.filter);
 
+  const search = (document.getElementById("userSearch")?.value || "")
+    .trim()
+    .toLowerCase();
+
+  const speltakFilters = filters.filter(f => SPELTAK_KEYS.includes(f));
+
   const rows = Object.entries(USERS_CACHE)
-    .filter(([_, u]) => {
-      // status / rol filters
-      if (filters.includes("inactive") && u.status !== "inactive") return false;
+    .filter(([uid, u]) => {
+      if (!u || typeof u !== "object") return false;
+
+      if (search) {
+        const haystack = `${u.fullName || ""} ${u.firstName || ""} ${u.lastName || ""} ${u.email || ""}`.toLowerCase();
+        if (!haystack.includes(search)) return false;
+      }
+
+      // Gedeactiveerde accounts alleen tonen als daarop gefilterd wordt.
+      if (filters.includes("inactive")) {
+        if (u.status !== "inactive") return false;
+      }
+
       if (filters.includes("admin") && !u.roles?.admin) return false;
       if (filters.includes("bestuur") && !u.roles?.bestuur) return false;
-
-      // speltak filters
-      const speltakFilters = filters.filter(f =>
-        ["bevers", "welpen", "scouts", "explorers", "rovers", "stam"].includes(f)
-      );
+      if (filters.includes("attention") && !needsAttention(uid, u)) return false;
 
       if (speltakFilters.length > 0) {
         const userSpeltakken = speltakkenToArray(u.roles?.speltakken);
-        const heeftMatch = speltakFilters.some(s => userSpeltakken.includes(s));
-
-        if (!heeftMatch) return false;
+        if (!speltakFilters.some(sp => userSpeltakken.includes(sp))) return false;
       }
 
       return true;
     })
     .sort((a, b) =>
-      (a[1].fullName || "").localeCompare(
-        b[1].fullName || "",
+      (a[1].fullName || a[1].email || "").localeCompare(
+        b[1].fullName || b[1].email || "",
         "nl",
         { sensitivity: "base" }
       )
     );
 
-  // Lege staat
+  const total = Object.keys(USERS_CACHE).length;
+  const countEl = document.getElementById("userCount");
+  if (countEl) {
+    countEl.textContent = rows.length === total
+      ? `${total} accounts`
+      : `${rows.length} van ${total} accounts`;
+  }
+
   const noUsersMsg = document.getElementById("noUsersMessage");
   if (noUsersMsg) {
     noUsersMsg.classList.toggle("hidden", rows.length > 0);
   }
 
-  // Render
   rows.forEach(([uid, user]) => {
     const tr = document.createElement("tr");
     tr.dataset.uid = uid;
 
     const isInactive = user.status === "inactive";
-    if (isInactive) tr.style.opacity = "0.5";
+    const attention = needsAttention(uid, user);
+    tr.classList.add("user-row");
+    if (isInactive) tr.classList.add("is-inactive");
+    if (uid === selectedUserId) tr.classList.add("is-selected");
 
-    tr.innerHTML = `
-<td>
-  ${escapeHtml(
+    const name =
       user.fullName ||
       `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
-      user.email
-  )}
-</td>
-      <td>
-        <span class="status-badge ${isInactive ? "status-inactive" : "status-active"}">
-          ${isInactive ? "Gedeactiveerd" : "Actief"}
-        </span>
+      user.email;
+
+    tr.innerHTML = `
+      <td class="user-name-cell">
+        <span class="user-name">${escapeHtml(name)}</span>
+        <span class="user-email">${escapeHtml(user.email || "")}</span>
+      </td>
+      <td><ul class="role-chips">${roleChipsHtml(user)}</ul></td>
+      <td class="user-login-cell">
+        ${isInactive
+          ? `<span class="status-badge status-inactive">Gedeactiveerd</span>`
+          : `${escapeHtml(formatLastLogin(uid))}${attention ? ` <span class="attention-dot" title="Aandacht nodig" aria-label="Aandacht nodig">●</span>` : ""}`}
       </td>
     `;
 
-    tr.classList.add("user-row");
-    tr.tabIndex = 0; // keyboard focus
+    tr.tabIndex = 0;
+    tr.setAttribute("role", "button");
+    tr.setAttribute("aria-label", `${name} openen`);
 
     tr.addEventListener("click", () => openUserPanel(uid));
     tr.addEventListener("keydown", (e) => {
@@ -520,9 +591,152 @@ function renderUsers(users) {
     });
 
     tbody.appendChild(tr);
-
   });
+
+  updateAccountsStat();
 }
+
+// ============================================================
+// OVERZICHT (tegels bovenaan)
+// ============================================================
+function setOverviewStat(key, value, sub = "", highlight = false) {
+  const valueEl = document.getElementById(`stat${key}Value`);
+  const subEl = document.getElementById(`stat${key}Sub`);
+  const card = document.getElementById(`stat${key}`);
+  if (valueEl) valueEl.textContent = String(value);
+  if (subEl) subEl.textContent = sub || "\u00a0";
+  card?.classList.toggle("needs-attention", !!highlight);
+}
+
+function updateAccountsStat() {
+  const entries = Object.entries(USERS_CACHE).filter(([, u]) => u && typeof u === "object");
+  const active = entries.filter(([, u]) => u.status !== "inactive");
+  const attention = active.filter(([uid, u]) => needsAttention(uid, u)).length;
+  setOverviewStat(
+    "Accounts",
+    active.length,
+    attention
+      ? `${attention} met aandacht nodig`
+      : LAST_SIGNIN ? "iedereen is actief" : "actieve accounts",
+    attention > 0
+  );
+}
+
+async function loadOverview() {
+  const app = getFirebaseApp();
+  const db = window._firebase.getDatabase(app);
+
+  // Open meldingen
+  try {
+    const snap = await window._firebase.get(window._firebase.ref(db, "bugs"));
+    const bugs = Object.values(snap.val() || {});
+    const nieuw = bugs.filter(b => !b.status || b.status === "Nieuw").length;
+    const bezig = bugs.filter(b => b.status === "In behandeling").length;
+    setOverviewStat(
+      "Bugs",
+      nieuw + bezig,
+      nieuw ? `${nieuw} nieuw, ${bezig} mee bezig` : bezig ? `${bezig} mee bezig` : "alles afgehandeld",
+      nieuw > 0
+    );
+  } catch (e) {
+    console.warn("Meldingen tellen mislukt:", e);
+    setOverviewStat("Bugs", "?", "kon niet laden");
+  }
+
+  // Jeugdleden per speltak (openbare lijst, verborgen leden niet meegeteld)
+  const listEl = document.getElementById("statLedenList");
+  if (listEl) {
+    try {
+      const counts = await Promise.all(
+        SPELTAK_KEYS.map(async sp => {
+          const snap = await window._firebase.get(
+            window._firebase.ref(db, `${sp}/public/jeugdleden`)
+          );
+          const leden = Object.values(snap.val() || {}).filter(l => l && !l.hidden);
+          return [sp, leden.length];
+        })
+      );
+      const total = counts.reduce((sum, [, n]) => sum + n, 0);
+      listEl.innerHTML =
+        counts.map(([sp, n]) => `
+          <a class="speltak-count speltak-${sp}" href="${sp}.html">
+            <span>${SPELTAK_LABELS[sp]}</span><strong>${n}</strong>
+          </a>`).join("") +
+        `<span class="speltak-count speltak-total"><span>Totaal</span><strong>${total}</strong></span>`;
+    } catch (e) {
+      console.warn("Leden tellen mislukt:", e);
+      listEl.innerHTML = `<span class="text-muted">Kon leden niet tellen.</span>`;
+    }
+  }
+
+  // Laatst ingelogd (Cloud Function; werkt pas na deploy)
+  try {
+    const result = await callFunction("getAdminOverview", {});
+    LAST_SIGNIN = result?.lastSignIn || {};
+    renderUsers(USERS_CACHE);
+    if (selectedUserId) fillLastLogin(selectedUserId);
+  } catch (e) {
+    console.warn("Inloggegevens niet beschikbaar:", e);
+  }
+}
+
+// ============================================================
+// LOGBOEK
+// ============================================================
+let auditLimit = 30;
+
+async function loadAuditLog() {
+  const list = document.getElementById("auditLogList");
+  const moreBtn = document.getElementById("auditLogMore");
+  if (!list) return;
+
+  try {
+    const app = getFirebaseApp();
+    const db = window._firebase.getDatabase(app);
+    const q = window._firebase.query(
+      window._firebase.ref(db, "auditLog"),
+      window._firebase.limitToLast(auditLimit + 1)
+    );
+    const snap = await window._firebase.get(q);
+    const entries = Object.values(snap.val() || {})
+      .sort((a, b) => (b.at || 0) - (a.at || 0));
+
+    const hasMore = entries.length > auditLimit;
+    const shown = entries.slice(0, auditLimit);
+
+    if (!shown.length) {
+      list.innerHTML = `<li class="text-muted">Nog geen wijzigingen vastgelegd. Nieuwe account- en rolwijzigingen verschijnen hier automatisch.</li>`;
+    } else {
+      list.innerHTML = shown.map(entry => {
+        const when = entry.at
+          ? new Date(entry.at).toLocaleString("nl-NL", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+          : "";
+        const details = Array.isArray(entry.details) && entry.details.length
+          ? `<ul class="audit-details">${entry.details.map(d => `<li>${escapeHtml(d)}</li>`).join("")}</ul>`
+          : "";
+        return `
+          <li class="audit-entry">
+            <div class="audit-head">
+              <strong>${escapeHtml(entry.action || "Wijziging")}</strong>
+              <span class="text-muted">${escapeHtml(entry.targetName || "")}</span>
+            </div>
+            ${details}
+            <div class="audit-meta text-muted">door ${escapeHtml(entry.actorName || "onbekend")} · ${escapeHtml(when)}</div>
+          </li>`;
+      }).join("");
+    }
+
+    moreBtn?.classList.toggle("hidden", !hasMore);
+  } catch (e) {
+    console.warn("Logboek laden mislukt:", e);
+    list.innerHTML = `<li class="text-muted">Het logboek kon niet worden geladen. (Zijn de nieuwe database rules al gepubliceerd?)</li>`;
+  }
+}
+
+document.getElementById("auditLogMore")?.addEventListener("click", () => {
+  auditLimit += 50;
+  loadAuditLog();
+});
 
 // ============================================================
 // ACCOUNTAANVRAGEN — MODALSTATUS
@@ -595,6 +809,15 @@ async function renderAccountRequests() {
 
     list.innerHTML = "";
 
+
+    setOverviewStat(
+      "Requests",
+      pendingRequests.length,
+      pendingRequests.length === 1
+        ? "wacht op beoordeling"
+        : "wachten op beoordeling",
+      pendingRequests.length > 0
+    );
 
     if (count) {
       count.textContent =
@@ -1408,16 +1631,31 @@ waitForFirebase(() => {
   panelView = document.getElementById("panelView");
   panelEdit = document.getElementById("panelEdit");
 
-  // Users laden
-  loadUsers();
+  // Users laden, daarna overzicht + logboek
+  loadUsers().finally(() => {
+    loadOverview();
+    loadAuditLog();
+  });
 
-  // Filters binden
+  // Filters en zoeken binden
   document
     .querySelectorAll("#userFilters input")
     .forEach(cb =>
-      cb.addEventListener("change", () => renderUsers(USERS_CACHE))
+      cb.addEventListener("change", () => {
+        cb.closest(".filter-chip")?.classList.toggle("is-active", cb.checked);
+        renderUsers(USERS_CACHE);
+      })
     );
+
+  document
+    .getElementById("userSearch")
+    ?.addEventListener("input", () => renderUsers(USERS_CACHE));
 });
+
+function fillLastLogin(uid) {
+  const el = document.getElementById("panelLastLogin");
+  if (el) el.textContent = formatLastLogin(uid);
+}
 
 
 function openUserPanel(uid) {
@@ -1425,31 +1663,36 @@ function openUserPanel(uid) {
   const u = USERS_CACHE[uid];
   if (!u) return;
 
-  // UI openen
   openSidePanel();
 
-  // View-state resetten
+  document.querySelectorAll("#userTable tr").forEach(tr =>
+    tr.classList.toggle("is-selected", tr.dataset.uid === uid)
+  );
+
   document.getElementById("panelView").classList.remove("hidden");
   document.getElementById("panelEdit").classList.add("hidden");
 
-  // Data vullen
   document.getElementById("panelName").textContent =
-    u.fullName || "—";
+    u.fullName || u.email || "—";
   document.getElementById("panelEmail").textContent = u.email || "—";
-  document.getElementById("panelStatus").textContent = u.status || "active";
+  document.getElementById("panelStatus").textContent =
+    u.status === "inactive" ? "Gedeactiveerd" : "Actief";
   document.getElementById("panelCreated").textContent =
     u.createdAt ? new Date(u.createdAt).toLocaleDateString("nl-NL") : "—";
+  fillLastLogin(uid);
 
-  const roles = document.getElementById("panelRoles");
-  roles.innerHTML = "";
+  document.getElementById("panelRoles").innerHTML = roleChipsHtml(u);
+  document.getElementById("panelTempPw")?.classList.toggle(
+    "hidden",
+    u.mustChangePassword !== true
+  );
 
-  if (u.roles?.admin) roles.innerHTML += "<li>Admin</li>";
-  if (u.roles?.bestuur) roles.innerHTML += "<li>Bestuur</li>";
-  const spArr = speltakkenToArray(u.roles?.speltakken);
-  if (spArr.length) {
-    spArr.forEach(s => {
-      roles.innerHTML += `<li>${escapeHtml(s)}</li>`;
-    });
+  // Jezelf verwijderen kan niet; knop dan uitschakelen.
+  const me = window._firebase.getAuth(getFirebaseApp()).currentUser?.uid;
+  const delBtn = document.getElementById("deleteUserBtn");
+  if (delBtn) {
+    delBtn.disabled = uid === me;
+    delBtn.title = uid === me ? "Je kunt je eigen account niet verwijderen" : "";
   }
 }
 
@@ -1482,6 +1725,9 @@ document.getElementById("editUserBtn").onclick = () => {
   const u = USERS_CACHE[selectedUserId];
   if (!u) return;
 
+  const nameInput = document.getElementById("editFullName");
+  if (nameInput) nameInput.value = u.fullName || "";
+
   editAdmin.checked = !!u.roles?.admin;
   editBestuur.checked = !!u.roles?.bestuur;
   editInactive.checked = u.status === "inactive";
@@ -1504,7 +1750,8 @@ document.getElementById("cancelEditBtn").onclick = () => {
   panelView.classList.remove("hidden");
 };
 
-document.getElementById("saveUserBtn").onclick = async () => {
+document.getElementById("panelEdit").addEventListener("submit", async (event) => {
+  event.preventDefault();
   const saveBtn = document.getElementById("saveUserBtn");
   const cancelBtn = document.getElementById("cancelEditBtn");
   const panel = document.getElementById("userSidePanel");
@@ -1518,8 +1765,18 @@ document.getElementById("saveUserBtn").onclick = async () => {
       document.querySelectorAll(".edit-speltak:checked")
     ).map(cb => cb.value);
 
+    const fullName =
+      (document.getElementById("editFullName")?.value || "").trim();
+
+    if (!fullName) {
+      showToast("Naam mag niet leeg zijn", "error");
+      document.getElementById("editFullName")?.focus();
+      return;
+    }
+
     await callFunction("updateUser", {
       uid: selectedUserId,
+      fullName,
       roles: {
         admin: editAdmin.checked,
         bestuur: editBestuur.checked,
@@ -1534,6 +1791,7 @@ document.getElementById("saveUserBtn").onclick = async () => {
     panelEdit.classList.add("hidden");
     panelView.classList.remove("hidden");
     showToast("Account bijgewerkt", "success");
+    loadAuditLog();
   } catch (e) {
     showToast(e?.message || "Opslaan mislukt", "error", 4200);
   } finally {
@@ -1541,7 +1799,7 @@ document.getElementById("saveUserBtn").onclick = async () => {
     if (cancelBtn) cancelBtn.disabled = false;
     setButtonLoading(saveBtn, false);
   }
-};
+});
 
 document.getElementById("deleteUserBtn").onclick = () => {
   const deleteModal = document.getElementById("confirmDeleteModal");
@@ -1560,17 +1818,15 @@ document.getElementById("deleteUserBtn").onclick = () => {
     deleteModal.classList.add("hidden"); // Sluit modal direct
 
     try {
-      const app = getFirebaseApp();
-      const db = window._firebase.getDatabase(app);
-      const userRef = window._firebase.ref(db, `users/${selectedUserId}`);
+      // Via de server: verwijdert login én profiel, en logt het.
+      await callFunction("deleteUserAccount", { uid: selectedUserId });
 
-      await window._firebase.remove(userRef);
-
-      showToast("Gebruiker succesvol verwijderd", "success");
+      showToast("Account verwijderd", "success");
       closeSidePanel();
-      loadUsers();
+      await loadUsers();
+      loadAuditLog();
     } catch (e) {
-      alert(e.message || "Verwijderen mislukt");
+      showToast(e?.message || "Verwijderen mislukt", "error", 4200);
     }
   };
 
@@ -1579,23 +1835,6 @@ document.getElementById("deleteUserBtn").onclick = () => {
     if (e.target === deleteModal) deleteModal.classList.add("hidden");
   };
 };
-
-// ===============================
-// Filters inklapbaar maken
-// ===============================
-const toggleBtn = document.getElementById("toggleUserFilters");
-const filtersEl = document.getElementById("userFilters");
-
-if (toggleBtn && filtersEl) {
-  toggleBtn.addEventListener("click", () => {
-    const isHidden = filtersEl.classList.contains("hidden");
-
-    filtersEl.classList.toggle("hidden", !isHidden);
-    toggleBtn.textContent = isHidden
-      ? "Verberg filters"
-      : "Toon filters";
-  });
-}
 
 document
   .getElementById("closeUserPanelBtn")

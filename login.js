@@ -171,6 +171,73 @@ function updateHeader() {
 window.updateHeader = updateHeader;
 
 // ======================================================================
+// BEHEER-TELLER (alleen admins): open aanvragen + nieuwe meldingen
+// ======================================================================
+async function updateAdminInbox() {
+  const existing = document.getElementById("adminInboxBadge");
+  const session = getSession();
+  const isAdmin = isLoggedIn() && session?.roles?.admin === true;
+
+  if (!isAdmin) {
+    existing?.remove();
+    return;
+  }
+
+  const container =
+    document.querySelector(".topbar-right-icons") ||
+    document.querySelector(".topbar-right");
+  if (!container || !window._firebase) return;
+
+  let requests = 0;
+  let nieuw = 0;
+
+  try {
+    const app = window._firebase.getApps().length
+      ? window._firebase.getApp()
+      : window._firebase.initializeApp(window.firebaseConfig);
+    const db = window._firebase.getDatabase(app);
+
+    const [reqSnap, bugSnap] = await Promise.all([
+      window._firebase.get(window._firebase.ref(db, "accountRequests")),
+      window._firebase.get(window._firebase.ref(db, "bugs"))
+    ]);
+
+    requests = Object.values(reqSnap.val() || {})
+      .filter(r => !r?.status || r.status === "pending").length;
+    nieuw = Object.values(bugSnap.val() || {})
+      .filter(b => !b?.status || b.status === "Nieuw").length;
+  } catch (err) {
+    console.warn("Beheer-teller laden mislukt:", err);
+    return;
+  }
+
+  const total = requests + nieuw;
+  const onAdminPage = /\/(admin|bug)\.html$/.test(window.location.pathname);
+
+  let badge = existing;
+  if (!badge) {
+    badge = document.createElement("a");
+    badge.id = "adminInboxBadge";
+    badge.className = "admin-inbox-badge";
+    container.insertBefore(badge, container.firstChild);
+  }
+
+  badge.href = requests ? "admin.html" : nieuw ? "bug.html" : "admin.html";
+  badge.classList.toggle("has-items", total > 0);
+  badge.classList.toggle("hidden", onAdminPage && total === 0);
+
+  const parts = [];
+  if (requests) parts.push(`${requests} ${requests === 1 ? "aanvraag" : "aanvragen"}`);
+  if (nieuw) parts.push(`${nieuw} ${nieuw === 1 ? "nieuwe melding" : "nieuwe meldingen"}`);
+
+  badge.textContent = total ? `Beheer · ${total}` : "Beheer";
+  badge.title = parts.length ? parts.join(", ") : "Niets nieuws in beheer";
+  badge.setAttribute("aria-label", parts.length ? `Beheer: ${parts.join(", ")}` : "Beheer");
+}
+
+window.updateAdminInbox = updateAdminInbox;
+
+// ======================================================================
 // FIREBASE INIT + AUTH LISTENER
 // ======================================================================
 function initFirebaseAuth(retries = 200) {
@@ -250,6 +317,7 @@ function initFirebaseAuth(retries = 200) {
 
     updateHeader();
     applyAuthVisibility();
+    updateAdminInbox();
     document.dispatchEvent(
       new CustomEvent("auth-changed", { detail: { loggedIn: true } })
     );

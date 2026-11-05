@@ -38,145 +38,36 @@
   <main class="container">
 
     <!-- ============================================================
-       INFO
+       OVERZICHT: wat heeft aandacht nodig?
   ============================================================ -->
-    <section class="info-block">
-      <h2>Beheeromgeving</h2>
-      <p class="text-muted">
-        Dit is de admin-omgeving. Alleen admins hebben toegang tot deze pagina.
-      </p>
+    <section class="admin-overview" aria-labelledby="adminOverviewTitle">
+      <h2 id="adminOverviewTitle" class="visually-hidden">Overzicht</h2>
 
-      <a href="bug.html" class="pill-btn outline" style="margin-bottom:0.75rem;">
-        Bugs 🐛
+      <a href="#accountRequestsTitle" class="admin-stat" id="statRequests">
+        <span class="admin-stat-label">Accountaanvragen</span>
+        <span class="admin-stat-value" id="statRequestsValue">–</span>
+        <span class="admin-stat-sub" id="statRequestsSub">wachten op beoordeling</span>
       </a>
-    </section>
 
-    <!-- ============================================================
-       GEBRUIKERS 
-  ============================================================ -->
-    <section class="planning-section">
-      <div class="section-header">
-        <h2>Gebruikers</h2>
-        <span class="text-muted">Beheer</span>
+      <a href="bug.html" class="admin-stat" id="statBugs">
+        <span class="admin-stat-label">Open meldingen</span>
+        <span class="admin-stat-value" id="statBugsValue">–</span>
+        <span class="admin-stat-sub" id="statBugsSub">&nbsp;</span>
+      </a>
+
+      <div class="admin-stat" id="statAccounts">
+        <span class="admin-stat-label">Accounts</span>
+        <span class="admin-stat-value" id="statAccountsValue">–</span>
+        <span class="admin-stat-sub" id="statAccountsSub">&nbsp;</span>
       </div>
 
-      <button id="toggleUserFilters" class="pill-btn outline" style="margin-bottom:0.75rem;">
-        Toon filters
-      </button>
-
-
-
-      <div id="userFilters" class="hidden" style="display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;">
-        <label>
-          <input type="checkbox" data-filter="admin" />
-          Admin
-        </label>
-        <label>
-          <input type="checkbox" data-filter="bestuur" />
-          Bestuur
-        </label>
-        <label>
-          <input type="checkbox" data-filter="inactive" />
-          Inactief
-        </label>
-        <label><input type="checkbox" data-filter="bevers"> Bevers</label>
-        <label><input type="checkbox" data-filter="welpen"> Welpen</label>
-        <label><input type="checkbox" data-filter="scouts"> Scouts</label>
-        <label><input type="checkbox" data-filter="explorers" /> Explorers</label>
-        <label><input type="checkbox" data-filter="rovers"> Rovers</label>
-        <label><input type="checkbox" data-filter="stam"> Stam</label>
-      </div>
-
-
-      <div style="display:flex;gap:1.5rem;align-items:flex-start;">
-        <!-- USERS TABLE -->
-        <div style="flex:2;min-width:0;">
-
-          <table class="planning-table">
-            <thead>
-              <tr>
-                <th>Naam</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="userTable">
-              <!-- Wordt gevuld via JS -->
-            </tbody>
-          </table>
-
-          <!-- Lege staat -->
-          <p id="noUsersMessage" class="text-muted hidden" style="margin-top:0.75rem;">
-            Geen gebruikers gevonden met deze filters.
-          </p>
-
+      <div class="admin-stat admin-stat-wide" id="statLeden">
+        <span class="admin-stat-label">Jeugdleden per speltak</span>
+        <div class="admin-speltak-counts" id="statLedenList" aria-live="polite">
+          <span class="text-muted">Laden…</span>
         </div>
-
-        <!-- USER SIDE PANEL -->
-        <aside id="userSidePanel" class="hidden" style="flex:1;border-left:1px solid #ddd;padding-left:1rem;">
-          <button id="closeUserPanelBtn" class="pill-btn outline" style="margin-bottom:1rem;width:100%;">
-            Sluiten
-          </button>
-
-          <h3 id="panelName">Gebruiker</h3>
-
-          <!-- VIEW MODE -->
-          <div id="panelView">
-            <p><strong>Email:</strong> <span id="panelEmail"></span></p>
-            <p><strong>Status:</strong> <span id="panelStatus"></span></p>
-            <p><strong>Aangemaakt:</strong> <span id="panelCreated"></span></p>
-
-            <p><strong>Rollen:</strong></p>
-            <ul id="panelRoles"></ul>
-
-            <button id="editUserBtn" class="pill-btn">Bewerken</button>
-            <button id="deleteUserBtn" class="pill-btn danger">
-              Account verwijderen
-            </button>
-          </div>
-
-          <!-- EDIT MODE -->
-          <div id="panelEdit" class="hidden">
-            <h4>Rollen</h4>
-            <h4>Speltakken</h4>
-
-            <label><input type="checkbox" class="edit-speltak" value="bevers"> Bevers</label><br>
-            <label><input type="checkbox" class="edit-speltak" value="welpen"> Welpen</label><br>
-            <label><input type="checkbox" class="edit-speltak" value="scouts"> Scouts</label><br>
-            <label><input type="checkbox" class="edit-speltak" value="explorers">Explorers</label><br>
-            <label><input type="checkbox" class="edit-speltak" value="rovers"> Rovers</label><br>
-            <label><input type="checkbox" class="edit-speltak" value="stam"> Stam</label>
-
-
-            <label>
-              <input type="checkbox" id="editAdmin" />
-              Admin
-            </label><br />
-
-            <label>
-              <input type="checkbox" id="editBestuur" />
-              Bestuur
-            </label>
-
-            <h4 style="margin-top:1rem;">Status</h4>
-
-            <label>
-              <input type="checkbox" id="editInactive" />
-              Inactief
-            </label>
-
-            <div style="margin-top:1.25rem;display:flex;gap:0.5rem;">
-              <button id="saveUserBtn" class="pill-btn primary">
-                Opslaan
-              </button>
-              <button id="cancelEditBtn" class="pill-btn outline">
-                Annuleren
-              </button>
-            </div>
-          </div>
-        </aside>
       </div>
     </section>
-
 
   <section
   class="planning-section account-requests-section"
@@ -209,6 +100,136 @@
     </p>
   </div>
 </section>
+
+    <section class="planning-section">
+      <div class="section-header">
+        <h2>Gebruikers</h2>
+        <span class="text-muted" id="userCount"></span>
+      </div>
+
+      <div class="user-toolbar">
+        <label class="visually-hidden" for="userSearch">Zoek gebruiker</label>
+        <input id="userSearch" class="meldingen-search" type="search" placeholder="Zoek op naam of e-mail…">
+
+        <div id="userFilters" class="meldingen-chips" role="group" aria-label="Filter op rol">
+          <label class="filter-chip"><input type="checkbox" data-filter="admin"> Admin</label>
+          <label class="filter-chip"><input type="checkbox" data-filter="bestuur"> Bestuur</label>
+          <label class="filter-chip"><input type="checkbox" data-filter="bevers"> Bevers</label>
+          <label class="filter-chip"><input type="checkbox" data-filter="welpen"> Welpen</label>
+          <label class="filter-chip"><input type="checkbox" data-filter="scouts"> Scouts</label>
+          <label class="filter-chip"><input type="checkbox" data-filter="explorers"> Explorers</label>
+          <label class="filter-chip"><input type="checkbox" data-filter="rovers"> Rovers</label>
+          <label class="filter-chip"><input type="checkbox" data-filter="stam"> Stam</label>
+          <label class="filter-chip"><input type="checkbox" data-filter="attention"> Aandacht nodig</label>
+          <label class="filter-chip"><input type="checkbox" data-filter="inactive"> Gedeactiveerd</label>
+        </div>
+      </div>
+
+      <div class="user-layout">
+        <!-- USERS TABLE -->
+        <div class="user-table-wrap">
+
+          <table class="planning-table user-table">
+            <thead>
+              <tr>
+                <th>Naam</th>
+                <th>Rollen</th>
+                <th>Laatst ingelogd</th>
+              </tr>
+            </thead>
+            <tbody id="userTable">
+              <!-- Wordt gevuld via JS -->
+            </tbody>
+          </table>
+
+          <!-- Lege staat -->
+          <p id="noUsersMessage" class="text-muted hidden" style="margin-top:0.75rem;">
+            Geen gebruikers gevonden met deze filters.
+          </p>
+
+        </div>
+
+        <!-- USER SIDE PANEL -->
+        <aside id="userSidePanel" class="user-side-panel hidden" aria-labelledby="panelName">
+          <button id="closeUserPanelBtn" class="modal-close-btn" type="button" aria-label="Paneel sluiten">&times;</button>
+
+          <h3 id="panelName">Gebruiker</h3>
+
+          <!-- WEERGAVE -->
+          <div id="panelView">
+            <dl class="panel-details">
+              <div><dt>E-mail</dt><dd id="panelEmail"></dd></div>
+              <div><dt>Status</dt><dd id="panelStatus"></dd></div>
+              <div><dt>Laatst ingelogd</dt><dd id="panelLastLogin">—</dd></div>
+              <div><dt>Aangemaakt</dt><dd id="panelCreated"></dd></div>
+            </dl>
+
+            <p class="panel-label">Rollen</p>
+            <ul id="panelRoles" class="role-chips"></ul>
+
+            <p id="panelTempPw" class="panel-warning hidden">
+              Heeft nog het tijdelijke wachtwoord (nog niet zelf gewijzigd).
+            </p>
+
+            <div class="panel-actions">
+              <button id="editUserBtn" class="pill-btn primary" type="button">Bewerken</button>
+              <button id="deleteUserBtn" class="pill-btn danger-outline" type="button">Account verwijderen</button>
+            </div>
+          </div>
+
+          <!-- BEWERKEN -->
+          <form id="panelEdit" class="panel-edit hidden">
+            <label class="panel-field">
+              Naam
+              <input id="editFullName" type="text" maxlength="80" autocomplete="off">
+            </label>
+
+            <fieldset class="panel-fieldset">
+              <legend>Speltakken</legend>
+              <label><input type="checkbox" class="edit-speltak" value="bevers"> Bevers</label>
+              <label><input type="checkbox" class="edit-speltak" value="welpen"> Welpen</label>
+              <label><input type="checkbox" class="edit-speltak" value="scouts"> Scouts</label>
+              <label><input type="checkbox" class="edit-speltak" value="explorers"> Explorers</label>
+              <label><input type="checkbox" class="edit-speltak" value="rovers"> Rovers</label>
+              <label><input type="checkbox" class="edit-speltak" value="stam"> Stam</label>
+            </fieldset>
+
+            <fieldset class="panel-fieldset">
+              <legend>Rollen</legend>
+              <label><input type="checkbox" id="editBestuur"> Bestuur</label>
+              <label><input type="checkbox" id="editAdmin"> Admin</label>
+            </fieldset>
+
+            <fieldset class="panel-fieldset">
+              <legend>Status</legend>
+              <label><input type="checkbox" id="editInactive"> Gedeactiveerd (kan niet meer inloggen)</label>
+            </fieldset>
+
+            <div class="panel-actions">
+              <button id="saveUserBtn" class="pill-btn primary" type="submit">Opslaan</button>
+              <button id="cancelEditBtn" class="pill-btn outline" type="button">Annuleren</button>
+            </div>
+          </form>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============================================================
+       LOGBOEK
+  ============================================================ -->
+    <section class="planning-section" aria-labelledby="auditLogTitle">
+      <div class="section-header">
+        <div>
+          <h2 id="auditLogTitle">Logboek</h2>
+          <p class="account-requests-subtitle">Account- en rolwijzigingen: wie, wat en wanneer.</p>
+        </div>
+      </div>
+      <ol id="auditLogList" class="audit-list" aria-live="polite">
+        <li class="text-muted">Logboek laden…</li>
+      </ol>
+      <button id="auditLogMore" type="button" class="pill-btn outline hidden">Meer tonen</button>
+    </section>
+
 
 
 <!-- ======================================================

@@ -110,17 +110,17 @@ function renderBugs() {
             <td style="padding: 12px;">
                 <strong style="display: block; color: var(--text-main);">${escapeHtml(bug.titel)}</strong>
                 <span style="color: var(--text-muted); font-size: 13px; display: block; margin-top: 2px;">${escapeHtml(bug.beschrijving)}</span>
-                <a href="${bug.pagina}" target="_blank" style="font-size: 11px; color: var(--blue); text-decoration: none; margin-top: 4px; display: inline-block;">Ga naar pagina ↗</a>
+                <a href="${/^https?:\/\//i.test(bug.pagina || "") ? escapeHtml(bug.pagina) : "#"}" target="_blank" rel="noopener noreferrer" style="font-size: 11px; color: var(--blue); text-decoration: none; margin-top: 4px; display: inline-block;">Ga naar pagina ↗</a>
             </td>
             <td style="padding: 12px;">
-                <select class="status-select" data-id="${bug.id}" style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px;">
+                <select class="status-select" data-id="${escapeHtml(bug.id)}" style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px;">
                     <option value="Nieuw" ${bug.status === 'Nieuw' ? 'selected' : ''}>Nieuw</option>
                     <option value="In behandeling" ${bug.status === 'In behandeling' ? 'selected' : ''}>In behandeling</option>
                     <option value="Opgelost" ${bug.status === 'Opgelost' ? 'selected' : ''}>Opgelost</option>
                 </select>
             </td>
             <td style="padding: 12px; text-align: right;">
-                <button class="delete-bug-btn" data-id="${bug.id}" style="background: none; border: none; color: #f43e3e; cursor: pointer; font-size: 13px; font-weight: 600;">Verwijderen</button>
+                <button class="delete-bug-btn" data-id="${escapeHtml(bug.id)}" style="background: none; border: none; color: #f43e3e; cursor: pointer; font-size: 13px; font-weight: 600;">Verwijderen</button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -144,6 +144,11 @@ function renderBugs() {
 }
 
 function escapeHtml(text) {
-    if (!text) return "";
-    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    if (text === undefined || text === null) return "";
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
 }

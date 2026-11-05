@@ -1,4 +1,16 @@
 
+// Tekst veilig in HTML zetten (namen, e-mailadressen uit aanvragen e.d.).
+// Accountaanvragen kunnen door iedereen worden ingediend, dus die
+// gegevens nooit ongefilterd via innerHTML tonen.
+function escapeHtml(value = "") {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function getFirebaseApp() {
   return window._firebase.getApps().length
     ? window._firebase.getApp()
@@ -71,115 +83,21 @@ async function approveRequestViaFunction(
       );
     }
 
+
+    /*
+     * Het account wordt op de server aangemaakt (Cloud Function
+     * approveAccountRequest). Daardoor kan zelf-registratie in
+     * Firebase uit, krijgt elk account een uniek tijdelijk
+     * wachtwoord, en wordt de aanvraag in dezelfde stap verwerkt.
+     */
+    const result =
+      await callFunction(
+        "approveAccountRequest",
+        { requestId }
+      );
+
     const tempPassword =
-      "Welkom48!";
-
-
-    // Maak gebruiker aan zonder de admin uit te loggen.
-    const secondaryAppName =
-      `SecondaryAuthApp-${Date.now()}`;
-
-    const secondaryApp =
-      window._firebase.initializeApp(
-        window.firebaseConfig,
-        secondaryAppName
-      );
-
-    const secondaryAuth =
-      window._firebase.getAuth(
-        secondaryApp
-      );
-
-    let userCredential = null;
-
-    try {
-      userCredential =
-        await window._firebase
-          .createUserWithEmailAndPassword(
-            secondaryAuth,
-            email,
-            tempPassword
-          );
-
-    } catch (authError) {
-      if (
-        authError.code !==
-        "auth/email-already-in-use"
-      ) {
-        throw new Error(
-          "Auth-registratie mislukt: " +
-          authError.message
-        );
-      }
-
-      console.warn(
-        "E-mailadres bestaat al in Firebase Authentication. Alleen de databasegegevens worden verwerkt."
-      );
-
-    } finally {
-      try {
-        if (
-          window._firebase.deleteApp
-        ) {
-          await window._firebase.deleteApp(
-            secondaryApp
-          );
-        }
-      } catch (cleanupError) {
-        console.warn(
-          "Tijdelijke Firebase-app kon niet worden verwijderd:",
-          cleanupError
-        );
-      }
-    }
-
-
-    const newUid =
-      userCredential?.user?.uid ||
-      requestId;
-
-
-    // Maak of actualiseer het gebruikersprofiel.
-    await window._firebase.set(
-      window._firebase.ref(
-        db,
-        `users/${newUid}`
-      ),
-      {
-        fullName:
-          requestData.fullName || "",
-
-        email,
-
-        status: "active",
-
-        createdAt:
-          Date.now(),
-
-        roles: {
-          admin:
-            !!requestData
-              .requestedRoles
-              ?.admin,
-
-          bestuur:
-            !!requestData
-              .requestedRoles
-              ?.bestuur,
-
-          speltakken:
-            requestData.speltakken || {}
-        }
-      }
-    );
-
-
-    // Verwijder de afgehandelde aanvraag.
-    await window._firebase.set(
-      requestRef,
-      null
-    );
-
+      result?.tempPassword || null;
 
     rowEl?.remove();
 
@@ -199,16 +117,25 @@ async function approveRequestViaFunction(
     const mailSubject =
       "Je account voor de OVN Jaarplanning is actief!";
 
-    const mailBody =
-      `Heyhoi ${firstName},\n\n` +
-      `Je account voor de Jaarplanning van OVN is zojuist goedgekeurd!\n\n` +
-      `Je kunt nu inloggen met de volgende gegevens:\n` +
-      `- Website: https://ovnjaarplanning.nl\n` +
-      `- Gebruikersnaam: ${email}\n` +
-      `- Tijdelijk wachtwoord: ${tempPassword}\n\n` +
-      `Pas direct je wachtwoord aan na je eerste keer inloggen.\n\n` +
-      `Met vriendelijke groet,\n` +
-      `De Admin`;
+    // Bestond het account al? Dan blijft het eigen wachtwoord
+    // gewoon geldig en sturen we geen tijdelijk wachtwoord mee.
+    const mailBody = tempPassword
+      ? `Heyhoi ${firstName},\n\n` +
+        `Je account voor de Jaarplanning van OVN is zojuist goedgekeurd!\n\n` +
+        `Je kunt nu inloggen met de volgende gegevens:\n` +
+        `- Website: https://ovnjaarplanning.nl\n` +
+        `- Gebruikersnaam: ${email}\n` +
+        `- Tijdelijk wachtwoord: ${tempPassword}\n\n` +
+        `Na je eerste keer inloggen kies je direct een eigen wachtwoord.\n\n` +
+        `Met vriendelijke groet,\n` +
+        `De Admin`
+      : `Heyhoi ${firstName},\n\n` +
+        `Je aanvraag voor de Jaarplanning van OVN is goedgekeurd!\n\n` +
+        `Je had al een account, dus je kunt inloggen op https://ovnjaarplanning.nl ` +
+        `met je bestaande e-mailadres (${email}) en wachtwoord.\n` +
+        `Wachtwoord vergeten? Gebruik dan "Wachtwoord vergeten?" in het inlogscherm.\n\n` +
+        `Met vriendelijke groet,\n` +
+        `De Admin`;
 
 
     showCopyModal(
@@ -263,13 +190,13 @@ function showCopyModal(toEmail, subject, body) {
   modal.innerHTML = `
     <div class="modal-content" style="max-width: 600px; text-align: left;">
       <h3>Account goedgekeurd! 🎉</h3>
-      <p>Het account is nu actief in de database. Stuur handmatig een mailtje naar <strong>${toEmail}</strong> met de onderstaande gegevens:</p>
+      <p>Het account is nu actief in de database. Stuur handmatig een mailtje naar <strong>${escapeHtml(toEmail)}</strong> met de onderstaande gegevens:</p>
       
       <label><strong>Onderwerp:</strong></label>
-      <input type="text" value="${subject}" readonly style="width:100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
+      <input type="text" value="${escapeHtml(subject)}" readonly style="width:100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
       
       <label><strong>Inhoud:</strong></label>
-      <textarea readonly rows="10" style="width:100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: sans-serif;">${body}</textarea>
+      <textarea readonly rows="10" style="width:100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: sans-serif;">${escapeHtml(body)}</textarea>
       
       <div class="modal-actions" style="margin-top: 15px;">
         <button id="btnOpenMail" class="pill-btn outline">Open Mail Programma</button>
@@ -568,9 +495,11 @@ function renderUsers(users) {
 
     tr.innerHTML = `
 <td>
-  ${user.fullName ||
+  ${escapeHtml(
+      user.fullName ||
       `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
-      user.email}
+      user.email
+  )}
 </td>
       <td>
         <span class="status-badge ${isInactive ? "status-inactive" : "status-active"}">
@@ -1519,7 +1448,7 @@ function openUserPanel(uid) {
   const spArr = speltakkenToArray(u.roles?.speltakken);
   if (spArr.length) {
     spArr.forEach(s => {
-      roles.innerHTML += `<li>${s}</li>`;
+      roles.innerHTML += `<li>${escapeHtml(s)}</li>`;
     });
   }
 }

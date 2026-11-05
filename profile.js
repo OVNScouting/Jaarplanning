@@ -385,10 +385,22 @@ document.addEventListener(
     database =
       window._firebase.getDatabase(app);
 
+    /*
+     * Alleen een verplichte wijziging (zonder huidig wachtwoord)
+     * als dat echt nodig is: het account heeft mustChangePassword
+     * in de database, of er is net met het oude standaard-
+     * wachtwoord ingelogd. Alleen de URL-parameter is niet genoeg;
+     * anders kon iedereen met toegang tot een open sessie het
+     * wachtwoord wijzigen zonder het huidige te kennen.
+     */
     const forcePasswordChange =
       new URLSearchParams(
         window.location.search
-      ).get("force_pw_change") === "true";
+      ).get("force_pw_change") === "true" &&
+      (
+        session.mustChangePassword === true ||
+        window.hasPendingForcedPasswordChange?.() === true
+      );
 
     if (forcePasswordChange) {
       pwWarning?.classList.remove("hidden");
@@ -560,6 +572,38 @@ passwordUpdateForm?.addEventListener(
           user,
           newValue
         );
+
+      // Verplichte wijziging is afgerond: vlag opruimen.
+      window.clearForcedPasswordChange?.();
+
+      if (forcedPasswordChange && database) {
+        try {
+          await window._firebase.set(
+            window._firebase.ref(
+              database,
+              `users/${user.uid}/mustChangePassword`
+            ),
+            null
+          );
+        } catch (flagError) {
+          // Niet fataal: het wachtwoord is wel gewijzigd.
+          console.warn(
+            "Kon mustChangePassword niet opruimen:",
+            flagError
+          );
+        }
+
+        const session = window.getAuthSession?.();
+        if (session) {
+          session.mustChangePassword = false;
+          try {
+            localStorage.setItem(
+              "ovn_auth_session",
+              JSON.stringify(session)
+            );
+          } catch {}
+        }
+      }
 
       closeModal(pwUpdateModal);
 

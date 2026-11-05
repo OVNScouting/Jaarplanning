@@ -1,5 +1,6 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
+const crypto = require("crypto");
 
 admin.initializeApp();
 
@@ -17,6 +18,53 @@ async function assertAdmin(auth) {
   if (!snapshot.exists() || snapshot.val() !== true) {
     throw new HttpsError("permission-denied", "Alleen admins hebben toegang tot deze actie.");
   }
+}
+
+const KNOWN_SPELTAKKEN = ["bevers", "welpen", "scouts", "explorers", "rovers", "stam"];
+
+/**
+ * Zet speltakken (array, {0:"bevers"} of {bevers:true}) om naar
+ * één vaste vorm: { bevers: true, welpen: false, ... }
+ */
+function normalizeSpeltakken(raw) {
+  const result = {};
+  const values = raw && typeof raw === "object" ? Object.values(raw) : [];
+  const asList = Array.isArray(raw) || values.every((v) => typeof v === "string")
+    ? values
+    : null;
+
+  KNOWN_SPELTAKKEN.forEach((sp) => {
+    result[sp] = asList ? asList.includes(sp) : !!(raw && raw[sp]);
+  });
+  return result;
+}
+
+/**
+ * Uniek, goed leesbaar tijdelijk wachtwoord (geen 0/O/1/l/I).
+ * Voorheen kreeg iedereen hetzelfde vaste wachtwoord.
+ */
+function generateTempPassword(length = 12) {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  const bytes = crypto.randomBytes(length);
+  let out = "";
+  for (let i = 0; i < length; i++) out += alphabet[bytes[i] % alphabet.length];
+  return out.slice(0, 4) + "-" + out.slice(4, 8) + "-" + out.slice(8);
+}
+
+/**
+ * Is dit een actief account met een profiel in /users?
+ * (Een los Firebase Auth-account zonder goedgekeurde aanvraag telt niet.)
+ */
+async function assertActiveMember(auth) {
+  if (!auth) {
+    throw new HttpsError("unauthenticated", "Je moet ingelogd zijn.");
+  }
+  const snap = await admin.database().ref(`users/${auth.uid}`).get();
+  const user = snap.val();
+  if (!user || user.status === "inactive") {
+    throw new HttpsError("permission-denied", "Je account is (nog) niet actief.");
+  }
+  return user;
 }
 
 /**
@@ -39,19 +87,7 @@ exports.updateUser = onCall(async (request) => {
 
     // Omzetten van aangevinkte lijst naar boolean-object:
     // Resultaat: { bevers: true, welpen: false, scouts: false, explorers: false, rovers: false, stam: true }
-    const knownSpeltakken = ["bevers", "welpen", "scouts", "explorers", "rovers", "stam"];
-    const rawSpeltakken = roles?.speltakken;
-
-    const speltakkenObj = {};
-    knownSpeltakken.forEach((sp) => {
-      if (Array.isArray(rawSpeltakken)) {
-        speltakkenObj[sp] = rawSpeltakken.includes(sp);
-      } else if (rawSpeltakken && typeof rawSpeltakken === "object") {
-        speltakkenObj[sp] = !!rawSpeltakken[sp];
-      } else {
-        speltakkenObj[sp] = false;
-      }
-    });
+    const speltakkenObj = normalizeSpeltakken(roles?.speltakken);
 
     // 1. Claims bijwerken in Firebase Auth
     await admin.auth().setCustomUserClaims(uid, {
@@ -83,9 +119,9 @@ exports.updateUser = onCall(async (request) => {
 exports.approveAccountRequest = onCall(async (request) => {
   await assertAdmin(request.auth);
 
-  const { requestId } = request.data;
-  if (!requestId) {
-    throw new HttpsError("invalid-argument", "requestId ontbreekt.");
+  const { requestId } = request.data || {};
+  if (typeof requestId !== "string" || !/^[A-Za-z0-9_-]+$/.test(requestId)) {
+    throw new HttpsError("invalid-argument", "requestId ontbreekt of is ongeldig.");
   }
 
   const db = admin.database();
@@ -97,59 +133,82 @@ exports.approveAccountRequest = onCall(async (request) => {
   }
 
   const accountRequest = snapshot.val();
-  const { email, fullName, requestedRoles, speltakken } = accountRequest;
+  const email = String(accountRequest.email || "").trim().toLowerCase();
+  const fullName = String(accountRequest.fullName || "").trim();
+
+  if (!email) {
+    throw new HttpsError("invalid-argument", "De aanvraag bevat geen e-mailadres.");
+  }
+
+  // Rollen komen uit de aanvraag zoals de admin die in het
+  // beoordelingsscherm heeft gecontroleerd/aangepast.
+  const roles = {
+    admin: !!accountRequest.requestedRoles?.admin,
+    bestuur: !!accountRequest.requestedRoles?.bestuur,
+    speltakken: normalizeSpeltakken(accountRequest.speltakken)
+  };
 
   try {
-    let userRecord;
-    // Genereer een tijdelijk wachtwoord dat we zo teruggeven aan de admin
-    const tempPassword = Math.random().toString(36).slice(-8) + "A1!";
+    let userRecord = null;
+    let tempPassword = null;
+    let existing = false;
 
     try {
       userRecord = await admin.auth().getUserByEmail(email);
+      existing = true;
     } catch (error) {
-      if (error.code === "auth/user-not-found") {
-        userRecord = await admin.auth().createUser({
-          email,
-          displayName: fullName,
-          password: tempPassword,
-          emailVerified: true
-        });
-      } else {
-        throw error;
-      }
+      if (error.code !== "auth/user-not-found") throw error;
+    }
+
+    if (!userRecord) {
+      tempPassword = generateTempPassword();
+      userRecord = await admin.auth().createUser({
+        email,
+        displayName: fullName || undefined,
+        password: tempPassword,
+        emailVerified: true
+      });
     }
 
     const uid = userRecord.uid;
 
-    // Claims instellen
-    const claims = {
-      admin: !!requestedRoles?.admin,
-      bestuur: !!requestedRoles?.bestuur
-    };
-    await admin.auth().setCustomUserClaims(uid, claims);
+    await admin.auth().setCustomUserClaims(uid, {
+      admin: roles.admin,
+      bestuur: roles.bestuur
+    });
 
-    // Profiel opslaan in database
-    const userPayload = {
+    // update i.p.v. set: bij een bestaand account blijven andere
+    // velden (zoals gekoppelde leden) behouden.
+    const profile = {
       fullName,
       email,
       status: "active",
-      createdAt: admin.database.ServerValue.TIMESTAMP,
-      roles: {
-        admin: claims.admin,
-        bestuur: claims.bestuur,
-        speltakken: speltakken || []
-      }
+      roles
     };
-    await db.ref(`users/${uid}`).set(userPayload);
+    if (!existing) {
+      profile.createdAt = admin.database.ServerValue.TIMESTAMP;
+      profile.mustChangePassword = true;
+    }
 
-    // Verwijder uit de wachtrij
-    await requestRef.remove();
+    await db.ref().update({
+      [`users/${uid}/fullName`]: profile.fullName,
+      [`users/${uid}/email`]: profile.email,
+      [`users/${uid}/status`]: profile.status,
+      [`users/${uid}/roles`]: profile.roles,
+      ...(existing ? {} : {
+        [`users/${uid}/createdAt`]: profile.createdAt,
+        [`users/${uid}/mustChangePassword`]: true
+      }),
+      [`accountRequests/${requestId}`]: null
+    });
 
-    // Geef het wachtwoord terug aan de frontend zodat de admin dit kan delen
+    // Het tijdelijke wachtwoord gaat alleen terug naar de admin
+    // die goedkeurt; het wordt nergens opgeslagen.
     return {
       success: true,
       uid,
-      tempPassword: tempPassword
+      existing,
+      tempPassword
     };
 
   } catch (err) {
@@ -192,13 +251,10 @@ exports.rejectAccountRequest = onCall(async (request) => {
 const SPELTAKKEN_DASHBOARD = ["bevers", "welpen", "scouts", "explorers", "rovers", "stam"];
 
 exports.getGlobalDashboard = onCall({ cors: true }, async (request) => {
-  // 1. Authenticatie-check: is de gebruiker ingelogd?
-  if (!request.auth) {
-    throw new HttpsError(
-      "unauthenticated",
-      "Je moet ingelogd zijn om het dashboard te bekijken."
-    );
-  }
+  // 1. Alleen actieve, goedgekeurde accounts (met profiel in /users).
+  //    Alleen "ingelogd" is niet genoeg: een los aangemaakt
+  //    Firebase-account zou anders alle privé-planningen zien.
+  await assertActiveMember(request.auth);
 
   try {
     const dbRef = admin.database().ref();

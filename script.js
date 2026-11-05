@@ -3,6 +3,9 @@
    ====================================================================== */
 import {
     sanitizeText,
+    escapeHtml,
+    sanitizeHtml,
+    linkifyText,
     todayISO,
     isPast,
     isFutureOrToday,
@@ -492,14 +495,14 @@ function openMemberActionChoice({
 
             button.innerHTML = `
                 <span class="member-action-choice-option-title">
-                    ${option.title}
+                    ${escapeHtml(option.title)}
                 </span>
 
                 ${
                     option.description
                         ? `
                             <span class="member-action-choice-option-description">
-                                ${option.description}
+                                ${escapeHtml(option.description)}
                             </span>
                         `
                         : ""
@@ -3173,11 +3176,18 @@ function applyModeVisibility() {
         const isLeidingCheck = !isOuder();
 
         // Logica voor welke opties we tonen
-        const opties = [
-            { val: "2025-2026", label: "25/26" },
-            { val: "2026-2027", label: "26/27" }
-            // Voeg hier eventueel dynamisch meer jaren toe
-        ];
+        // Automatisch: vanaf 2025-2026 t/m het seizoen na het huidige.
+        // (Voorheen stond hier een vaste lijst t/m 26/27, waardoor
+        // 27/28 nooit verscheen.)
+        const huidigSeizoen = getSeizoenVanDatum(todayISO());
+        const huidigStartJaar = Number(huidigSeizoen.split("-")[0]);
+        const opties = [];
+        for (let jaar = 2025; jaar <= huidigStartJaar + 1; jaar++) {
+            opties.push({
+                val: `${jaar}-${jaar + 1}`,
+                label: `${String(jaar).slice(2)}/${String(jaar + 1).slice(2)}`
+            });
+        }
 
         let html = `<label>Seizoen:</label><select id="filterSeizoen" class="cell-select">`;
 
@@ -3563,8 +3573,11 @@ function renderEverything() {
    INFO BLOK
    ====================================================================== */
 function loadInfo() {
-    infoTekst.innerHTML = data.infotekst || "";
-    infoEdit.innerHTML = data.infotekst || "";
+    // Ook bij het tonen opschonen: beschermt tegen oude of
+    // rechtstreeks in de database gezette HTML.
+    const veilig = sanitizeHtml(data.infotekst || "");
+    infoTekst.innerHTML = veilig;
+    infoEdit.innerHTML = veilig;
 }
 
 function toggleInfoEdit() {
@@ -3578,12 +3591,13 @@ function toggleInfoEdit() {
         infoEditButton.textContent = "Opslaan info";
     } else {
         // Opslaan
-        const sanitized = sanitizeText(infoEdit.innerHTML);
+        const sanitized = sanitizeHtml(infoEdit.innerHTML);
 
-        Promise.all([
-            update(ref(db, speltak), { infotekst: sanitized }),
-            update(ref(db, PUBLIC_ROOT), { infotekst: sanitized })
-        ]).then(() => {
+        // Eén atomische update: privé en publiek lopen nooit uit elkaar.
+        update(ref(db), {
+            [`${speltak}/infotekst`]: sanitized,
+            [`${PUBLIC_ROOT}/infotekst`]: sanitized
+        }).then(() => {
             // Lokale state en weergave direct bijwerken
             data.infotekst = sanitized;
             infoTekst.innerHTML = sanitized;
@@ -3592,6 +3606,15 @@ function toggleInfoEdit() {
             infoEditorWrapper.classList.add("hidden");
             infoTekst.classList.remove("hidden");
             infoEditButton.textContent = "Info bewerken";
+        }).catch(error => {
+            // Voorheen faalde opslaan stil; nu blijft de editor open
+            // zodat de tekst niet verloren gaat.
+            console.error("Info opslaan mislukt:", error);
+            infoEditActive = true;
+            toonMelding(
+                "Opslaan mislukt",
+                "De informatie kon niet worden opgeslagen. Controleer je verbinding en probeer het opnieuw."
+            );
         });
     }
 }
@@ -3651,8 +3674,8 @@ function renderLedenbeheerScouts() {
         const header = document.createElement("div");
         header.className = `ploeg-header ploeg-${ploeg}`;
         header.innerHTML = icon
-            ? `<img src="${icon}" class="ploeg-icoon"> ${label}`
-            : `${label}`;
+            ? `<img src="${escapeHtml(icon)}" class="ploeg-icoon" alt=""> ${escapeHtml(label)}`
+            : escapeHtml(label);
         jeugdContainer.appendChild(header);
 
         leden
@@ -3685,14 +3708,14 @@ li.innerHTML = `
     <button
         type="button"
         class="member-row-button"
-        aria-label="${obj.naam} openen"
+        aria-label="${escapeHtml(obj.naam)} openen"
         title="${obj.hidden
-            ? `${obj.naam} — verborgen`
-            : obj.naam
+            ? `${escapeHtml(obj.naam)} — verborgen`
+            : escapeHtml(obj.naam)
         }"
     >
         <span class="member-row-name">
-            ${obj.naam}
+            ${escapeHtml(obj.naam)}
         </span>
 
         ${
@@ -3766,19 +3789,16 @@ memberButton?.addEventListener(
             );
             if (!ok) return;
 
-            await update(ref(db, `${speltak}/jeugdleden/${dragged.id}`), {
-                Ploeg: newPloeg,
-                PL: false,
-                APL: false,
-                volgorde: 999
-            });
-
-            await update(ref(db, `${PUBLIC_ROOT}/jeugdleden/${dragged.id}`), {
-                Ploeg: newPloeg,
-                PL: false,
-                APL: false,
-                volgorde: 999
-            });
+            // Eén atomische update voor privé én publiek.
+            const ploegUpdates = {};
+            for (const root of [speltak, PUBLIC_ROOT]) {
+                const base = `${root}/jeugdleden/${dragged.id}`;
+                ploegUpdates[`${base}/Ploeg`] = newPloeg;
+                ploegUpdates[`${base}/PL`] = false;
+                ploegUpdates[`${base}/APL`] = false;
+                ploegUpdates[`${base}/volgorde`] = 999;
+            }
+            await update(ref(db), ploegUpdates);
 
             return loadEverything();
 
@@ -3939,7 +3959,7 @@ function addHeaders() {
             if (j.PL) icon = "✪ ";
             else if (j.APL) icon = "☆ ";
 
-            th.innerHTML = `<div class="name-vertical">${icon}${j.naam}</div>`;
+            th.innerHTML = `<div class="name-vertical">${icon}${escapeHtml(j.naam)}</div>`;
             trTop.appendChild(th);
         });
     } else {
@@ -4001,7 +4021,7 @@ function addHeaders() {
                 const th = document.createElement("th");
                 th.classList.add("col-leiding");
                 if (isOuder()) th.classList.add("hide-view");
-                th.innerHTML = `<div class="name-vertical">${l.naam}</div>`;
+                th.innerHTML = `<div class="name-vertical">${escapeHtml(l.naam)}</div>`;
                 trTop.appendChild(th);
             });
         } else {
@@ -4101,8 +4121,8 @@ function renderEmptyTableState(kind) {
 
     td.innerHTML = `
     <div class="empty-state">
-      <div class="empty-title">${title}</div>
-      <div class="empty-body">${body}</div>
+      <div class="empty-title">${escapeHtml(title)}</div>
+      <div class="empty-body">${escapeHtml(body)}</div>
     </div>
   `;
 
@@ -4121,7 +4141,7 @@ function showUndoBanner(message, onUndo) {
     }
 
     banner.innerHTML = `
-        <span>${message}</span>
+        <span>${escapeHtml(message)}</span>
         <button id="undoDeleteBtn">Ongedaan maken</button>
     `;
 
@@ -4692,12 +4712,12 @@ function makeEditableCell(o, field, extraClass = "", type = "text") {
         if (o.typeOpkomst === "kamp" && o.einddatum) {
             td.innerHTML = `
                 <span class="date-weekday">${weekdag}</span>
-                <span>${formatDateRange(value, o.einddatum)}</span>
+                <span>${escapeHtml(formatDateRange(value, o.einddatum))}</span>
             `;
         } else {
             td.innerHTML = `
                 <span class="date-weekday">${weekdag}</span>
-                <span>${formatDateDisplay(value)}</span>
+                <span>${escapeHtml(formatDateDisplay(value))}</span>
             `;
         }
     } else {
@@ -5491,8 +5511,8 @@ function toonMelding(titel, tekst) {
         // Zorg voor de HTML structuur
         overlay.innerHTML = `
             <div class="popup-box">
-                <h3>${titel}</h3>
-                <p>${tekst}</p>
+                <h3>${escapeHtml(titel)}</h3>
+                <p>${escapeHtml(tekst)}</p>
                 <button id="ok-btn">OK</button>
             </div>
         `;
@@ -5759,15 +5779,15 @@ function makeMemberRow(obj, type) {
         <button
             type="button"
             class="member-row-button"
-            aria-label="${obj.naam} openen"
+            aria-label="${escapeHtml(obj.naam)} openen"
             title="${
                 obj.hidden
-                    ? `${obj.naam} — verborgen`
-                    : obj.naam
+                    ? `${escapeHtml(obj.naam)} — verborgen`
+                    : escapeHtml(obj.naam)
             }"
         >
             <span class="member-row-name">
-                ${obj.naam}
+                ${escapeHtml(obj.naam)}
             </span>
         </button>
     `;
@@ -6047,7 +6067,8 @@ function handleMemberAction(obj, type, act) {
 
     const path = type === "jeugd" ? "jeugdleden" : "leiding";
     const list = type === "jeugd" ? jeugd : leiding;
-    const baseRef = ref(db, `${speltak}/${path}/${obj.id}`);
+    const basePath = `${speltak}/${path}/${obj.id}`;
+    const baseRef = ref(db, basePath);
 
     // Bewerken van lid
     if (act === "edit") {
@@ -6060,22 +6081,34 @@ function handleMemberAction(obj, type, act) {
     // Verwijderen
     if (act === "del") {
         if (confirm(`Verwijder ${obj.naam}?`)) {
-            Promise.all([
-                set(baseRef, null),
-                type === "jeugd" ? set(ref(db, `${PUBLIC_ROOT}/jeugdleden/${obj.id}`), null) : Promise.resolve()
-            ]).then(loadEverything);
+            const delUpdates = { [basePath]: null };
+            if (type === "jeugd") {
+                delUpdates[`${PUBLIC_ROOT}/jeugdleden/${obj.id}`] = null;
+            }
+            update(ref(db), delUpdates)
+                .then(loadEverything)
+                .catch(error => {
+                    console.error("Verwijderen lid mislukt:", error);
+                    alert("Verwijderen is mislukt. Probeer het opnieuw.");
+                });
         }
         return;
     }
 
     // Verborgen / zichtbaar wisselen
     if (act === "toggle") {
-        Promise.all([
-            update(baseRef, { hidden: !obj.hidden }),
-            type === "jeugd"
-                ? update(ref(db, `${PUBLIC_ROOT}/jeugdleden/${obj.id}`), { hidden: !obj.hidden })
-                : Promise.resolve()
-        ]).then(loadEverything);
+        const hideUpdates = {
+            [`${basePath}/hidden`]: !obj.hidden
+        };
+        if (type === "jeugd") {
+            hideUpdates[`${PUBLIC_ROOT}/jeugdleden/${obj.id}/hidden`] = !obj.hidden;
+        }
+        update(ref(db), hideUpdates)
+            .then(loadEverything)
+            .catch(error => {
+                console.error("Zichtbaarheid wijzigen mislukt:", error);
+                alert("Wijzigen is mislukt. Probeer het opnieuw.");
+            });
         return;
     }
 
@@ -6586,31 +6619,22 @@ if (editingMemberId) {
 
 
     /*
-     * Het huidige record bijwerken.
+     * Het huidige record bijwerken; jeugdleden in dezelfde
+     * atomische update ook naar public spiegelen.
      */
 
-    await update(
-        ref(
-            db,
-            `${speltak}/${path}/${editingMemberId}`
-        ),
-        updateObj
-    );
+    const memberUpdates = {};
+    const memberRoots = type === "jeugd"
+        ? [`${speltak}/${path}`, `${PUBLIC_ROOT}/jeugdleden`]
+        : [`${speltak}/${path}`];
 
-
-    /*
-     * Jeugdleden ook naar public spiegelen.
-     */
-
-    if (type === "jeugd") {
-        await update(
-            ref(
-                db,
-                `${PUBLIC_ROOT}/jeugdleden/${editingMemberId}`
-            ),
-            updateObj
-        );
+    for (const root of memberRoots) {
+        for (const [key, value] of Object.entries(updateObj)) {
+            memberUpdates[`${root}/${editingMemberId}/${key}`] = value;
+        }
     }
+
+    await update(ref(db), memberUpdates);
 
 
     /*
@@ -6717,21 +6741,15 @@ if (editingMemberId) {
     };
 
 
-    await set(
-        newRef,
-        base
-    );
-
+    const newMemberUpdates = {
+        [`${speltak}/${path}/${newRef.key}`]: base
+    };
 
     if (type === "jeugd") {
-        await set(
-            ref(
-                db,
-                `${PUBLIC_ROOT}/jeugdleden/${newRef.key}`
-            ),
-            base
-        );
+        newMemberUpdates[`${PUBLIC_ROOT}/jeugdleden/${newRef.key}`] = base;
     }
+
+    await update(ref(db), newMemberUpdates);
 }
 
 memberModal.classList.add(
@@ -7002,16 +7020,11 @@ saveOpkomst?.addEventListener("click", async () => {
     saveOpkomst.textContent = "Opslaan…";
 
     try {
-        await Promise.all([
-            set(
-                ref(db, `${speltak}/opkomsten/${opkomstId}`),
-                opkomstObj
-            ),
-            set(
-                ref(db, `${PUBLIC_ROOT}/opkomsten/${opkomstId}`),
-                publicObj
-            )
-        ]);
+        // Eén atomische update: privé en publiek altijd gelijk.
+        await update(ref(db), {
+            [`${speltak}/opkomsten/${opkomstId}`]: opkomstObj,
+            [`${PUBLIC_ROOT}/opkomsten/${opkomstId}`]: publicObj
+        });
 
         editingOpkomstId = null;
         opModal.classList.add("hidden");
@@ -7063,23 +7076,24 @@ async function saveRow(tr) {
 
     // 2. Schrijf de data weg naar Firebase
     try {
-        // Private data updaten
-        await update(ref(db, `${speltak}/opkomsten/${opkomstId}`), updatedData);
-
-        // Publieke data updaten (alleen velden die publiek mogen zijn)
-        if (PUBLIC_ROOT) {
-            const publicData = {};
-            for (const [key, value] of Object.entries(updatedData)) {
-                if (isPublicOpkomstField(key)) {
-                    publicData[key] = value;
-                }
+        // Privé + publiek (alleen publieke velden) in één atomische update.
+        const rowUpdates = {};
+        for (const [key, value] of Object.entries(updatedData)) {
+            rowUpdates[`${speltak}/opkomsten/${opkomstId}/${key}`] = value;
+            if (isPublicOpkomstField(key)) {
+                rowUpdates[`${PUBLIC_ROOT}/opkomsten/${opkomstId}/${key}`] = value;
             }
-            if (Object.keys(publicData).length > 0) {
-                await update(ref(db, `${PUBLIC_ROOT}/opkomsten/${opkomstId}`), publicData);
-            }
+        }
+        if (Object.keys(rowUpdates).length > 0) {
+            await update(ref(db), rowUpdates);
         }
     } catch (error) {
         console.error(`Fout bij opslaan van opkomst ${opkomstId}:`, error);
+        // Voorheen ging dit stil mis; nu ziet de leiding het.
+        await toonMelding(
+            "Opslaan mislukt",
+            "Een opkomst kon niet worden opgeslagen. Controleer je verbinding en probeer het opnieuw."
+        );
     }
 }
 
@@ -7112,16 +7126,10 @@ confirmDeleteOpkomst?.addEventListener("click", () => {
     // Pas na de undo-periode definitief verwijderen
     const timeout = setTimeout(async () => {
         try {
-            await Promise.all([
-                set(
-                    ref(db, `${speltak}/opkomsten/${o.id}`),
-                    null
-                ),
-                set(
-                    ref(db, `${PUBLIC_ROOT}/opkomsten/${o.id}`),
-                    null
-                )
-            ]);
+            await update(ref(db), {
+                [`${speltak}/opkomsten/${o.id}`]: null,
+                [`${PUBLIC_ROOT}/opkomsten/${o.id}`]: null
+            });
 
             pendingDeleteOpkomst = null;
             hideUndoBanner();

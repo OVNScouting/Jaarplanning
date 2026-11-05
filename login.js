@@ -205,6 +205,7 @@ function initFirebaseAuth(retries = 200) {
 
     let roles = {};
     let status = "active";
+    let mustChangePassword = false;
 
     try {
       const db = window._firebase.getDatabase(app);
@@ -215,6 +216,7 @@ function initFirebaseAuth(retries = 200) {
         const data = snapshot.val();
         roles = data.roles || {};
         status = data.status || "active";
+        mustChangePassword = data.mustChangePassword === true;
       }
     } catch (err) {
       console.warn("Kon gebruikersgegevens niet laden:", err);
@@ -242,6 +244,7 @@ function initFirebaseAuth(retries = 200) {
       email: user.email,
       roles,
       status,
+      mustChangePassword,
       loginAt: Date.now(),
     });
 
@@ -250,7 +253,71 @@ function initFirebaseAuth(retries = 200) {
     document.dispatchEvent(
       new CustomEvent("auth-changed", { detail: { loggedIn: true } })
     );
+
+    // Tijdelijk wachtwoord? Dan eerst een eigen wachtwoord kiezen.
+    if (mustChangePassword || hasPendingForcedPasswordChange()) {
+      redirectToForcedPasswordChange();
+    }
   });
+}
+
+// ======================================================================
+// VERPLICHT WACHTWOORD WIJZIGEN
+// ======================================================================
+
+const FORCE_PW_KEY = "ovn_force_pw_change";
+
+// SHA-256 van het oude gedeelde standaardwachtwoord (alleen voor de
+// overgangsperiode; mag weg zodra niemand het meer gebruikt).
+const OLD_DEFAULT_PASSWORD_SHA256 =
+  "7cb94054014d7d02fe30c91ccd2a07338d82db2c5f36d5e81cf6db480f223958";
+
+async function isOldDefaultPassword(password) {
+  try {
+    const bytes = new TextEncoder().encode(password);
+    const digest = await crypto.subtle.digest("SHA-256", bytes);
+    const hex = [...new Uint8Array(digest)]
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
+    return hex === OLD_DEFAULT_PASSWORD_SHA256;
+  } catch {
+    return false;
+  }
+}
+
+function hasPendingForcedPasswordChange() {
+  try {
+    return sessionStorage.getItem(FORCE_PW_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function clearForcedPasswordChange() {
+  try {
+    sessionStorage.removeItem(FORCE_PW_KEY);
+  } catch {}
+}
+window.clearForcedPasswordChange = clearForcedPasswordChange;
+window.hasPendingForcedPasswordChange = hasPendingForcedPasswordChange;
+
+function redirectToForcedPasswordChange() {
+  if (/\/profile\.html$/.test(window.location.pathname)) return;
+
+  const target = "profile.html?force_pw_change=true";
+  const tempModal = document.getElementById("tempPasswordModal");
+  const okBtn = document.getElementById("tempPasswordOkBtn");
+
+  if (tempModal && okBtn) {
+    tempModal.classList.remove("hidden");
+    document.body.classList.add("modal-open");
+    okBtn.onclick = () => {
+      window.location.href = target;
+    };
+    return;
+  }
+
+  window.location.href = target;
 }
 
 // ======================================================================
@@ -498,42 +565,24 @@ function openLoginModal() {
             password
           );
 
+        /*
+         * Overgangsregeling voor accounts die nog het oude,
+         * gedeelde standaardwachtwoord gebruiken. We vergelijken
+         * alleen een hash; het wachtwoord zelf staat niet meer in
+         * de code. Nieuwe accounts krijgen een uniek tijdelijk
+         * wachtwoord + het databaseveld mustChangePassword.
+         */
+        if (await isOldDefaultPassword(password)) {
+          try {
+            sessionStorage.setItem(FORCE_PW_KEY, "1");
+          } catch {}
+        }
+
         closeLoginModal();
 
-        /*
-         * Bestaande tijdelijke-wachtwoordflow.
-         * Dit kan later nog worden vervangen door
-         * een databaseveld zoals mustChangePassword.
-         */
-        if (password === "Welkom48!") {
-          const tempModal =
-            document.getElementById(
-              "tempPasswordModal"
-            );
-
-          if (tempModal) {
-            tempModal.classList.remove("hidden");
-            document.body.classList.add(
-              "modal-open"
-            );
-
-            document
-              .getElementById("tempPasswordOkBtn")
-              .onclick = () => {
-                tempModal.classList.add("hidden");
-
-                window.location.href =
-                  "profile.html?force_pw_change=true";
-              };
-
-          } else {
-            window.location.href =
-              "profile.html?force_pw_change=true";
-          }
-
-        } else {
-          window.location.reload();
-        }
+        // De auth-listener stuurt door naar het profiel als
+        // er eerst een nieuw wachtwoord gekozen moet worden.
+        window.location.reload();
 
       } catch (error) {
         console.error(

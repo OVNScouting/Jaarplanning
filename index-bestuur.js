@@ -13,7 +13,7 @@ import {
 } from "./firebase-imports.js";
 
 
-import { formatDateDisplay, isFutureOrToday } from "./utils.js";
+import { formatDateDisplay, isFutureOrToday, escapeHtml } from "./utils.js";
 
 function getFirebaseApp() {
   return getApps().length ? getApp() : initializeApp(window.firebaseConfig);
@@ -155,18 +155,18 @@ async function loadHighlights(
 
       row.innerHTML = `
         <div class="meldingen-label">
-          📌 ${item.titel || "(zonder titel)"}
+          📌 ${escapeHtml(item.titel || "(zonder titel)")}
         </div>
 
         <div class="meldingen-sub">
-          ${dateAndTime}
-          · ${formatBestuursType(item.type)}
+          ${escapeHtml(dateAndTime)}
+          · ${escapeHtml(formatBestuursType(item.type))}
         </div>
       `;
 
       row.onclick = () => {
         window.location.href =
-          `bestuur.html#item=${item.id}`;
+          `bestuur.html#item=${encodeURIComponent(item.id)}`;
       };
 
       list.appendChild(row);

@@ -7,18 +7,132 @@
    SANITIZE / TEKST
    ======================================================== */
 
-// Verwijder potentieel gevaarlijke tags
-export function sanitizeText(t = "") {
-  return t.replace(/<\/?(script|style)[^>]*>/gi, "");
+// Maak tekst veilig om in HTML te zetten (namen, titels, notities).
+// Gebruik dit voor ALLES uit de database dat via innerHTML wordt getoond.
+export function escapeHtml(value = "") {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Oude naam: blijft bestaan zodat bestaande imports niet breken,
+// maar escapet nu alles (de oude versie liet o.a. <img onerror> door).
+export const sanitizeText = escapeHtml;
+
+// Opgemaakte tekst (zoals het infoblok) opschonen met een allowlist.
+// Alleen onschuldige opmaak blijft over; scripts, event-attributen
+// (onclick, onerror, ...) en javascript:-links verdwijnen.
+const ALLOWED_TAGS = new Set([
+  "B", "STRONG", "I", "EM", "U", "S", "BR", "P", "DIV", "SPAN", "FONT",
+  "A", "UL", "OL", "LI", "H1", "H2", "H3", "H4", "BLOCKQUOTE", "HR"
+]);
+
+const DROP_WITH_CONTENT =
+  /^(SCRIPT|STYLE|IFRAME|OBJECT|EMBED|TEMPLATE|SVG|MATH|NOSCRIPT|TEXTAREA|SELECT)$/;
+
+function isSafeUrl(url = "") {
+  const value = String(url).trim();
+  return /^(https?:|mailto:|tel:)/i.test(value);
+}
+
+function isSafeColor(value = "") {
+  return /^(#[0-9a-f]{3,8}|[a-z]+|rgba?\([\d\s.,%]+\))$/i.test(
+    String(value).trim()
+  );
+}
+
+export function sanitizeHtml(html = "") {
+  // DOMParser voert geen scripts uit en laadt geen afbeeldingen.
+  const parsed = new DOMParser().parseFromString(
+    `<body>${String(html ?? "")}</body>`,
+    "text/html"
+  );
+
+  const clean = (source, target) => {
+    source.childNodes.forEach(node => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        target.appendChild(document.createTextNode(node.textContent));
+        return;
+      }
+      if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+      const tag = node.tagName.toUpperCase();
+
+      // Onbekende tags: tekst behouden, tag zelf niet.
+      if (!ALLOWED_TAGS.has(tag)) {
+        if (!DROP_WITH_CONTENT.test(tag)) clean(node, target);
+        return;
+      }
+
+      const el = document.createElement(tag.toLowerCase());
+
+      if (tag === "A") {
+        const href = node.getAttribute("href");
+        if (href && isSafeUrl(href)) {
+          el.setAttribute("href", href.trim());
+          el.setAttribute("target", "_blank");
+          el.setAttribute("rel", "noopener noreferrer");
+        }
+      }
+
+      if (tag === "FONT") {
+        const color = node.getAttribute("color");
+        if (color && isSafeColor(color)) el.setAttribute("color", color);
+      }
+
+      // Alleen kleur en vet/cursief uit inline style overnemen.
+      const style = node.style || {};
+      if (style.color && isSafeColor(style.color)) el.style.color = style.color;
+      if (/^(bold|normal|[1-9]00)$/.test(style.fontWeight || "")) {
+        el.style.fontWeight = style.fontWeight;
+      }
+      if (/^(italic|normal)$/.test(style.fontStyle || "")) {
+        el.style.fontStyle = style.fontStyle;
+      }
+      if (
+        /^(\d+(\.\d+)?(px|em|rem|%)|(x{1,3}-)?(small|large)|medium|smaller|larger)$/
+          .test(style.fontSize || "")
+      ) {
+        el.style.fontSize = style.fontSize;
+      }
+      if (tag === "FONT" && /^[1-7]$/.test(node.getAttribute("size") || "")) {
+        el.setAttribute("size", node.getAttribute("size"));
+      }
+
+      clean(node, el);
+      target.appendChild(el);
+    });
+  };
+
+  const output = document.createElement("div");
+  clean(parsed.body, output);
+  return output.innerHTML;
+}
+
+// Platte tekst veilig tonen, met losse links klikbaar gemaakt.
+export function linkifyText(text = "") {
+  return escapeHtml(text).replace(
+    /https?:\/\/[^\s<"']+[^\s<"'.,;:!?)\]]/g,
+    url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`
+  );
 }
 
 /* ========================================================
    DATUM — BASIS
    ======================================================== */
 
-// Vandaag als ISO-datum (YYYY-MM-DD)
+// Vandaag als ISO-datum (YYYY-MM-DD) in de LOKALE tijd.
+// (toISOString() is UTC: tussen 00:00 en 01:00/02:00 Nederlandse
+// tijd gaf dat nog de datum van gisteren.)
 export function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 // Is datum in het verleden?
@@ -180,10 +294,12 @@ export function filterOpkomsten(opkomsten = [], filter = "all") {
 
 export function isBinnen3Dagen(dateStr) {
   if (!dateStr) return false;
-  const target = new Date(dateStr);
+  // Beide datums op lokale middernacht, zodat "over 3 dagen"
+  // niet afhangt van het tijdstip of de UTC-omrekening.
+  const target = new Date(`${dateStr}T00:00:00`);
   const now = new Date();
-  const diffTime = target - now;
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  now.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((target - now) / (1000 * 60 * 60 * 24));
 
   return diffDays >= 0 && diffDays <= 3;
 }

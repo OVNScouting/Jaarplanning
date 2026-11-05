@@ -12,6 +12,10 @@ admin.initializeApp();
 const DB_REGION = "europe-west1";
 const SITE_URL = "https://ovnjaarplanning.nl";
 
+// Alle beheer-mails (nieuwe melding, nieuwe accountaanvraag) gaan naar
+// dit vaste adres. (Bewuste keuze: geen Google Workspace.)
+const ADMIN_MAIL_TO = "ovnscouting@gmail.com";
+
 // E-mail (Gmail + app-wachtwoord). Deze twee secrets MOETEN bestaan
 // vóór "firebase deploy --only functions", anders weigert de deploy:
 //   firebase functions:secrets:set MAIL_USER
@@ -114,17 +118,8 @@ async function writeAudit({ actor, action, targetUid = null, targetName = "", de
 // E-MAIL AAN ADMINS
 // ============================================================
 
-async function getAdminEmails() {
-  const snap = await admin.database().ref("users").get();
-  const users = snap.val() || {};
-  return Object.values(users)
-    .filter((u) => u?.roles?.admin === true && u.status !== "inactive" && u.email)
-    .map((u) => String(u.email).trim())
-    .filter((e, i, all) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && all.indexOf(e) === i);
-}
-
 /**
- * Stuurt een platte-tekstmail naar alle actieve admins.
+ * Stuurt een platte-tekstmail naar het beheeradres (ADMIN_MAIL_TO).
  * Zonder ingestelde MAIL_USER/MAIL_PASS wordt er niets verstuurd
  * (alleen een waarschuwing in de logs); de rest werkt gewoon door.
  */
@@ -143,12 +138,6 @@ async function mailAdmins(subject, text) {
     return;
   }
 
-  const recipients = await getAdminEmails();
-  if (!recipients.length) {
-    console.warn("Geen admins met e-mailadres gevonden; e-mail overgeslagen.");
-    return;
-  }
-
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: { user, pass }
@@ -157,8 +146,7 @@ async function mailAdmins(subject, text) {
   try {
     await transporter.sendMail({
       from: `"OVN Jaarplanning" <${user}>`,
-      to: user,
-      bcc: recipients.join(", "),
+      to: ADMIN_MAIL_TO,
       subject: subject.replace(/[\r\n]+/g, " ").slice(0, 150),
       text
     });

@@ -443,6 +443,17 @@ function likelyFiles(bug) {
   }
 
   const text = `${bug.titel || ""} ${bug.beschrijving || ""}`.toLowerCase();
+  // Trefwoorden wegen zwaarder dan de pagina: oudere meldingen werden
+  // vaak vanaf de startpagina verstuurd, ook als het om een speltak ging.
+  if (/opkomst|kamp|jaarplanning|planning|aanwezig|ploeg|nest|leden|lid |kolom|tabel|verleden|seizoen/.test(text)) {
+    ["script.js", "utils.js", "style.css"].forEach((f) => files.add(f));
+  }
+  if (/dashboard/.test(text)) files.add("dashboard.js");
+  if (/bestuur|agenda/.test(text)) files.add("bestuur.js");
+  if (/telefoon|mobiel|scherm|zoom|swipe/.test(text)) {
+    files.add("mobile.css");
+    files.add("mobile.js");
+  }
   if (/inlog|wachtwoord|account|login/.test(text)) files.add("login.js");
   if (/melding|probleem melden/.test(text)) files.add("utils.js");
   if (/rechten|toegang|permission|geweigerd/.test(text)) files.add("database.rules.json");
@@ -458,12 +469,14 @@ function buildClaudePrompt(bug) {
 
   const aanpak = {
     bug: [
+      "0. Controleer eerst of dit op main al is opgelost (recente commits en pull requests). Zo ja: zeg waar en hoe, en stop daar.",
       "1. Lees de genoemde bestanden en zoek de oorzaak. Reproduceer het probleem waar mogelijk (let op apparaat en schermbreedte).",
       "2. Leg kort uit wat de oorzaak is voordat je iets verandert.",
       "3. Los het op met een zo klein mogelijke wijziging die bestaande functionaliteit en stijl intact laat.",
       "4. Test op desktop én telefoonbreedte, in licht en donker thema."
     ],
     wens: [
+      "0. Controleer eerst of dit al (deels) bestaat op main. Zo ja: zeg waar, en stop daar.",
       "1. Bekijk hoe het huidige gedrag werkt in de genoemde bestanden.",
       "2. Doe eerst een kort voorstel (wat, waar, gevolgen voor ouders/leiding/admin) en wacht op mijn akkoord voordat je bouwt.",
       "3. Houd het simpel voor vrijwilligers en ouders; geen nieuwe frameworks of build-stap.",
@@ -491,10 +504,10 @@ function buildClaudePrompt(bug) {
     `"""`,
     ``,
     `## Technische context`,
-    `- Pagina: ${slug}.html`,
-    `- Apparaat: ${[ctx.apparaat, ctx.scherm].filter(Boolean).join(", ") || "onbekend"}`,
-    `- Browser: ${[ctx.browser, ctx.systeem].filter(Boolean).join(" op ") || "onbekend"}`,
-    `- Rol van de melder: ${ctx.rol || "onbekend"}`,
+    `- Pagina waar gemeld: ${slug}.html${bug.context ? "" : " (oudere melding: dit is waar de knop werd ingedrukt, niet per se waar het probleem zit)"}`,
+    ctx.apparaat ? `- Apparaat: ${[ctx.apparaat, ctx.scherm].filter(Boolean).join(", ")}` : null,
+    ctx.browser ? `- Browser: ${[ctx.browser, ctx.systeem].filter(Boolean).join(" op ")}` : null,
+    ctx.rol ? `- Rol van de melder: ${ctx.rol}` : null,
     `- Waarschijnlijk betrokken bestanden: ${likelyFiles(bug).join(", ")}`,
     bug.reactie ? `- Eerdere reactie van de beheerder: ${bug.reactie}` : null,
     ``,

@@ -4,7 +4,8 @@
 
 import {
   formatDateDisplay,
-  isFutureOrToday
+  isFutureOrToday,
+  todayISO
 } from "./utils.js";
 
 import {
@@ -13,7 +14,9 @@ import {
   getApp,
   getDatabase,
   ref,
-  get
+  get,
+  getFunctions,
+  httpsCallable
 } from "./firebase-imports.js";
 
 function getFirebaseApp() {
@@ -75,7 +78,7 @@ async function loadDashboard() {
   container.innerHTML = "<p>Dashboard laden…</p>";
 
   try {
-    const { getFunctions, httpsCallable } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js");
+    // Zelfde Firebase-versie als de rest van de site (was los 10.8.0).
     const functions = getFunctions(app);
     const getGlobalDashboard = httpsCallable(functions, "getGlobalDashboard");
 
@@ -83,9 +86,7 @@ async function loadDashboard() {
     const rawOpkomsten = response.data.data;
 
     // Bepaal de datum van precies 2 maanden vanaf vandaag
-    const maxDatum = new Date();
-    maxDatum.setMonth(maxDatum.getMonth() + 2);
-    const maxDatumStr = maxDatum.toISOString().split("T")[0];
+    const maxDatumStr = getMaxDatumStr();
 
     const opkomsten = [];
 
@@ -155,7 +156,11 @@ async function loadDashboard() {
       }
     }
 
-    const bestuurs = await loadBestuursItems();
+    // Bestuursitems: alleen vandaag t/m twee maanden vooruit
+    // (stonden eerder ongefilterd, ook uit het verleden, bovenaan).
+    const bestuurs = (await loadBestuursItems()).filter(
+      (b) => b.datum && isFutureOrToday(b.datum) && b.datum <= maxDatumStr
+    );
 
     const combined = [...opkomsten, ...bestuurs]
       .sort((a, b) => {
@@ -175,8 +180,37 @@ async function loadDashboard() {
 
   } catch (err) {
     console.error("Fout bij laden dashboard:", err);
-    container.innerHTML = "<p>Je moet ingelogd zijn om het dashboard te bekijken.</p>";
+    const code = String(err?.code || "");
+    const message = /unauthenticated/.test(code)
+      ? "Je moet ingelogd zijn om het dashboard te bekijken."
+      : /permission-denied/.test(code)
+        ? "Je account heeft (nog) geen toegang tot het dashboard."
+        : "Het dashboard kon niet worden geladen. Controleer je verbinding en probeer het opnieuw.";
+    container.innerHTML = "";
+    const p = document.createElement("p");
+    p.textContent = message;
+    container.appendChild(p);
   }
+}
+
+// Vandaag + 2 maanden, als YYYY-MM-DD in lokale tijd.
+function getMaxDatumStr() {
+  const d = new Date();
+  d.setMonth(d.getMonth() + 2);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// "Vandaag", "Morgen" of "Za 14 november"
+function formatDashboardDate(iso) {
+  const today = todayISO();
+  const t = new Date(`${today}T12:00:00`);
+  t.setDate(t.getDate() + 1);
+  const tomorrow = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+  const weekdag = ["Zo", "Ma", "Di", "Wo", "Do", "Vr", "Za"][new Date(`${iso}T12:00:00`).getDay()];
+  const base = `${weekdag} ${formatDateDisplay(iso)}`;
+  if (iso === today) return `Vandaag · ${base}`;
+  if (iso === tomorrow) return `Morgen · ${base}`;
+  return base;
 }
 
 // ======================================================================
@@ -247,7 +281,7 @@ function renderDesktop(grouped) {
   for (const date of dates) {
     const h = document.createElement("h3");
     h.className = "dashboard-date";
-    h.textContent = formatDateDisplay(date);
+    h.textContent = formatDashboardDate(date);
     container.appendChild(h);
 
    const wrapper = document.createElement("div");

@@ -14,6 +14,7 @@ import {
     isoFromInput,
     sortOpkomsten,
     getNextUpcoming,
+    isOpkomstVoorbij,
     getSeizoenVanDatum,
     isSeizoenToegestaan,
     isBinnen3Dagen
@@ -3846,8 +3847,8 @@ function renderTable() {
     const visible = opkomsten.filter(o => {
         // 1. Tijd-filter
         let timeMatch = true;
-        if (currentFilter === "future") timeMatch = isFutureOrToday(o.datum);
-        if (currentFilter === "past") timeMatch = isPast(o.datum);
+        if (currentFilter === "future") timeMatch = !isOpkomstVoorbij(o);
+        if (currentFilter === "past") timeMatch = isOpkomstVoorbij(o);
 
         // 2. Seizoen-filter (Helperfunctie uit utils.js)
         // Importeer getSeizoenVanDatum in je bestand indien nog niet gedaan
@@ -3954,9 +3955,11 @@ function addHeaders() {
             }
 
             // Icons bij PL/APL
+            // Het sterretje staat rechtop in een eigen element; in de
+            // gedraaide tekst viel het anders half buiten de kolom.
             let icon = "";
-            if (j.PL) icon = "✪ ";
-            else if (j.APL) icon = "☆ ";
+            if (j.PL) icon = `<span class="pl-icon" title="PL" aria-label="PL">★</span>`;
+            else if (j.APL) icon = `<span class="pl-icon is-apl" title="APL" aria-label="APL">☆</span>`;
 
             th.innerHTML = `<div class="name-vertical">${icon}${escapeHtml(j.naam)}</div>`;
             trTop.appendChild(th);
@@ -4289,7 +4292,7 @@ if (isEdit()) {
         }
     );
 }
-    const past = isPast(o.datum);
+    const past = isOpkomstVoorbij(o);
     // Verleden: altijd volledig grijs, geen andere kleurmarkeringen
     if (past) {
         tr.classList.add("row-grey");
@@ -5258,9 +5261,10 @@ async function togglePresence(
     key,
     isLeidingCell = false
 ) {
+    // Bij een kamp telt de laatste dag (een lopend kamp is niet voorbij).
     const datumOpkomst =
         new Date(
-            `${o.datum}T12:00:00`
+            `${isOpkomstVoorbij(o) ? o.datum : todayISO()}T12:00:00`
         );
 
     const vandaag =
@@ -5276,16 +5280,18 @@ async function togglePresence(
 
 
     /*
-     * Verleden niet meer wijzigbaar.
+     * Verleden: ouders kunnen niets meer wijzigen; leiding wel, zodat
+     * de aanwezigheid achteraf netjes bijgewerkt kan worden.
      */
 
     if (
         datumOpkomst <
-        vandaag
+        vandaag &&
+        !isLeiding()
     ) {
         await toonMelding(
             "Datum verstreken",
-            "Deze opkomst is al geweest."
+            "Deze opkomst is al geweest. Neem contact op met de leiding als de aanwezigheid niet klopt."
         );
 
         return;
@@ -5303,6 +5309,7 @@ async function togglePresence(
 
 
     if (
+        !isLeiding() &&
         isBinnen3Dagen(
             o.datum
         ) &&

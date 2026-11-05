@@ -262,10 +262,22 @@ export function compareDateTime(a, b) {
    NIEUW — CANONIEKE OPKOMST-LOGICA (STAP 5)
    ======================================================== */
 
+// Laatste dag van een opkomst: bij een kamp de einddatum.
+// (Een lopend kamp telt zo niet al na de eerste dag als "verleden".)
+export function opkomstEindDatum(o = {}) {
+  if (o.einddatum && o.einddatum > (o.datum || "")) return o.einddatum;
+  return o.datum;
+}
+
+// Is de opkomst helemaal voorbij (laatste dag ligt vóór vandaag)?
+export function isOpkomstVoorbij(o = {}) {
+  return isPast(opkomstEindDatum(o));
+}
+
 export function sortOpkomsten(opkomsten = []) {
   return [...opkomsten].sort((a, b) => {
-    const aPast = isPast(a.datum);
-    const bPast = isPast(b.datum);
+    const aPast = isOpkomstVoorbij(a);
+    const bPast = isOpkomstVoorbij(b);
 
     // Toekomst eerst
     if (aPast !== bPast) return aPast ? 1 : -1;
@@ -279,15 +291,15 @@ export function getNextUpcoming(opkomsten = []) {
   if (!Array.isArray(opkomsten) || !opkomsten.length) return null;
 
   const sorted = sortOpkomsten(opkomsten);
-  return sorted.find(o => isFutureOrToday(o.datum)) || null;
+  return sorted.find(o => !isOpkomstVoorbij(o)) || null;
 }
 
 export function filterOpkomsten(opkomsten = [], filter = "all") {
   if (filter === "future") {
-    return opkomsten.filter(o => isFutureOrToday(o.datum));
+    return opkomsten.filter(o => !isOpkomstVoorbij(o));
   }
   if (filter === "past") {
-    return opkomsten.filter(o => isPast(o.datum));
+    return opkomsten.filter(o => isOpkomstVoorbij(o));
   }
   return opkomsten;
 }

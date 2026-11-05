@@ -6651,3 +6651,14 @@ html[data-theme="dark"] .panel-warning { color: #fcd34d; }
   margin-top: 0.25rem;
   font-size: 0.78rem;
 }
+
+/* PL/APL-sterretje rechtop boven de gedraaide naam (viel half weg) */
+.name-vertical .pl-icon {
+  display: inline-block;
+  writing-mode: horizontal-tb;
+  transform: rotate(180deg);
+  font-size: 0.85rem;
+  line-height: 1;
+  margin: 0 0 3px;
+  color: inherit;
+}

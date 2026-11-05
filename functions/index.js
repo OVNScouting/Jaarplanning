@@ -12,9 +12,11 @@ admin.initializeApp();
 const DB_REGION = "europe-west1";
 const SITE_URL = "https://ovnjaarplanning.nl";
 
-// E-mail (Gmail + app-wachtwoord). Instellen met:
+// E-mail (Gmail + app-wachtwoord). Deze twee secrets MOETEN bestaan
+// vóór "firebase deploy --only functions", anders weigert de deploy:
 //   firebase functions:secrets:set MAIL_USER
 //   firebase functions:secrets:set MAIL_PASS
+// (Lege waarde of later uitzetten kan: dan wordt er alleen niet gemaild.)
 const MAIL_USER = defineSecret("MAIL_USER");
 const MAIL_PASS = defineSecret("MAIL_PASS");
 
@@ -562,6 +564,15 @@ async function findMelderUid(bug) {
   }
 }
 
+/**
+ * Alleen spiegelen naar een bestaand profiel; anders zou een
+ * verwijderd account terugkomen als lege rij in de gebruikerslijst.
+ */
+async function profileExists(uid) {
+  const snap = await admin.database().ref(`users/${uid}/email`).get();
+  return snap.exists();
+}
+
 /** Spiegel meldingen die nog geen samenvatting bij de melder hebben. */
 async function backfillMeldingen() {
   const db = admin.database();
@@ -572,7 +583,9 @@ async function backfillMeldingen() {
   const updates = {};
   for (const [id, bug] of Object.entries(bugs)) {
     const uid = await findMelderUid(bug);
-    if (uid) updates[`users/${uid}/meldingen/${id}`] = meldingSummary(bug);
+    if (uid && (await profileExists(uid))) {
+      updates[`users/${uid}/meldingen/${id}`] = meldingSummary(bug);
+    }
   }
   updates["_meta/meldingenBackfilled"] = true;
   await db.ref().update(updates);
@@ -603,7 +616,7 @@ exports.onBugWritten = onValueWritten(
     }
 
     const uid = await findUid(after);
-    if (uid) {
+    if (uid && (await profileExists(uid))) {
       await db.ref(`users/${uid}/meldingen/${bugId}`).set(meldingSummary(after));
     }
 

@@ -884,13 +884,13 @@ function openAccountRequestModal() {
 
 <div class="account-section">
  <label>Voornaam</label>
-<input id="reqFirstName" type="text" />
+<input id="reqFirstName" type="text" maxlength="60" autocomplete="given-name" />
 
 <label>Achternaam</label>
-<input id="reqLastName" type="text" />
+<input id="reqLastName" type="text" maxlength="60" autocomplete="family-name" />
 
   <label>Email</label>
-  <input id="reqEmail" type="email" />
+  <input id="reqEmail" type="email" maxlength="120" autocomplete="email" />
 </div>
 
 <div class="account-section">

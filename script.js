@@ -3060,6 +3060,16 @@ initHorizontalScrollProxy();
    STATE
    ====================================================================== */
 let data = {};
+
+// Mobiele kaartjesweergave (hier bovenaan gedeclareerd: setMode() rendert
+// al tijdens het laden van de module, vóór de functies verderop).
+const MOBILE_VIEW_KEY = "ovn_mobile_view";
+const expandedCards = new Set();
+const PRESENCE_LABELS = {
+    aanwezig: { icon: "✓", label: "Aanwezig" },
+    afwezig: { icon: "✗", label: "Afwezig" },
+    onbekend: { icon: "?", label: "Onbekend" }
+};
 let opkomsten = [];
 let jeugd = [];
 let leiding = [];
@@ -3889,7 +3899,6 @@ function renderTable() {
    in- en uitzoomen). Kaartjes tonen per opkomst de belangrijkste info
    en de aanwezigheid; de tabel blijft beschikbaar via de schakelaar.
    ====================================================================== */
-const MOBILE_VIEW_KEY = "ovn_mobile_view";
 
 // Desktop: Dashboard/Ledenbeheer niet meer zwevend rechtsonder (ze
 // verstopten de knop 'Nieuwe opkomst'), maar naast 'Opkomsten bewerken'.
@@ -3901,7 +3910,6 @@ const MOBILE_VIEW_KEY = "ovn_mobile_view";
     headerRight.insertBefore(sidebarEl, editBtn || null);
     sidebarEl.classList.add("in-toolbar");
 })();
-const expandedCards = new Set();
 
 function getMobileView() {
     try {
@@ -3964,11 +3972,6 @@ function ensureMobileCardsContainer() {
     return container;
 }
 
-const PRESENCE_LABELS = {
-    aanwezig: { icon: "✓", label: "Aanwezig" },
-    afwezig: { icon: "✗", label: "Afwezig" },
-    onbekend: { icon: "?", label: "Onbekend" }
-};
 
 function renderMobileCards(visible = [], emptyKind = "") {
     const container = ensureMobileCardsContainer();

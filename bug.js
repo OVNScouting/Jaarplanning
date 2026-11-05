@@ -38,7 +38,10 @@ const state = {
   tab: "open",
   type: "alle",
   search: "",
-  expandedId: null
+  expandedId: null,
+  // Onopgeslagen invoer per melding: blijft bewaard als de lijst
+  // opnieuw opbouwt (bijv. omdat er een nieuwe melding binnenkomt).
+  drafts: {}
 };
 
 const listEl = document.getElementById("meldingenList");
@@ -250,6 +253,8 @@ function renderCard(bug) {
 
 function renderDetail(bug) {
   const ctx = bug.context || {};
+  const draft = state.drafts[bug.id] || {};
+  const value = (field, fallback) => (field in draft ? draft[field] : fallback);
   const detail = document.createElement("div");
   detail.className = "melding-detail";
 
@@ -269,17 +274,17 @@ function renderDetail(bug) {
       <div class="melding-edit-row">
         <label>Status
           <select name="status">
-            ${STATUSES.map((s) => `<option value="${s}" ${s === bug.status ? "selected" : ""}>${s}</option>`).join("")}
+            ${STATUSES.map((s) => `<option value="${s}" ${s === value("status", bug.status) ? "selected" : ""}>${s}</option>`).join("")}
           </select>
         </label>
         <label>Type
           <select name="type">
-            ${Object.entries(TYPES).map(([k, t]) => `<option value="${k}" ${k === bug.type ? "selected" : ""}>${t.label}</option>`).join("")}
+            ${Object.entries(TYPES).map(([k, t]) => `<option value="${k}" ${k === value("type", bug.type) ? "selected" : ""}>${t.label}</option>`).join("")}
           </select>
         </label>
         <label>Prioriteit
           <select name="prioriteit">
-            ${Object.entries(PRIORITIES).map(([k, l]) => `<option value="${k}" ${k === (bug.prioriteit || "normaal") ? "selected" : ""}>${l}</option>`).join("")}
+            ${Object.entries(PRIORITIES).map(([k, l]) => `<option value="${k}" ${k === value("prioriteit", bug.prioriteit || "normaal") ? "selected" : ""}>${l}</option>`).join("")}
           </select>
         </label>
       </div>
@@ -287,7 +292,7 @@ function renderDetail(bug) {
       <label class="melding-reply-label">
         Reactie aan de melder
         <span class="text-muted">Zichtbaar voor ${escapeHtml(bug.melder || "de melder")} in Mijn profiel.</span>
-        <textarea name="reactie" rows="3" maxlength="2000" placeholder="Bijv. Opgelost in de nieuwe versie, of: Doen we niet, omdat…">${escapeHtml(bug.reactie || "")}</textarea>
+        <textarea name="reactie" rows="3" maxlength="2000" placeholder="Bijv. Opgelost in de nieuwe versie, of: Doen we niet, omdat…">${escapeHtml(value("reactie", bug.reactie || ""))}</textarea>
       </label>
 
       <div class="melding-quick" aria-label="Snelle reacties">
@@ -308,15 +313,28 @@ function renderDetail(bug) {
 
   const form = detail.querySelector("form");
 
+  const rememberDraft = () => {
+    state.drafts[bug.id] = {
+      status: form.status.value,
+      type: form.type.value,
+      prioriteit: form.prioriteit.value,
+      reactie: form.reactie.value
+    };
+  };
+  form.addEventListener("input", rememberDraft);
+  form.addEventListener("change", rememberDraft);
+
   detail.querySelectorAll(".melding-quick-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       form.status.value = btn.dataset.status;
       if (!form.reactie.value.trim()) form.reactie.value = btn.dataset.text;
+      rememberDraft();
       form.reactie.focus();
     });
   });
 
   detail.querySelector(".melding-cancel").addEventListener("click", () => {
+    delete state.drafts[bug.id];
     state.expandedId = null;
     render();
   });
@@ -329,7 +347,9 @@ function renderDetail(bug) {
     if (!ok) return;
     try {
       await remove(ref(db, `bugs/${bug.id}`));
+      delete state.drafts[bug.id];
       state.expandedId = null;
+      render();
       showToast("Melding verwijderd", "success");
     } catch (error) {
       console.error(error);
@@ -354,11 +374,13 @@ function renderDetail(bug) {
 
     try {
       await update(ref(db, `bugs/${bug.id}`), updates);
+      delete state.drafts[bug.id];
       showToast(
         OPEN_STATUSES.has(updates.status) ? "Opgeslagen" : "Opgeslagen en naar Afgerond verplaatst",
         "success"
       );
       state.expandedId = OPEN_STATUSES.has(updates.status) === (state.tab === "open") ? bug.id : null;
+      render();
     } catch (error) {
       console.error(error);
       showToast("Opslaan mislukt", "error");

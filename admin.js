@@ -513,7 +513,8 @@ function renderUsers(users) {
         if (!haystack.includes(search)) return false;
       }
 
-      // Gedeactiveerde accounts alleen tonen als daarop gefilterd wordt.
+      // Filter 'Gedeactiveerd': alleen gedeactiveerde accounts tonen.
+      // Zonder filter staan ze er ook, maar vervaagd.
       if (filters.includes("inactive")) {
         if (u.status !== "inactive") return false;
       }

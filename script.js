@@ -5,7 +5,6 @@ import {
     sanitizeText,
     escapeHtml,
     sanitizeHtml,
-    linkifyText,
     todayISO,
     isPast,
     isFutureOrToday,

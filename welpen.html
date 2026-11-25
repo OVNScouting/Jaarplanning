@@ -162,7 +162,10 @@
         </div>
       </div>
 
-      <button id="addMemberButton" class="pill-btn primary">Lid toevoegen </button>
+      <div class="ledenbeheer-acties">
+        <button id="addMemberButton" class="pill-btn primary">Lid toevoegen</button>
+        <button id="manageGroepenButton" class="pill-btn outline" type="button">Nesten beheren</button>
+      </div>
 
     </section>
 
@@ -227,11 +230,8 @@
           <div id="welpenNestFields">
             <label>Nest:</label>
             <select id="memberNest">
-              <option value="">Geen</option>
-              <option value="zwart">Zwart</option>
-              <option value="wit">Wit</option>
-              <option value="grijs">Grijs</option>
-              <option value="bruin">Bruin</option>
+              <!-- Gevuld door script.js (Nesten beheren) -->
+              <option value="">Geen nest</option>
             </select>
 
             <label>

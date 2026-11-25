@@ -1799,42 +1799,6 @@ body.mode-ouder .col-divider {
   text-decoration: underline;
 }
 
-/* ============================================
-   NESTKLEUREN – subtiele achtergrond
-============================================ */
-
-/* Zwart */
-.nest-zwart {
-  background: var(--nest-zwart);
-  color: var(--nest-zwart-text);
-}
-
-/* Bruin */
-.nest-bruin {
-  background: var(--nest-bruin);
-  color: var(--nest-bruin-text);
-}
-
-/* Wit */
-.nest-wit {
-  background: var(--nest-wit);
-  color: var(--nest-wit-text);
-}
-
-/* Grijs */
-.nest-grijs {
-  background: var(--nest-grijs);
-  color: var(--nest-grijs-text);
-}
-
-/* Nestloze leden → geen extra styling */
-.nest-none,
-.nest- {
-  background: transparent;
-}
-
-
-
 /* ============================================================
    WELPEN — LEDENBEHEER VELDEN
 ============================================================ */
@@ -1878,207 +1842,209 @@ body.mode-ouder .col-divider {
   backdrop-filter: blur(2px);
 }
 
-/* ============================================
-   LEDENBEHEER – NESTKOPJES (Optie A)
-============================================ */
+/* ============================================================
+   NESTEN (WELPEN) & PLOEGEN (SCOUTS) — KLEUREN
+   ------------------------------------------------------------
+   Kleuren komen uit de database ("Nesten/Ploegen beheren").
+   script.js zet per element:
+     --groep-kleur / --groep-tekst                (licht thema)
+     --groep-kleur-donker / --groep-tekst-donker  (donker thema)
+   De tekstkleur wordt op contrast gekozen.
+============================================================ */
 
-.nest-header {
-  font-weight: 700;
-  font-size: 0.9rem;
-  margin: 0.8rem 0 0.3rem;
-  padding-bottom: 2px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  opacity: 0.85;
+.groep-kleur {
+  background: var(--groep-kleur);
+  color: var(--groep-tekst);
 }
 
-/* Icoontjes per nest */
-.nest-icon-zwart::before {
-  content: "⚫";
+.planning-table thead th.groep-kleur,
+.planning-table th.groep-kleur {
+  background: var(--groep-kleur);
+  color: var(--groep-tekst);
+  /* Zacht lichtrandje i.p.v. de oude witte overlay,
+     die het contrast van de tekst verlaagde */
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.18);
 }
 
-.nest-icon-bruin::before {
-  content: "🟤";
+.planning-table th.groep-kleur .name-vertical,
+.planning-table th.groep-kleur .welpen-naam-reallife {
+  color: var(--groep-tekst);
 }
 
-.nest-icon-wit::before {
-  content: "⚪";
-}
-
-.nest-icon-grijs::before {
-  content: "⚫";
-  opacity: 0.5;
-}
-
-/* ============================================
-   WELPEN – WITTE HIGHLIGHT IN NESTCELLEN
-   ============================================ */
-
-/* Alle nestcellen krijgen een highlight overlay */
-.nest-zwart,
-.nest-wit,
-.nest-grijs,
-.nest-bruin {
-  position: relative;
-  /* noodzakelijk voor overlay */
-  overflow: hidden;
-  /* voorkomt dat highlight uitsteekt */
-}
-
-/* De highlight zelf */
-.nest-zwart::before,
-.nest-wit::before,
-.nest-grijs::before,
-.nest-bruin::before {
-  content: "";
-  position: absolute;
-  top: 4px;
-  /* kleine margin: ziet er premium uit */
-  bottom: 4px;
-  left: 4px;
-  right: 4px;
-  background: rgba(255, 255, 255, 0.28);
-  /* subtiele, zachte highlight */
-  border-radius: 6px;
-  /* mooi afgerond */
-  z-index: 1;
-  /* onder de tekst maar boven de achtergrond */
-  pointer-events: none;
-  /* highlight blokkeert niets */
-}
-
-/* Tekst moet boven de highlight liggen */
-.nest-zwart>*,
-.nest-wit>*,
-.nest-grijs>*,
-.nest-bruin>* {
-  position: relative;
-  z-index: 2;
-}
-
-/* ======================================================================
-   SCOUTS — premium highlight overlay (zelfde systeem als Welpen)
-   ====================================================================== */
-
-.ploeg-sperwer,
-.ploeg-kievit,
-.ploeg-reiger,
-.ploeg-meeuw {
-  position: relative;
-  overflow: hidden;
-}
-
-/* Highlight overlay */
-.ploeg-sperwer::before,
-.ploeg-kievit::before,
-.ploeg-reiger::before,
-.ploeg-meeuw::before {
-  content: "";
-  position: absolute;
-  top: 4px;
-  bottom: 4px;
-  left: 4px;
-  right: 4px;
-
-  /* Zelfde subtiele premium overlay als welpen */
-  background: rgba(255, 255, 255, 0.28);
-  border-radius: 6px;
-
-  z-index: 1;
-  pointer-events: none;
-}
-
-/* Tekst boven overlay */
-.ploeg-sperwer>*,
-.ploeg-kievit>*,
-.ploeg-reiger>*,
-.ploeg-meeuw>* {
-  position: relative;
-  z-index: 2;
-}
-
-
-/* ============================================
-   SCOUTS – PLOEGKLEUREN (header only)
-============================================ */
-th.ploeg-sperwer {
-  background-color: var(--ploeg-sperwer);
-  color: var(--ploeg-sperwer-text);
-  position: relative;
-}
-
-th.ploeg-kievit {
-  background-color: var(--ploeg-kievit);
-  color: var(--ploeg-kievit-text);
-  position: relative;
-}
-
-th.ploeg-reiger {
-  background-color: var(--ploeg-reiger);
-  color: var(--ploeg-reiger-text);
-  position: relative;
-}
-
-th.ploeg-meeuw {
-  background-color: var(--ploeg-meeuw);
-  color: var(--ploeg-meeuw-text);
-  position: relative;
-}
-
-th.ploeg- {
-  background-color: var(--ploeg-none);
-  color: var(--ploeg-none-text);
-  position: relative;
-}
-
-/* Subtiele white overlay zoals bij Welpen */
-th[class^="ploeg-"]::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.12);
-  pointer-events: none;
-}
-
-/* Ledenbeheer ploeg-headers */
-.ploeg-header {
+/* Ledenbeheer: kopje per nest/ploeg */
+.groep-header {
   font-weight: 600;
-  padding: 8px 10px;
+  padding: 7px 10px;
   margin-top: 10px;
   margin-bottom: 4px;
   border-radius: 6px;
   display: flex;
   align-items: center;
   gap: 8px;
-  text-transform: capitalize;
+  list-style: none;
 }
 
-.ploeg-header.ploeg-sperwer {
-  background: var(--ploeg-sperwer);
-  color: var(--ploeg-sperwer-text);
+.groep-header-geen {
+  background: var(--card-secondary);
+  color: var(--text-main);
 }
 
-.ploeg-header.ploeg-kievit {
-  background: var(--ploeg-kievit);
-  color: var(--ploeg-kievit-text);
+.groep-header-naam {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
-.ploeg-header.ploeg-reiger {
-  background: var(--ploeg-reiger);
-  color: var(--ploeg-reiger-text);
+.groep-header-aantal {
+  font-size: 0.78rem;
+  font-weight: 600;
+  min-width: 1.6em;
+  padding: 1px 7px;
+  border-radius: 999px;
+  text-align: center;
+  /* Past zich aan de tekstkleur aan: licht én donker kopje */
+  background: color-mix(in srgb, currentColor 18%, transparent);
+  color: inherit;
 }
 
-.ploeg-header.ploeg-meeuw {
-  background: var(--ploeg-meeuw);
-  color: var(--ploeg-meeuw-text);
-}
-
-.ploeg-header .ploeg-icoon {
+.groep-header .ploeg-icoon {
   height: 22px;
   width: auto;
   filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.3));
+}
+
+.groep-leeg {
+  list-style: none;
+  padding: 4px 10px 6px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.groep-stip {
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  border-radius: 50%;
+  background: var(--groep-kleur, transparent);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  flex: 0 0 auto;
+}
+
+/* Knoppen onder het ledenbeheer */
+.ledenbeheer-acties {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+/* ============================================================
+   NESTEN / PLOEGEN BEHEREN — MODAL
+============================================================ */
+
+.groepen-beheer-content {
+  width: min(520px, calc(100vw - 2rem));
+  text-align: left;
+}
+
+.groepen-beheer-lijst {
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.groep-beheer-rij {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card-secondary);
+}
+
+/* Overschrijft de algemene modal-input stijl */
+.modal-content .groep-beheer-rij input {
+  margin: 0;
+}
+
+.modal-content .groep-beheer-rij .groep-beheer-kleur {
+  width: 44px;
+  height: 38px;
+  padding: 2px;
+  cursor: pointer;
+  background: var(--card);
+}
+
+.groep-beheer-aantal {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.groep-beheer-knoppen {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.groep-beheer-knop {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--text-main);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.groep-beheer-knop:hover:not(:disabled) {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.groep-beheer-knop:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Opslaan/Annuleren altijd in beeld, ook bij een lange lijst */
+.groepen-beheer-content .modal-actions {
+  position: sticky;
+  bottom: -1.5rem;
+  margin: 0.75rem -1.5rem -1.5rem;
+  padding: 0.75rem 1.5rem 1rem;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+}
+
+.groepen-beheer-fout {
+  min-height: 1.2em;
+  margin: 0.5rem 0 0;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+/* Telefoon: aantal en knoppen onder de naam */
+@media (max-width: 520px) {
+  .groep-beheer-rij {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  .groep-beheer-aantal {
+    grid-column: 1 / 2;
+    text-align: center;
+  }
+
+  .groep-beheer-knoppen {
+    grid-column: 2 / 3;
+    justify-content: flex-end;
+  }
 }
 
 /* ===============================
@@ -2654,34 +2620,6 @@ tr.approved {
   --opkomst-kamp: #ffe066;
   --opkomst-kamp-bg: #fbfcd5;
 
-  /* Scouts — ploegkleuren */
-  --ploeg-sperwer: #f0da6c;
-  --ploeg-sperwer-text: #2f2a12;
-
-  --ploeg-kievit: #659c37;
-  --ploeg-kievit-text: #ffffff;
-
-  --ploeg-reiger: #37659c;
-  --ploeg-reiger-text: #ffffff;
-
-  --ploeg-meeuw: #9c3c37;
-  --ploeg-meeuw-text: #ffffff;
-
-  --ploeg-none: #bbbbbb;
-  --ploeg-none-text: #111827;
-
-  /* Welpen — nestkleuren */
-  --nest-zwart: #28292b;
-  --nest-zwart-text: #ffffff;
-
-  --nest-bruin: #69574b;
-  --nest-bruin-text: #ffffff;
-
-  --nest-wit: #faf7e8;
-  --nest-wit-text: #111827;
-
-  --nest-grijs: #404652;
-  --nest-grijs-text: #ffffff;
 
   --danger-soft: #fee2e2;
   --danger-text: #b91c1c;
@@ -2749,34 +2687,6 @@ html[data-theme="dark"] {
   --opkomst-kamp: #facc15;
   --opkomst-kamp-bg: #493d16;
 
-  /* Scouts — ploegkleuren dark mode */
-  --ploeg-sperwer: #c5aa3f;
-  --ploeg-sperwer-text: #171306;
-
-  --ploeg-kievit: #4f7f32;
-  --ploeg-kievit-text: #f8fafc;
-
-  --ploeg-reiger: #355f91;
-  --ploeg-reiger-text: #f8fafc;
-
-  --ploeg-meeuw: #833d3a;
-  --ploeg-meeuw-text: #f8fafc;
-
-  --ploeg-none: #596273;
-  --ploeg-none-text: #f1f5f9;
-
-  /* Welpen — nestkleuren dark mode */
-  --nest-zwart: #303238;
-  --nest-zwart-text: #f8fafc;
-
-  --nest-bruin: #665448;
-  --nest-bruin-text: #f8fafc;
-
-  --nest-wit: #d7d2bf;
-  --nest-wit-text: #16181d;
-
-  --nest-grijs: #4d5563;
-  --nest-grijs-text: #f8fafc;
 
   --danger-soft: #4a2029;
   --danger-text: #fda4af;
@@ -3270,7 +3180,7 @@ html[data-theme="dark"] .dashboard-table {
   color: var(--text-main);
 }
 
-html[data-theme="dark"] .planning-table th:not([class*="ploeg-"]):not([class*="nest-"]),
+html[data-theme="dark"] .planning-table th:not(.groep-kleur),
 html[data-theme="dark"] .dashboard-table th {
   background: var(--table-header-bg);
   color: var(--text-main);
@@ -3281,8 +3191,7 @@ html[data-theme="dark"] .dashboard-table th {
  * Gekleurde ploeg- en nestheaders behouden hun eigen achtergrond.
  * Alleen de tabelrand moet aan dark mode worden aangepast.
  */
-html[data-theme="dark"] .planning-table th[class*="ploeg-"],
-html[data-theme="dark"] .planning-table th[class*="nest-"] {
+html[data-theme="dark"] .planning-table th.groep-kleur {
   border-color: var(--border);
 }
 
@@ -4104,71 +4013,24 @@ html[data-theme="dark"] .profile-role-speltak {
 }
 
 /* ============================================================
-   DARK MODE — ploeg- en nesthighlight
+   DARK MODE — nest- en ploegkleuren (iets gedempt)
 ============================================================ */
 
-html[data-theme="dark"] .nest-zwart::before,
-html[data-theme="dark"] .nest-wit::before,
-html[data-theme="dark"] .nest-grijs::before,
-html[data-theme="dark"] .nest-bruin::before,
-html[data-theme="dark"] .ploeg-sperwer::before,
-html[data-theme="dark"] .ploeg-kievit::before,
-html[data-theme="dark"] .ploeg-reiger::before,
-html[data-theme="dark"] .ploeg-meeuw::before {
-  background: rgba(255, 255, 255, 0.16);
+html[data-theme="dark"] .groep-kleur,
+html[data-theme="dark"] .planning-table thead th.groep-kleur,
+html[data-theme="dark"] .planning-table th.groep-kleur {
+  background: var(--groep-kleur-donker, var(--groep-kleur));
+  color: var(--groep-tekst-donker, var(--groep-tekst));
 }
 
-/*
- * Expliciete eindregels, zodat toekomstige algemene
- * tabelheaderregels de groepskleuren niet opnieuw overschrijven.
- */
-
-html[data-theme="dark"] .planning-table th.ploeg-sperwer {
-  background-color: var(--ploeg-sperwer);
-  color: var(--ploeg-sperwer-text);
+html[data-theme="dark"] .planning-table th.groep-kleur .name-vertical,
+html[data-theme="dark"] .planning-table th.groep-kleur .welpen-naam-reallife {
+  color: var(--groep-tekst-donker, var(--groep-tekst));
 }
 
-html[data-theme="dark"] .planning-table th.ploeg-kievit {
-  background-color: var(--ploeg-kievit);
-  color: var(--ploeg-kievit-text);
-}
-
-html[data-theme="dark"] .planning-table th.ploeg-reiger {
-  background-color: var(--ploeg-reiger);
-  color: var(--ploeg-reiger-text);
-}
-
-html[data-theme="dark"] .planning-table th.ploeg-meeuw {
-  background-color: var(--ploeg-meeuw);
-  color: var(--ploeg-meeuw-text);
-}
-
-html[data-theme="dark"] .planning-table th.ploeg- {
-  background-color: var(--ploeg-none);
-  color: var(--ploeg-none-text);
-}
-
-html[data-theme="dark"] .planning-table th.nest-zwart {
-  background-color: var(--nest-zwart);
-  color: var(--nest-zwart-text);
-}
-
-html[data-theme="dark"] .planning-table th.nest-bruin {
-  background-color: var(--nest-bruin);
-  color: var(--nest-bruin-text);
-}
-
-html[data-theme="dark"] .planning-table th.nest-wit,
-html[data-theme="dark"] .planning-table th.nest-wit .name-vertical,
-html[data-theme="dark"] .planning-table th.nest-wit .welpen-naam,
-html[data-theme="dark"] .planning-table th.nest-wit .welpen-naam-reallife {
-  background-color: var(--nest-wit);
-  color: var(--nest-wit-text) !important;
-}
-
-html[data-theme="dark"] .planning-table th.nest-grijs {
-  background-color: var(--nest-grijs);
-  color: var(--nest-grijs-text);
+html[data-theme="dark"] .groep-header-geen {
+  background: var(--card-secondary);
+  color: var(--text-main);
 }
 
 /* Interne notities voor leiding */

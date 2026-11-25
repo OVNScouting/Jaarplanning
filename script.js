@@ -168,6 +168,228 @@ function isPublicOpkomstField(field) {
 }
 
 
+/* ======================================================================
+   SUBGROEPEN — nesten (Welpen) en ploegen (Scouts)
+   ----------------------------------------------------------------------
+   De lijst met nesten/ploegen staat in `${PUBLIC_ROOT}/groepen`:
+     { <id>: { naam, kleur, volgorde, icoon? } }
+   Publiek, omdat ouders de kleuren in de planning ook zien.
+   Bij een jeugdlid staat alleen het id (veld `Nest` of `Ploeg`).
+   Zolang er nog niets is opgeslagen gelden de standaardgroepen
+   hieronder, zodat bestaande leden gewoon blijven werken.
+   ====================================================================== */
+
+const GROEP_INSTELLINGEN = {
+    welpen: {
+        veld: "Nest",
+        enkelvoud: "nest",
+        hetWoord: true, // "het nest" → dit/ander/elk nest
+        meervoud: "nesten",
+        geenLabel: "Nestloos",
+        geenOptie: "Geen nest",
+        geenKleur: null,
+        standaard: [
+            { id: "zwart", naam: "Zwart", kleur: "#28292b" },
+            { id: "bruin", naam: "Bruin", kleur: "#69574b" },
+            { id: "wit", naam: "Wit", kleur: "#faf7e8" },
+            { id: "grijs", naam: "Grijs", kleur: "#404652" }
+        ]
+    },
+    scouts: {
+        veld: "Ploeg",
+        enkelvoud: "ploeg",
+        hetWoord: false, // "de ploeg" → deze/andere/elke ploeg
+        meervoud: "ploegen",
+        geenLabel: "Zonder ploeg",
+        geenOptie: "Zonder ploeg",
+        geenKleur: "#bbbbbb",
+        standaard: [
+            { id: "meeuw", naam: "Meeuwen", kleur: "#9c3c37", icoon: "assets/Ploegteken-meeuw.png" },
+            { id: "reiger", naam: "Reigers", kleur: "#37659c", icoon: "assets/Ploegteken-reiger.png" },
+            { id: "kievit", naam: "Kieviten", kleur: "#659c37", icoon: "assets/Ploegteken-kievit.png" },
+            { id: "sperwer", naam: "Sperwers", kleur: "#f0da6c", icoon: "assets/Ploegteken-sperwer.png" }
+        ]
+    }
+};
+
+const groepInstelling = GROEP_INSTELLINGEN[speltak] || null;
+
+// Kleine taalhulp: "dit nest" vs. "deze ploeg"
+function groepWoord(hetVorm, deVorm) {
+    return groepInstelling?.hetWoord ? hetVorm : deVorm;
+}
+
+// Kleuren die als eerste worden voorgesteld bij een nieuwe groep
+const GROEP_KLEUR_SUGGESTIES = [
+    "#b91c1c", "#ea580c", "#ca8a04", "#15803d", "#0f766e",
+    "#1d4ed8", "#7c3aed", "#be185d", "#28292b", "#faf7e8"
+];
+
+const GROEP_MAX_AANTAL = 12;
+
+// Actuele lijst, gesorteerd op volgorde: [{ id, naam, kleur, icoon, volgorde }]
+let groepen = [];
+
+function isGeldigeGroepKleur(kleur) {
+    return typeof kleur === "string" && /^#[0-9a-f]{6}$/i.test(kleur);
+}
+
+function normaliseerGroepen(raw) {
+    if (!groepInstelling) return [];
+
+    const bron =
+        raw && typeof raw === "object" && Object.keys(raw).length
+            ? Object.entries(raw).map(([id, g]) => ({ id, ...(g || {}) }))
+            : groepInstelling.standaard.map((g, i) => ({ ...g, volgorde: i + 1 }));
+
+    return bron
+        .map((g, i) => ({
+            id: String(g.id || "").toLowerCase(),
+            naam: String(g.naam || g.id || "").trim() || String(g.id || ""),
+            kleur: isGeldigeGroepKleur(g.kleur) ? g.kleur.toLowerCase() : "#94a3b8",
+            // Alleen eigen plaatjes uit /assets toestaan
+            icoon:
+                typeof g.icoon === "string" && /^assets\/[\w.-]+$/.test(g.icoon)
+                    ? g.icoon
+                    : "",
+            volgorde: Number.isFinite(Number(g.volgorde)) ? Number(g.volgorde) : 900 + i
+        }))
+        .filter(g => g.id)
+        .sort((a, b) => a.volgorde - b.volgorde);
+}
+
+function getGroep(id) {
+    return groepen.find(g => g.id === (id || "")) || null;
+}
+
+function getGroepLabel(id) {
+    if (!id) return groepInstelling?.geenLabel || "";
+    return getGroep(id)?.naam || id;
+}
+
+/*
+ * Volgorde: bekende groepen in ingestelde volgorde,
+ * daarna onbekende waarden (bv. handmatig in de database),
+ * en "geen groep" altijd als laatste.
+ */
+function getGroepIndex(id) {
+    if (!id) return 10000;
+    const idx = groepen.findIndex(g => g.id === id);
+    return idx === -1 ? 5000 : idx;
+}
+
+/*
+ * Wit of donker tekstkleur, afhankelijk van hoe licht
+ * de achtergrond is. Zo blijft elke gekozen kleur leesbaar.
+ */
+function getGroepTekstkleur(hex) {
+    if (!isGeldigeGroepKleur(hex)) return "#111827";
+
+    const kanaal = i => {
+        const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+        return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+
+    const lum = 0.2126 * kanaal(1) + 0.7152 * kanaal(3) + 0.0722 * kanaal(5);
+
+    // Contrast met wit vs. contrast met bijna-zwart
+    return (1.05 / (lum + 0.05)) >= ((lum + 0.05) / 0.06) ? "#ffffff" : "#111827";
+}
+
+/*
+ * Achtergrond- en tekstkleur van een groep op een element zetten.
+ * Geeft true terug als er een kleur is toegepast.
+ */
+function applyGroepKleur(el, id) {
+    if (!el || !groepInstelling) return false;
+
+    const kleur = id ? getGroep(id)?.kleur : groepInstelling.geenKleur;
+    if (!kleur) return false;
+
+    const donker = getGroepKleurDonker(kleur);
+
+    el.classList.add("groep-kleur");
+    el.style.setProperty("--groep-kleur", kleur);
+    el.style.setProperty("--groep-tekst", getGroepTekstkleur(kleur));
+    el.style.setProperty("--groep-kleur-donker", donker);
+    el.style.setProperty("--groep-tekst-donker", getGroepTekstkleur(donker));
+    return true;
+}
+
+/*
+ * Donker thema: kleur iets richting leisteen-grijs trekken.
+ * Heel licht wordt iets donkerder, heel donker iets lichter,
+ * zodat een nest niet wegvalt tegen de donkere achtergrond.
+ * (Benadert de eerder handmatig gekozen donkere tinten.)
+ */
+function getGroepKleurDonker(hex) {
+    if (!isGeldigeGroepKleur(hex)) return hex;
+
+    const doel = [0x5b, 0x61, 0x70];
+    return "#" + [1, 3, 5]
+        .map((i, k) => {
+            const c = parseInt(hex.slice(i, i + 2), 16);
+            return Math.round(c * 0.82 + doel[k] * 0.18)
+                .toString(16)
+                .padStart(2, "0");
+        })
+        .join("");
+}
+
+function makeGroepStip(kleur) {
+    const stip = document.createElement("span");
+    stip.className = "groep-stip";
+    stip.setAttribute("aria-hidden", "true");
+    if (kleur) stip.style.setProperty("--groep-kleur", kleur);
+    return stip;
+}
+
+/*
+ * Keuzelijst (nest/ploeg) in de ledenmodal vullen.
+ * De huidige waarde blijft behouden, ook als die
+ * (nog) niet in de lijst staat.
+ */
+function fillGroepSelect(select, waarde = select?.value || "") {
+    if (!select || !groepInstelling) return;
+
+    select.innerHTML = "";
+
+    const opties = [
+        { id: "", naam: groepInstelling.geenOptie },
+        ...groepen
+    ];
+
+    if (waarde && !getGroep(waarde)) {
+        opties.push({ id: waarde, naam: waarde });
+    }
+
+    opties.forEach(g => {
+        const o = document.createElement("option");
+        o.value = g.id;
+        o.textContent = g.naam;
+        select.appendChild(o);
+    });
+
+    select.value = waarde;
+}
+
+function maakGroepId(naam, bestaandeIds) {
+    const basis =
+        String(naam || "")
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[̀-ͯ]/g, "")
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "")
+            .slice(0, 24) || groepInstelling.enkelvoud;
+
+    let id = basis;
+    let n = 2;
+    while (bestaandeIds.has(id)) id = `${basis}-${n++}`;
+    return id;
+}
+
+
 // Standaard start/eindtijden per speltak
 const defaultTimes = {
     bevers: { start: "10:30", eind: "12:30" },
@@ -1253,7 +1475,7 @@ function toggleScoutsExtraFields() {
         scoutsExtraFields.style.display = "block";
 
         // Dropdown altijd opnieuw vullen
-        fillScoutsPloegDropdown();
+        fillGroepSelect(memberPloeg);
 
         const heeftPloeg = memberPloeg.value !== "";
 
@@ -2724,28 +2946,6 @@ memberPloeg?.addEventListener("change", () => {
     memberAPL.disabled = !heeftPloeg;
 });
 
-// Scouts ploegopties dynamisch vullen
-const SCOUTS_OPTIES = [
-    { value: "", label: "Geen ploeg" },
-    { value: "meeuw", label: "Meeuwen" },
-    { value: "reiger", label: "Reigers" },
-    { value: "kievit", label: "Kieviten" },
-    { value: "sperwer", label: "Sperwers" }
-];
-
-function fillScoutsPloegDropdown() {
-    if (!memberPloeg) return;
-
-    memberPloeg.innerHTML = ""; // leegmaken
-
-    SCOUTS_OPTIES.forEach(opt => {
-        const o = document.createElement("option");
-        o.value = opt.value;
-        o.textContent = opt.label;
-        memberPloeg.appendChild(o);
-    });
-}
-
 // Type-wissel: juiste extra velden tonen
 memberType?.addEventListener("change", () => {
     toggleWelpenExtraFields();
@@ -3242,6 +3442,7 @@ sharedStamMembers = [];
             const pubSnap = await get(ref(db, PUBLIC_ROOT));
             if (!pubSnap.exists()) throw new Error("Geen publieke data gevonden");
             data = pubSnap.val() || {};
+            groepen = normaliseerGroepen(data.groepen);
         } else {
             // Leiding: private + public; merge jeugd-aanwezigheid uit public
             const [privSnap, pubSnap] = await Promise.all([
@@ -3254,6 +3455,9 @@ sharedStamMembers = [];
             data = privSnap.val() || {};
             const pub = pubSnap.exists() ? (pubSnap.val() || {}) : {};
             const pubOpkomsten = pub.opkomsten || {};
+
+            // Nesten/ploegen staan alleen in public
+            groepen = normaliseerGroepen(pub.groepen);
 
             if (data.opkomsten && pubOpkomsten) {
                 Object.keys(data.opkomsten).forEach((opId) => {
@@ -3514,23 +3718,17 @@ jeugd = Object.entries(data.jeugdleden || {})
             a.volgorde - b.volgorde
     );
 
-        if (speltak === "welpen") {
-            const NestOrder = { zwart: 1, bruin: 2, wit: 3, grijs: 4, "": 5, none: 5 };
+        // Welpen/Scouts: groeperen per nest/ploeg, leider(s) bovenaan
+        if (groepInstelling) {
+            const veld = groepInstelling.veld;
             jeugd.sort((a, b) => {
-                const na = NestOrder[a.Nest || "none"];
-                const nb = NestOrder[b.Nest || "none"];
-                if (na !== nb) return na - nb;
+                const ga = getGroepIndex(a[veld]);
+                const gb = getGroepIndex(b[veld]);
+                if (ga !== gb) return ga - gb;
+                if ((a[veld] || "") !== (b[veld] || "")) {
+                    return (a[veld] || "").localeCompare(b[veld] || "");
+                }
                 if (a.NestLeider !== b.NestLeider) return a.NestLeider ? -1 : 1;
-                return a.naam.localeCompare(b.naam);
-            });
-        }
-
-        if (speltak === "scouts") {
-            const PLOEG_ORDER = { meeuw: 1, reiger: 2, kievit: 3, sperwer: 4, "": 5 };
-            jeugd.sort((a, b) => {
-                const pa = PLOEG_ORDER[a.Ploeg || ""] || 999;
-                const pb = PLOEG_ORDER[b.Ploeg || ""] || 999;
-                if (pa !== pb) return pa - pb;
                 if (a.PL !== b.PL) return a.PL ? -1 : 1;
                 if (a.APL !== b.APL) return a.APL ? -1 : 1;
                 return a.naam.localeCompare(b.naam);
@@ -3629,29 +3827,84 @@ function toggleInfoEdit() {
         });
     }
 }
-// ===============================================
-// WELPEN – NEST ORDER HELPERS
-// ===============================================
-const NEST_ORDER = ["zwart", "bruin", "wit", "grijs", ""];
-
-function getNestIndex(nest) {
-    const idx = NEST_ORDER.indexOf(nest || "");
-    return idx === -1 ? 999 : idx;
-}
-
-// SCOUTS – PLOEG ORDER & MAPPING
-const SCOUT_PLOEGEN = ["meeuw", "reiger", "kievit", "sperwer", ""];
-const SCOUT_PLOEG_LABELS = {
-    "meeuw": "Meeuwen",
-    "reiger": "Reigers",
-    "kievit": "Kieviten",
-    "sperwer": "Sperwers",
-    "": "Zonder ploeg"
-};
-
 /* ======================================================================
    SCOUTS — LEDENBEHEER
 ====================================================================== */
+/*
+ * Kopje boven een nest/ploeg in het ledenbeheer.
+ */
+function makeGroepHeader(id, aantal) {
+    const header = document.createElement("div");
+    header.className = "groep-header";
+
+    const groep = getGroep(id);
+    if (!applyGroepKleur(header, id)) {
+        header.classList.add("groep-header-geen");
+    }
+
+    if (groep?.icoon) {
+        const img = document.createElement("img");
+        img.src = groep.icoon;
+        img.className = "ploeg-icoon";
+        img.alt = "";
+        header.appendChild(img);
+    }
+
+    const label = document.createElement("span");
+    label.className = "groep-header-naam";
+    label.textContent = getGroepLabel(id);
+    header.appendChild(label);
+
+    const teller = document.createElement("span");
+    teller.className = "groep-header-aantal";
+    teller.textContent = String(aantal);
+    teller.title = `${aantal} ${aantal === 1 ? "lid" : "leden"}`;
+    header.appendChild(teller);
+
+    return header;
+}
+
+/*
+ * Jeugdleden per nest/ploeg tonen. Lege groepen worden ook
+ * getoond, zodat een net aangemaakt nest meteen zichtbaar is.
+ */
+function renderJeugdPerGroep(container, makeRow, sorteer) {
+    const veld = groepInstelling.veld;
+    const perGroep = new Map(groepen.map(g => [g.id, []]));
+
+    jeugd.forEach(j => {
+        const key = j[veld] || "";
+        if (!perGroep.has(key)) perGroep.set(key, []);
+        perGroep.get(key).push(j);
+    });
+
+    [...perGroep.keys()]
+        .sort((a, b) => getGroepIndex(a) - getGroepIndex(b) || a.localeCompare(b))
+        .forEach(id => {
+            const leden = perGroep.get(id);
+
+            // "Zonder nest/ploeg" alleen tonen als er iemand in zit
+            if (!id && !leden.length) return;
+
+            container.appendChild(makeGroepHeader(id, leden.length));
+
+            if (!leden.length) {
+                const leeg = document.createElement("li");
+                leeg.className = "groep-leeg";
+                leeg.textContent =
+                    `Nog niemand in ${groepWoord("dit", "deze")} ${groepInstelling.enkelvoud}. ` +
+                    `Open een lid om het hier in te delen.`;
+                container.appendChild(leeg);
+                return;
+            }
+
+            leden
+                .slice()
+                .sort(sorteer)
+                .forEach(j => container.appendChild(makeRow(j)));
+        });
+}
+
 function renderLedenbeheerScouts() {
     const jeugdContainer = document.getElementById("jeugdLeden");
     const leidingContainer = ledenbeheerLeiding;
@@ -3660,46 +3913,316 @@ function renderLedenbeheerScouts() {
     jeugdContainer.innerHTML = "";
     leidingContainer.innerHTML = "";
 
-    const ICONS = {
-        "sperwer": "assets/Ploegteken-sperwer.png",
-        "kievit": "assets/Ploegteken-kievit.png",
-        "reiger": "assets/Ploegteken-reiger.png",
-        "meeuw": "assets/Ploegteken-meeuw.png",
-        "": ""
-    };
-
-    const byPloeg = {};
-    SCOUT_PLOEGEN.forEach(p => (byPloeg[p] = []));
-
-    jeugd.forEach(j => {
-        const key = j.Ploeg || "";
-        if (!byPloeg[key]) byPloeg[key] = [];
-        byPloeg[key].push(j);
-    });
-
-    SCOUT_PLOEGEN.forEach(ploeg => {
-        const leden = byPloeg[ploeg];
-        const label = SCOUT_PLOEG_LABELS[ploeg];
-        const icon = ICONS[ploeg];
-
-        const header = document.createElement("div");
-        header.className = `ploeg-header ploeg-${ploeg}`;
-        header.innerHTML = icon
-            ? `<img src="${escapeHtml(icon)}" class="ploeg-icoon" alt=""> ${escapeHtml(label)}`
-            : escapeHtml(label);
-        jeugdContainer.appendChild(header);
-
-        leden
-            .sort((a, b) => {
-                if (a.PL !== b.PL) return a.PL ? -1 : 1;
-                if (a.APL !== b.APL) return a.APL ? -1 : 1;
-                return a.naam.localeCompare(b.naam);
-            })
-            .forEach(j => jeugdContainer.appendChild(makeMemberRowScouts(j)));
-    });
+    renderJeugdPerGroep(
+        jeugdContainer,
+        makeMemberRowScouts,
+        (a, b) => {
+            if (a.PL !== b.PL) return a.PL ? -1 : 1;
+            if (a.APL !== b.APL) return a.APL ? -1 : 1;
+            return a.naam.localeCompare(b.naam);
+        }
+    );
 
     leiding.forEach(l => leidingContainer.appendChild(makeMemberRow(l, "leiding")));
 }
+/* ======================================================================
+   NESTEN / PLOEGEN BEHEREN
+   ----------------------------------------------------------------------
+   Leiding kan zelf nesten (Welpen) of ploegen (Scouts) toevoegen,
+   hernoemen, een kleur geven, herordenen en — als er niemand meer
+   in zit — verwijderen. Indelen van kinderen gaat zoals altijd via
+   de ledenmodal of door te slepen.
+   ====================================================================== */
+
+let groepenBeheerModal = null;
+let groepenConcept = [];
+
+function ensureGroepenBeheerModal() {
+    if (groepenBeheerModal) return groepenBeheerModal;
+
+    const titel = `${groepInstelling.meervoud[0].toUpperCase()}${groepInstelling.meervoud.slice(1)} beheren`;
+
+    const modal = document.createElement("div");
+    modal.id = "groepenBeheerModal";
+    modal.className = "modal hidden groepen-beheer-modal";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    modal.setAttribute("aria-labelledby", "groepenBeheerTitel");
+
+    modal.innerHTML = `
+        <div class="modal-content groepen-beheer-content">
+            <div class="member-action-choice-header">
+                <div>
+                    <h3 id="groepenBeheerTitel">${escapeHtml(titel)}</h3>
+                    <p>
+                        Kies een naam en kleur. Kinderen deel je daarna in
+                        via het ledenbeheer.
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    class="member-link-modal-close"
+                    data-groepen-sluiten
+                    aria-label="Venster sluiten"
+                >×</button>
+            </div>
+
+            <ul class="groepen-beheer-lijst"></ul>
+
+            <button type="button" class="pill-btn outline groepen-beheer-toevoegen">
+                + ${escapeHtml(groepInstelling.enkelvoud[0].toUpperCase() + groepInstelling.enkelvoud.slice(1))} toevoegen
+            </button>
+
+            <p class="groepen-beheer-fout" role="alert" aria-live="polite"></p>
+
+            <div class="modal-actions">
+                <button type="button" class="pill-btn outline" data-groepen-sluiten>Annuleren</button>
+                <button type="button" class="pill-btn primary groepen-beheer-opslaan">Opslaan</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    groepenBeheerModal = modal;
+
+    modal.querySelectorAll("[data-groepen-sluiten]").forEach(btn =>
+        btn.addEventListener("click", closeGroepenBeheer)
+    );
+
+    modal.addEventListener("click", e => {
+        if (e.target === modal) closeGroepenBeheer();
+    });
+
+    modal.addEventListener("keydown", e => {
+        if (e.key === "Escape") closeGroepenBeheer();
+    });
+
+    modal.querySelector(".groepen-beheer-toevoegen")
+        .addEventListener("click", voegConceptGroepToe);
+
+    modal.querySelector(".groepen-beheer-opslaan")
+        .addEventListener("click", slaGroepenOp);
+
+    return modal;
+}
+
+function openGroepenBeheer() {
+    if (!groepInstelling) return;
+    if (!isLeiding()) {
+        alert(`Alleen leiding kan ${groepInstelling.meervoud} beheren.`);
+        return;
+    }
+
+    const modal = ensureGroepenBeheerModal();
+
+    groepenConcept = groepen.map(g => ({ ...g, nieuw: false }));
+    zetGroepenFout("");
+    renderGroepenConcept();
+
+    modal.classList.remove("hidden");
+    modal.querySelector(".groepen-beheer-lijst input[type='text']")?.focus();
+}
+
+function closeGroepenBeheer() {
+    groepenBeheerModal?.classList.add("hidden");
+}
+
+function zetGroepenFout(tekst) {
+    const el = groepenBeheerModal?.querySelector(".groepen-beheer-fout");
+    if (el) el.textContent = tekst;
+}
+
+function telLedenInGroep(id) {
+    const veld = groepInstelling.veld;
+    return jeugd.filter(j => (j[veld] || "") === id).length;
+}
+
+function renderGroepenConcept() {
+    const lijst = groepenBeheerModal.querySelector(".groepen-beheer-lijst");
+    lijst.innerHTML = "";
+
+    groepenConcept.forEach((g, index) => {
+        const aantal = g.nieuw ? 0 : telLedenInGroep(g.id);
+
+        const li = document.createElement("li");
+        li.className = "groep-beheer-rij";
+
+        const kleur = document.createElement("input");
+        kleur.type = "color";
+        kleur.value = g.kleur;
+        kleur.className = "groep-beheer-kleur";
+        kleur.setAttribute("aria-label", `Kleur van ${g.naam || groepWoord("nieuw ", "nieuwe ") + groepInstelling.enkelvoud}`);
+        kleur.addEventListener("input", () => {
+            g.kleur = kleur.value.toLowerCase();
+        });
+
+        const naam = document.createElement("input");
+        naam.type = "text";
+        naam.value = g.naam;
+        naam.maxLength = 30;
+        naam.placeholder = `Naam van ${groepWoord("het", "de")} ${groepInstelling.enkelvoud}`;
+        naam.className = "groep-beheer-naam";
+        naam.setAttribute("aria-label", `Naam ${groepInstelling.enkelvoud} ${index + 1}`);
+        naam.addEventListener("input", () => {
+            g.naam = naam.value;
+        });
+
+        const info = document.createElement("span");
+        info.className = "groep-beheer-aantal";
+        info.textContent = aantal === 1 ? "1 lid" : `${aantal} leden`;
+
+        const knoppen = document.createElement("div");
+        knoppen.className = "groep-beheer-knoppen";
+
+        const maakKnop = (tekst, label, onClick, disabled = false, titel = label) => {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "groep-beheer-knop";
+            b.textContent = tekst;
+            b.setAttribute("aria-label", label);
+            b.title = titel;
+            b.disabled = disabled;
+            b.addEventListener("click", onClick);
+            return b;
+        };
+
+        knoppen.appendChild(maakKnop("↑", "Omhoog", () => verplaatsConcept(index, -1), index === 0));
+        knoppen.appendChild(maakKnop("↓", "Omlaag", () => verplaatsConcept(index, 1), index === groepenConcept.length - 1));
+        knoppen.appendChild(
+            maakKnop(
+                "×",
+                `${groepInstelling.enkelvoud} verwijderen`,
+                () => {
+                    groepenConcept.splice(index, 1);
+                    zetGroepenFout("");
+                    renderGroepenConcept();
+                },
+                aantal > 0,
+                aantal > 0
+                    ? `Verplaats eerst ${aantal === 1 ? "het lid" : `de ${aantal} leden`} naar ${groepWoord("een ander", "een andere")} ${groepInstelling.enkelvoud}`
+                    : `${groepInstelling.enkelvoud} verwijderen`
+            )
+        );
+
+        li.append(kleur, naam, info, knoppen);
+        lijst.appendChild(li);
+    });
+
+    const toevoegen = groepenBeheerModal.querySelector(".groepen-beheer-toevoegen");
+    toevoegen.disabled = groepenConcept.length >= GROEP_MAX_AANTAL;
+}
+
+function verplaatsConcept(index, richting) {
+    const doel = index + richting;
+    if (doel < 0 || doel >= groepenConcept.length) return;
+    const [g] = groepenConcept.splice(index, 1);
+    groepenConcept.splice(doel, 0, g);
+    renderGroepenConcept();
+}
+
+function voegConceptGroepToe() {
+    if (groepenConcept.length >= GROEP_MAX_AANTAL) return;
+
+    const gebruikt = new Set(groepenConcept.map(g => g.kleur));
+    const kleur =
+        GROEP_KLEUR_SUGGESTIES.find(k => !gebruikt.has(k)) ||
+        GROEP_KLEUR_SUGGESTIES[0];
+
+    groepenConcept.push({ id: "", naam: "", kleur, icoon: "", nieuw: true });
+    zetGroepenFout("");
+    renderGroepenConcept();
+
+    const invoer = groepenBeheerModal.querySelectorAll(".groep-beheer-naam");
+    invoer[invoer.length - 1]?.focus();
+}
+
+async function slaGroepenOp() {
+    if (!isLeiding()) return;
+
+    // Valideren
+    if (!groepenConcept.length) {
+        // Een lege lijst zou de standaardgroepen terugbrengen
+        zetGroepenFout(`Er moet minstens één ${groepInstelling.enkelvoud} overblijven.`);
+        return;
+    }
+
+    const namen = new Set();
+    for (const g of groepenConcept) {
+        g.naam = String(g.naam || "").trim();
+
+        if (!g.naam) {
+            zetGroepenFout(`Geef ${groepWoord("elk", "elke")} ${groepInstelling.enkelvoud} een naam.`);
+            return;
+        }
+
+        const sleutel = g.naam.toLowerCase();
+        if (namen.has(sleutel)) {
+            zetGroepenFout(`De naam "${g.naam}" komt twee keer voor.`);
+            return;
+        }
+        namen.add(sleutel);
+
+        if (!isGeldigeGroepKleur(g.kleur)) g.kleur = "#94a3b8";
+    }
+
+    // Groepen met leden mogen niet verdwijnen (knop is al uitgeschakeld,
+    // maar ook hier controleren voor het geval de lijst intussen wijzigde)
+    const blijftBestaan = new Set(groepenConcept.filter(g => !g.nieuw).map(g => g.id));
+    const verdwijntMetLeden = groepen.find(
+        g => !blijftBestaan.has(g.id) && telLedenInGroep(g.id) > 0
+    );
+    if (verdwijntMetLeden) {
+        zetGroepenFout(`${verdwijntMetLeden.naam} heeft nog leden en kan niet worden verwijderd.`);
+        return;
+    }
+
+    // Opbouwen; bestaande id's blijven gelijk zodat leden ingedeeld blijven
+    const ids = new Set([...blijftBestaan, ...jeugd.map(j => j[groepInstelling.veld]).filter(Boolean)]);
+    const opslag = {};
+
+    groepenConcept.forEach((g, i) => {
+        let id = g.id;
+        if (g.nieuw || !id) {
+            id = maakGroepId(g.naam, ids);
+            ids.add(id);
+        }
+
+        opslag[id] = {
+            naam: g.naam,
+            kleur: g.kleur,
+            volgorde: i + 1,
+            ...(g.icoon ? { icoon: g.icoon } : {})
+        };
+    });
+
+    const knop = groepenBeheerModal.querySelector(".groepen-beheer-opslaan");
+    knop.disabled = true;
+
+    try {
+        // Hele lijst in één keer vervangen
+        await update(ref(db), {
+            [`${PUBLIC_ROOT}/groepen`]: opslag
+        });
+
+        closeGroepenBeheer();
+        await loadEverything();
+    } catch (err) {
+        console.error(`${groepInstelling.meervoud} opslaan mislukt:`, err);
+        zetGroepenFout("Opslaan mislukt. Controleer je verbinding en probeer het opnieuw.");
+    } finally {
+        knop.disabled = false;
+    }
+}
+
+const manageGroepenButton = document.getElementById("manageGroepenButton");
+if (manageGroepenButton) {
+    if (groepInstelling) {
+        manageGroepenButton.addEventListener("click", openGroepenBeheer);
+    } else {
+        manageGroepenButton.remove();
+    }
+}
+
 function makeMemberRowScouts(obj) {
     const li = document.createElement("li");
     li.classList.add("draggable");
@@ -3791,8 +4314,8 @@ memberButton?.addEventListener(
         // PLOEGWISSEL?
         // ===============================
         if (oldPloeg !== newPloeg) {
-            const oldLabel = SCOUT_PLOEG_LABELS[oldPloeg];
-            const newLabel = SCOUT_PLOEG_LABELS[newPloeg];
+            const oldLabel = getGroepLabel(oldPloeg);
+            const newLabel = getGroepLabel(newPloeg);
 
             const ok = confirm(
                 `${dragged.naam} verplaatsen van '${oldLabel}' naar '${newLabel}'?\n\n` +
@@ -4215,8 +4738,7 @@ function addHeaders() {
 
             // SCOUTS kleurmarkeringen
             if (speltak === "scouts") {
-                const ploeg = j.Ploeg || "";
-                th.classList.add(`ploeg-${ploeg}`);
+                applyGroepKleur(th, j.Ploeg || "");
             }
 
             // Icons bij PL/APL
@@ -4238,7 +4760,7 @@ function addHeaders() {
             // Bovenste rij: WelpenNaam
             const thTop = document.createElement("th");
             thTop.classList.add("col-jeugd");
-            if (Nest) thTop.classList.add(`nest-${Nest}`);
+            applyGroepKleur(thTop, Nest);
 
             const divTop = document.createElement("div");
             divTop.classList.add("name-vertical", "welpen-naam");
@@ -5368,30 +5890,10 @@ function makePresenceCell(
         );
 
 
-        if (ploeg === "sperwer") {
+        // Alleen veilige klassenamen (id's zijn slugs)
+        if (/^[a-z0-9-]+$/.test(ploeg)) {
             td.classList.add(
-                "presence-scout-sperwer"
-            );
-
-        } else if (
-            ploeg === "kievit"
-        ) {
-            td.classList.add(
-                "presence-scout-kievit"
-            );
-
-        } else if (
-            ploeg === "reiger"
-        ) {
-            td.classList.add(
-                "presence-scout-reiger"
-            );
-
-        } else if (
-            ploeg === "meeuw"
-        ) {
-            td.classList.add(
-                "presence-scout-meeuw"
+                `presence-scout-${ploeg}`
             );
         }
     }
@@ -5979,37 +6481,16 @@ function renderLedenbeheer() {
     // Scouts hebben eigen systeem
     if (speltak === "scouts") return renderLedenbeheerScouts();
 
-    // Welpen: bestaande nestlogica
+    // Welpen: leden per nest
     if (speltak === "welpen") {
         jeugdContainer.innerHTML = "";
         if (leidingContainer) leidingContainer.innerHTML = "";
 
-        const byNest = {};
-        jeugd.forEach(j => {
-            const key = j.Nest || "";
-            if (!byNest[key]) byNest[key] = [];
-            byNest[key].push(j);
-        });
-
-        Object.keys(byNest)
-            .sort((a, b) => getNestIndex(a) - getNestIndex(b))
-            .forEach(nest => {
-                const niceName =
-                    nest === "zwart" ? "Zwart" :
-                        nest === "bruin" ? "Bruin" :
-                            nest === "wit" ? "Wit" :
-                                nest === "grijs" ? "Grijs" :
-                                    "Nestloos";
-
-                const header = document.createElement("div");
-                header.className = "nest-header";
-                header.textContent = niceName;
-                jeugdContainer.appendChild(header);
-
-                byNest[nest]
-                    .sort((a, b) => a.volgorde - b.volgorde)
-                    .forEach(j => jeugdContainer.appendChild(makeMemberRow(j, "jeugd")));
-            });
+        renderJeugdPerGroep(
+            jeugdContainer,
+            j => makeMemberRow(j, "jeugd"),
+            (a, b) => a.volgorde - b.volgorde
+        );
 
         if (!ledenOnly && leidingContainer) {
             leiding.forEach(l => leidingContainer.appendChild(makeMemberRow(l, "leiding")));
@@ -6193,33 +6674,14 @@ function makeMemberRow(obj, type) {
             type === "jeugd" &&
             oldNest !== newNest
         ) {
-            const oldLabel =
-                oldNest || "Nestloos";
-
-            const newLabel =
-                newNest || "Nestloos";
-
-
-            const icons = {
-                zwart: "⚫",
-                bruin: "🟤",
-                wit: "⚪",
-                grijs: "⚫"
-            };
-
-
-            const iconOld =
-                icons[oldNest] || "";
-
-            const iconNew =
-                icons[newNest] || "";
-
-
             const confirmed =
                 confirm(
                     `${dragged.naam} verplaatsen van ` +
-                    `${iconOld} ${oldLabel} naar ` +
-                    `${iconNew} ${newLabel}?`
+                    `'${getGroepLabel(oldNest)}' naar ` +
+                    `'${getGroepLabel(newNest)}'?` +
+                    (dragged.NestLeider
+                        ? "\n\nLet op: de nestleider-rol vervalt bij een nestwissel."
+                        : "")
                 );
 
 
@@ -6301,6 +6763,17 @@ function makeMemberRow(obj, type) {
                         `${PUBLIC_ROOT}/jeugdleden/${member.id}/Nest`
                     ] =
                         member.Nest || "";
+
+                    // Nestleider-rol vervalt bij een nestwissel
+                    // (werd voorheen alleen lokaal aangepast)
+                    if (
+                        speltak === "welpen" &&
+                        member === dragged &&
+                        oldNest !== newNest
+                    ) {
+                        updates[`${speltak}/jeugdleden/${member.id}/NestLeider`] = false;
+                        updates[`${PUBLIC_ROOT}/jeugdleden/${member.id}/NestLeider`] = false;
+                    }
                 }
             }
         );
@@ -6572,7 +7045,7 @@ if (
             memberNest.parentElement.style.display = "block";
             memberNestLeider.parentElement.style.display = "block";
 
-            memberNest.value = (obj.Nest || "").toLowerCase();
+            fillGroepSelect(memberNest, (obj.Nest || "").toLowerCase());
             memberNestLeider.checked = !!obj.NestLeider;
 
         } else {
@@ -6588,7 +7061,7 @@ if (
     // SCOUTS — juiste werking bij bewerken
     if (speltak === "scouts" && scoutsExtraFields) {
 
-        fillScoutsPloegDropdown();
+        fillGroepSelect(memberPloeg);
 
         if (type === "jeugd") {
             memberPloeg.value = obj.Ploeg || "";
@@ -6673,7 +7146,7 @@ memberManagementActions
     // WELPEN extra velden resetten
     if (speltak === "welpen" && welpenExtraFields) {
         memberWelpenNaam.value = "";
-        memberNest.value = "";
+        fillGroepSelect(memberNest, "");
         memberNestLeider.checked = false;
     }
 
@@ -6691,7 +7164,7 @@ memberManagementActions
 
     // SCOUTS extra velden resetten
     if (speltak === "scouts" && scoutsExtraFields) {
-        fillScoutsPloegDropdown();
+        fillGroepSelect(memberPloeg);
         memberPloeg.value = "";
         memberPL.checked = false;
         memberAPL.checked = false;
@@ -6830,12 +7303,15 @@ saveMember?.addEventListener("click", async () => {
 
             if (conflict) {
                 const overschrijf = confirm(
-                    `Er is al een nestleider (${conflict.naam}) in Nest ${updateObj.Nest}. Overschrijven?`
+                    `Er is al een nestleider (${conflict.naam}) in nest ${getGroepLabel(updateObj.Nest)}. Overschrijven?`
                 );
                 if (!overschrijf) return;
 
-                await update(ref(db, `${speltak}/jeugdleden/${conflict.id}`), {
-                    NestLeider: false
+                // Privé én publiek, anders blijft de oude nestleider
+                // voor ouders zichtbaar
+                await update(ref(db), {
+                    [`${speltak}/jeugdleden/${conflict.id}/NestLeider`]: false,
+                    [`${PUBLIC_ROOT}/jeugdleden/${conflict.id}/NestLeider`]: false
                 });
             }
         }
@@ -6853,11 +7329,14 @@ saveMember?.addEventListener("click", async () => {
 
                 if (conflictPL) {
                     const ok = confirm(
-                        `Er is al een PL (${conflictPL.naam}) in ploeg ${updateObj.Ploeg}. Overschrijven?`
+                        `Er is al een PL (${conflictPL.naam}) in ploeg ${getGroepLabel(updateObj.Ploeg)}. Overschrijven?`
                     );
                     if (!ok) return;
 
-                    await update(ref(db, `${speltak}/jeugdleden/${conflictPL.id}`), { PL: false });
+                    await update(ref(db), {
+                        [`${speltak}/jeugdleden/${conflictPL.id}/PL`]: false,
+                        [`${PUBLIC_ROOT}/jeugdleden/${conflictPL.id}/PL`]: false
+                    });
                 }
             }
             // Check APL
@@ -6870,11 +7349,14 @@ saveMember?.addEventListener("click", async () => {
 
                 if (conflictAPL) {
                     const ok = confirm(
-                        `Er is al een APL (${conflictAPL.naam}) in ploeg ${updateObj.Ploeg}. Overschrijven?`
+                        `Er is al een APL (${conflictAPL.naam}) in ploeg ${getGroepLabel(updateObj.Ploeg)}. Overschrijven?`
                     );
                     if (!ok) return;
 
-                    await update(ref(db, `${speltak}/jeugdleden/${conflictAPL.id}`), { APL: false });
+                    await update(ref(db), {
+                        [`${speltak}/jeugdleden/${conflictAPL.id}/APL`]: false,
+                        [`${PUBLIC_ROOT}/jeugdleden/${conflictAPL.id}/APL`]: false
+                    });
                 }
             }
         }

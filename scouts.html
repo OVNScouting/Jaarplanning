@@ -163,7 +163,10 @@
         </div>
       </div>
 
-      <button id="addMemberButton" class="pill-btn primary">Lid toevoegen</button>
+      <div class="ledenbeheer-acties">
+        <button id="addMemberButton" class="pill-btn primary">Lid toevoegen</button>
+        <button id="manageGroepenButton" class="pill-btn outline" type="button">Ploegen beheren</button>
+      </div>
 
     </section>
 
@@ -221,11 +224,8 @@
         <div id="scoutsExtraFields" class="modal-extra-group hidden">
           <label>Ploeg:</label>
           <select id="memberPloeg">
+            <!-- Gevuld door script.js (Ploegen beheren) -->
             <option value="">Zonder ploeg</option>
-            <option value="sperwer">Sperwer</option>
-            <option value="kievit">Kievit</option>
-            <option value="reiger">Reiger</option>
-            <option value="meeuw">Meeuw</option>
           </select>
 
           <label>Rollen:</label>
